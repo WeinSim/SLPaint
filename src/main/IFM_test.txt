@@ -1,0 +1,44 @@
+package main;
+
+import java.io.File;
+
+class IFM_test {
+
+    imageFileTarget = {null, user specified exists, user specified new, same}
+    imageTarget = {new, from file, same}
+
+    void new() {
+        check for unsaved changes
+        close current
+        create new
+
+        file: null
+        image: new
+    }
+ 
+    void open() {
+        check for unsaved changes
+        close current
+        user chooses file
+        open chosen file
+
+        file: user specified exists
+        image: from file
+    }
+
+    void saveCurrent() {
+        save
+
+        file: stays the same
+        image: stays the same
+    }
+
+    void saveAs() {
+        close current
+        user chooses file
+        save as chosen file
+
+        file: user specified new
+        image: stays the same
+    }
+}
