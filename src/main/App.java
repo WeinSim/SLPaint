@@ -10,11 +10,14 @@ import ui.AppUI;
 
 public abstract class App {
 
-    private static boolean showDebugOutline = false;
+    private static final double FRAME_TIME_GAMMA = 0.05;
 
     protected Window window;
 
+    protected double avgFrameTime = -1;
+
     protected AppUI<?> ui;
+    private static boolean showDebugOutline = false;
 
     protected AppRenderer<?> renderer;
     private Loader loader;
@@ -34,6 +37,12 @@ public abstract class App {
     }
 
     public void update(double deltaT) {
+        if (avgFrameTime < 0) {
+            avgFrameTime = deltaT;
+        } else {
+            avgFrameTime = (1 - FRAME_TIME_GAMMA) * avgFrameTime + FRAME_TIME_GAMMA * deltaT;
+        }
+
         boolean[] keys = window.getKeys();
         boolean[] prevKeys = window.getPrevKeys();
         SVector mousePos = window.getMousePosition();
@@ -42,7 +51,12 @@ public abstract class App {
 
         // toggle debug outline
         if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_COMMA)) {
-            App.toggleDebugOutline();
+            toggleDebugOutline();
+        }
+
+        // reload shaders
+        if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_S) && keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
+            renderer.reloadShaders();
         }
 
         // UI update
@@ -119,5 +133,9 @@ public abstract class App {
 
     public static boolean showDebugOutline() {
         return showDebugOutline;
+    }
+
+    public double getFrameRate() {
+        return 1.0 / avgFrameTime;
     }
 }

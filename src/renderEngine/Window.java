@@ -81,7 +81,10 @@ public class Window {
 
         // Make the OpenGL context current
         GLFW.glfwMakeContextCurrent(windowHandle);
-        // Enable v-sync
+        // Enable v-sync.
+        // Note: this limits the application to 60fps, which can make very fast paint
+        // strokes look jagged. To improve this, the rendering logic could be separated
+        // onto its own thread. For now though, this is not neccessary.
         GLFW.glfwSwapInterval(1);
 
         GLFW.glfwSetWindowSizeLimits(windowHandle, 200, 200, Integer.MAX_VALUE, Integer.MAX_VALUE);
@@ -213,7 +216,8 @@ public class Window {
         GLFWVidMode pmVideoMode = GLFW.glfwGetVideoMode(primaryMonitor);
         PointerBuffer monitors = GLFW.glfwGetMonitors();
         int count;
-        for (count = 0; monitors.hasRemaining(); monitors.get(), count++);
+        for (count = 0; monitors.hasRemaining(); monitors.get(), count++)
+            ;
         int offset = count == 2 ? 1920 : 0;
         GLFW.glfwSetWindowPos(windowHandle,
                 offset + (pmVideoMode.width() - width) / 2,

@@ -10,8 +10,6 @@ import sutil.SUtil;
 
 public class MainLoop {
 
-    private static final double FPS_CAP = 60;
-
     private static ArrayList<App> apps;
 
     public static void main(String[] args) {
@@ -24,7 +22,7 @@ public class MainLoop {
         MainApp mainApp = new MainApp();
         Window mainWindow = mainApp.getWindow();
 
-        double deltaT = 1.0 / FPS_CAP;
+        double deltaT = 1.0 / 60.0;
         while (!mainWindow.isCloseRequested()) {
             long startTime = System.nanoTime();
 

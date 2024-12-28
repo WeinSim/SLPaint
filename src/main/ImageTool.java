@@ -1,6 +1,6 @@
 package main;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 public enum ImageTool {
 
@@ -25,17 +25,23 @@ public enum ImageTool {
                 if ((baseColor & bitmask) == (replaceColor & bitmask))
                     // break;
                     return;
-                ArrayList<Long> boundary = new ArrayList<>();
+                LinkedList<Long> boundary = new LinkedList<>();
                 boundary.add((x & 0xFFFFFFFFL) << 32 | (y & 0xFFFFFFFFL));
+                // no noticeable performance increase with cached bitmap for discovered pixels
+                // boolean[][] discovered = new boolean[image.getWidth()][image.getHeight()];
                 while (!boundary.isEmpty()) {
                     long point = boundary.removeLast();
-                    int pointX = (int) (point >> 32);
-                    int pointY = (int) (point & 0xFFFFFFFF);
+                    int pointX = (int) ((point >> 32) & 0xFFFFFFFFL);
+                    int pointY = (int) (point & 0xFFFFFFFFL);
+                    // discovered[pointX][pointY] = true;
                     image.setPixel(pointX, pointY, replaceColor);
                     for (int i = 0; i < FILL_XOFF.length; i++) {
                         int newX = pointX + FILL_XOFF[i];
                         int newY = pointY + FILL_YOFF[i];
                         if (image.isInside(newX, newY)) {
+                            // if (discovered[newX][newY]) {
+                            // continue;
+                            // }
                             if ((image.getPixel(newX, newY) & bitmask) == (baseColor & bitmask)) {
                                 boundary.add((newX & 0xFFFFFFFFL) << 32 | (newY & 0xFFFFFFFFL));
                             }
@@ -43,7 +49,6 @@ public enum ImageTool {
                     }
                 }
             }
-            case SELECTION -> app.startSelection();
             default -> {
             }
         }

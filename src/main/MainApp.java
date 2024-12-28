@@ -1,6 +1,5 @@
 package main;
 
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +21,7 @@ import ui.CustomColorContainer;
 import ui.MainUI;
 
 /**
- * TODO: continue: saving images
+ * TODO:
  * App:
  * * Dialogs
  * * * Save dialog
@@ -31,15 +30,18 @@ import ui.MainUI;
  * * * Only one at a time
  * * Keep track of all file locks in one centralized place to avoid leaking
  * * Selection
- * * * Rework entire system (rn it's a mess)
  * * * Clipboard (Copy / Paste / Cut)
- * * * Resize selection
- * * * Ctrl+Shift+X
  * * * Transparent selection (checkbox)
- * * Resize button
- * * Resize handles
+ * * Resizing
+ * * * Resize button
+ * * * Resize handles
+ * * * Selection resizing
+ * * * Selection Ctrl+Shift+X
+ * * Undo / redo
  * * Pencil: different sizes
  * * Transparency?
+ * * Let user choose app color style (BASE_COLOR)? (using ColorPickerApp)
+ * * Recognize remapping from CAPS_LOCK to ESCAPE
  * * Maybe turn the ColorPickerApp into a togglable side panel?
  * UI:
  * * Add hMargin and vMargin in UIContainer
@@ -52,8 +54,6 @@ import ui.MainUI;
  * Error handling
  */
 public class MainApp extends App {
-
-    public static final int FPS_CAP = 60;
 
     public static final int RGB_BITMASK = 0x00FFFFFF;
 
@@ -90,7 +90,6 @@ public class MainApp extends App {
 
     public static final int SAVE_DIALOG = 1, NEW_DIALOG = 2, CHANGE_SIZE_DIALOG = 3, NEW_COLOR_DIALOG = 4,
             ROTATE_DIALOG = 5, FLIP_DIALOG = 6, UNABLE_TO_SAVE_IMAGE_DIALOG = 7, DISCARD_UNSAVED_CHANGES_DIALOG = 9;
-    public static final int NO_SELECTION = 0, CREATING_SELECTION = 1, IDLE_SELECTION = 2, DRAGGING_SELECTION = 3;
 
     private static final int MIN_ZOOM_LEVEL = -4;
     private static final int MAX_ZOOM_LEVEL = 8;
@@ -103,6 +102,12 @@ public class MainApp extends App {
     // private Image image;
     // private ImageFile imageFile;
 
+    private SelectionManager selectionManager;
+
+    /**
+     * used for restoring the tool that was selected before the color picker
+     */
+    private ImageTool prevTool;
     private ImageTool activeTool;
     private int primaryColor;
     private int secondaryColor;
@@ -112,18 +117,6 @@ public class MainApp extends App {
     private int colorSelection;
     private ArrayList<Integer> customColors;
     private CustomColorContainer customColorContainer;
-
-    private int selectionPhase;
-    private Image selection;
-    // CREATING_SELECTION
-    private int selectionStartX, selectionStartY;
-    private int selectionEndX, selectionEndY;
-    // IDLE_SELECTION, DRAGGING_SELECTION
-    private int selectionPosX, selectionPosY;
-    private int selectionWidth, selectionHeight;
-    // DRAGGING_SELECTION
-    private int selectionDragStartX, selectionDragStartY;
-    private SVector selectionDragStartMouseCoords; // (world coords)
 
     private SVector imageTranslation;
     private int imageZoomLevel;
@@ -151,11 +144,12 @@ public class MainApp extends App {
         eventQueue = new LinkedList<>();
 
         activeTool = ImageTool.PENCIL;
+        prevTool = ImageTool.PENCIL;
+
         primaryColor = 0;
         secondaryColor = -1;
         customColors = new ArrayList<>();
-        selectionPhase = NO_SELECTION;
-        selection = null;
+        selectionManager = new SelectionManager(this);
 
         // imageFileManager = new ImageFileManager(this);
         imageFileManager = new ImageFileManager(this, "dialogFlowchart.png");
@@ -188,6 +182,7 @@ public class MainApp extends App {
         Image image = imageFileManager.getImage();
         // canvas actions
         if (canvas.mouseAbove()) {
+            // scroll actions
             double scrollAmount = (prevMouseScroll.y - mouseScroll.y) * MOUSE_WHEEL_SENSITIVITY;
             if (keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
                 // zoom
@@ -206,19 +201,41 @@ public class MainApp extends App {
                     imageTranslation.y -= scrollAmount;
                 }
             }
-            if (selectionPhase == IDLE_SELECTION && mouseButtons[0] && !prevMouseButtons[0]) {
-                if (mouseAboveSelection(mouseX, mouseY)) {
-                    // start dragging selection
-                    selectionPhase = DRAGGING_SELECTION;
-                    selectionDragStartX = selectionPosX;
-                    selectionDragStartY = selectionPosY;
-                    selectionDragStartMouseCoords = window.getMousePosition().copy();
-                    selectionDragStartMouseCoords.sub(imageTranslation).div(getImageZoom());
-                } else {
-                    // end selection
-                    endSelection();
+
+            // left click
+            if (mouseButtons[0] && !prevMouseButtons[0]) {
+                if (selectionManager.getPhase() == SelectionManager.IDLE) {
+                    if (selectionManager.mouseAboveSelection(mouseX, mouseY)) {
+                        // start dragging selection
+                        selectionManager.startDragging();
+                    } else {
+                        // finish selection
+                        selectionManager.finish();
+                    }
+                } else if (activeTool == ImageTool.SELECTION) {
+                    // start creating selection
+                    selectionManager.startCreating();
                 }
             }
+
+            /*
+             * TODO selection: start dragging selection, end selection
+             */
+            // if (selectionPhase == IDLE_SELECTION && mouseButtons[0] &&
+            // !prevMouseButtons[0]) {
+            // if (mouseAboveSelection(mouseX, mouseY)) {
+            // // start dragging selection
+            // selectionPhase = DRAGGING_SELECTION;
+            // selectionDragStartX = selectionPosX;
+            // selectionDragStartY = selectionPosY;
+            // selectionDragStartMouseCoords = window.getMousePosition().copy();
+            // selectionDragStartMouseCoords.sub(imageTranslation).div(getImageZoom());
+            // } else {
+            // // end selection
+            // endSelection();
+            // }
+            // }
+
             // right click
             if (mouseButtons[1] && !prevMouseButtons[1]) {
                 if (keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
@@ -230,19 +247,30 @@ public class MainApp extends App {
             // tool click
             if (!keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
                 if (image.isInside(mouseX, mouseY)) {
+                    boolean anyClickHappened = false;
                     for (int i = 0; i < mouseButtons.length; i++) {
                         if (mouseButtons[i] && !prevMouseButtons[i]) {
                             activeTool.click(this, mouseX, mouseY, i);
+                            anyClickHappened = true;
                         }
+                    }
+                    if (activeTool == ImageTool.COLOR_PICKER && anyClickHappened) {
+                        // queue the resetting to the previous tool to avoid using the previous tool for
+                        // one frame
+                        queueEvent(() -> setActiveTool(prevTool));
                     }
                 }
             }
         }
+
+        // tool update / release
         for (int i = 0; i < mouseButtons.length; i++) {
-            if (mouseButtons[i] && !keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
-                // tool update
-                if (canvas.mouseAbove()) {
-                    activeTool.update(this, mouseX, mouseY, i);
+            if (mouseButtons[i]) {
+                if (!keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
+                    // tool update
+                    if (canvas.mouseAbove()) {
+                        activeTool.update(this, mouseX, mouseY, i);
+                    }
                 }
             } else if (prevMouseButtons[i]) {
                 // tool release
@@ -259,64 +287,60 @@ public class MainApp extends App {
             SVector mouseMovement = new SVector(mousePos).sub(prevMousePos);
             imageTranslation.add(mouseMovement);
         }
-        if (selectionPhase == DRAGGING_SELECTION) {
-            if (!mouseButtons[0]) {
-                // stop dragging selection
-                selectionPhase = IDLE_SELECTION;
-            } else {
-                // dragging selection
-                SVector delta = window.getMousePosition().copy();
-                delta.sub(imageTranslation).div(getImageZoom());
-                delta.sub(selectionDragStartMouseCoords);
-                selectionPosX = selectionDragStartX + (int) delta.x;
-                selectionPosY = selectionDragStartY + (int) delta.y;
-            }
-        }
 
-        if (selectionPhase == CREATING_SELECTION) {
-            if (!mouseButtons[0]) {
-                // stop creating selection
-                selectionWidth = Math.abs(selectionStartX - selectionEndX);
-                selectionHeight = Math.abs(selectionStartY - selectionEndY);
-                if (selectionWidth == 0 && selectionHeight == 0) {
-                    cancelSelection();
-                } else {
-                    selectionPhase = IDLE_SELECTION;
-                    selectionPosX = Math.min(selectionStartX, selectionEndX);
-                    selectionPosY = Math.min(selectionStartY, selectionEndY);
-
-                    BufferedImage subImage = image.getSubImage(selectionPosX, selectionPosY, selectionWidth,
-                            selectionHeight);
-                    selection = new Image(subImage);
-
-                    image.setPixels(selectionPosX, selectionPosY, selectionWidth, selectionHeight, secondaryColor);
+        // selection actions
+        switch (selectionManager.getPhase()) {
+            case SelectionManager.CREATING -> {
+                // finish creating selection
+                if (!mouseButtons[0]) {
+                    selectionManager.finishCreating();
                 }
-            } else {
-                // creating selection
-                selectionEndX = Math.min(Math.max(0, mouseX), image.getWidth());
-                selectionEndY = Math.min(Math.max(0, mouseY), image.getHeight());
+            }
+            case SelectionManager.IDLE -> {
+                // esc -> finish selection
+                if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_CAPS_LOCK)) {
+                    selectionManager.finish();
+                }
+                // del -> cancel selection
+                if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_DELETE)) {
+                    selectionManager.cancel();
+                }
+            }
+            case SelectionManager.DRAGGING -> {
+                // finish dragging image
+                if (!mouseButtons[0]) {
+                    selectionManager.finishDragging();
+                }
             }
         }
 
-        // reset transform
+        // keyboard shortcuts
         if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_R) && !keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
+            // R -> reset viewport transform
             resetImageTransform();
         }
-
         if (keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
-            // select all
             if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_A)) {
-                setActiveTool(ImageTool.SELECTION);
-                selectionPhase = IDLE_SELECTION;
-                selectionPosX = 0;
-                selectionPosY = 0;
-                selectionWidth = image.getWidth();
-                selectionHeight = image.getHeight();
-                BufferedImage subImage = image.getSubImage(0, 0, selectionWidth, selectionHeight);
-                selection = new Image(subImage);
-                image.setPixels(0, 0, selectionWidth, selectionHeight, secondaryColor);
+                selectionManager.selectEverything();
             }
-            // save
+            /*
+             * TODO selection:
+             * select all
+             */
+            // select all
+            // if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_A)) {
+            // setActiveTool(ImageTool.SELECTION);
+            // selectionPhase = IDLE_SELECTION;
+            // selectionPosX = 0;
+            // selectionPosY = 0;
+            // selectionWidth = image.getWidth();
+            // selectionHeight = image.getHeight();
+            // BufferedImage subImage = image.getSubImage(0, 0, selectionWidth,
+            // selectionHeight);
+            // selection = new Image(subImage);
+            // image.setPixels(0, 0, selectionWidth, selectionHeight, secondaryColor);
+            // }
+            // Ctrl (+ Shift) + S -> save (as)
             if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_S)) {
                 if (keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
                     saveImageAs();
@@ -326,48 +350,74 @@ public class MainApp extends App {
             }
         }
 
-        // delete selection
-        if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_DELETE)) {
-            if (selectionPhase == IDLE_SELECTION) {
-                cancelSelection();
-            }
-        }
+        selectionManager.update();
 
         // update image texture
         image.updateOpenGLTexture();
+
+        /*
+         * TODO selection:
+         * stop dragging selection
+         * dragging selection
+         * stop creating selection
+         * cancel selection
+         * creating selection
+         */
+        // if (selectionPhase == DRAGGING_SELECTION) {
+        // if (!mouseButtons[0]) {
+        // // stop dragging selection
+        // selectionPhase = IDLE_SELECTION;
+        // } else {
+        // // dragging selection
+        // SVector delta = window.getMousePosition().copy();
+        // delta.sub(imageTranslation).div(getImageZoom());
+        // delta.sub(selectionDragStartMouseCoords);
+        // selectionPosX = selectionDragStartX + (int) delta.x;
+        // selectionPosY = selectionDragStartY + (int) delta.y;
+        // }
+        // }
+
+        // if (selectionPhase == CREATING_SELECTION) {
+        // if (!mouseButtons[0]) {
+        // // stop creating selection
+        // selectionWidth = Math.abs(selectionStartX - selectionEndX);
+        // selectionHeight = Math.abs(selectionStartY - selectionEndY);
+        // if (selectionWidth == 0 && selectionHeight == 0) {
+        // cancelSelection();
+        // } else {
+        // selectionPhase = IDLE_SELECTION;
+        // selectionPosX = Math.min(selectionStartX, selectionEndX);
+        // selectionPosY = Math.min(selectionStartY, selectionEndY);
+
+        // BufferedImage subImage = image.getSubImage(selectionPosX, selectionPosY,
+        // selectionWidth,
+        // selectionHeight);
+        // selection = new Image(subImage);
+
+        // image.setPixels(selectionPosX, selectionPosY, selectionWidth,
+        // selectionHeight, secondaryColor);
+        // }
+        // } else {
+        // // creating selection
+        // selectionEndX = Math.min(Math.max(0, mouseX), image.getWidth());
+        // selectionEndY = Math.min(Math.max(0, mouseY), image.getHeight());
+        // }
+        // }
+
+        /*
+         * TODO selection:
+         * delete selection
+         */
+        // delete selection
+        // if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_DELETE)) {
+        // if (selectionPhase == IDLE_SELECTION) {
+        // cancelSelection();
+        // }
+        // }
     }
 
     @Override
     public void finish() {
-    }
-
-    private boolean mouseAboveSelection(int mouseX, int mouseY) {
-        return mouseX >= selectionPosX
-                && mouseX < selectionPosX + selectionWidth
-                && mouseY >= selectionPosY
-                && mouseY < selectionPosY + selectionHeight;
-    }
-
-    public void startSelection() {
-        if (selectionPhase != NO_SELECTION) {
-            return;
-        }
-        selectionPhase = CREATING_SELECTION;
-        int[] mousePos = getMouseImagePosition();
-        selectionStartX = mousePos[0];
-        selectionStartY = mousePos[1];
-    }
-
-    public void cancelSelection() {
-        selectionPhase = NO_SELECTION;
-        selection = null;
-    }
-
-    public void endSelection() {
-        Image image = imageFileManager.getImage();
-        image.setSubImage(selection.getBufferedImage(), selectionPosX, selectionPosY);
-        selectionPhase = NO_SELECTION;
-        selection = null;
     }
 
     public void selectColor(int color) {
@@ -485,6 +535,10 @@ public class MainApp extends App {
         imageTranslation = getCanvasPosition().add(new SVector(1, 1).scale(getCanvasMargin()));
     }
 
+    public SelectionManager getSelectionManager() {
+        return selectionManager;
+    }
+
     public Image getImage() {
         return imageFileManager.getImage();
     }
@@ -509,26 +563,6 @@ public class MainApp extends App {
         return canvas.getMargin();
     }
 
-    public int getSelectionPhase() {
-        return selectionPhase;
-    }
-
-    public int getSelectionStartX() {
-        return selectionStartX;
-    }
-
-    public int getSelectionStartY() {
-        return selectionStartY;
-    }
-
-    public int getSelectionEndX() {
-        return selectionEndX;
-    }
-
-    public int getSelectionEndY() {
-        return selectionEndY;
-    }
-
     public void setPrimaryColor(int primaryColor) {
         this.primaryColor = primaryColor;
     }
@@ -542,8 +576,16 @@ public class MainApp extends App {
     }
 
     public void setActiveTool(ImageTool tool) {
-        if (activeTool == ImageTool.SELECTION && selectionPhase != NO_SELECTION) {
-            endSelection();
+        if (activeTool == tool) {
+            return;
+        }
+        if (activeTool == ImageTool.SELECTION) {
+            if (selectionManager.getPhase() == SelectionManager.IDLE) {
+                selectionManager.finish();
+            }
+        }
+        if (tool == ImageTool.COLOR_PICKER) {
+            prevTool = activeTool;
         }
         activeTool = tool;
     }
@@ -563,6 +605,10 @@ public class MainApp extends App {
     private int[] getMouseImagePosition(SVector mouse) {
         SVector mouseImagePos = mouse.copy().sub(imageTranslation).div(getImageZoom());
         return new int[] { (int) Math.floor(mouseImagePos.x), (int) Math.floor(mouseImagePos.y) };
+    }
+
+    public SVector getMouseImagePosVec() {
+        return window.getMousePosition().copy().sub(imageTranslation).div(getImageZoom());
     }
 
     public int getMouseImageX() {
@@ -612,34 +658,12 @@ public class MainApp extends App {
         return imageFileManager.getImageFile();
     }
 
-    public Image getSelection() {
-        return selection;
-    }
-
-    public int getSelectionPosX() {
-        return selectionPosX;
-    }
-
-    public int getSelectionPosY() {
-        return selectionPosY;
-    }
-
-    public int getSelectionWidth() {
-        return switch (selectionPhase) {
-            case CREATING_SELECTION -> Math.abs(selectionStartX - selectionEndX);
-            default -> selectionWidth;
-        };
-    }
-
-    public int getSelectionHeight() {
-        return switch (selectionPhase) {
-            case CREATING_SELECTION -> Math.abs(selectionStartY - selectionEndY);
-            default -> selectionHeight;
-        };
-    }
-
     public void queueEvent(UIAction action) {
         eventQueue.add(action);
+    }
+
+    public void startSelection() {
+        // selectionManager.startSelection();
     }
 
     public static String formatFilesize(long filesize) {

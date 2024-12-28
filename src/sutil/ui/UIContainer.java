@@ -10,7 +10,7 @@ public class UIContainer extends UIElement {
     public static final int VERTICAL = 0, HORIZONTAL = 1;
 
     /**
-     * Every {@code UIContainer} has one of three size types:
+     * Every {@code UIContainer} has one of four size types:
      * <ul>
      * <li>{@code MINIMAL}: The size of the container is the smallest size that fits
      * all of its children, the padding between the children and the margin around

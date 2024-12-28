@@ -34,8 +34,13 @@ public class UIRenderMaster {
     private SVector stroke;
     private boolean doStroke;
     private double strokeWeight;
+    private boolean doCheckerbaordStroke;
+    private SVector checkerboardStroke;
+    private double checkerboardStrokeSize;
     private TextFont textFont;
     private double textSize;
+    private boolean clip;
+    private SVector clipPosition, clipSize;
 
     private RawModel dummyVAO;
     // private RawModel quadVAO;
@@ -55,6 +60,10 @@ public class UIRenderMaster {
         textFont = null;
         fill = new SVector();
         stroke = new SVector();
+        checkerboardStroke = new SVector();
+        clip = false;
+        clipPosition = new SVector();
+        clipSize = new SVector();
     }
 
     public void start() {
@@ -83,6 +92,9 @@ public class UIRenderMaster {
         rectShader.loadUniform("stroke", stroke);
         rectShader.loadUniform("doStroke", doStroke ? 1 : 0);
         rectShader.loadUniform("strokeWeight", strokeWeight);
+        rectShader.loadUniform("doCheckerboardStroke", doCheckerbaordStroke ? 1 : 0);
+        rectShader.loadUniform("checkerboardStroke", checkerboardStroke);
+        rectShader.loadUniform("checkerboardStrokeSize", checkerboardStrokeSize);
         rectShader.loadUniform("uiMatrix", uiMatrix);
         rectShader.loadUniform("viewMatrix", createViewMatrix());
 
@@ -139,8 +151,9 @@ public class UIRenderMaster {
 
         imageShader.loadUniform("viewMatrix", createViewMatrix());
         imageShader.loadUniform("transformationMatrix", uiMatrix);
-        // TODO
-        SVector[] imageViewport = { new SVector(), new SVector(10000, 10000) };
+        SVector[] imageViewport = clip
+                ? new SVector[] { clipPosition, clipPosition.copy().add(clipSize) }
+                : new SVector[] { new SVector(), new SVector(10000, 10000) };
         imageShader.loadUniform("viewportTopLeft", imageViewport[0]);
         imageShader.loadUniform("viewportBottomRight", imageViewport[1]);
 
@@ -207,6 +220,22 @@ public class UIRenderMaster {
         }
         shader.start();
         activeShader = shader;
+    }
+
+    /**
+     * Only applies to images
+     * 
+     * @param position
+     * @param size
+     */
+    public void clipArea(SVector position, SVector size) {
+        clip = true;
+        clipPosition.set(position);
+        clipSize.set(size);
+    }
+
+    public void noClip() {
+        clip = false;
     }
 
     public void translate(SVector translation) {
@@ -283,6 +312,16 @@ public class UIRenderMaster {
 
     public void strokeWeight(double strokeWeight) {
         this.strokeWeight = strokeWeight;
+    }
+
+    public void checkerboardStroke(SVector color, double size) {
+        checkerboardStroke.set(color);
+        checkerboardStrokeSize = size;
+        doCheckerbaordStroke = true;
+    }
+
+    public void noCheckerboardStroke() {
+        doCheckerbaordStroke = false;
     }
 
     public void textFont(TextFont font) {

@@ -27,6 +27,8 @@ public class UITextInput extends UIContainer {
 
     public UITextInput(String text) {
         this(() -> text, (String s) -> {});
+        // this should probably also work
+        // this(() -> text, (String _) -> {});
     }
 
     @Override
@@ -116,7 +118,8 @@ public class UITextInput extends UIContainer {
         }
 
         public void resetTimer() {
-            blinkStart = GLFW.glfwGetTime();
+            // blinkStart = GLFW.glfwGetTime();
+            blinkStart = System.nanoTime() * 1e-9;
         }
 
         public void hide() {
@@ -126,7 +129,8 @@ public class UITextInput extends UIContainer {
         public void update(SVector mouse) {
             super.update(mouse);
 
-            outlineNormal = active() && ((GLFW.glfwGetTime() - blinkStart) / BLINK_INTERVAL) % 2 < 1;
+            // outlineNormal = active() && ((GLFW.glfwGetTime() - blinkStart) / BLINK_INTERVAL) % 2 < 1;
+            outlineNormal = active() && ((System.nanoTime() * 1e-9 - blinkStart) / BLINK_INTERVAL) % 2 < 1;
         }
     }
 }

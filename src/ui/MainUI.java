@@ -6,6 +6,7 @@ import main.Image;
 import main.ImageFormat;
 import main.ImageTool;
 import main.MainApp;
+import main.SelectionManager;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UIGetter;
@@ -111,6 +112,8 @@ public class MainUI extends AppUI<MainApp> {
         canvas.noOutline();
         UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.BOTTOM);
         statusBar.zeroMargin().noOutline().withBackground();
+        statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate())));
+        statusBar.add(new UISeparator());
         statusBar.add(new UILabel(() -> {
             String ret = "Format: ";
             ImageFormat format = app.getImageFormat();
@@ -146,8 +149,10 @@ public class MainUI extends AppUI<MainApp> {
         statusBar.add(new UISeparator());
         statusBar.add(new UILabel(() -> {
             String ret = "Selection size:";
-            if (app.getSelectionPhase() != MainApp.NO_SELECTION) {
-                ret += " %d x %d px".formatted(app.getSelectionWidth(), app.getSelectionHeight());
+            SelectionManager selectionManager = app.getSelectionManager();
+            if (selectionManager.getPhase() != SelectionManager.NONE) {
+                ret += " %d x %d px".formatted(selectionManager.getWidth(),
+                        selectionManager.getHeight());
             }
             return ret;
         }));

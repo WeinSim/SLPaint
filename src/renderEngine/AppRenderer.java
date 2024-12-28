@@ -96,4 +96,8 @@ public class AppRenderer<T extends App> {
             uiMaster.rect(position, size);
         }
     }
+
+    public void reloadShaders() {
+        uiMaster = new UIRenderMaster(app);
+    }
 }
