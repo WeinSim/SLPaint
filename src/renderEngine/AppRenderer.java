@@ -2,8 +2,7 @@ package renderEngine;
 
 import org.lwjgl.opengl.GL11;
 
-import main.App;
-import main.MainApp;
+import main.apps.App;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
@@ -32,7 +31,7 @@ public class AppRenderer<T extends App> {
     }
 
     protected void setDefaultBGColor() {
-        SVector bgColor = MainApp.BACKGROUND_NORMAL_COLOR;
+        SVector bgColor = App.getBackgroundNormalColor();
         GL11.glClearColor((float) bgColor.x, (float) bgColor.y, (float) bgColor.z, 1);
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
     }

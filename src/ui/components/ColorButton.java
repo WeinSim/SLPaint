@@ -1,6 +1,6 @@
 package ui.components;
 
-import main.MainApp;
+import main.apps.MainApp;
 import sutil.math.SVector;
 import sutil.ui.UIElement;
 import sutil.ui.UIGetter;

@@ -1,12 +1,10 @@
 package ui;
 
-import java.util.ArrayList;
-
 import main.Image;
 import main.ImageFormat;
 import main.ImageTool;
-import main.MainApp;
 import main.SelectionManager;
+import main.apps.MainApp;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UIGetter;
@@ -14,6 +12,7 @@ import sutil.ui.UILabel;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
 import ui.components.ColorButton;
+import ui.components.CustomColorContainer;
 import ui.components.ImageCanvas;
 import ui.components.ToolButton;
 
@@ -25,13 +24,26 @@ public class MainUI extends AppUI<MainApp> {
 
     public MainUI(MainApp app) {
         super(app);
+    }
 
+    @Override
+    protected void init() {
         UIContainer mainField = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         mainField.zeroMargin().zeroPadding().noOutline();
 
-        UIContainer topRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIContainer topRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER) {
+            @Override
+            public double getMargin() {
+                return 2 * super.getMargin();
+            }
+        };
         topRow.setFillSize();
         topRow.withBackground();
+
+        UIContainer settings = addTopRowSection(topRow, "Settings");
+        settings.add(new UIButton("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG)));
+
+        topRow.add(new UISeparator());
 
         UIContainer fileOptions = addTopRowSection(topRow, "File");
         fileOptions.add(new UIButton("New", () -> app.newImage()));
@@ -95,9 +107,14 @@ public class MainUI extends AppUI<MainApp> {
                 currentRow = null;
             }
         }
-        CustomColorContainer ccc = new CustomColorContainer(UIContainer.HORIZONTAL, UIContainer.CENTER, app);
+        CustomColorContainer ccc = new CustomColorContainer(app.getCustomColorButtonArray(),
+                (Integer color) -> {
+                    if (color == null) {
+                        return;
+                    }
+                    app.selectColor(color);
+                });
         ccc.zeroMargin().noOutline();
-        ccc.updateColors(new ArrayList<>());
         allColors.add(ccc);
         topRow.add(allColors);
 
@@ -160,8 +177,6 @@ public class MainUI extends AppUI<MainApp> {
         mainField.add(canvas);
 
         root.add(mainField);
-
-        updateSize();
     }
 
     private UIContainer addTopRowSection(UIContainer topRow, String name) {

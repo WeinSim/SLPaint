@@ -2,7 +2,7 @@ package main.dialogs;
 
 import javax.swing.JOptionPane;
 
-import main.MainApp;
+import main.apps.MainApp;
 
 public class UnimplementedDialog extends UserDialog {
 

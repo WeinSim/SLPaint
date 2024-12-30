@@ -1,6 +1,6 @@
 package main.dialogs;
 
-import main.MainApp;
+import main.apps.MainApp;
 
 public abstract class UserDialog extends Thread {
 

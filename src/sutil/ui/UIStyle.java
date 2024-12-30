@@ -26,4 +26,16 @@ public class UIStyle {
     public double getStrokeWeight() {
         return strokeWeightGetter.get();
     }
+
+    public void setBackgroundColorGetter(UIGetter<SVector> backgroundColorGetter) {
+        this.backgroundColorGetter = backgroundColorGetter;
+    }
+
+    public void setOutlineColorGetter(UIGetter<SVector> outlineColorGetter) {
+        this.outlineColorGetter = outlineColorGetter;
+    }
+
+    public void setStrokeWeightGetter(UIGetter<Double> strokeWeightGetter) {
+        this.strokeWeightGetter = strokeWeightGetter;
+    }
 }

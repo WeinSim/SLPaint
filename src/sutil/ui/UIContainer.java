@@ -55,6 +55,12 @@ public class UIContainer extends UIElement {
     protected ArrayList<UIElement> children;
 
     public UIContainer(int orientation, int alignment) {
+        if (orientation < 0 || orientation > 1 || alignment < 0 || alignment > 2) {
+            throw new IllegalArgumentException(String.format(
+                    "Invalid orientation or alignment. orientation = %d, alignment = %d",
+                    orientation, alignment));
+        }
+
         this.orientation = orientation;
         this.alignment = alignment;
 
@@ -77,6 +83,10 @@ public class UIContainer extends UIElement {
         children.add(child);
         child.setPanel(panel);
         child.parent = this;
+    }
+
+    public void remove(UIElement child) {
+        children.remove(child);
     }
 
     @Override
@@ -221,10 +231,18 @@ public class UIContainer extends UIElement {
         };
     }
 
+    /**
+     * 
+     * @return the space around the outside.
+     */
     public double getMargin() {
         return zeroMargin ? 0 : panel.getMargin();
     }
 
+    /**
+     * 
+     * @return the space between the children.
+     */
     public double getPadding() {
         return zeroPadding ? 0 : panel.getPadding();
     }
@@ -266,11 +284,21 @@ public class UIContainer extends UIElement {
         this.zeroPadding = zeroPadding;
     }
 
+    /**
+     * Removes space around the outside.
+     * 
+     * @param zeroMargin
+     */
     public UIContainer zeroMargin() {
         setZeroMargin(true);
         return this;
     }
 
+    /**
+     * Removes space between children.
+     * 
+     * @return
+     */
     public UIContainer zeroPadding() {
         setZeroPadding(true);
         return this;

@@ -10,6 +10,8 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import main.apps.MainApp;
+
 public class ImageFileManager {
 
     private static final FileFilter ALL_IMAGE_FORMATS_FILTER = generateAllImageFormatsFilter();

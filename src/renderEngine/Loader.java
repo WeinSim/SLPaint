@@ -16,7 +16,7 @@ import org.lwjgl.opengl.GL30;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
-import main.MainApp;
+import main.apps.MainApp;
 import renderEngine.fonts.FontChar;
 import renderEngine.fonts.TextFont;
 import sutil.SUtil;

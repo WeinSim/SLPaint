@@ -1,5 +1,6 @@
 package main;
 
+import main.apps.MainApp;
 import sutil.math.SVector;
 
 public class SelectionManager {

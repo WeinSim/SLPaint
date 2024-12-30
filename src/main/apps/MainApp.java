@@ -1,28 +1,33 @@
-package main;
+package main.apps;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.LinkedList;
 
 import org.lwjgl.glfw.GLFW;
 
+import main.ColorButtonArray;
+import main.Image;
+import main.ImageFile;
+import main.ImageFileManager;
+import main.ImageFormat;
+import main.ImageTool;
+import main.SelectionManager;
 import main.dialogs.SaveDialog;
 import main.dialogs.UnableToSaveImageDialog;
 import main.dialogs.UnimplementedDialog;
 import renderEngine.MainAppRenderer;
 import sutil.SUtil;
 import sutil.math.SVector;
-import sutil.ui.UIAction;
 import sutil.ui.UIContainer;
-import ui.CustomColorContainer;
 import ui.MainUI;
 
 /**
- * TODO:
+ * TODO: continue: light mode / dark mode
  * App:
+ * * When parent app closes, shouldren should also close
  * * Dialogs
  * * * Save dialog
  * * * * Keep track of unsaved changes, ask user to save before quitting if
@@ -39,21 +44,29 @@ import ui.MainUI;
  * * * Selection Ctrl+Shift+X
  * * Undo / redo
  * * Pencil: different sizes
+ * * Text tool
  * * Transparency?
- * * Let user choose app color style (BASE_COLOR)? (using ColorPickerApp)
+ * * Settings > UI Base Color
+ * * * When clicked: color picker, default colors, custom colors
  * * Recognize remapping from CAPS_LOCK to ESCAPE
  * * Maybe turn the ColorPickerApp into a togglable side panel?
  * UI:
- * * Add hMargin and vMargin in UIContainer
+ * * Light theme / dark theme
+ * * General design: containers with separators should double their margin!
+ * * Scrolling
  * * Tool icons & cursors
+ * * (Add hMargin and vMargin in UIContainer)
+ * * * Not neccessary for now. UISeparators now extend fully even without
+ * * * hMargin and vMargin
  * Rendering:
  * * Ellipse rendering (for color buttons maybe?)
  * * Premultiply view matrix and transformation matrix (for rect and text
  * * shader)
  * * Rename transformationMatrix to uiMatrix
  * Error handling
+ * 3D UI view?
  */
-public class MainApp extends App {
+public final class MainApp extends App {
 
     public static final int RGB_BITMASK = 0x00FFFFFF;
 
@@ -80,16 +93,9 @@ public class MainApp extends App {
             SUtil.toARGB(199, 191, 230),
     };
 
-    public static final SVector BASE_COLOR = new SVector(0.15, 0.7, 1);
-    public static final SVector BACKGROUND_NORMAL_COLOR = new SVector(BASE_COLOR).scale(0.12);
-    public static final SVector BACKGROUND_HIGHLIGHT_COLOR = new SVector(BASE_COLOR).scale(0.25);
-    public static final SVector BACKGROUND_HIGHLIGHT_COLOR_2 = new SVector(BASE_COLOR).scale(0.35);
-    public static final SVector OUTLINE_NORMAL_COLOR = new SVector(BASE_COLOR).scale(0.6);
-    public static final SVector OUTLINE_HIGHLIGHT_COLOR = new SVector(BASE_COLOR).scale(0.6);
-    public static final SVector SEPARATOR_COLOR = new SVector(BASE_COLOR).scale(0.28);
-
     public static final int SAVE_DIALOG = 1, NEW_DIALOG = 2, CHANGE_SIZE_DIALOG = 3, NEW_COLOR_DIALOG = 4,
-            ROTATE_DIALOG = 5, FLIP_DIALOG = 6, UNABLE_TO_SAVE_IMAGE_DIALOG = 7, DISCARD_UNSAVED_CHANGES_DIALOG = 9;
+            ROTATE_DIALOG = 5, FLIP_DIALOG = 6, UNABLE_TO_SAVE_IMAGE_DIALOG = 7, DISCARD_UNSAVED_CHANGES_DIALOG = 9,
+            SETTINGS_DIALOG = 10;
 
     private static final int MIN_ZOOM_LEVEL = -4;
     private static final int MAX_ZOOM_LEVEL = 8;
@@ -115,8 +121,9 @@ public class MainApp extends App {
      * 0 = primary color is selected, 1 = secondary color is selcted
      */
     private int colorSelection;
-    private ArrayList<Integer> customColors;
-    private CustomColorContainer customColorContainer;
+    // private ArrayList<Integer> customColors;
+    private ColorButtonArray customColorButtonArray;
+    // private CustomColorContainer customColorContainer;
 
     private SVector imageTranslation;
     private int imageZoomLevel;
@@ -124,42 +131,41 @@ public class MainApp extends App {
 
     private UIContainer canvas;
 
-    private ColorEditorApp colorEditorApp;
-
-    private LinkedList<UIAction> eventQueue;
+    // private ColorEditorApp colorEditorApp;
+    // private SettingsApp settingsApp;
+    private ArrayList<Integer> customUIBaseColors;
 
     public MainApp() {
         super(1280, 720, 1, "SLPaint");
-    }
-
-    @Override
-    public void init() {
-        super.init();
 
         window.setCloseOnEscape(false);
 
-        ui = new MainUI(this);
+        // customColors = new ArrayList<>();
+        customColorButtonArray = new ColorButtonArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
+        customUIBaseColors = new ArrayList<>();
+        selectionManager = new SelectionManager(this);
+
+        // imageFileManager = new ImageFileManager(this);
+        imageFileManager = new ImageFileManager(this, "dialogFlowchart.png");
+
+        createUI();
+
         renderer = new MainAppRenderer(this);
 
-        eventQueue = new LinkedList<>();
+        resetImageTransform();
 
         activeTool = ImageTool.PENCIL;
         prevTool = ImageTool.PENCIL;
 
         primaryColor = 0;
         secondaryColor = -1;
-        customColors = new ArrayList<>();
-        selectionManager = new SelectionManager(this);
-
-        // imageFileManager = new ImageFileManager(this);
-        imageFileManager = new ImageFileManager(this, "dialogFlowchart.png");
-
-        resetImageTransform();
     }
 
     @Override
     public void update(double deltaT) {
         super.update(deltaT);
+
+        // App.setBaseColor(toSVector(primaryColor));
 
         boolean[] keys = window.getKeys();
         boolean[] prevKeys = window.getPrevKeys();
@@ -169,11 +175,6 @@ public class MainApp extends App {
         boolean[] prevMouseButtons = window.getPrevMouseButtons();
         SVector mouseScroll = window.getMouseScroll();
         SVector prevMouseScroll = window.getPrevMouseScroll();
-
-        // empty event queue
-        while (!eventQueue.isEmpty()) {
-            eventQueue.removeFirst().run();
-        }
 
         int[] mouseImagePos = getMouseImagePosition();
         int mouseX = mouseImagePos[0];
@@ -202,7 +203,7 @@ public class MainApp extends App {
                 }
             }
 
-            // left click
+            // selection - left click
             if (mouseButtons[0] && !prevMouseButtons[0]) {
                 if (selectionManager.getPhase() == SelectionManager.IDLE) {
                     if (selectionManager.mouseAboveSelection(mouseX, mouseY)) {
@@ -217,24 +218,6 @@ public class MainApp extends App {
                     selectionManager.startCreating();
                 }
             }
-
-            /*
-             * TODO selection: start dragging selection, end selection
-             */
-            // if (selectionPhase == IDLE_SELECTION && mouseButtons[0] &&
-            // !prevMouseButtons[0]) {
-            // if (mouseAboveSelection(mouseX, mouseY)) {
-            // // start dragging selection
-            // selectionPhase = DRAGGING_SELECTION;
-            // selectionDragStartX = selectionPosX;
-            // selectionDragStartY = selectionPosY;
-            // selectionDragStartMouseCoords = window.getMousePosition().copy();
-            // selectionDragStartMouseCoords.sub(imageTranslation).div(getImageZoom());
-            // } else {
-            // // end selection
-            // endSelection();
-            // }
-            // }
 
             // right click
             if (mouseButtons[1] && !prevMouseButtons[1]) {
@@ -320,27 +303,12 @@ public class MainApp extends App {
             resetImageTransform();
         }
         if (keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
+            // Ctrl + A -> select everything
             if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_A)) {
+                setActiveTool(ImageTool.SELECTION);
                 selectionManager.selectEverything();
             }
-            /*
-             * TODO selection:
-             * select all
-             */
-            // select all
-            // if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_A)) {
-            // setActiveTool(ImageTool.SELECTION);
-            // selectionPhase = IDLE_SELECTION;
-            // selectionPosX = 0;
-            // selectionPosY = 0;
-            // selectionWidth = image.getWidth();
-            // selectionHeight = image.getHeight();
-            // BufferedImage subImage = image.getSubImage(0, 0, selectionWidth,
-            // selectionHeight);
-            // selection = new Image(subImage);
-            // image.setPixels(0, 0, selectionWidth, selectionHeight, secondaryColor);
-            // }
-            // Ctrl (+ Shift) + S -> save (as)
+            // Ctr (+ Shift) + S -> save (as)
             if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_S)) {
                 if (keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
                     saveImageAs();
@@ -354,66 +322,6 @@ public class MainApp extends App {
 
         // update image texture
         image.updateOpenGLTexture();
-
-        /*
-         * TODO selection:
-         * stop dragging selection
-         * dragging selection
-         * stop creating selection
-         * cancel selection
-         * creating selection
-         */
-        // if (selectionPhase == DRAGGING_SELECTION) {
-        // if (!mouseButtons[0]) {
-        // // stop dragging selection
-        // selectionPhase = IDLE_SELECTION;
-        // } else {
-        // // dragging selection
-        // SVector delta = window.getMousePosition().copy();
-        // delta.sub(imageTranslation).div(getImageZoom());
-        // delta.sub(selectionDragStartMouseCoords);
-        // selectionPosX = selectionDragStartX + (int) delta.x;
-        // selectionPosY = selectionDragStartY + (int) delta.y;
-        // }
-        // }
-
-        // if (selectionPhase == CREATING_SELECTION) {
-        // if (!mouseButtons[0]) {
-        // // stop creating selection
-        // selectionWidth = Math.abs(selectionStartX - selectionEndX);
-        // selectionHeight = Math.abs(selectionStartY - selectionEndY);
-        // if (selectionWidth == 0 && selectionHeight == 0) {
-        // cancelSelection();
-        // } else {
-        // selectionPhase = IDLE_SELECTION;
-        // selectionPosX = Math.min(selectionStartX, selectionEndX);
-        // selectionPosY = Math.min(selectionStartY, selectionEndY);
-
-        // BufferedImage subImage = image.getSubImage(selectionPosX, selectionPosY,
-        // selectionWidth,
-        // selectionHeight);
-        // selection = new Image(subImage);
-
-        // image.setPixels(selectionPosX, selectionPosY, selectionWidth,
-        // selectionHeight, secondaryColor);
-        // }
-        // } else {
-        // // creating selection
-        // selectionEndX = Math.min(Math.max(0, mouseX), image.getWidth());
-        // selectionEndY = Math.min(Math.max(0, mouseY), image.getHeight());
-        // }
-        // }
-
-        /*
-         * TODO selection:
-         * delete selection
-         */
-        // delete selection
-        // if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_DELETE)) {
-        // if (selectionPhase == IDLE_SELECTION) {
-        // cancelSelection();
-        // }
-        // }
     }
 
     @Override
@@ -435,11 +343,7 @@ public class MainApp extends App {
             secondaryColor = color;
         }
 
-        if (customColors.size() >= MainUI.NUM_COLOR_BUTTONS_PER_ROW) {
-            customColors.removeLast();
-        }
-        customColors.addFirst(color);
-        customColorContainer.updateColors(customColors);
+        customColorButtonArray.addColor(color);
     }
 
     public void drawLine(int x, int y, int color) {
@@ -489,25 +393,30 @@ public class MainApp extends App {
     }
 
     public void showDialog(int type) {
+        super.showDialog(type);
         switch (type) {
             case SAVE_DIALOG -> (new SaveDialog(this)).start();
             case UNABLE_TO_SAVE_IMAGE_DIALOG -> (new UnableToSaveImageDialog(this)).start();
-            case NEW_COLOR_DIALOG -> {
-                if (colorEditorApp != null) {
-                    colorEditorApp.getWindow().requestFocus();
-                } else {
-                    colorEditorApp = new ColorEditorApp(this, colorSelection == 0 ? primaryColor : secondaryColor);
-                    GLFW.glfwMakeContextCurrent(window.getWindowHandle());
-                }
+            case NEW_COLOR_DIALOG, SETTINGS_DIALOG -> {
             }
-            // default -> System.out.format("TODO: implement dialog type %s\n", type);
             default -> (new UnimplementedDialog(this, type)).start();
         }
     }
 
+    @Override
+    protected App createChildApp(int dialogType) {
+        return switch (dialogType) {
+            case NEW_COLOR_DIALOG -> new ColorEditorApp(
+                    this,
+                    colorSelection == 0 ? primaryColor : secondaryColor);
+            case SETTINGS_DIALOG ->
+                new SettingsApp(this);
+            default -> null;
+        };
+    }
+
     public void openImage() {
         imageFileManager.open();
-        // draggingImage = false;
     }
 
     public void newImage() {
@@ -528,6 +437,10 @@ public class MainApp extends App {
      */
     public void saveImageAs() {
         imageFileManager.saveAs();
+    }
+
+    public ArrayList<Integer> getCustomUIBaseColors() {
+        return customUIBaseColors;
     }
 
     public void resetImageTransform() {
@@ -631,13 +544,14 @@ public class MainApp extends App {
         return window.getDisplaySize();
     }
 
-    public void clearColorEditor() {
-        colorEditorApp = null;
+    public ColorButtonArray getCustomColorButtonArray() {
+        return customColorButtonArray;
     }
 
-    public void setCustomColorContainer(CustomColorContainer customColorContainer) {
-        this.customColorContainer = customColorContainer;
-    }
+    // public void setCustomColorContainer(CustomColorContainer
+    // customColorContainer) {
+    // this.customColorContainer = customColorContainer;
+    // }
 
     public long getFilesize() {
         ImageFile imageFile = imageFileManager.getImageFile();
@@ -656,14 +570,6 @@ public class MainApp extends App {
 
     public ImageFile getImageFile() {
         return imageFileManager.getImageFile();
-    }
-
-    public void queueEvent(UIAction action) {
-        eventQueue.add(action);
-    }
-
-    public void startSelection() {
-        // selectionManager.startSelection();
     }
 
     public static String formatFilesize(long filesize) {

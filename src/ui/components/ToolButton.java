@@ -1,7 +1,7 @@
 package ui.components;
 
 import main.ImageTool;
-import main.MainApp;
+import main.apps.MainApp;
 import sutil.ui.UIButton;
 import ui.AppUI;
 

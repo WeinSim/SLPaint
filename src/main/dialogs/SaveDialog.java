@@ -7,7 +7,7 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
 import main.ImageFormat;
-import main.MainApp;
+import main.apps.MainApp;
 
 public class SaveDialog extends UserDialog {
 

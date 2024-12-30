@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 
+import main.apps.App;
+import main.apps.MainApp;
 import renderEngine.Window;
 import sutil.SUtil;
 
@@ -61,7 +63,6 @@ public class MainLoop {
 
     public static void addApp(App app) {
         apps.add(app);
-        app.init();
     }
 
     private static void initGLFW() {

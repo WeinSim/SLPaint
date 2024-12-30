@@ -1,8 +1,8 @@
 package renderEngine;
 
 import main.Image;
-import main.MainApp;
 import main.SelectionManager;
+import main.apps.MainApp;
 import sutil.math.SVector;
 
 public class MainAppRenderer extends AppRenderer<MainApp> {

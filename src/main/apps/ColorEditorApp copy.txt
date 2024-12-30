@@ -1,40 +1,38 @@
-package main;
+package main.apps;
 
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIRoot;
-import ui.ColorEditorUI;
+import sutil.ui.UISetter;
 import ui.components.DragTarget;
 import ui.components.HueSatField;
 import ui.components.LightnessScaleContainer.LightnessScale;
 
-public class ColorEditorApp extends App {
+public final class ColorEditorApp extends App {
 
-    private MainApp mainApp;
+    private UISetter<Integer> closeAction;
 
     private HueSatField hueSatField;
     private LightnessScale lightnessScale;
     private DragTarget dragTarget;
 
-    private int originalColor;
+    private int initialColor;
     private int rgb;
     private double hue;
     private double saturation;
     private double lightness;
 
-    public ColorEditorApp(MainApp mainApp, int color) {
-        super(500, 500, 0, false, "Color Editor");
-        this.mainApp = mainApp;
-        originalColor = color;
+    public ColorEditorApp(App parent, int initialColor, UISetter<Integer> closeAction) {
+        super(500, 500, 0, false, "Color Editor", parent);
+        this.initialColor = initialColor;
+        this.closeAction = closeAction;
 
-        setRGB(color);
+        setRGB(initialColor);
     }
 
     @Override
     public void init() {
-        super.init();
-
-        ui = new ColorEditorUI(this);
+        createUI();
 
         UIRoot root = ui.getRoot();
         SVector rootSize = root.getSize();
@@ -58,13 +56,8 @@ public class ColorEditorApp extends App {
         }
     }
 
-    @Override
-    public void finish() {
-        mainApp.clearColorEditor();
-    }
-
-    public void addToCustomColors() {
-        mainApp.addCustomColor(getRGB());
+    public void close() {
+        closeAction.set(getRGB());
         window.requestClose();
     }
 
@@ -141,7 +134,12 @@ public class ColorEditorApp extends App {
         this.hueSatField = hueSatField;
     }
 
-    public int getOriginalColor() {
-        return originalColor;
+    public int getInitialColor() {
+        return initialColor;
+    }
+
+    @Override
+    protected App createChildApp(int dialogType) {
+        return null;
     }
 }

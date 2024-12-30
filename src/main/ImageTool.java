@@ -2,6 +2,8 @@ package main;
 
 import java.util.LinkedList;
 
+import main.apps.MainApp;
+
 public enum ImageTool {
 
     PENCIL, COLOR_PICKER, FILL_BUCKET, SELECTION;

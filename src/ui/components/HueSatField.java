@@ -1,6 +1,6 @@
 package ui.components;
 
-import main.ColorEditorApp;
+import main.ColorPicker;
 import renderEngine.Window;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
@@ -13,33 +13,33 @@ public class HueSatField extends UIContainer implements DragTarget {
     private static final double CURSOR_LINE_WIDTH = 4;
     private static final double CURSOR_CENTER_GAP = 10;
 
-    private ColorEditorApp app;
+    private ColorPicker colorPicker;
 
-    public HueSatField(ColorEditorApp app) {
+    public HueSatField(ColorPicker colorPicker, double size) {
         super(0, 0);
-        this.app = app;
+        this.colorPicker = colorPicker;
 
         noOutline();
-        setFixedSize(new SVector(300, 300));
+        setFixedSize(new SVector(size, size));
 
         add(new Cursor());
 
-        app.setHueSatField(this);
+        setClickAction(() -> colorPicker.setDragTarget(this));
 
-        setClickAction(() -> app.setDragTarget(this));
+        colorPicker.setHueSatField(this);
     }
 
     @Override
     public void drag() {
-        Window window = app.getWindow();
+        Window window = colorPicker.getWindow();
         SVector mousePos = window.getMousePosition();
         SVector absolutePos = getAbsolutePosition();
         mousePos = new SVector(mousePos).sub(absolutePos);
         mousePos.x = Math.min(Math.max(0, mousePos.x), size.x);
         mousePos.y = Math.min(Math.max(0, mousePos.y), size.y);
 
-        app.setHue(mousePos.x / size.x * 360);
-        app.setSaturation(1 - mousePos.y / size.y);
+        colorPicker.setHue(mousePos.x / size.x * 360);
+        colorPicker.setSaturation(1 - mousePos.y / size.y);
 
         setCursorPosition(mousePos);
     }

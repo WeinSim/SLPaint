@@ -23,8 +23,6 @@ public abstract class UIPanel {
     protected double padding = 10;
 
     private UIElement selectedElement;
-    // private int selectedIndex;
-    // private ArrayList<UIElement> selectables;
 
     public UIPanel() {
         selectedElement = null;
@@ -138,8 +136,4 @@ public abstract class UIPanel {
     public UIElement getSelectedElement() {
         return selectedElement;
     }
-
-    // public void addSelectable(UIElement selectable) {
-    // selectables.add(selectable);
-    // }
 }

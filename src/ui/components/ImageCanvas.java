@@ -1,6 +1,6 @@
 package ui.components;
 
-import main.MainApp;
+import main.apps.MainApp;
 import sutil.ui.UIContainer;
 
 public class ImageCanvas extends UIContainer {

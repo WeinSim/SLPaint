@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjglx.util.vector.Matrix3f;
 
-import main.App;
+import main.apps.App;
 import renderEngine.fonts.TextFont;
 import shaders.ShaderProgram;
 import sutil.math.SVector;

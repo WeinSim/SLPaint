@@ -1,6 +1,6 @@
 package sutil.ui;
 
-import main.MainApp;
+import main.apps.App;
 import sutil.math.SVector;
 
 public class UISeparator extends UIContainer {
@@ -11,7 +11,11 @@ public class UISeparator extends UIContainer {
 
         setFillSize();
 
+        zeroMargin();
+
+        add(new UISeparatorMargin());
         add(new UISeparatorInside());
+        add(new UISeparatorMargin());
     }
 
     @Override
@@ -25,13 +29,17 @@ public class UISeparator extends UIContainer {
         public UISeparatorInside() {
             super(VERTICAL, LEFT);
             setFillSize();
-            add(new UIEmpty(1));
-            setZeroMargin(true);
+            zeroMargin();
 
-            UIGetter<SVector> bgColor = () -> MainApp.SEPARATOR_COLOR;
-            UIGetter<SVector> olColor = () -> null;
-            UIGetter<Double> swGetter = () -> 1.0;
-            setStyle(new UIStyle(bgColor, olColor, swGetter));
+            style.setOutlineColorGetter(() -> App.getSeparatorColor());
+        }
+    }
+
+    private class UISeparatorMargin extends UIElement {
+
+        @Override
+        public void setMinSize() {
+            size.set(getMargin(), 0);
         }
     }
 }
