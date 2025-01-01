@@ -5,6 +5,7 @@ import main.apps.App;
 import main.apps.MainApp;
 import main.apps.SettingsApp;
 import sutil.math.SVector;
+import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
@@ -101,5 +102,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         }));
 
         root.add(baseColor);
+
+        root.add(new UIButton("Done", () -> app.getWindow().requestClose()));
     }
 }

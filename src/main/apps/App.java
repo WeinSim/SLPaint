@@ -19,22 +19,40 @@ import ui.SettingsUI;
 public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
 
     public static final SVector[] DEFAULT_UI_COLORS = {
-            new SVector(0.3, 0.3, 0.3),
+            // new SVector(0.3, 0.3, 0.3),
+            new SVector(1, 1, 1),
             new SVector(0.07, 0.35, 0.5),
             new SVector(0.5, 0.35, 0.07),
             new SVector(0.5, 0.07, 0.35),
     };
 
-    private static final double BACKGROUND_NORMAL_COLOR_SCALE = 0.24,
-            BACKGROUND_HIGHLIGHT_COLOR_SCALE = 0.5,
-            BACKGROUND_HIGHLIGHT_COLOR_2_SCALE = 0.7,
-            OUTLINE_NORMAL_COLOR_SCALE = 1.2,
-            OUTLINE_HIGHLIGHT_COLOR_SCALE = 1.2,
-            SEPARATOR_COLOR_SCALE = 0.56;
+    public static enum UIColor {
+        BACKGROUND_NORMAL(0.24),
+        BACKGROUND_HIGHLIGHT(0.5),
+        BACKGROUND_HIGHLIGHT_2(0.7),
+        OUTLINE_NORMAL(1.2),
+        OUTLINE_HIGHLIGHT(1.2),
+        SEPARATOR(0.56);
+
+        private final double brightness;
+
+        private UIColor(double brightness) {
+            this.brightness = brightness;
+        }
+    }
+
+    // private static final double BACKGROUND_NORMAL_COLOR_SCALE = 0.24,
+    // BACKGROUND_HIGHLIGHT_COLOR_SCALE = 0.5,
+    // BACKGROUND_HIGHLIGHT_COLOR_2_SCALE = 0.7,
+    // OUTLINE_NORMAL_COLOR_SCALE = 1.2,
+    // OUTLINE_HIGHLIGHT_COLOR_SCALE = 1.2,
+    // SEPARATOR_COLOR_SCALE = 0.56;
 
     private static final double FRAME_TIME_GAMMA = 0.05;
 
     private static SVector baseColor = new SVector(DEFAULT_UI_COLORS[0]);
+
+    public static boolean darkMode = false;
 
     protected Window window;
 
@@ -239,30 +257,75 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
     }
 
     public static SVector getBackgroundNormalColor() {
-        return new SVector(baseColor).scale(BACKGROUND_NORMAL_COLOR_SCALE);
+        return getUIColor(UIColor.BACKGROUND_NORMAL);
     }
 
     public static SVector getBackgroundHighlightColor() {
-        return new SVector(baseColor).scale(BACKGROUND_HIGHLIGHT_COLOR_SCALE);
+        return getUIColor(UIColor.BACKGROUND_HIGHLIGHT);
     }
 
     public static SVector getBackgroundHighlightColor2() {
-        return new SVector(baseColor).scale(BACKGROUND_HIGHLIGHT_COLOR_2_SCALE);
+        return getUIColor(UIColor.BACKGROUND_HIGHLIGHT_2);
     }
 
     public static SVector getOutlineNormalColor() {
-        return new SVector(baseColor).scale(OUTLINE_NORMAL_COLOR_SCALE);
+        return getUIColor(UIColor.OUTLINE_NORMAL);
     }
 
     public static SVector getOutlineHighlightColor() {
-        return new SVector(baseColor).scale(OUTLINE_HIGHLIGHT_COLOR_SCALE);
+        return getUIColor(UIColor.OUTLINE_HIGHLIGHT);
     }
 
     public static SVector getSeparatorColor() {
-        return new SVector(baseColor).scale(SEPARATOR_COLOR_SCALE);
+        return getUIColor(UIColor.SEPARATOR);
+    }
+
+    private static SVector getUIColor(UIColor colorType) {
+        double brightness = colorType.brightness;
+
+        // TODO continue: figure out good colors for light mode
+        // reference:
+        // https://images.minitool.com/de.minitool.com/images/uploads/news/2022/02/microsoft-paint-herunterladen-installieren/microsoft-paint-herunterladen-installieren-1.png
+        brightness = switch (colorType) {
+            case BACKGROUND_NORMAL -> 0.8;
+            case BACKGROUND_HIGHLIGHT -> 0.65;
+            case BACKGROUND_HIGHLIGHT_2 -> 0.6;
+            case OUTLINE_NORMAL -> 0.3;
+            case OUTLINE_HIGHLIGHT -> 0.3;
+            case SEPARATOR -> 0.56;
+        };
+        // if (!darkMode) {
+        // brightness = 1 - brightness;
+        // }
+
+        return new SVector(baseColor).scale(brightness);
     }
 
     public void setDialogType(int dialogType) {
         this.dialogType = dialogType;
     }
+
+    // public static SVector getBackgroundNormalColor() {
+    // return new SVector(baseColor).scale(BACKGROUND_NORMAL_COLOR_SCALE);
+    // }
+
+    // public static SVector getBackgroundHighlightColor() {
+    // return new SVector(baseColor).scale(BACKGROUND_HIGHLIGHT_COLOR_SCALE);
+    // }
+
+    // public static SVector getBackgroundHighlightColor2() {
+    // return new SVector(baseColor).scale(BACKGROUND_HIGHLIGHT_COLOR_2_SCALE);
+    // }
+
+    // public static SVector getOutlineNormalColor() {
+    // return new SVector(baseColor).scale(OUTLINE_NORMAL_COLOR_SCALE);
+    // }
+
+    // public static SVector getOutlineHighlightColor() {
+    // return new SVector(baseColor).scale(OUTLINE_HIGHLIGHT_COLOR_SCALE);
+    // }
+
+    // public static SVector getSeparatorColor() {
+    // return new SVector(baseColor).scale(SEPARATOR_COLOR_SCALE);
+    // }
 }

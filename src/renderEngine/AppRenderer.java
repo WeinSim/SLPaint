@@ -83,7 +83,7 @@ public class AppRenderer<T extends App> {
             uiMaster.popMatrix();
         }
         if (element instanceof UIText text) {
-            uiMaster.fill(new SVector(1, 1, 1));
+            uiMaster.fill(App.darkMode ? new SVector(1, 1, 1) : new SVector(0, 0, 0));
             uiMaster.text(text.getText(), position);
         }
 

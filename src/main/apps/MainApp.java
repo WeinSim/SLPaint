@@ -25,7 +25,7 @@ import sutil.ui.UIContainer;
 import ui.MainUI;
 
 /**
- * TODO: continue: light mode / dark mode
+ * TODO: continue: light mode
  * App:
  * * When parent app closes, shouldren should also close
  * * Dialogs
@@ -322,10 +322,6 @@ public final class MainApp extends App {
 
         // update image texture
         image.updateOpenGLTexture();
-    }
-
-    @Override
-    public void finish() {
     }
 
     public void selectColor(int color) {

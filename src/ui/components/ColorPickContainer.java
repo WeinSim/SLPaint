@@ -177,16 +177,11 @@ public class ColorPickContainer extends UIContainer {
     }
 
     private UIContainer createRow3() {
-        // UIContainer row3 = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
-        // row3.noOutline();
-        // row3.setFillSize();
         UIButton customColor = new UIButton("Add to Custom Colors",
                 () -> colorPicker.getCloseAction().set(colorPicker.getRGB()));
         customColor.setAlignment(UIContainer.CENTER);
         customColor.setFillSize();
         return customColor;
-        // row3.add(customColor);
-        // return row3;
     }
 
     @Override
