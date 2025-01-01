@@ -1,7 +1,7 @@
 package sutil.ui;
 
-import main.apps.App;
 import sutil.math.SVector;
+import ui.Colors;
 
 public class UISeparator extends UIContainer {
 
@@ -31,7 +31,7 @@ public class UISeparator extends UIContainer {
             setFillSize();
             zeroMargin();
 
-            style.setOutlineColorGetter(() -> App.getSeparatorColor());
+            style.setOutlineColorGetter(() -> Colors.getSeparatorColor());
         }
     }
 

@@ -8,6 +8,7 @@ import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIText;
 import ui.AppUI;
+import ui.Colors;
 import ui.components.HueSatField;
 import ui.components.LightnessScaleContainer.LightnessScale;
 
@@ -31,7 +32,10 @@ public class AppRenderer<T extends App> {
     }
 
     protected void setDefaultBGColor() {
-        SVector bgColor = App.getBackgroundNormalColor();
+        setBGColor(Colors.getBackgroundNormalColor());
+    }
+
+    protected void setBGColor(SVector bgColor) {
         GL11.glClearColor((float) bgColor.x, (float) bgColor.y, (float) bgColor.z, 1);
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
     }
@@ -83,7 +87,7 @@ public class AppRenderer<T extends App> {
             uiMaster.popMatrix();
         }
         if (element instanceof UIText text) {
-            uiMaster.fill(App.darkMode ? new SVector(1, 1, 1) : new SVector(0, 0, 0));
+            uiMaster.fill(Colors.getTextColor());
             uiMaster.text(text.getText(), position);
         }
 

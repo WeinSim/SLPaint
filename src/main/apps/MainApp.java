@@ -25,8 +25,21 @@ import sutil.ui.UIContainer;
 import ui.MainUI;
 
 /**
- * TODO: continue: light mode
+ * TODO:
  * App:
+ * * Selection
+ * * * Clipboard (Copy / Paste / Cut)
+ * * Maybe turn the ColorPickerApp into a togglable side panel?
+ * * Resizing
+ * * * Resize handles
+ * * * Selection resizing
+ * * * Selection Ctrl+Shift+X
+ * * Undo / redo
+ * * Pencil: different sizes
+ * * Text tool
+ * * Line tool
+ * * Transparency
+ * * Recognize remapping from CAPS_LOCK to ESCAPE
  * * When parent app closes, shouldren should also close
  * * Dialogs
  * * * Save dialog
@@ -34,22 +47,6 @@ import ui.MainUI;
  * * * * there are unsaved changes
  * * * Only one at a time
  * * Keep track of all file locks in one centralized place to avoid leaking
- * * Selection
- * * * Clipboard (Copy / Paste / Cut)
- * * * Transparent selection (checkbox)
- * * Resizing
- * * * Resize button
- * * * Resize handles
- * * * Selection resizing
- * * * Selection Ctrl+Shift+X
- * * Undo / redo
- * * Pencil: different sizes
- * * Text tool
- * * Transparency?
- * * Settings > UI Base Color
- * * * When clicked: color picker, default colors, custom colors
- * * Recognize remapping from CAPS_LOCK to ESCAPE
- * * Maybe turn the ColorPickerApp into a togglable side panel?
  * UI:
  * * Light theme / dark theme
  * * General design: containers with separators should double their margin!
@@ -125,6 +122,8 @@ public final class MainApp extends App {
     private ColorButtonArray customColorButtonArray;
     // private CustomColorContainer customColorContainer;
 
+    private boolean transparentSelection;
+
     private SVector imageTranslation;
     private int imageZoomLevel;
     private boolean draggingImage;
@@ -157,8 +156,10 @@ public final class MainApp extends App {
         activeTool = ImageTool.PENCIL;
         prevTool = ImageTool.PENCIL;
 
-        primaryColor = 0;
-        secondaryColor = -1;
+        primaryColor = SUtil.toARGB(0);
+        secondaryColor = SUtil.toARGB(255);
+
+        transparentSelection = false;
     }
 
     @Override
@@ -497,6 +498,14 @@ public final class MainApp extends App {
             prevTool = activeTool;
         }
         activeTool = tool;
+    }
+
+    public boolean isTransparentSelection() {
+        return transparentSelection;
+    }
+
+    public void toggleTransparentSelection() {
+        transparentSelection = !transparentSelection;
     }
 
     public void setSecondaryColor(int secondaryColor) {

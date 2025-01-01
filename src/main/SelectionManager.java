@@ -30,8 +30,8 @@ public class SelectionManager {
 
     public void update() {
         SVector mousePos = app.getMouseImagePosVec();
-        int mouseX = (int) Math.floor(mousePos.x),
-                mouseY = (int) Math.floor(mousePos.y);
+        int mouseX = (int) Math.round(mousePos.x),
+                mouseY = (int) Math.round(mousePos.y);
         switch (phase) {
             case NONE, IDLE -> {
             }
@@ -55,8 +55,11 @@ public class SelectionManager {
             return;
         }
 
-        startX = Math.min(Math.max(0, app.getMouseImageX()), app.getImage().getWidth());
-        startY = Math.min(Math.max(0, app.getMouseImageY()), app.getImage().getHeight());
+        SVector mousePos = app.getMouseImagePosVec();
+        int mouseX = (int) Math.round(mousePos.x),
+                mouseY = (int) Math.round(mousePos.y);
+        startX = Math.min(Math.max(0, mouseX), app.getImage().getWidth());
+        startY = Math.min(Math.max(0, mouseY), app.getImage().getHeight());
 
         phase = CREATING;
     }
@@ -82,13 +85,14 @@ public class SelectionManager {
     }
 
     private void createSubImage() {
-        selection = new Image(app.getImage().getSubImage(x, y, width, height));
+        selection = new Image(app.getImage().getSubImage(x, y, width, height,
+                app.isTransparentSelection() ? app.getSecondaryColor() : null));
         app.getImage().setPixels(x, y, width, height, app.getSecondaryColor());
     }
 
     public void selectEverything() {
         // if (phase != NONE) {
-        //     return;
+        // return;
         // }
         cancel();
         x = 0;

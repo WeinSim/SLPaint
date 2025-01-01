@@ -25,7 +25,7 @@ public class Image {
     }
 
     private void init(BufferedImage image) {
-        bufferedImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+        bufferedImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
         bufferedImage.getGraphics().drawImage(image, 0, 0, null);
 
         textureID = GL11.glGenTextures();
@@ -58,7 +58,8 @@ public class Image {
                 buffer.put((byte) ((pixel >> 16) & 0xFF));
                 buffer.put((byte) ((pixel >> 8) & 0xFF));
                 buffer.put((byte) (pixel & 0xFF));
-                buffer.put((byte) 0xFF);
+                // buffer.put((byte) 0xFF);
+                buffer.put((byte) ((pixel >> 24) & 0xFF));
             }
         }
 
@@ -76,23 +77,24 @@ public class Image {
         dirty = false;
     }
 
-    public BufferedImage getSubImage(int startX, int startY, int width, int height) {
+    public BufferedImage getSubImage(int startX, int startY, int width, int height, Integer backgroundColor) {
         int[] oldPixels = bufferedImage.getRGB(startX, startY, width, height, null, 0, getWidth());
         int[] newPixels = new int[width * height];
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                newPixels[y * width + x] = oldPixels[y * getWidth() + x];
+                int oldColor = oldPixels[y * getWidth() + x];
+                newPixels[y * width + x] = (backgroundColor != null && oldColor == backgroundColor) ? 0 : oldColor;
             }
         }
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         image.setRGB(0, 0, width, height, newPixels, 0, width);
         return image;
     }
 
     public int getPixel(int x, int y) {
-        int[] array = new int[3];
+        int[] array = new int[4];
         bufferedImage.getRaster().getPixel(x, y, array);
-        return SUtil.toARGB(array[0], array[1], array[2]);
+        return SUtil.toARGB(array[0], array[1], array[2], array[3]);
     }
 
     public void setSubImage(BufferedImage image, int x, int y) {
@@ -105,14 +107,25 @@ public class Image {
         if (w <= 0 || h <= 0) {
             return;
         }
-        int[] pixels = new int[3 * w * h];
+        int[] pixels = new int[4 * w * h];
         int index = 0;
         for (int yoff = 0; yoff < h; yoff++) {
             for (int xoff = 0; xoff < w; xoff++) {
-                int color = image.getRGB(xoff - x + x0, yoff - y + y0);
-                pixels[index++] = SUtil.red(color);
-                pixels[index++] = SUtil.green(color);
-                pixels[index++] = SUtil.blue(color);
+                int dest = bufferedImage.getRGB(x0 + xoff, y0 + yoff);
+                int destRed = SUtil.red(dest),
+                        destGreen = SUtil.green(dest),
+                        destBlue = SUtil.blue(dest);
+                double destAlpha = SUtil.alpha(dest) / 255.0;
+                int source = image.getRGB(xoff - x + x0, yoff - y + y0);
+                int sourceRed = SUtil.red(source),
+                        sourceGreen = SUtil.green(source),
+                        sourceBlue = SUtil.blue(source);
+                double sourceAlpha = SUtil.alpha(source) / 255.0;
+
+                pixels[index++] = (int) (destRed * (1 - sourceAlpha) + sourceRed * sourceAlpha);
+                pixels[index++] = (int) (destGreen * (1 - sourceAlpha) + sourceGreen * sourceAlpha);
+                pixels[index++] = (int) (destBlue * (1 - sourceAlpha) + sourceBlue * sourceAlpha);
+                pixels[index++] = (int) (255 * (1 - (1 - destAlpha) * (1 - sourceAlpha)));
             }
         }
 
@@ -129,7 +142,8 @@ public class Image {
         int[] colorArray = {
                 SUtil.red(color),
                 SUtil.green(color),
-                SUtil.blue(color)
+                SUtil.blue(color),
+                SUtil.alpha(color)
         };
         bufferedImage.getRaster().setPixel(x, y, colorArray);
         setDirty(x, y);
@@ -139,11 +153,12 @@ public class Image {
         if (x < 0 || x + width > getWidth() || y < 0 || y + height > getHeight()) {
             return;
         }
-        int[] array = new int[3 * width * height];
+        int[] array = new int[4 * width * height];
         int r = SUtil.red(color);
         int g = SUtil.green(color);
         int b = SUtil.blue(color);
-        int[] colorArray = { r, g, b };
+        int a = SUtil.alpha(color);
+        int[] colorArray = { r, g, b, a };
         for (int i = 0; i < array.length; i++) {
             array[i] = colorArray[i % colorArray.length];
         }

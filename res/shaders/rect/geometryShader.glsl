@@ -14,12 +14,12 @@ uniform vec2 position;
 uniform vec2 size;
 
 uniform vec3 fill;
-uniform int doFill;
+uniform int fillMode;
 uniform vec3 stroke;
-uniform int doStroke;
+uniform int strokeMode;
 uniform float strokeWeight;
-uniform int doCheckerboardStroke;
-uniform vec3 checkerboardStroke;
+uniform vec3 checkerboardColor1;
+uniform vec3 checkerboardColor2;
 
 uniform mat3 viewMatrix;
 uniform mat3 uiMatrix;
@@ -32,19 +32,38 @@ const vec2[4] cornerOffsets = vec2[4](
 );
 
 void main(void) {
-    applyCheckerboard = 0;
-    if (doFill > 0.5) {
+    if (fillMode > 0) {
+        if (fillMode == 1) {
+            // normal fill
+            applyCheckerboard = 0;
+            color = vec4(fill, 1.0);
+        } else {
+            // checkerboard fill
+            applyCheckerboard = 1;
+            color = vec4(checkerboardColor1, 1.0);
+            color2 = vec4(checkerboardColor2, 1.0);
+        }
+
         for (int i = 0; i < 4; i++) {
-            vec3 screenPos = viewMatrix * uiMatrix * vec3((position + cornerOffsets[i] * size), 1.0);
+            relativePos = cornerOffsets[i] * size;
+            vec3 screenPos = viewMatrix * uiMatrix * vec3(position + cornerOffsets[i] * size, 1.0);
             color = vec4(fill, 1.0);
             gl_Position = vec4(screenPos.xy, 0, 1);
             EmitVertex();
         }
         EndPrimitive();
     }
-    if (doStroke > 0.5) {
-        applyCheckerboard = doCheckerboardStroke;
-        color2 = vec4(checkerboardStroke, 1.0);
+    if (strokeMode > 0) {
+        if (strokeMode == 1) {
+            // normal stroke
+            applyCheckerboard = 0;
+            color = vec4(stroke, 1.0);
+        } else {
+            // checkerboard stroke
+            applyCheckerboard = 1;
+            color = vec4(checkerboardColor1, 1.0);
+            color2 = vec4(checkerboardColor2, 1.0);
+        }
 
         float[5] distsAlongEdge = float[5](
             0,
@@ -61,7 +80,6 @@ void main(void) {
             }
             vec2 offset = cornerOffsets[offsetIndex];
             vec2 basePos = position + offset * size;
-            color = vec4(stroke, 1.0);
 
             vec2 swOffset = (offset - 0.5) * strokeWeight;
 

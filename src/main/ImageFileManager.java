@@ -32,7 +32,7 @@ public class ImageFileManager {
     }
 
     private Image createNewImage(int width, int height) {
-        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Image image = new Image(img);
         image.setPixels(0, 0, width, height, app.getSecondaryColor());
         return image;

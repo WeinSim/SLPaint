@@ -11,6 +11,7 @@ import sutil.ui.UISetter;
 import sutil.ui.UIStyle;
 import sutil.ui.UIText;
 import sutil.ui.UITextInput;
+import ui.Colors;
 
 public class ColorPickContainer extends UIContainer {
 
@@ -82,7 +83,7 @@ public class ColorPickContainer extends UIContainer {
         UIContainer colorPreview = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         colorPreview.zeroMargin().noOutline();
         UIContainer colorBox = new UIContainer(UIContainer.HORIZONTAL, 0);
-        colorBox.setStyle(new UIStyle(() -> null, () -> new SVector(1, 1, 1), () -> 4.0));
+        colorBox.setStyle(new UIStyle(() -> null, () -> Colors.getTextColor(), () -> 4.0));
         colorBox.zeroMargin().zeroPadding().noOutline();
         for (int i = 0; i < 2; i++) {
             UIContainer c = new UIContainer(0, 0);
@@ -173,6 +174,31 @@ public class ColorPickContainer extends UIContainer {
             rgbInput.add(colorRow);
         }
         row2.add(rgbInput);
+
+        // TODO continue: alpha input (make it togglable. ui base color should not have
+        // an alpha component)
+        // UIGetter<String> textUpdater = () ->
+        // Integer.toString(SUtil.alpha(colorPicker.getRGB()));
+        // UISetter<String> valueUpdater = (String s) -> {
+        // int component = 0;
+        // if (s.length() > 0) {
+        // try {
+        // component = Integer.parseInt(s);
+        // } catch (NumberFormatException e) {
+        // return;
+        // }
+        // }
+        // component = Math.min(Math.max(0, component), 255);
+        // int color = colorPicker.getRGB();
+        // int shiftAmount = 24;
+        // int mask = 0xFF << shiftAmount;
+        // color &= ~mask;
+        // color |= component << shiftAmount;
+        // colorPicker.setRGB(color);
+        // };
+        // UITextInput alphaInput = new UITextInput(textUpdater, valueUpdater);
+        // row2.add(alphaInput);
+
         return row2;
     }
 

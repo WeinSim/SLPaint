@@ -1,10 +1,8 @@
 package ui;
 
 import main.ColorPicker;
-import main.apps.App;
 import main.apps.MainApp;
 import main.apps.SettingsApp;
-import sutil.math.SVector;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UISeparator;
@@ -28,6 +26,14 @@ public class SettingsUI extends AppUI<SettingsApp> {
         root.setZeroPadding(false);
         root.setMinimalSize();
 
+        root.add(createBaseColor());
+
+        root.add(createDarkModeToggle());
+
+        root.add(new UIButton("Done", () -> app.getWindow().requestClose()));
+    }
+
+    private UIContainer createBaseColor() {
         UIContainer baseColor = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         baseColor.setFillSize();
 
@@ -39,7 +45,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         gap.noOutline();
         // gap.setMaximalSize();
         baseColorHeading.add(gap);
-        ColorButton baseColorButton = new ColorButton(() -> MainApp.toInt(App.getBaseColor()),
+        ColorButton baseColorButton = new ColorButton(() -> MainApp.toInt(Colors.getBaseColor()),
                 MainUI.COLOR_BUTTON_SIZE);
         baseColorHeading.add(baseColorButton);
         ColorPicker colorPicker = app.getColorPicker();
@@ -61,10 +67,17 @@ public class SettingsUI extends AppUI<SettingsApp> {
         defaultColors.zeroMargin().noOutline();
         UIContainer defaultColorContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         defaultColorContainer.zeroMargin().noOutline();
-        for (SVector color : App.DEFAULT_UI_COLORS) {
-            int colorInt = MainApp.toInt(color);
-            ColorButton button = new ColorButton(() -> colorInt, MainUI.COLOR_BUTTON_SIZE);
-            button.setClickAction(() -> app.setUIColor(colorInt));
+        // for (SVector color : Colors.DEFAULT_UI_COLORS_DARK) {
+        //     int colorInt = MainApp.toInt(color);
+        //     ColorButton button = new ColorButton(() -> colorInt, MainUI.COLOR_BUTTON_SIZE);
+        //     button.setClickAction(() -> app.setUIColor(colorInt));
+        //     defaultColorContainer.add(button);
+        // }
+        int numDefaultColors = Colors.getNumDefaultColors();
+        for (int i = 0; i < numDefaultColors; i++) {
+            final int j = i;
+            ColorButton button = new ColorButton(() -> MainApp.toInt(Colors.getDefaultColors()[j]), MainUI.COLOR_BUTTON_SIZE);
+            button.setClickAction(() -> app.setUIColor(MainApp.toInt(Colors.getDefaultColors()[j])));
             defaultColorContainer.add(button);
         }
         defaultColors.add(defaultColorContainer);
@@ -101,8 +114,17 @@ public class SettingsUI extends AppUI<SettingsApp> {
             }
         }));
 
-        root.add(baseColor);
+        return baseColor;
+    }
 
-        root.add(new UIButton("Done", () -> app.getWindow().requestClose()));
+    private UIContainer createDarkModeToggle() {
+        UIContainer darkModeToggle = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+
+        UIButton button = new UIButton("", () -> app.toggleDarkMode());
+        button.setText(() -> String.format("Mode: %s", Colors.isDarkMode() ? "Dark" : "Light"));
+
+        darkModeToggle.add(button);
+
+        return darkModeToggle;
     }
 }

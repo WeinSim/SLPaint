@@ -24,6 +24,7 @@ public class ColorPicker {
     private double hue;
     private double saturation;
     private double lightness;
+    private double alpha;
 
     public ColorPicker(App app, int initialColor, UISetter<Integer> closeAction) {
         this.app = app;
@@ -62,7 +63,7 @@ public class ColorPicker {
 
     private void updateRGB() {
         SVector v = SUtil.hslToRGB(hue, saturation, lightness);
-        rgb = SUtil.toARGB(v.x, v.y, v.z);
+        rgb = SUtil.toARGB(v.x, v.y, v.z, alpha);
     }
 
     public void setHue(double hue) {
@@ -101,6 +102,7 @@ public class ColorPicker {
         hue = hsl.x;
         saturation = hsl.y;
         lightness = hsl.z;
+        alpha = SUtil.alpha(rgb);
 
         // updateCursorPositions();
     }

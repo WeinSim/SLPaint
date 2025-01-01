@@ -47,9 +47,9 @@ public abstract class AppUI<T extends App> extends UIPanel{
     }
 
     public static <T extends UIElement> T setButtonStyle2(T element, UIGetter<Boolean> selectedGetter) {
-        UIGetter<SVector> backgroundColorGetter = () -> selectedGetter.get() ? App.getBackgroundHighlightColor2()
+        UIGetter<SVector> backgroundColorGetter = () -> selectedGetter.get() ? Colors.getBackgroundHighlightColor2()
                 : null;
-        UIGetter<SVector> outlineColorGetter = () -> element.mouseAbove() ? App.getOutlineHighlightColor() : null;
+        UIGetter<SVector> outlineColorGetter = () -> element.mouseAbove() ? Colors.getOutlineHighlightColor() : null;
         UIGetter<Double> strokeWeightGetter = () -> 1.0;
         element.setStyle(new UIStyle(backgroundColorGetter, outlineColorGetter, strokeWeightGetter));
         return element;
@@ -84,21 +84,21 @@ public abstract class AppUI<T extends App> extends UIPanel{
 
     @Override
     public SVector getBackgroundNormalColor() {
-        return App.getBackgroundNormalColor();
+        return Colors.getBackgroundNormalColor();
     }
 
     @Override
     public SVector getBackgroundHighlightColor() {
-        return App.getBackgroundHighlightColor();
+        return Colors.getBackgroundHighlightColor();
     }
 
     @Override
     public SVector getOutlineNormalColor() {
-        return App.getOutlineNormalColor();
+        return Colors.getOutlineNormalColor();
     }
 
     @Override
     public SVector getOutlineHighlightColor() {
-        return App.getOutlineHighlightColor();
+        return Colors.getOutlineHighlightColor();
     }
 }

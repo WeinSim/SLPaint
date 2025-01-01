@@ -18,6 +18,8 @@ public class UIRenderMaster {
     public static final int FONT_TEXTURE_WIDTH = 256;
     public static final int FONT_TEXTURE_HEIGHT = 512;
 
+    private static final int NONE = 0, NORMAL = 1, CHECKERBOARD = 2;
+
     private App app;
 
     private ShaderProgram rectShader;
@@ -30,13 +32,15 @@ public class UIRenderMaster {
     private LinkedList<Matrix3f> uiMatrixStack;
 
     private SVector fill;
-    private boolean doFill;
+    private int fillMode;
+
     private SVector stroke;
-    private boolean doStroke;
+    private int strokeMode;
     private double strokeWeight;
-    private boolean doCheckerbaordStroke;
-    private SVector checkerboardStroke;
-    private double checkerboardStrokeSize;
+
+    private double checkerboardSize;
+    private SVector[] checkerboardColors;
+
     private TextFont textFont;
     private double textSize;
     private boolean clip;
@@ -58,9 +62,14 @@ public class UIRenderMaster {
 
         uiMatrixStack = new LinkedList<>();
         textFont = null;
+
         fill = new SVector();
+        fillMode = NONE;
         stroke = new SVector();
-        checkerboardStroke = new SVector();
+        strokeMode = NONE;
+
+        checkerboardColors = new SVector[] { new SVector(), new SVector() };
+
         clip = false;
         clipPosition = new SVector();
         clipSize = new SVector();
@@ -88,13 +97,13 @@ public class UIRenderMaster {
         rectShader.loadUniform("position", position);
         rectShader.loadUniform("size", size);
         rectShader.loadUniform("fill", fill);
-        rectShader.loadUniform("doFill", doFill ? 1 : 0);
+        rectShader.loadUniform("fillMode", fillMode);
         rectShader.loadUniform("stroke", stroke);
-        rectShader.loadUniform("doStroke", doStroke ? 1 : 0);
+        rectShader.loadUniform("strokeMode", strokeMode);
         rectShader.loadUniform("strokeWeight", strokeWeight);
-        rectShader.loadUniform("doCheckerboardStroke", doCheckerbaordStroke ? 1 : 0);
-        rectShader.loadUniform("checkerboardStroke", checkerboardStroke);
-        rectShader.loadUniform("checkerboardStrokeSize", checkerboardStrokeSize);
+        rectShader.loadUniform("checkerboardColor1", checkerboardColors[0]);
+        rectShader.loadUniform("checkerboardColor2", checkerboardColors[1]);
+        rectShader.loadUniform("checkerboardSize", checkerboardSize);
         rectShader.loadUniform("uiMatrix", uiMatrix);
         rectShader.loadUniform("viewMatrix", createViewMatrix());
 
@@ -128,7 +137,7 @@ public class UIRenderMaster {
         textShader.loadUniform("viewMatrix", viewMatrix);
         textShader.loadUniform("transformationMatrix", uiMatrix);
         textShader.loadUniform("fill", fill);
-        textShader.loadUniform("doFill", doFill ? 1 : 0);
+        textShader.loadUniform("doFill", fillMode == NONE ? 0 : 1);
 
         GL20.glEnableVertexAttribArray(0);
         GL20.glEnableVertexAttribArray(1);
@@ -144,6 +153,8 @@ public class UIRenderMaster {
 
     public void image(int textureID, SVector position, SVector size) {
         activateShader(imageShader);
+
+        // TODO continue: activate alpha blending
 
         pushMatrix();
         translate(position);
@@ -294,34 +305,38 @@ public class UIRenderMaster {
 
     public void fill(SVector fill) {
         this.fill.set(fill);
-        doFill = true;
+        fillMode = NORMAL;
     }
 
     public void noFill() {
-        doFill = false;
+        fillMode = NONE;
+    }
+
+    public void checkerboardFill(SVector color1, SVector color2, double size) {
+        fillMode = CHECKERBOARD;
+        checkerboardColors[0] = color1;
+        checkerboardColors[1] = color2;
+        checkerboardSize = size;
     }
 
     public void stroke(SVector stroke) {
         this.stroke.set(stroke);
-        doStroke = true;
+        strokeMode = NORMAL;
     }
 
     public void noStroke() {
-        doStroke = false;
+        strokeMode = NONE;
     }
 
     public void strokeWeight(double strokeWeight) {
         this.strokeWeight = strokeWeight;
     }
 
-    public void checkerboardStroke(SVector color, double size) {
-        checkerboardStroke.set(color);
-        checkerboardStrokeSize = size;
-        doCheckerbaordStroke = true;
-    }
-
-    public void noCheckerboardStroke() {
-        doCheckerbaordStroke = false;
+    public void checkerboardStroke(SVector color1, SVector color2, double size) {
+        strokeMode = CHECKERBOARD;
+        checkerboardColors[0] = color1;
+        checkerboardColors[1] = color2;
+        checkerboardSize = size;
     }
 
     public void textFont(TextFont font) {

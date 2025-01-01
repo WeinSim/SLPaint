@@ -4,6 +4,7 @@ import main.Image;
 import main.SelectionManager;
 import main.apps.MainApp;
 import sutil.math.SVector;
+import ui.Colors;
 
 public class MainAppRenderer extends AppRenderer<MainApp> {
 
@@ -13,7 +14,8 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
 
     @Override
     public void render() {
-        setDefaultBGColor();
+        // setDefaultBGColor();
+        setBGColor(Colors.getCanvasColor());
 
         uiMaster.start();
 
@@ -21,8 +23,15 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
         double zoom = app.getImageZoom();
         uiMaster.translate(translation);
         uiMaster.scale(zoom);
+
         Image image = app.getImage();
-        uiMaster.image(image.getTextureID(), new SVector(), new SVector(image.getWidth(), image.getHeight()));
+        int width = image.getWidth(), height = image.getHeight();
+        uiMaster.strokeWeight(0);
+        uiMaster.noStroke();
+        uiMaster.checkerboardFill(new SVector(1, 1, 1), new SVector(1, 1, 1).scale(0.8), 10);
+        SVector imageSize = new SVector(width, height);
+        uiMaster.rect(new SVector(), imageSize);
+        uiMaster.image(image.getTextureID(), new SVector(), imageSize);
 
         SelectionManager selectionManager = app.getSelectionManager();
         Image selection = selectionManager.getSelection();
@@ -55,12 +64,10 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
                 w = selectionManager.getWidth();
                 h = selectionManager.getHeight();
             }
-            uiMaster.stroke(new SVector());
+            uiMaster.checkerboardStroke(new SVector(), new SVector(1, 1, 1), 15);
             uiMaster.strokeWeight(2);
-            uiMaster.checkerboardStroke(new SVector(1, 1, 1), 15);
             uiMaster.noFill();
             uiMaster.rect(new SVector(x, y).scale(zoom), new SVector(w, h).scale(app.getImageZoom()));
-            uiMaster.noCheckerboardStroke();
         }
 
         renderUI();

@@ -5,12 +5,13 @@ import renderEngine.Window;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
 import sutil.ui.UIStyle;
+import ui.Colors;
 
 public class LightnessScaleContainer extends UIContainer {
 
     private Slider slider1, slider2;
 
-    private static final UIStyle SLIDER_STYLE = new UIStyle(() -> new SVector(1, 1, 1), () -> null, () -> 1.0);
+    private static final UIStyle SLIDER_STYLE = new UIStyle(() -> Colors.getTextColor(), () -> null, () -> 1.0);
 
     public LightnessScaleContainer(ColorPicker colorPicker) {
         super(HORIZONTAL, TOP);

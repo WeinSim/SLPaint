@@ -28,8 +28,13 @@ public class MainUI extends AppUI<MainApp> {
 
     @Override
     protected void init() {
-        UIContainer mainField = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
-        mainField.zeroMargin().zeroPadding().noOutline();
+        root.setOrientation(UIContainer.VERTICAL);
+        root.setAlignment(UIContainer.LEFT);
+        root.zeroMargin().zeroPadding().noOutline();
+
+        // UIContainer mainField = new UIContainer(UIContainer.VERTICAL,
+        // UIContainer.LEFT);
+        // mainField.zeroMargin().zeroPadding().noOutline();
 
         UIContainer topRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER) {
             @Override
@@ -38,7 +43,7 @@ public class MainUI extends AppUI<MainApp> {
             }
         };
         topRow.setFillSize();
-        topRow.withBackground();
+        topRow.withBackground().noOutline();
 
         UIContainer settings = addTopRowSection(topRow, "Settings");
         settings.add(new UIButton("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG)));
@@ -123,12 +128,29 @@ public class MainUI extends AppUI<MainApp> {
         newColor.setClickAction(() -> app.showDialog(MainApp.NEW_COLOR_DIALOG));
         topRow.add(newColor);
 
-        mainField.add(topRow);
+        // mainField.add(topRow);
+        root.add(topRow);
 
-        ImageCanvas canvas = new ImageCanvas(UIContainer.HORIZONTAL, UIContainer.BOTTOM, app);
+        ImageCanvas canvas = new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, app);
         canvas.noOutline();
+        root.add(canvas);
+
+        UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
+        sidePanel.withBackground().noOutline();
+        UIButton transparentSelection = new UIButton("", () -> app.toggleTransparentSelection());
+        transparentSelection.setText(() -> String.format(
+                "Transparent selection: %s",
+                app.isTransparentSelection() ? "On" : "Off"));
+        sidePanel.add(transparentSelection);
+        // ColorPicker cp = new ColorPicker(app, 0, (Integer _) -> {
+        // });
+        // sidePanel.add(new ColorPickContainer(cp));
+        canvas.add(sidePanel);
+
         UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.BOTTOM);
-        statusBar.zeroMargin().noOutline().withBackground();
+        // statusBar.zeroMargin().noOutline().withBackground();
+        statusBar.withBackground().noOutline();
+        statusBar.setFillSize();
         statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate())));
         statusBar.add(new UISeparator());
         statusBar.add(new UILabel(() -> {
@@ -173,10 +195,15 @@ public class MainUI extends AppUI<MainApp> {
             }
             return ret;
         }));
-        canvas.add(statusBar);
-        mainField.add(canvas);
+        UIContainer fill = new UIContainer(0, 0);
+        fill.noOutline().noBackground();
+        fill.setMaximalSize();
+        statusBar.add(fill);
+        // canvas.add(statusBar);
+        // mainField.add(canvas);
+        root.add(statusBar);
 
-        root.add(mainField);
+        // root.add(mainField);
     }
 
     private UIContainer addTopRowSection(UIContainer topRow, String name) {

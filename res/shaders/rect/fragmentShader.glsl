@@ -8,7 +8,7 @@ in vec2 relativePos;
 
 out vec4 outColor;
 
-uniform float checkerboardStrokeSize;
+uniform float checkerboardSize;
 uniform vec2 size;
 uniform float strokeWeight;
 
@@ -26,8 +26,8 @@ void main(void) {
         if (relPosClip.y > height) {
             relPosClip.y -= height;
         }
-        int xComp = int(relPosClip.x / checkerboardStrokeSize);
-        int yComp = int(relPosClip.y / checkerboardStrokeSize);
+        int xComp = int(relPosClip.x / checkerboardSize);
+        int yComp = int(relPosClip.y / checkerboardSize);
         outColor = (xComp + yComp) % 2 == 0 ? color : color2;
 
         // int segment = int(abs(distAlongEdge) / checkerboardStrokeSize);

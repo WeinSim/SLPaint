@@ -6,6 +6,13 @@ import sutil.math.SVector;
 
 public class UILabel extends UIContainer {
 
+    /**
+     * TODO
+     * As it is currently implemented, there is a bug with the textUpdater:
+     * When a UILabel is initialized with a textUpdater, then calling
+     * setText(String) will not work because the textUpdater is still in action.
+     * You would have to call {@code setText((UIGetter<String>) null)} separately.
+     */
     private UIGetter<String> textUpdater;
 
     private UILabel() {
@@ -60,5 +67,9 @@ public class UILabel extends UIContainer {
         for (String line : text) {
             add(new UIText(line));
         }
+    }
+
+    public void setText(UIGetter<String> textUpdater) {
+        this.textUpdater = textUpdater;
     }
 }
