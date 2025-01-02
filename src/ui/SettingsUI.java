@@ -7,9 +7,9 @@ import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
-import ui.components.ColorButton;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
+import ui.components.UIColorElement;
 
 public class SettingsUI extends AppUI<SettingsApp> {
 
@@ -45,8 +45,8 @@ public class SettingsUI extends AppUI<SettingsApp> {
         gap.noOutline();
         // gap.setMaximalSize();
         baseColorHeading.add(gap);
-        ColorButton baseColorButton = new ColorButton(() -> MainApp.toInt(Colors.getBaseColor()),
-                MainUI.COLOR_BUTTON_SIZE);
+        UIColorElement baseColorButton = new UIColorElement(() -> MainApp.toInt(Colors.getBaseColor()),
+                MainUI.COLOR_BUTTON_SIZE, true);
         baseColorHeading.add(baseColorButton);
         ColorPicker colorPicker = app.getColorPicker();
         // baseColorRow1.add(new UIButton("Reset", () ->
@@ -68,15 +68,17 @@ public class SettingsUI extends AppUI<SettingsApp> {
         UIContainer defaultColorContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         defaultColorContainer.zeroMargin().noOutline();
         // for (SVector color : Colors.DEFAULT_UI_COLORS_DARK) {
-        //     int colorInt = MainApp.toInt(color);
-        //     ColorButton button = new ColorButton(() -> colorInt, MainUI.COLOR_BUTTON_SIZE);
-        //     button.setClickAction(() -> app.setUIColor(colorInt));
-        //     defaultColorContainer.add(button);
+        // int colorInt = MainApp.toInt(color);
+        // ColorButton button = new ColorButton(() -> colorInt,
+        // MainUI.COLOR_BUTTON_SIZE);
+        // button.setClickAction(() -> app.setUIColor(colorInt));
+        // defaultColorContainer.add(button);
         // }
         int numDefaultColors = Colors.getNumDefaultColors();
         for (int i = 0; i < numDefaultColors; i++) {
             final int j = i;
-            ColorButton button = new ColorButton(() -> MainApp.toInt(Colors.getDefaultColors()[j]), MainUI.COLOR_BUTTON_SIZE);
+            UIColorElement button = new UIColorElement(() -> MainApp.toInt(Colors.getDefaultColors()[j]),
+                    MainUI.COLOR_BUTTON_SIZE, true);
             button.setClickAction(() -> app.setUIColor(MainApp.toInt(Colors.getDefaultColors()[j])));
             defaultColorContainer.add(button);
         }
@@ -104,7 +106,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         baseColorExpand.add(new UISeparator());
 
-        baseColorExpand.add(new ColorPickContainer(colorPicker, 240, UIContainer.HORIZONTAL));
+        baseColorExpand.add(new ColorPickContainer(colorPicker, 240, UIContainer.HORIZONTAL, false));
 
         baseColorButton.setClickAction(() -> app.queueEvent(() -> {
             if (baseColor.getChildren().contains(baseColorExpand)) {

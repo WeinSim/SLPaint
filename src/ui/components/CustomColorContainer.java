@@ -12,8 +12,8 @@ public class CustomColorContainer extends UIContainer {
 
         for (int i = 0; i < colors.getLength(); i++) {
             final int j = i;
-            ColorButton button = new ColorButton(() -> colors.getColor(j), MainUI.COLOR_BUTTON_SIZE);
-            button.setClickAction(() -> clickAction.set(button.getColor()));
+            UIColorElement button = new UIColorElement(() -> colors.getColor(j), MainUI.COLOR_BUTTON_SIZE, true);
+            button.setClickAction(() -> clickAction.set(colors.getColor(j)));
             add(button);
         }
     }

@@ -14,6 +14,7 @@ uniform vec2 position;
 uniform vec2 size;
 
 uniform vec3 fill;
+uniform float fillAlpha;
 uniform int fillMode;
 uniform vec3 stroke;
 uniform int strokeMode;
@@ -36,18 +37,17 @@ void main(void) {
         if (fillMode == 1) {
             // normal fill
             applyCheckerboard = 0;
-            color = vec4(fill, 1.0);
+            color = vec4(fill, fillAlpha);
         } else {
             // checkerboard fill
             applyCheckerboard = 1;
-            color = vec4(checkerboardColor1, 1.0);
-            color2 = vec4(checkerboardColor2, 1.0);
+            color = vec4(checkerboardColor1, fillAlpha);
+            color2 = vec4(checkerboardColor2, fillAlpha);
         }
 
         for (int i = 0; i < 4; i++) {
             relativePos = cornerOffsets[i] * size;
             vec3 screenPos = viewMatrix * uiMatrix * vec3(position + cornerOffsets[i] * size, 1.0);
-            color = vec4(fill, 1.0);
             gl_Position = vec4(screenPos.xy, 0, 1);
             EmitVertex();
         }

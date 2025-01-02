@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import org.lwjgl.glfw.GLFW;
 
 import main.ColorButtonArray;
+import main.ColorPicker;
 import main.Image;
 import main.ImageFile;
 import main.ImageFileManager;
@@ -21,8 +22,8 @@ import main.dialogs.UnimplementedDialog;
 import renderEngine.MainAppRenderer;
 import sutil.SUtil;
 import sutil.math.SVector;
-import sutil.ui.UIContainer;
 import ui.MainUI;
+import ui.components.ImageCanvas;
 
 /**
  * TODO:
@@ -33,8 +34,13 @@ import ui.MainUI;
  * * Resizing
  * * * Selection resizing
  * * * Selection Ctrl+Shift+X
+ * * Save user settings (ui base color, light / dark mode, transparent
+ * selection)
  * * Undo / redo
- * * Pencil: different sizes
+ * * Pencil
+ * * * Add different sizes
+ * * * Fix bug: pencil draws when mouse is clicked outside of canvas and dragged
+ * * * * onto canvas
  * * Text tool
  * * Line tool
  * * Transparency
@@ -60,6 +66,7 @@ import ui.MainUI;
  * * * * (similar to what Colors does with colors). Maybe combine Sizes and
  * * * * Colors
  * * * * into a single UIProperties class
+ * * Turn HueSatField into a circle? (angle = hue, radius = saturation)
  * * General design: containers with separators should double their margin!
  * * Scrolling
  * * Tool icons & cursors
@@ -67,6 +74,8 @@ import ui.MainUI;
  * * * Not neccessary for now. UISeparators now extend fully even without
  * * * hMargin and vMargin
  * Rendering:
+ * * Clean up UIRenderMaster API and UI shaders (especially with regards to
+ * * * transparency!)
  * * Ellipse rendering (for color buttons maybe?)
  * * Premultiply view matrix and transformation matrix (for rect and text
  * * shader)
@@ -105,6 +114,8 @@ public final class MainApp extends App {
             ROTATE_DIALOG = 5, FLIP_DIALOG = 6, UNABLE_TO_SAVE_IMAGE_DIALOG = 7, DISCARD_UNSAVED_CHANGES_DIALOG = 9,
             SETTINGS_DIALOG = 10;
 
+    public static final int PRIMARY_COLOR = 0, SECONDARY_COLOR = 1;
+
     private static final int MIN_ZOOM_LEVEL = -4;
     private static final int MAX_ZOOM_LEVEL = 8;
     private static final double ZOOM_BASE = 1.6;
@@ -123,15 +134,18 @@ public final class MainApp extends App {
      */
     private ImageTool prevTool;
     private ImageTool activeTool;
+
     private int primaryColor;
     private int secondaryColor;
+    /**
+     * ColorPicker for the currently selected color
+     */
+    private ColorPicker selectedColorPicker;
     /**
      * 0 = primary color is selected, 1 = secondary color is selcted
      */
     private int colorSelection;
-    // private ArrayList<Integer> customColors;
     private ColorButtonArray customColorButtonArray;
-    // private CustomColorContainer customColorContainer;
 
     private boolean transparentSelection;
 
@@ -139,7 +153,7 @@ public final class MainApp extends App {
     private int imageZoomLevel;
     private boolean draggingImage;
 
-    private UIContainer canvas;
+    private ImageCanvas canvas;
 
     // private ColorEditorApp colorEditorApp;
     // private SettingsApp settingsApp;
@@ -158,6 +172,11 @@ public final class MainApp extends App {
         // imageFileManager = new ImageFileManager(this);
         imageFileManager = new ImageFileManager(this, "dialogFlowchart.png");
 
+        primaryColor = SUtil.toARGB(0);
+        secondaryColor = SUtil.toARGB(255);
+        colorSelection = PRIMARY_COLOR;
+        selectedColorPicker = new ColorPicker(this, getSelectedColor(), (Integer color) -> addCustomColor(color));
+
         createUI();
 
         renderer = new MainAppRenderer(this);
@@ -167,17 +186,12 @@ public final class MainApp extends App {
         activeTool = ImageTool.PENCIL;
         prevTool = ImageTool.PENCIL;
 
-        primaryColor = SUtil.toARGB(0);
-        secondaryColor = SUtil.toARGB(255);
-
         transparentSelection = false;
     }
 
     @Override
     public void update(double deltaT) {
         super.update(deltaT);
-
-        // App.setBaseColor(toSVector(primaryColor));
 
         boolean[] keys = window.getKeys();
         boolean[] prevKeys = window.getPrevKeys();
@@ -194,7 +208,7 @@ public final class MainApp extends App {
 
         Image image = imageFileManager.getImage();
         // canvas actions
-        if (canvas.mouseAbove()) {
+        if (canvas.mouseTrulyAbove()) {
             // scroll actions
             double scrollAmount = (prevMouseScroll.y - mouseScroll.y) * MOUSE_WHEEL_SENSITIVITY;
             if (keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
@@ -263,7 +277,7 @@ public final class MainApp extends App {
             if (mouseButtons[i]) {
                 if (!keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
                     // tool update
-                    if (canvas.mouseAbove()) {
+                    if (canvas.mouseTrulyAbove()) {
                         activeTool.update(this, mouseX, mouseY, i);
                     }
                 }
@@ -330,6 +344,14 @@ public final class MainApp extends App {
             }
         }
 
+        selectedColorPicker.update();
+
+        if (colorSelection == PRIMARY_COLOR) {
+            primaryColor = selectedColorPicker.getRGB();
+        } else {
+            secondaryColor = selectedColorPicker.getRGB();
+        }
+
         selectionManager.update();
 
         // update image texture
@@ -337,19 +359,22 @@ public final class MainApp extends App {
     }
 
     public void selectColor(int color) {
-        if (colorSelection == 0) {
-            primaryColor = color;
+        if (colorSelection == PRIMARY_COLOR) {
+            setPrimaryColor(color);
+            // primaryColor = color;
         } else {
-            secondaryColor = color;
+            setSecondaryColor(color);
+            // secondaryColor = color;
         }
     }
 
     public void addCustomColor(int color) {
-        if (colorSelection == 0) {
-            primaryColor = color;
-        } else {
-            secondaryColor = color;
-        }
+        selectColor(color);
+        // if (colorSelection == 0) {
+        // primaryColor = color;
+        // } else {
+        // secondaryColor = color;
+        // }
 
         customColorButtonArray.addColor(color);
     }
@@ -416,7 +441,8 @@ public final class MainApp extends App {
         return switch (dialogType) {
             case NEW_COLOR_DIALOG -> new ColorEditorApp(
                     this,
-                    colorSelection == 0 ? primaryColor : secondaryColor);
+                    getSelectedColor());
+            // colorSelection == 0 ? primaryColor : secondaryColor);
             case SETTINGS_DIALOG ->
                 new SettingsApp(this);
             default -> null;
@@ -453,7 +479,7 @@ public final class MainApp extends App {
 
     public void resetImageTransform() {
         imageZoomLevel = 0;
-        imageTranslation = getCanvasPosition().add(new SVector(1, 1).scale(getCanvasMargin()));
+        imageTranslation = canvas.getAbsolutePosition().add(new SVector(1, 1).scale(canvas.getMargin()));
     }
 
     public SelectionManager getSelectionManager() {
@@ -472,24 +498,44 @@ public final class MainApp extends App {
         return Math.pow(ZOOM_BASE, imageZoomLevel);
     }
 
-    public void setCanvas(UIContainer element) {
+    public void setCanvas(ImageCanvas element) {
         canvas = element;
     }
 
-    public SVector getCanvasPosition() {
-        return canvas.getAbsolutePosition();
-    }
-
-    public double getCanvasMargin() {
-        return canvas.getMargin();
+    public ColorPicker getSelectedColorPicker() {
+        return selectedColorPicker;
     }
 
     public void setPrimaryColor(int primaryColor) {
         this.primaryColor = primaryColor;
+        selectedColorPicker.setRGB(primaryColor);
     }
 
     public int getPrimaryColor() {
         return primaryColor;
+    }
+
+    public void setSecondaryColor(int secondaryColor) {
+        this.secondaryColor = secondaryColor;
+        selectedColorPicker.setRGB(secondaryColor);
+    }
+
+    public int getSecondaryColor() {
+        return secondaryColor;
+    }
+
+    public int getSelectedColor() {
+        return colorSelection == PRIMARY_COLOR ? primaryColor : secondaryColor;
+    }
+
+    public int getColorSelection() {
+        return colorSelection;
+    }
+
+    public void setColorSelection(int colorSelection) {
+        this.colorSelection = colorSelection;
+
+        selectedColorPicker.setRGB(getSelectedColor());
     }
 
     public ImageTool getActiveTool() {
@@ -519,14 +565,6 @@ public final class MainApp extends App {
         transparentSelection = !transparentSelection;
     }
 
-    public void setSecondaryColor(int secondaryColor) {
-        this.secondaryColor = secondaryColor;
-    }
-
-    public int getSecondaryColor() {
-        return secondaryColor;
-    }
-
     public int[] getMouseImagePosition() {
         return getMouseImagePosition(window.getMousePosition());
     }
@@ -546,14 +584,6 @@ public final class MainApp extends App {
 
     public int getMouseImageY() {
         return getMouseImagePosition()[1];
-    }
-
-    public int getColorSelection() {
-        return colorSelection;
-    }
-
-    public void setColorSelection(int colorSelection) {
-        this.colorSelection = colorSelection;
     }
 
     public int[] getDisplaySize() {

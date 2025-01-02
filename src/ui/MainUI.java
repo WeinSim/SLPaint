@@ -11,10 +11,11 @@ import sutil.ui.UIGetter;
 import sutil.ui.UILabel;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
-import ui.components.ColorButton;
+import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.ImageCanvas;
 import ui.components.ToolButton;
+import ui.components.UIColorElement;
 
 public class MainUI extends AppUI<MainApp> {
 
@@ -82,7 +83,7 @@ public class MainUI extends AppUI<MainApp> {
             colorContainer.setSelectable(true);
 
             UIGetter<Integer> cg = i == 0 ? () -> app.getPrimaryColor() : () -> app.getSecondaryColor();
-            colorContainer.add(new ColorButton(cg, 36));
+            colorContainer.add(new UIColorElement(cg, 36, true));
             UILabel label = new UILabel("%s\nColor".formatted(i == 0 ? "Primary" : "Secondary"));
             label.setAlignment(UIContainer.CENTER);
             label.zeroMargin();
@@ -103,7 +104,7 @@ public class MainUI extends AppUI<MainApp> {
             }
 
             final int color = MainApp.DEFAULT_COLORS[i];
-            ColorButton button = new ColorButton(() -> color, COLOR_BUTTON_SIZE);
+            UIColorElement button = new UIColorElement(() -> color, COLOR_BUTTON_SIZE, true);
             button.setClickAction(() -> app.selectColor(color));
             currentRow.add(button);
 
@@ -135,16 +136,22 @@ public class MainUI extends AppUI<MainApp> {
         canvas.noOutline();
         root.add(canvas);
 
-        UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
+        UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT) {
+            @Override
+            public double getMargin() {
+                return 2 * super.getMargin();
+            }
+        };
         sidePanel.withBackground().noOutline();
         UIButton transparentSelection = new UIButton("", () -> app.toggleTransparentSelection());
         transparentSelection.setText(() -> String.format(
                 "Transparent selection: %s",
                 app.isTransparentSelection() ? "On" : "Off"));
         sidePanel.add(transparentSelection);
-        // ColorPicker cp = new ColorPicker(app, 0, (Integer _) -> {
-        // });
-        // sidePanel.add(new ColorPickContainer(cp));
+
+        sidePanel.add(new UISeparator());
+
+        sidePanel.add(new ColorPickContainer(app.getSelectedColorPicker()));
         canvas.add(sidePanel);
 
         UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.BOTTOM);

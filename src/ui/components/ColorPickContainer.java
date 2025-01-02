@@ -1,7 +1,6 @@
 package ui.components;
 
 import main.ColorPicker;
-import main.apps.MainApp;
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIButton;
@@ -27,10 +26,10 @@ public class ColorPickContainer extends UIContainer {
     private double size;
 
     public ColorPickContainer(ColorPicker colorPicker) {
-        this(colorPicker, DEFAULT_SIZE, VERTICAL);
+        this(colorPicker, DEFAULT_SIZE, VERTICAL, true);
     }
 
-    public ColorPickContainer(ColorPicker colorPicker, double size, int orientation) {
+    public ColorPickContainer(ColorPicker colorPicker, double size, int orientation, boolean addAlpha) {
         super(orientation, orientation == VERTICAL ? CENTER : TOP);
         this.colorPicker = colorPicker;
         this.size = size;
@@ -40,7 +39,7 @@ public class ColorPickContainer extends UIContainer {
         noOutline();
 
         UIContainer row1 = createRow1();
-        UIContainer row2 = createRow2();
+        UIContainer row2 = addAlpha ? createRow2() : null;
         UIContainer row3 = createRow3();
         UIContainer row4 = createRow4();
 
@@ -50,12 +49,17 @@ public class ColorPickContainer extends UIContainer {
 
         add(row1);
         if (orientation == VERTICAL) {
-            add(row2);
+            if (addAlpha) {
+                add(row2);
+            }
             add(row3);
+            add(row4);
         } else {
             UIContainer right = new UIContainer(VERTICAL, CENTER);
             right.zeroMargin().noOutline();
-            right.add(row2);
+            if (addAlpha) {
+                right.add(row2);
+            }
             right.add(row3);
             right.add(row4);
             add(right);
@@ -79,8 +83,6 @@ public class ColorPickContainer extends UIContainer {
 
         row2.add(new UIText("Alpha:"));
 
-        // TODO continue: alpha input (make it togglable. ui base color should not have
-        // an alpha component)
         UIGetter<String> textUpdater = () -> Integer.toString(SUtil.alpha(colorPicker.getRGB()));
         UISetter<String> valueUpdater = (String s) -> {
             int alpha = 0;
@@ -93,12 +95,6 @@ public class ColorPickContainer extends UIContainer {
             }
             alpha = Math.min(Math.max(0, alpha), 255);
             colorPicker.setAlpha(alpha);
-            // int color = colorPicker.getRGB();
-            // int shiftAmount = 24;
-            // int mask = 0xFF << shiftAmount;
-            // color &= ~mask;
-            // color |= component << shiftAmount;
-            // colorPicker.setRGB(color);
         };
         UITextInput alphaInput = new UITextInput(textUpdater, valueUpdater);
         row2.add(alphaInput);
@@ -122,16 +118,13 @@ public class ColorPickContainer extends UIContainer {
         UIContainer colorPreview = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         colorPreview.zeroMargin().noOutline();
         UIContainer colorBox = new UIContainer(UIContainer.HORIZONTAL, 0);
-        colorBox.setStyle(new UIStyle(() -> null, () -> Colors.getTextColor(), () -> 4.0));
+        colorBox.setStyle(new UIStyle(() -> null, () -> Colors.getTextColor(), () -> 2.0));
         colorBox.zeroMargin().zeroPadding().noOutline();
         for (int i = 0; i < 2; i++) {
-            UIContainer c = new UIContainer(0, 0);
-            c.setFixedSize(new SVector(PREVIEW_WIDTH / 2, PREVIEW_HEIGHT));
-            UIGetter<SVector> bgColorGetter = i == 0
-                    ? () -> MainApp.toSVector(colorPicker.getInitialColor())
-                    : () -> MainApp.toSVector(colorPicker.getRGB());
-            c.setStyle(new UIStyle(bgColorGetter, () -> null, () -> 1.0));
-            colorBox.add(c);
+            UIGetter<Integer> bgColorGetter = i == 0
+                    ? () -> colorPicker.getInitialColor()
+                    : () -> colorPicker.getRGB();
+            colorBox.add(new UIColorElement(bgColorGetter, new SVector(PREVIEW_WIDTH / 2, PREVIEW_HEIGHT), false));
         }
         colorPreview.add(colorBox);
         colorPreview.add(new UIText("Preview"));

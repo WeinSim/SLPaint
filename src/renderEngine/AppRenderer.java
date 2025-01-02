@@ -3,6 +3,8 @@ package renderEngine;
 import org.lwjgl.opengl.GL11;
 
 import main.apps.App;
+import main.apps.MainApp;
+import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
@@ -12,6 +14,7 @@ import ui.Colors;
 import ui.components.AlphaScale;
 import ui.components.HueSatField;
 import ui.components.LightnessScale;
+import ui.components.UIColorElement;
 
 public class AppRenderer<T extends App> {
 
@@ -44,10 +47,7 @@ public class AppRenderer<T extends App> {
     protected void renderUI() {
         uiMaster.resetMatrix();
         AppUI<?> ui = app.getUI();
-        renderUI(ui);
-    }
 
-    private void renderUI(AppUI<?> ui) {
         uiMaster.textFont(ui.getFont());
         uiMaster.textSize(ui.getTextSize());
 
@@ -60,6 +60,15 @@ public class AppRenderer<T extends App> {
 
         SVector bgColor = element.getBackgroundColor();
         SVector olColor = element.getOutlineColor();
+
+        if (element instanceof UIColorElement e && bgColor != null) {
+            uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
+            uiMaster.noStroke();
+            uiMaster.rect(position, size);
+
+            uiMaster.fillAlpha(SUtil.alpha(e.getColor()) / 255.0);
+        }
+
         if (bgColor != null) {
             uiMaster.fill(bgColor);
         } else {
@@ -73,6 +82,8 @@ public class AppRenderer<T extends App> {
         }
         uiMaster.rect(position, size);
 
+        uiMaster.fillAlpha(1.0);
+
         if (element instanceof HueSatField) {
             uiMaster.hueSatField(position, size);
         }
@@ -80,9 +91,14 @@ public class AppRenderer<T extends App> {
             uiMaster.lightnessScale(position, size, scale.getHue(), scale.getSaturation(), scale.getOrientation());
         }
         if (element instanceof AlphaScale scale) {
-            // TODO continue: the actual alpha scale
-            // uiMaster.lightnessScale(position, size, scale.getRGB(), 1 - scale.getOrientation());
-            uiMaster.lightnessScale(position, size, scale.getHue(), scale.getSaturation(), scale.getOrientation());
+            // checkerboard background
+            uiMaster.noStroke();
+            uiMaster.checkerboardFill(Colors.getTransparentColors(), size.y / 2);
+            uiMaster.rect(position, size);
+
+            // color gradient
+            uiMaster.fill(MainApp.toSVector(scale.getRGB()));
+            uiMaster.alphaScale(position, size, scale.getOrientation());
         }
         if (element instanceof UIContainer container) {
             uiMaster.pushMatrix();

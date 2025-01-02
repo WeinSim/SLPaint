@@ -177,8 +177,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
             child.getWindow().requestFocus();
         } else {
             child = createChildApp(dialogType);
-            child.setDialogType(dialogType);
-            childApps.put(dialogType, child);
+            if (child != null) {
+                child.setDialogType(dialogType);
+                childApps.put(dialogType, child);
+            }
             GLFW.glfwMakeContextCurrent(window.getWindowHandle());
         }
     }

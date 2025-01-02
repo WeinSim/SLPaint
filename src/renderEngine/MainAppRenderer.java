@@ -8,6 +8,8 @@ import ui.Colors;
 
 public class MainAppRenderer extends AppRenderer<MainApp> {
 
+    private static final SVector[] SELECTION_BORDER_COLORS = new SVector[] { new SVector(), new SVector(1, 1, 1) };
+
     public MainAppRenderer(MainApp app) {
         super(app);
     }
@@ -28,7 +30,7 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
         int width = image.getWidth(), height = image.getHeight();
         uiMaster.strokeWeight(0);
         uiMaster.noStroke();
-        uiMaster.checkerboardFill(new SVector(1, 1, 1), new SVector(1, 1, 1).scale(0.8), 10);
+        uiMaster.checkerboardFill(Colors.getTransparentColors(), 10);
         SVector imageSize = new SVector(width, height);
         uiMaster.rect(new SVector(), imageSize);
         uiMaster.image(image.getTextureID(), new SVector(), imageSize);
@@ -64,7 +66,7 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
                 w = selectionManager.getWidth();
                 h = selectionManager.getHeight();
             }
-            uiMaster.checkerboardStroke(new SVector(), new SVector(1, 1, 1), 15);
+            uiMaster.checkerboardStroke(SELECTION_BORDER_COLORS, 15);
             uiMaster.strokeWeight(2);
             uiMaster.noFill();
             uiMaster.rect(new SVector(x, y).scale(zoom), new SVector(w, h).scale(app.getImageZoom()));

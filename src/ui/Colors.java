@@ -21,14 +21,16 @@ public class Colors {
     /**
      * https://images.minitool.com/de.minitool.com/images/uploads/news/2022/02/microsoft-paint-herunterladen-installieren/microsoft-paint-herunterladen-installieren-1.png
      */
-    public static enum UIColor {
+    private static enum UIColor {
         BACKGROUND_NORMAL(0.24, 0.95),
         BACKGROUND_HIGHLIGHT(0.5, 0.9),
-        BACKGROUND_HIGHLIGHT_2(0.7, 0.8),
+        BACKGROUND_HIGHLIGHT_2(0.7, 0.85),
         OUTLINE_NORMAL(1.1, 0.45),
         OUTLINE_HIGHLIGHT(1.1, 0.45),
         SEPARATOR(0.56, 0.7),
-        CANVAS(0.5, 0.8);
+        CANVAS(0.4, 0.85),
+        TRANSPARENCY_1(0.4, 1),
+        TRANSPARENCY_2(0.2, 0.85);
 
         public final double darkModeBrightness, lightModeBrightness;
 
@@ -96,13 +98,16 @@ public class Colors {
         return getUIColor(UIColor.CANVAS);
     }
 
+    public static SVector[] getTransparentColors() {
+        return new SVector[] { getUIColor(UIColor.TRANSPARENCY_1), getUIColor(UIColor.TRANSPARENCY_2) };
+    }
+
     private static SVector getUIColor(UIColor colorType) {
         double brightness = darkMode ? colorType.darkModeBrightness : colorType.lightModeBrightness;
 
         brightness = switch (colorType) {
-            // case CANVAS -> 0.8;
-            // case BACKGROUND_HIGHLIGHT -> 0.83;
-            // case BACKGROUND_HIGHLIGHT_2 -> 0.76;
+            // case TRANSPARENCY_1 -> 0.1;
+            // case TRANSPARENCY_2 -> 0.85;
             default -> brightness;
         };
 

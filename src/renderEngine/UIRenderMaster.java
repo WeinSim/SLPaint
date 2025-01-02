@@ -32,6 +32,7 @@ public class UIRenderMaster {
     private LinkedList<Matrix3f> uiMatrixStack;
 
     private SVector fill;
+    private double fillAlpha;
     private int fillMode;
 
     private SVector stroke;
@@ -97,6 +98,7 @@ public class UIRenderMaster {
         rectShader.loadUniform("position", position);
         rectShader.loadUniform("size", size);
         rectShader.loadUniform("fill", fill);
+        rectShader.loadUniform("fillAlpha", fillAlpha);
         rectShader.loadUniform("fillMode", fillMode);
         rectShader.loadUniform("stroke", stroke);
         rectShader.loadUniform("strokeMode", strokeMode);
@@ -192,7 +194,7 @@ public class UIRenderMaster {
         scale(size);
 
         activateShader(hslShader);
-        hslShader.loadUniform("hueSat", 1);
+        hslShader.loadUniform("hueSatAlpha", 1);
         hslShader.loadUniform("viewMatrix", createViewMatrix());
         hslShader.loadUniform("transformationMatrix", uiMatrix);
 
@@ -209,7 +211,7 @@ public class UIRenderMaster {
         scale(size);
 
         activateShader(hslShader);
-        hslShader.loadUniform("hueSat", 0);
+        hslShader.loadUniform("hueSatAlpha", 0);
         hslShader.loadUniform("orientation", orientation);
         hslShader.loadUniform("hue", hue);
         hslShader.loadUniform("saturation", saturation);
@@ -222,6 +224,26 @@ public class UIRenderMaster {
 
         popMatrix();
     }
+
+    public void alphaScale(SVector position, SVector size, int orientation) {
+        pushMatrix();
+        translate(position);
+        scale(size);
+
+        activateShader(hslShader);
+        hslShader.loadUniform("hueSatAlpha", 2);
+        hslShader.loadUniform("orientation", orientation);
+        hslShader.loadUniform("viewMatrix", createViewMatrix());
+        hslShader.loadUniform("transformationMatrix", uiMatrix);
+        hslShader.loadUniform("fill", fill);
+
+        GL30.glBindVertexArray(dummyVAO.getVaoID());
+        GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
+        GL30.glBindVertexArray(0);
+
+        popMatrix();
+    }
+
 
     private void activateShader(ShaderProgram shader) {
         if (activeShader == shader) {
@@ -304,6 +326,10 @@ public class UIRenderMaster {
         uiMatrix = uiMatrixStack.pop();
     }
 
+    public void fillAlpha(double alpha) {
+        this.fillAlpha = alpha;
+    }
+
     public void fill(SVector fill) {
         this.fill.set(fill);
         fillMode = NORMAL;
@@ -313,10 +339,10 @@ public class UIRenderMaster {
         fillMode = NONE;
     }
 
-    public void checkerboardFill(SVector color1, SVector color2, double size) {
+    public void checkerboardFill(SVector[] colors, double size) {
         fillMode = CHECKERBOARD;
-        checkerboardColors[0] = color1;
-        checkerboardColors[1] = color2;
+        checkerboardColors[0].set(colors[0]);
+        checkerboardColors[1].set(colors[1]);
         checkerboardSize = size;
     }
 
@@ -333,10 +359,10 @@ public class UIRenderMaster {
         this.strokeWeight = strokeWeight;
     }
 
-    public void checkerboardStroke(SVector color1, SVector color2, double size) {
+    public void checkerboardStroke(SVector[] colors, double size) {
         strokeMode = CHECKERBOARD;
-        checkerboardColors[0] = color1;
-        checkerboardColors[1] = color2;
+        checkerboardColors[0].set(colors[0]);
+        checkerboardColors[1].set(colors[1]);
         checkerboardSize = size;
     }
 

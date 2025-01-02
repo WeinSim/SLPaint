@@ -1,0 +1,25 @@
+package ui;
+
+import sutil.math.SVector;
+import sutil.ui.UIGetter;
+import sutil.ui.UIStyle;
+
+public class UITransparencyStyle extends UIStyle {
+
+    private UIGetter<Double> backgroundAlphaGetter;
+
+    public UITransparencyStyle(UIGetter<SVector> backgroundColorGetter, UIGetter<Double> backgroundAlphaGetter,
+            UIGetter<SVector> outlineColorGetter, UIGetter<Double> strokeWeightGetter) {
+        super(backgroundColorGetter, outlineColorGetter, strokeWeightGetter);
+
+        this.backgroundAlphaGetter = backgroundAlphaGetter;
+    }
+
+    public double getBackgroundAlpha() {
+        return backgroundAlphaGetter.get();
+    }
+
+    public void setBackgroundAlphaGetter(UIGetter<Double> backgroundAlphaGetter) {
+        this.backgroundAlphaGetter = backgroundAlphaGetter;
+    }
+}

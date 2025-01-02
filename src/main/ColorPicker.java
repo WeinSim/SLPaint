@@ -25,7 +25,7 @@ public class ColorPicker {
     private double hue;
     private double saturation;
     private double lightness;
-    private double alpha;
+    private int alpha;
 
     public ColorPicker(App app, int initialColor, UISetter<Integer> closeAction) {
         this.app = app;
@@ -81,6 +81,7 @@ public class ColorPicker {
 
     public void setAlpha(int alpha) {
         setComponent(24, alpha);
+        this.alpha = alpha;
     }
 
     public void setComponent(int shiftAmount, int component) {

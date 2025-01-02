@@ -14,7 +14,7 @@ public final class SettingsApp extends App {
     private ColorPicker colorPicker;
 
     public SettingsApp(MainApp mainApp) {
-        super(800, 600, Window.NORMAL, true, "Settings", mainApp);
+        super(850, 600, Window.NORMAL, true, "Settings", mainApp);
 
         customColorButtonArray = new ColorButtonArray(SettingsUI.NUM_UI_BASE_COLOR_BUTTONS);
 

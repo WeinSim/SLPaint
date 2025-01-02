@@ -4,9 +4,9 @@ import sutil.math.SVector;
 
 public class UIStyle {
 
-    private UIGetter<SVector> backgroundColorGetter;
-    private UIGetter<SVector> outlineColorGetter;
-    private UIGetter<Double> strokeWeightGetter;
+    protected UIGetter<SVector> backgroundColorGetter;
+    protected UIGetter<SVector> outlineColorGetter;
+    protected UIGetter<Double> strokeWeightGetter;
 
     public UIStyle(UIGetter<SVector> backgroundColorGetter, UIGetter<SVector> outlineColorGetter,
             UIGetter<Double> strokeWeightGetter) {
