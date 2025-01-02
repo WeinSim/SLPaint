@@ -9,8 +9,9 @@ import sutil.ui.UIElement;
 import sutil.ui.UIText;
 import ui.AppUI;
 import ui.Colors;
+import ui.components.AlphaScale;
 import ui.components.HueSatField;
-import ui.components.LightnessScaleContainer.LightnessScale;
+import ui.components.LightnessScale;
 
 public class AppRenderer<T extends App> {
 
@@ -76,7 +77,12 @@ public class AppRenderer<T extends App> {
             uiMaster.hueSatField(position, size);
         }
         if (element instanceof LightnessScale scale) {
-            uiMaster.lightnessScale(position, size, scale.getHue(), scale.getSaturation());
+            uiMaster.lightnessScale(position, size, scale.getHue(), scale.getSaturation(), scale.getOrientation());
+        }
+        if (element instanceof AlphaScale scale) {
+            // TODO continue: the actual alpha scale
+            // uiMaster.lightnessScale(position, size, scale.getRGB(), 1 - scale.getOrientation());
+            uiMaster.lightnessScale(position, size, scale.getHue(), scale.getSaturation(), scale.getOrientation());
         }
         if (element instanceof UIContainer container) {
             uiMaster.pushMatrix();

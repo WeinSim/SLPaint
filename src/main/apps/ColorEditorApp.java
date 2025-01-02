@@ -1,8 +1,6 @@
 package main.apps;
 
 import main.ColorPicker;
-import sutil.math.SVector;
-import sutil.ui.UIRoot;
 
 public final class ColorEditorApp extends App {
 
@@ -16,13 +14,9 @@ public final class ColorEditorApp extends App {
             window.requestClose();
         });
 
-        createUI();
+        adjustSizeOnInit = true;
 
-        UIRoot root = ui.getRoot();
-        SVector rootSize = root.getSize();
-        int width = (int) rootSize.x;
-        int height = (int) rootSize.y;
-        window.setSizeAndCenter(width, height);
+        createUI();
     }
 
     @Override

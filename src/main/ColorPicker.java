@@ -7,7 +7,7 @@ import sutil.math.SVector;
 import sutil.ui.UISetter;
 import ui.components.DragTarget;
 import ui.components.HueSatField;
-import ui.components.LightnessScaleContainer.LightnessScale;
+import ui.components.UIScale;
 
 public class ColorPicker {
 
@@ -16,7 +16,8 @@ public class ColorPicker {
     private UISetter<Integer> closeAction;
 
     private HueSatField hueSatField;
-    private LightnessScale lightnessScale;
+    private UIScale lightnessScale;
+    private UIScale alphaScale;
     private DragTarget dragTarget;
 
     private int initialColor;
@@ -66,6 +67,28 @@ public class ColorPicker {
         rgb = SUtil.toARGB(v.x, v.y, v.z, alpha);
     }
 
+    public void setRed(int red) {
+        setComponent(16, red);
+    }
+
+    public void setGreen(int green) {
+        setComponent(8, green);
+    }
+
+    public void setBlue(int blue) {
+        setComponent(0, blue);
+    }
+
+    public void setAlpha(int alpha) {
+        setComponent(24, alpha);
+    }
+
+    public void setComponent(int shiftAmount, int component) {
+        int mask = 0xFF << shiftAmount;
+        rgb &= ~mask;
+        rgb |= component << shiftAmount;
+    }
+
     public void setHue(double hue) {
         this.hue = hue;
         updateRGB();
@@ -108,14 +131,19 @@ public class ColorPicker {
     }
 
     private void updateCursorPositions() {
-        SVector size = hueSatField.getSize();
-        hueSatField.setCursorPosition(new SVector(hue / 360 * size.x, (1 - saturation) * size.y));
-        size = lightnessScale.getSize();
-        lightnessScale.setCursorPosition(new SVector(0, (1 - lightness) * size.y));
+        hueSatField.updateCursorPosition();
+        lightnessScale.updateCursorPosition();
+        if (alphaScale != null) {
+            alphaScale.updateCursorPosition();
+        }
     }
 
-    public void setLightnessScale(LightnessScale lightnessScale) {
+    public void setLightnessScale(UIScale lightnessScale) {
         this.lightnessScale = lightnessScale;
+    }
+
+    public void setAlphaScale(UIScale alphaScale) {
+        this.alphaScale = alphaScale;
     }
 
     public void setHueSatField(HueSatField hueSatField) {

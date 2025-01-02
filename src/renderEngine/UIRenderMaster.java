@@ -203,13 +203,14 @@ public class UIRenderMaster {
         popMatrix();
     }
 
-    public void lightnessScale(SVector position, SVector size, double hue, double saturation) {
+    public void lightnessScale(SVector position, SVector size, double hue, double saturation, int orientation) {
         pushMatrix();
         translate(position);
         scale(size);
 
         activateShader(hslShader);
         hslShader.loadUniform("hueSat", 0);
+        hslShader.loadUniform("orientation", orientation);
         hslShader.loadUniform("hue", hue);
         hslShader.loadUniform("saturation", saturation);
         hslShader.loadUniform("viewMatrix", createViewMatrix());

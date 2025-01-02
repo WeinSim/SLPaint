@@ -31,7 +31,6 @@ import ui.MainUI;
  * * * Clipboard (Copy / Paste / Cut)
  * * Maybe turn the ColorPickerApp into a togglable side panel?
  * * Resizing
- * * * Resize handles
  * * * Selection resizing
  * * * Selection Ctrl+Shift+X
  * * Undo / redo
@@ -39,6 +38,14 @@ import ui.MainUI;
  * * Text tool
  * * Line tool
  * * Transparency
+ * * * Show color transparency in color selection
+ * * * ColorPickContainer: add option to remove alpha slider
+ * * * Grey-white squares should always appear the same size
+ * * * Simply selecting a transparent area and unselecting it causes the
+ * * * * transparency to go away. Reason: selecting the area replaces that part
+ * * * * of the image with the secondary color. Placing the transparent
+ * * * * selection back onto the opaque background leaves the background
+ * * * * unaffected. What is the expected behavior here?
  * * Recognize remapping from CAPS_LOCK to ESCAPE
  * * When parent app closes, shouldren should also close
  * * Dialogs
@@ -46,9 +53,13 @@ import ui.MainUI;
  * * * * Keep track of unsaved changes, ask user to save before quitting if
  * * * * there are unsaved changes
  * * * Only one at a time
- * * Keep track of all file locks in one centralized place to avoid leaking
+ * * * Keep track of all file locks in one centralized place to avoid leaking
  * UI:
- * * Light theme / dark theme
+ * * UI scale (based on screen resolution)
+ * * * Add a static Sizes class that handles all the sizes of the entire UI
+ * * * * (similar to what Colors does with colors). Maybe combine Sizes and
+ * * * * Colors
+ * * * * into a single UIProperties class
  * * General design: containers with separators should double their margin!
  * * Scrolling
  * * Tool icons & cursors

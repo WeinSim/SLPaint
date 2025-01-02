@@ -11,6 +11,7 @@ import renderEngine.Loader;
 import renderEngine.Window;
 import sutil.math.SVector;
 import sutil.ui.UIAction;
+import sutil.ui.UIRoot;
 import ui.AppUI;
 import ui.ColorEditorUI;
 import ui.MainUI;
@@ -27,6 +28,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
     private LinkedList<UIAction> eventQueue;
 
     protected AppUI<?> ui;
+    protected boolean adjustSizeOnInit = false;
     private static boolean showDebugOutline = false;
 
     protected AppRenderer<?> renderer;
@@ -76,6 +78,14 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
             e.printStackTrace();
             System.exit(1);
         }
+
+        if (adjustSizeOnInit) {
+            UIRoot root = ui.getRoot();
+            SVector rootSize = root.getSize();
+            int width = (int) rootSize.x;
+            int height = (int) rootSize.y;
+            window.setSizeAndCenter(width, height);
+        }
     }
 
     // protected abstract void init();
@@ -106,6 +116,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         // reload shaders
         if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_S) && keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
             renderer.reloadShaders();
+        }
+
+        if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_R) && keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
+            createUI();
         }
 
         // UI update

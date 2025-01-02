@@ -23,10 +23,10 @@ public enum ImageTool {
                 Image image = app.getImage();
                 int baseColor = image.getPixel(x, y);
                 int replaceColor = mouseButton == 0 ? app.getPrimaryColor() : app.getSecondaryColor();
-                int bitmask = MainApp.RGB_BITMASK;
-                if ((baseColor & bitmask) == (replaceColor & bitmask))
-                    // break;
-                    return;
+                // int bitmask = MainApp.RGB_BITMASK;
+                // if ((baseColor & bitmask) == (replaceColor & bitmask))
+                // // break;
+                // return;
                 LinkedList<Long> boundary = new LinkedList<>();
                 boundary.add((x & 0xFFFFFFFFL) << 32 | (y & 0xFFFFFFFFL));
                 // no noticeable performance increase with cached bitmap for discovered pixels
@@ -44,7 +44,7 @@ public enum ImageTool {
                             // if (discovered[newX][newY]) {
                             // continue;
                             // }
-                            if ((image.getPixel(newX, newY) & bitmask) == (baseColor & bitmask)) {
+                            if (image.getPixel(newX, newY)  == baseColor) {
                                 boundary.add((newX & 0xFFFFFFFFL) << 32 | (newY & 0xFFFFFFFFL));
                             }
                         }

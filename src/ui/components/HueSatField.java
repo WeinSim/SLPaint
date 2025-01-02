@@ -40,13 +40,14 @@ public class HueSatField extends UIContainer implements DragTarget {
 
         colorPicker.setHue(mousePos.x / size.x * 360);
         colorPicker.setSaturation(1 - mousePos.y / size.y);
-
-        setCursorPosition(mousePos);
     }
 
     @Override
-    public void setCursorPosition(SVector position) {
-        children.get(0).getPosition().set(position);
+    public void updateCursorPosition() {
+        double hue = colorPicker.getHue(),
+                saturation = colorPicker.getSaturation();
+        SVector pos = new SVector(hue / 360 * size.x, (1 - saturation) * size.y);
+        children.get(0).getPosition().set(pos);
     }
 
     @Override

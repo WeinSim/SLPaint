@@ -8,6 +8,8 @@ uniform float hue;
 uniform float saturation;
 // 0 = lightness (1-dim), 1 = hue-sat (2-dim)
 uniform int hueSat;
+// 0 = vertical gradient, 1 = horizontal gradien
+uniform int orientation;
 
 vec3 hsvToRGB(float h, float s, float v);
 
@@ -18,7 +20,11 @@ void main(void) {
     if (hueSat > 0.5) {
         outColor = vec4(hslToRGB(passUVCoords.x * 360, 1 - passUVCoords.y, 0.5), 1.0);
     } else {
-        outColor = vec4(hslToRGB(hue, saturation, 1 - passUVCoords.y), 1.0);
+        if (orientation < 0.5) {
+            outColor = vec4(hslToRGB(hue, saturation, 1 - passUVCoords.y), 1.0);
+        } else {
+            outColor = vec4(hslToRGB(hue, saturation, passUVCoords.x), 1.0);
+        }
     }
 }
 

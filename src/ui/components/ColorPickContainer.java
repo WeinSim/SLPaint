@@ -42,6 +42,7 @@ public class ColorPickContainer extends UIContainer {
         UIContainer row1 = createRow1();
         UIContainer row2 = createRow2();
         UIContainer row3 = createRow3();
+        UIContainer row4 = createRow4();
 
         // row1.setOutlineNormal(true);
         // row2.setOutlineNormal(true);
@@ -56,6 +57,7 @@ public class ColorPickContainer extends UIContainer {
             right.zeroMargin().noOutline();
             right.add(row2);
             right.add(row3);
+            right.add(row4);
             add(right);
         }
     }
@@ -65,20 +67,57 @@ public class ColorPickContainer extends UIContainer {
         row1.zeroMargin().noOutline();
         HueSatField hueSatField = new HueSatField(colorPicker, size);
         row1.add(hueSatField);
-        LightnessScaleContainer lsc = new LightnessScaleContainer(colorPicker);
-        row1.add(lsc);
+        UIScaleContainer lightnessScale = new UIScaleContainer(new LightnessScale(UIContainer.VERTICAL, colorPicker));
+        row1.add(lightnessScale);
         return row1;
     }
 
     private UIContainer createRow2() {
-        UIContainer row2 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP) {
+        UIContainer row2 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        row2.zeroMargin().noOutline();
+        row2.setFillSize();
+
+        row2.add(new UIText("Alpha:"));
+
+        // TODO continue: alpha input (make it togglable. ui base color should not have
+        // an alpha component)
+        UIGetter<String> textUpdater = () -> Integer.toString(SUtil.alpha(colorPicker.getRGB()));
+        UISetter<String> valueUpdater = (String s) -> {
+            int alpha = 0;
+            if (s.length() > 0) {
+                try {
+                    alpha = Integer.parseInt(s);
+                } catch (NumberFormatException e) {
+                    return;
+                }
+            }
+            alpha = Math.min(Math.max(0, alpha), 255);
+            colorPicker.setAlpha(alpha);
+            // int color = colorPicker.getRGB();
+            // int shiftAmount = 24;
+            // int mask = 0xFF << shiftAmount;
+            // color &= ~mask;
+            // color |= component << shiftAmount;
+            // colorPicker.setRGB(color);
+        };
+        UITextInput alphaInput = new UITextInput(textUpdater, valueUpdater);
+        row2.add(alphaInput);
+
+        UIScaleContainer alphaScale = new UIScaleContainer(new AlphaScale(UIContainer.HORIZONTAL, colorPicker));
+        alphaScale.setMaximalSize();
+        row2.add(alphaScale);
+        return row2;
+    }
+
+    private UIContainer createRow3() {
+        UIContainer row3 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP) {
             @Override
             public double getPadding() {
                 return 2 * super.getPadding();
             }
         };
-        row2.zeroMargin().noOutline();
-        row2.setFillSize();
+        row3.zeroMargin().noOutline();
+        row3.setFillSize();
 
         UIContainer colorPreview = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         colorPreview.zeroMargin().noOutline();
@@ -96,12 +135,12 @@ public class ColorPickContainer extends UIContainer {
         }
         colorPreview.add(colorBox);
         colorPreview.add(new UIText("Preview"));
-        row2.add(colorPreview);
+        row3.add(colorPreview);
 
         UIContainer gap = new UIContainer(0, 0);
         gap.zeroMargin().noOutline();
         gap.setMaximalSize();
-        row2.add(gap);
+        row3.add(gap);
 
         UIContainer hslInput = new UIContainer(UIContainer.VERTICAL, UIContainer.RIGHT);
         hslInput.zeroMargin().noOutline();
@@ -137,7 +176,7 @@ public class ColorPickContainer extends UIContainer {
             colorRow.add(colorInput);
             hslInput.add(colorRow);
         }
-        row2.add(hslInput);
+        row3.add(hslInput);
 
         UIContainer rgbInput = new UIContainer(UIContainer.VERTICAL, UIContainer.RIGHT);
         rgbInput.zeroMargin().noOutline();
@@ -173,36 +212,12 @@ public class ColorPickContainer extends UIContainer {
             colorRow.add(colorInput);
             rgbInput.add(colorRow);
         }
-        row2.add(rgbInput);
+        row3.add(rgbInput);
 
-        // TODO continue: alpha input (make it togglable. ui base color should not have
-        // an alpha component)
-        // UIGetter<String> textUpdater = () ->
-        // Integer.toString(SUtil.alpha(colorPicker.getRGB()));
-        // UISetter<String> valueUpdater = (String s) -> {
-        // int component = 0;
-        // if (s.length() > 0) {
-        // try {
-        // component = Integer.parseInt(s);
-        // } catch (NumberFormatException e) {
-        // return;
-        // }
-        // }
-        // component = Math.min(Math.max(0, component), 255);
-        // int color = colorPicker.getRGB();
-        // int shiftAmount = 24;
-        // int mask = 0xFF << shiftAmount;
-        // color &= ~mask;
-        // color |= component << shiftAmount;
-        // colorPicker.setRGB(color);
-        // };
-        // UITextInput alphaInput = new UITextInput(textUpdater, valueUpdater);
-        // row2.add(alphaInput);
-
-        return row2;
+        return row3;
     }
 
-    private UIContainer createRow3() {
+    private UIContainer createRow4() {
         UIButton customColor = new UIButton("Add to Custom Colors",
                 () -> colorPicker.getCloseAction().set(colorPicker.getRGB()));
         customColor.setAlignment(UIContainer.CENTER);
