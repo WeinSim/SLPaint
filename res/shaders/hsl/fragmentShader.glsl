@@ -16,6 +16,12 @@ vec3 hsvToRGB(float h, float s, float v);
 
 vec3 hslToRGB(float h, float s, float l);
 
+float mag(vec2 v);
+
+float atan2(float y, float x);
+
+const float PI = 3.1415926535;
+
 void main(void) {
     if (hueSatAlpha == 0) {
         if (orientation == 0) {
@@ -25,12 +31,32 @@ void main(void) {
         }
     } else if (hueSatAlpha == 1) {
         outColor = vec4(hslToRGB(passUVCoords.x * 360, 1 - passUVCoords.y, 0.5), 1.0);
-    } else {
+    } else if (hueSatAlpha == 2) {
         if (orientation == 0) {
             outColor = vec4(fill, 1 - passUVCoords.y);
         } else {
             outColor = vec4(fill, passUVCoords.x);
         }
+    } else {
+        vec2 transformedUVCoords = 2 * passUVCoords - 1;
+        float mag = mag(transformedUVCoords);
+        if (mag > 1) {
+            discard;
+        }
+        float angle = atan2(transformedUVCoords.y, transformedUVCoords.x);
+        outColor = vec4(hslToRGB(angle * 180 / PI, mag, 0.5), 1.0);
+    }
+}
+
+float mag(vec2 v) {
+    return sqrt(v.x * v.x + v.y * v.y);
+}
+
+float atan2(float y, float x) {
+    if (x > 0) {
+        return atan(y / x);
+    } else {
+        return atan(y / x) - PI;
     }
 }
 

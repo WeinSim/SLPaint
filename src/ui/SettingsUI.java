@@ -1,6 +1,7 @@
 package ui;
 
 import main.ColorPicker;
+import main.apps.App;
 import main.apps.MainApp;
 import main.apps.SettingsApp;
 import sutil.ui.UIButton;
@@ -21,14 +22,17 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
     @Override
     protected void init() {
-        root.setOrientation(UIContainer.VERTICAL);
         root.setZeroMargin(false);
         root.setZeroPadding(false);
-        root.setMinimalSize();
 
-        root.add(createBaseColor());
+        UIContainer mainContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
+        mainContainer.setMaximalSize();
 
-        root.add(createDarkModeToggle());
+        mainContainer.add(createBaseColor());
+        mainContainer.add(createDarkModeToggle());
+        mainContainer.add(createHueSatFieldToggle());
+
+        root.add(mainContainer);
 
         root.add(new UIButton("Done", () -> app.getWindow().requestClose()));
     }
@@ -106,7 +110,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         baseColorExpand.add(new UISeparator());
 
-        baseColorExpand.add(new ColorPickContainer(colorPicker, 240, UIContainer.HORIZONTAL, false));
+        baseColorExpand.add(new ColorPickContainer(colorPicker, 240, UIContainer.HORIZONTAL, false, true));
 
         baseColorButton.setClickAction(() -> app.queueEvent(() -> {
             if (baseColor.getChildren().contains(baseColorExpand)) {
@@ -120,13 +124,26 @@ public class SettingsUI extends AppUI<SettingsApp> {
     }
 
     private UIContainer createDarkModeToggle() {
-        UIContainer darkModeToggle = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        // UIContainer darkModeToggle = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
 
         UIButton button = new UIButton("", () -> app.toggleDarkMode());
         button.setText(() -> String.format("Mode: %s", Colors.isDarkMode() ? "Dark" : "Light"));
 
-        darkModeToggle.add(button);
+        return button;
 
-        return darkModeToggle;
+        // darkModeToggle.add(button);
+        // return darkModeToggle;
+    }
+
+    private UIContainer createHueSatFieldToggle() {
+        // UIContainer hueSatToggle = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+
+        UIButton button = new UIButton("", () -> App.toggleCircularHueSatField());
+        button.setText(() -> String.format("HueSatField: %s", App.isCircularHueSatField() ? "Circle" : "Square"));
+
+        return button;
+
+        // hueSatToggle.add(button);
+        // return hueSatToggle;
     }
 }

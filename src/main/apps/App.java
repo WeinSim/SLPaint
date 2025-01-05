@@ -21,6 +21,9 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
 
     private static final double FRAME_TIME_GAMMA = 0.05;
 
+    private static boolean showDebugOutline = false;
+    private static boolean circularHueSatField = true;
+
     protected Window window;
 
     protected double avgFrameTime = -1;
@@ -29,7 +32,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
 
     protected AppUI<?> ui;
     protected boolean adjustSizeOnInit = false;
-    private static boolean showDebugOutline = false;
 
     protected AppRenderer<?> renderer;
     private Loader loader;
@@ -58,26 +60,14 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         childApps = new HashMap<>();
         loader = new Loader();
         eventQueue = new LinkedList<>();
-
-        // init();
-
-        // if (ui == null) {
-        // createUI();
-        // }
     }
 
     protected void createUI() {
-        Class<? extends AppUI<?>> uiClass = switch (this) {
-            case MainApp _ -> MainUI.class;
-            case ColorEditorApp _ -> ColorEditorUI.class;
-            case SettingsApp _ -> SettingsUI.class;
+        ui = switch (this) {
+            case MainApp m -> new MainUI(m);
+            case ColorEditorApp c -> new ColorEditorUI(c);
+            case SettingsApp s -> new SettingsUI(s);
         };
-        try {
-            ui = uiClass.getDeclaredConstructor(getClass()).newInstance(this);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
 
         if (adjustSizeOnInit) {
             UIRoot root = ui.getRoot();
@@ -87,8 +77,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
             window.setSizeAndCenter(width, height);
         }
     }
-
-    // protected abstract void init();
 
     public void update(double deltaT) {
         if (avgFrameTime < 0) {
@@ -224,6 +212,14 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
 
     public static boolean showDebugOutline() {
         return showDebugOutline;
+    }
+
+    public static boolean isCircularHueSatField() {
+        return circularHueSatField;
+    }
+
+    public static void toggleCircularHueSatField() {
+        circularHueSatField = !circularHueSatField;
     }
 
     public double getFrameRate() {

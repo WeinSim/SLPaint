@@ -188,13 +188,13 @@ public class UIRenderMaster {
         popMatrix();
     }
 
-    public void hueSatField(SVector position, SVector size) {
+    public void hueSatField(SVector position, SVector size, boolean circular) {
         pushMatrix();
         translate(position);
         scale(size);
 
         activateShader(hslShader);
-        hslShader.loadUniform("hueSatAlpha", 1);
+        hslShader.loadUniform("hueSatAlpha", circular ? 3 : 1);
         hslShader.loadUniform("viewMatrix", createViewMatrix());
         hslShader.loadUniform("transformationMatrix", uiMatrix);
 

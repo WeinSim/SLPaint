@@ -85,7 +85,7 @@ public class AppRenderer<T extends App> {
         uiMaster.fillAlpha(1.0);
 
         if (element instanceof HueSatField) {
-            uiMaster.hueSatField(position, size);
+            uiMaster.hueSatField(position, size, App.isCircularHueSatField());
         }
         if (element instanceof LightnessScale scale) {
             uiMaster.lightnessScale(position, size, scale.getHue(), scale.getSaturation(), scale.getOrientation());

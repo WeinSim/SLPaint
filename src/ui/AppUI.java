@@ -23,7 +23,7 @@ public abstract class AppUI<T extends App> extends UIPanel{
         textSize = 18;
         courierNew = app.getLoader().loadFont("Courier New Bold", (int) textSize, false);
 
-        root = new UIRoot(this, UIContainer.HORIZONTAL, UIContainer.TOP);
+        root = new UIRoot(this, UIContainer.VERTICAL, UIContainer.LEFT);
         root.zeroMargin().zeroPadding().noBackground().noOutline();
         int[] displaySize = app.getWindow().getDisplaySize();
         root.setFixedSize(new SVector(displaySize[0], displaySize[1]));

@@ -26,10 +26,11 @@ public class ColorPickContainer extends UIContainer {
     private double size;
 
     public ColorPickContainer(ColorPicker colorPicker) {
-        this(colorPicker, DEFAULT_SIZE, VERTICAL, true);
+        this(colorPicker, DEFAULT_SIZE, VERTICAL, true, true);
     }
 
-    public ColorPickContainer(ColorPicker colorPicker, double size, int orientation, boolean addAlpha) {
+    public ColorPickContainer(ColorPicker colorPicker, double size, int orientation, boolean addAlpha,
+            boolean addPreview) {
         super(orientation, orientation == VERTICAL ? CENTER : TOP);
         this.colorPicker = colorPicker;
         this.size = size;
@@ -40,7 +41,7 @@ public class ColorPickContainer extends UIContainer {
 
         UIContainer row1 = createRow1();
         UIContainer row2 = addAlpha ? createRow2() : null;
-        UIContainer row3 = createRow3();
+        UIContainer row3 = createRow3(addPreview);
         UIContainer row4 = createRow4();
 
         // row1.setOutlineNormal(true);
@@ -105,7 +106,7 @@ public class ColorPickContainer extends UIContainer {
         return row2;
     }
 
-    private UIContainer createRow3() {
+    private UIContainer createRow3(boolean addPreview) {
         UIContainer row3 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP) {
             @Override
             public double getPadding() {
@@ -115,16 +116,18 @@ public class ColorPickContainer extends UIContainer {
         row3.zeroMargin().noOutline();
         row3.setFillSize();
 
+        // if (addPreview) {
         UIContainer colorPreview = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         colorPreview.zeroMargin().noOutline();
         UIContainer colorBox = new UIContainer(UIContainer.HORIZONTAL, 0);
         colorBox.setStyle(new UIStyle(() -> null, () -> Colors.getTextColor(), () -> 2.0));
         colorBox.zeroMargin().zeroPadding().noOutline();
-        for (int i = 0; i < 2; i++) {
+        double width = addPreview ? PREVIEW_WIDTH / 2 : PREVIEW_WIDTH;
+        for (int i = addPreview ? 0 : 1; i < 2; i++) {
             UIGetter<Integer> bgColorGetter = i == 0
                     ? () -> colorPicker.getInitialColor()
                     : () -> colorPicker.getRGB();
-            colorBox.add(new UIColorElement(bgColorGetter, new SVector(PREVIEW_WIDTH / 2, PREVIEW_HEIGHT), false));
+            colorBox.add(new UIColorElement(bgColorGetter, new SVector(width, PREVIEW_HEIGHT), false));
         }
         colorPreview.add(colorBox);
         colorPreview.add(new UIText("Preview"));
@@ -134,6 +137,7 @@ public class ColorPickContainer extends UIContainer {
         gap.zeroMargin().noOutline();
         gap.setMaximalSize();
         row3.add(gap);
+        // }
 
         UIContainer hslInput = new UIContainer(UIContainer.VERTICAL, UIContainer.RIGHT);
         hslInput.zeroMargin().noOutline();

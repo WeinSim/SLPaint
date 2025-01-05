@@ -151,7 +151,12 @@ public class MainUI extends AppUI<MainApp> {
 
         sidePanel.add(new UISeparator());
 
-        sidePanel.add(new ColorPickContainer(app.getSelectedColorPicker()));
+        sidePanel.add(new ColorPickContainer(
+                app.getSelectedColorPicker(),
+                200,
+                UIContainer.VERTICAL,
+                true,
+                false));
         canvas.add(sidePanel);
 
         UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.BOTTOM);

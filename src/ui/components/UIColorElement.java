@@ -24,6 +24,7 @@ public class UIColorElement extends UIElement {
                 ? () -> getColor() == null
                         ? new SVector(0.5, 0.5, 0.5)
                         : Colors.getTextColor()
+                        // : Colors.getOutlineNormalColor()
                 : () -> null;
         UIGetter<Double> strokeWeightGetter = () -> 1.0;
         setStyle(new UIStyle(backgroundColorGetter, outlineColorGetter, strokeWeightGetter));

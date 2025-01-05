@@ -26,11 +26,10 @@ import ui.MainUI;
 import ui.components.ImageCanvas;
 
 /**
- * TODO:
+ * TODO: continue: Sizes class, UIToggles?
  * App:
  * * Selection
  * * * Clipboard (Copy / Paste / Cut)
- * * Maybe turn the ColorPickerApp into a togglable side panel?
  * * Resizing
  * * * Selection resizing
  * * * Selection Ctrl+Shift+X
@@ -44,8 +43,6 @@ import ui.components.ImageCanvas;
  * * Text tool
  * * Line tool
  * * Transparency
- * * * Show color transparency in color selection
- * * * ColorPickContainer: add option to remove alpha slider
  * * * Grey-white squares should always appear the same size
  * * * Simply selecting a transparent area and unselecting it causes the
  * * * * transparency to go away. Reason: selecting the area replaces that part
@@ -61,12 +58,12 @@ import ui.components.ImageCanvas;
  * * * Only one at a time
  * * * Keep track of all file locks in one centralized place to avoid leaking
  * UI:
+ * * Add UIToggle component (for dark mode and hueSatField settings)
  * * UI scale (based on screen resolution)
  * * * Add a static Sizes class that handles all the sizes of the entire UI
  * * * * (similar to what Colors does with colors). Maybe combine Sizes and
  * * * * Colors
  * * * * into a single UIProperties class
- * * Turn HueSatField into a circle? (angle = hue, radius = saturation)
  * * General design: containers with separators should double their margin!
  * * Scrolling
  * * Tool icons & cursors
@@ -80,6 +77,7 @@ import ui.components.ImageCanvas;
  * * Premultiply view matrix and transformation matrix (for rect and text
  * * shader)
  * * Rename transformationMatrix to uiMatrix
+ * * Anti aliasing
  * Error handling
  * 3D UI view?
  */

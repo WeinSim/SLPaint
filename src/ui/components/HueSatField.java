@@ -1,11 +1,13 @@
 package ui.components;
 
 import main.ColorPicker;
+import main.apps.App;
 import renderEngine.Window;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIStyle;
+import ui.Colors;
 
 public class HueSatField extends UIContainer implements DragTarget {
 
@@ -35,18 +37,44 @@ public class HueSatField extends UIContainer implements DragTarget {
         SVector mousePos = window.getMousePosition();
         SVector absolutePos = getAbsolutePosition();
         mousePos = new SVector(mousePos).sub(absolutePos);
-        mousePos.x = Math.min(Math.max(0, mousePos.x), size.x);
-        mousePos.y = Math.min(Math.max(0, mousePos.y), size.y);
 
-        colorPicker.setHue(mousePos.x / size.x * 360);
-        colorPicker.setSaturation(1 - mousePos.y / size.y);
+        if (App.isCircularHueSatField()) {
+            SVector mousePosRelative = new SVector(mousePos.x / size.x - 0.5, mousePos.y / size.y - 0.5).scale(2);
+
+            double mag = mousePosRelative.mag();
+            if (mag > 1) {
+                mousePosRelative.normalize();
+                mag = 1;
+            }
+
+            double angle = Math.atan2(mousePosRelative.y, mousePosRelative.x);
+            if (angle < 0) {
+                angle += 2 * Math.PI;
+            }
+            colorPicker.setHue(angle / Math.PI * 180);
+            colorPicker.setSaturation(mag);
+        } else {
+            mousePos.x = Math.min(Math.max(0, mousePos.x), size.x);
+            mousePos.y = Math.min(Math.max(0, mousePos.y), size.y);
+
+            colorPicker.setHue(mousePos.x / size.x * 360);
+            colorPicker.setSaturation(1 - mousePos.y / size.y);
+        }
+
     }
 
     @Override
     public void updateCursorPosition() {
         double hue = colorPicker.getHue(),
                 saturation = colorPicker.getSaturation();
-        SVector pos = new SVector(hue / 360 * size.x, (1 - saturation) * size.y);
+        SVector pos;
+        if (App.isCircularHueSatField()) {
+            hue *= Math.PI / 180;
+            pos = new SVector(Math.cos(hue) * saturation + 1, Math.sin(hue) * saturation + 1);
+            pos.mult(size).div(2);
+        } else {
+            pos = new SVector(hue / 360 * size.x, (1 - saturation) * size.y);
+        }
         children.get(0).getPosition().set(pos);
     }
 
@@ -90,7 +118,7 @@ public class HueSatField extends UIContainer implements DragTarget {
         public CursorLine(boolean vertical) {
             this.vertical = vertical;
 
-            setStyle(new UIStyle(() -> new SVector(), () -> null, () -> 1.0));
+            setStyle(new UIStyle(() -> Colors.getTextColor(), () -> null, () -> 1.0));
         }
 
         @Override

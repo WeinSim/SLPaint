@@ -29,8 +29,8 @@ public class Colors {
         OUTLINE_HIGHLIGHT(1.1, 0.45),
         SEPARATOR(0.56, 0.7),
         CANVAS(0.4, 0.85),
-        TRANSPARENCY_1(0.4, 1),
-        TRANSPARENCY_2(0.2, 0.85);
+        TRANSPARENCY_1(0.6, 1),
+        TRANSPARENCY_2(0.0, 0.85);
 
         public final double darkModeBrightness, lightModeBrightness;
 
@@ -106,8 +106,8 @@ public class Colors {
         double brightness = darkMode ? colorType.darkModeBrightness : colorType.lightModeBrightness;
 
         brightness = switch (colorType) {
-            // case TRANSPARENCY_1 -> 0.1;
-            // case TRANSPARENCY_2 -> 0.85;
+            // case TRANSPARENCY_1 -> 0.6;
+            // case TRANSPARENCY_2 -> 0.0;
             default -> brightness;
         };
 
