@@ -3,7 +3,7 @@ package ui.components;
 import main.ColorButtonArray;
 import sutil.ui.UIContainer;
 import sutil.ui.UISetter;
-import ui.MainUI;
+import ui.Sizes;
 
 public class CustomColorContainer extends UIContainer {
 
@@ -12,7 +12,7 @@ public class CustomColorContainer extends UIContainer {
 
         for (int i = 0; i < colors.getLength(); i++) {
             final int j = i;
-            UIColorElement button = new UIColorElement(() -> colors.getColor(j), MainUI.COLOR_BUTTON_SIZE, true);
+            UIColorElement button = new UIColorElement(() -> colors.getColor(j), Sizes.getColorButtonSize(), true);
             button.setClickAction(() -> clickAction.set(colors.getColor(j)));
             add(button);
         }

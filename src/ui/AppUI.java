@@ -20,7 +20,10 @@ public abstract class AppUI<T extends App> extends UIPanel{
     public AppUI(T app) {
         this.app = app;
 
-        textSize = 18;
+        margin = Sizes.getMargin();
+        padding = Sizes.getPadding();
+
+        textSize = Sizes.getTextSize();
         courierNew = app.getLoader().loadFont("Courier New Bold", (int) textSize, false);
 
         root = new UIRoot(this, UIContainer.VERTICAL, UIContainer.LEFT);

@@ -20,13 +20,15 @@ import main.dialogs.SaveDialog;
 import main.dialogs.UnableToSaveImageDialog;
 import main.dialogs.UnimplementedDialog;
 import renderEngine.MainAppRenderer;
+import renderEngine.Window;
 import sutil.SUtil;
 import sutil.math.SVector;
 import ui.MainUI;
 import ui.components.ImageCanvas;
 
 /**
- * TODO: continue: Sizes class, UIToggles?
+ * TODO: continue: Sizes class (window sizes)
+ * UIToggles?
  * App:
  * * Selection
  * * * Clipboard (Copy / Paste / Cut)
@@ -78,6 +80,7 @@ import ui.components.ImageCanvas;
  * * shader)
  * * Rename transformationMatrix to uiMatrix
  * * Anti aliasing
+ * Maximized windows don't show up correctly on Windows 11
  * Error handling
  * 3D UI view?
  */
@@ -158,7 +161,7 @@ public final class MainApp extends App {
     private ArrayList<Integer> customUIBaseColors;
 
     public MainApp() {
-        super(1280, 720, 1, "SLPaint");
+        super(1280, 720, Window.MAXIMIZED, "SLPaint");
 
         window.setCloseOnEscape(false);
 

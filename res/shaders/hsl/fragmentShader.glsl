@@ -53,6 +53,9 @@ float mag(vec2 v) {
 }
 
 float atan2(float y, float x) {
+    if (abs(x) < 1e-6) {
+        return y < 0 ? 3 * PI / 2 : PI / 2;
+    }
     if (x > 0) {
         return atan(y / x);
     } else {

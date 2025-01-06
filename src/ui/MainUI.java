@@ -19,8 +19,6 @@ import ui.components.UIColorElement;
 
 public class MainUI extends AppUI<MainApp> {
 
-    public static final int COLOR_BUTTON_SIZE = 28;
-
     public static final int NUM_COLOR_BUTTONS_PER_ROW = 10;
 
     public MainUI(MainApp app) {
@@ -83,7 +81,7 @@ public class MainUI extends AppUI<MainApp> {
             colorContainer.setSelectable(true);
 
             UIGetter<Integer> cg = i == 0 ? () -> app.getPrimaryColor() : () -> app.getSecondaryColor();
-            colorContainer.add(new UIColorElement(cg, 36, true));
+            colorContainer.add(new UIColorElement(cg, Sizes.getBigColorButtonSize(), true));
             UILabel label = new UILabel("%s\nColor".formatted(i == 0 ? "Primary" : "Secondary"));
             label.setAlignment(UIContainer.CENTER);
             label.zeroMargin();
@@ -104,7 +102,7 @@ public class MainUI extends AppUI<MainApp> {
             }
 
             final int color = MainApp.DEFAULT_COLORS[i];
-            UIColorElement button = new UIColorElement(() -> color, COLOR_BUTTON_SIZE, true);
+            UIColorElement button = new UIColorElement(() -> color, Sizes.getColorButtonSize(), true);
             button.setClickAction(() -> app.selectColor(color));
             currentRow.add(button);
 
@@ -153,7 +151,7 @@ public class MainUI extends AppUI<MainApp> {
 
         sidePanel.add(new ColorPickContainer(
                 app.getSelectedColorPicker(),
-                200,
+                Sizes.getColorPickerSizeSidePanel(),
                 UIContainer.VERTICAL,
                 true,
                 false));

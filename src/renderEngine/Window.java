@@ -87,7 +87,8 @@ public class Window {
         // onto its own thread. For now though, this is not neccessary.
         GLFW.glfwSwapInterval(1);
 
-        GLFW.glfwSetWindowSizeLimits(windowHandle, 200, 200, Integer.MAX_VALUE, Integer.MAX_VALUE);
+        // GLFW.glfwSetWindowSizeLimits(windowHandle, 200, 200, Integer.MAX_VALUE, Integer.MAX_VALUE);
+        GLFW.glfwSetWindowSizeLimits(windowHandle, 200, 200, GLFW.GLFW_DONT_CARE, GLFW.GLFW_DONT_CARE);
 
         arrowCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
         handCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);

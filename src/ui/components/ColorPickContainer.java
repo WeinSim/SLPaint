@@ -11,6 +11,7 @@ import sutil.ui.UIStyle;
 import sutil.ui.UIText;
 import sutil.ui.UITextInput;
 import ui.Colors;
+import ui.Sizes;
 
 public class ColorPickContainer extends UIContainer {
 
@@ -18,15 +19,12 @@ public class ColorPickContainer extends UIContainer {
     // private static final String[] HSL_NAMES = { "Hue", "Sat", "Light" };
     private static final String[] RGB_NAMES = { "R", "G", "B" };
     private static final String[] HSL_NAMES = { "H", "S", "L" };
-    private static final double PREVIEW_WIDTH = 120, PREVIEW_HEIGHT = 80;
-
-    public static final double DEFAULT_SIZE = 300;
 
     private ColorPicker colorPicker;
     private double size;
 
     public ColorPickContainer(ColorPicker colorPicker) {
-        this(colorPicker, DEFAULT_SIZE, VERTICAL, true, true);
+        this(colorPicker, Sizes.getColorPickerSizeExtraWindow(), VERTICAL, true, true);
     }
 
     public ColorPickContainer(ColorPicker colorPicker, double size, int orientation, boolean addAlpha,
@@ -122,12 +120,17 @@ public class ColorPickContainer extends UIContainer {
         UIContainer colorBox = new UIContainer(UIContainer.HORIZONTAL, 0);
         colorBox.setStyle(new UIStyle(() -> null, () -> Colors.getTextColor(), () -> 2.0));
         colorBox.zeroMargin().zeroPadding().noOutline();
-        double width = addPreview ? PREVIEW_WIDTH / 2 : PREVIEW_WIDTH;
+        double previewWidth = Sizes.getColorPickerPreviewWidth(),
+                previewHeight = Sizes.getColorPickerPreviewHeight();
+        if (addPreview) {
+            previewWidth /= 2;
+        }
+        // double width = addPreview ? previewWidth / 2 : previewWidth;
         for (int i = addPreview ? 0 : 1; i < 2; i++) {
             UIGetter<Integer> bgColorGetter = i == 0
                     ? () -> colorPicker.getInitialColor()
                     : () -> colorPicker.getRGB();
-            colorBox.add(new UIColorElement(bgColorGetter, new SVector(width, PREVIEW_HEIGHT), false));
+            colorBox.add(new UIColorElement(bgColorGetter, new SVector(previewWidth, previewHeight), false));
         }
         colorPreview.add(colorBox);
         colorPreview.add(new UIText("Preview"));
