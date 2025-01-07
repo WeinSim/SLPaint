@@ -106,9 +106,9 @@ public abstract class UIElement {
         double sw = style.getStrokeWeight();
         if (panel.getSelectedElement() == this) {
             if (style.getOutlineColor() == null) {
-                sw = 1;
+                sw = panel.getStrokeWeight();
             } else {
-                sw += 1;
+                sw *= 2;
             }
         }
         return sw;
@@ -179,7 +179,7 @@ public abstract class UIElement {
             }
             return outlineColor;
         };
-        UIGetter<Double> strokeWeightGetter = () -> 1.0;
+        UIGetter<Double> strokeWeightGetter = () -> panel.getStrokeWeight();
 
         style = new UIStyle(backgroundColorGetter, outlineColorGetter, strokeWeightGetter);
     }

@@ -24,7 +24,7 @@ public class ColorPickContainer extends UIContainer {
     private double size;
 
     public ColorPickContainer(ColorPicker colorPicker) {
-        this(colorPicker, Sizes.getColorPickerSizeExtraWindow(), VERTICAL, true, true);
+        this(colorPicker, Sizes.COLOR_PICKER_EXTRA_WINDOW.size, VERTICAL, true, true);
     }
 
     public ColorPickContainer(ColorPicker colorPicker, double size, int orientation, boolean addAlpha,
@@ -120,8 +120,8 @@ public class ColorPickContainer extends UIContainer {
         UIContainer colorBox = new UIContainer(UIContainer.HORIZONTAL, 0);
         colorBox.setStyle(new UIStyle(() -> null, () -> Colors.getTextColor(), () -> 2.0));
         colorBox.zeroMargin().zeroPadding().noOutline();
-        double previewWidth = Sizes.getColorPickerPreviewWidth(),
-                previewHeight = Sizes.getColorPickerPreviewHeight();
+        double previewWidth = Sizes.COLOR_PICKER_PREVIEW.width,
+                previewHeight = Sizes.COLOR_PICKER_PREVIEW.height;
         if (addPreview) {
             previewWidth /= 2;
         }

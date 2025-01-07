@@ -129,6 +129,10 @@ public abstract class UIPanel {
         return new SVector(1, 1, 1).scale(0.6);
     }
 
+    public double getStrokeWeight() {
+        return 1.0;
+    }
+
     public void setSelectedElement(UIElement element) {
         selectedElement = element;
     }

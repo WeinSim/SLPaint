@@ -70,7 +70,8 @@ public class UITextInput extends UIContainer {
     @Override
     public void setMinSize() {
         super.setMinSize();
-        size.x = 60;
+        // size.x = 60;
+        size.x = panel.getTextSize() * 3.3333;
     }
 
     @Override

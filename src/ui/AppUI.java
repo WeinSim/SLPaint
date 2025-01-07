@@ -20,10 +20,10 @@ public abstract class AppUI<T extends App> extends UIPanel{
     public AppUI(T app) {
         this.app = app;
 
-        margin = Sizes.getMargin();
-        padding = Sizes.getPadding();
+        margin = Sizes.MARGIN.size;
+        padding = Sizes.PADDING.size;
 
-        textSize = Sizes.getTextSize();
+        textSize = Sizes.TEXT.size;
         courierNew = app.getLoader().loadFont("Courier New Bold", (int) textSize, false);
 
         root = new UIRoot(this, UIContainer.VERTICAL, UIContainer.LEFT);
@@ -53,7 +53,7 @@ public abstract class AppUI<T extends App> extends UIPanel{
         UIGetter<SVector> backgroundColorGetter = () -> selectedGetter.get() ? Colors.getBackgroundHighlightColor2()
                 : null;
         UIGetter<SVector> outlineColorGetter = () -> element.mouseAbove() ? Colors.getOutlineHighlightColor() : null;
-        UIGetter<Double> strokeWeightGetter = () -> 1.0;
+        UIGetter<Double> strokeWeightGetter = () -> Sizes.STROKE_WEIGHT.size;
         element.setStyle(new UIStyle(backgroundColorGetter, outlineColorGetter, strokeWeightGetter));
         return element;
     }
@@ -103,5 +103,10 @@ public abstract class AppUI<T extends App> extends UIPanel{
     @Override
     public SVector getOutlineHighlightColor() {
         return Colors.getOutlineHighlightColor();
+    }
+
+    @Override
+    public double getStrokeWeight() {
+        return Sizes.STROKE_WEIGHT.size;
     }
 }

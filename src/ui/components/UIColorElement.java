@@ -6,6 +6,7 @@ import sutil.ui.UIElement;
 import sutil.ui.UIGetter;
 import sutil.ui.UIStyle;
 import ui.Colors;
+import ui.Sizes;
 
 public class UIColorElement extends UIElement {
 
@@ -24,9 +25,9 @@ public class UIColorElement extends UIElement {
                 ? () -> getColor() == null
                         ? new SVector(0.5, 0.5, 0.5)
                         : Colors.getTextColor()
-                        // : Colors.getOutlineNormalColor()
+                // : Colors.getOutlineNormalColor()
                 : () -> null;
-        UIGetter<Double> strokeWeightGetter = () -> 1.0;
+        UIGetter<Double> strokeWeightGetter = () -> Sizes.STROKE_WEIGHT.size;
         setStyle(new UIStyle(backgroundColorGetter, outlineColorGetter, strokeWeightGetter));
     }
 

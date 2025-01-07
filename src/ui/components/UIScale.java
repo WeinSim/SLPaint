@@ -4,6 +4,7 @@ import main.ColorPicker;
 import renderEngine.Window;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
+import ui.Sizes;
 
 public abstract class UIScale extends UIContainer implements DragTarget {
 
@@ -45,7 +46,7 @@ public abstract class UIScale extends UIContainer implements DragTarget {
 
     @Override
     public double getMargin() {
-        return 13;
+        return Sizes.UI_SCALE_MARGIN.size;
     }
 
     public void setParent(UIScaleContainer parent) {

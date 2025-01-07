@@ -6,6 +6,7 @@ import renderEngine.Window;
 import sutil.math.SVector;
 import ui.Colors;
 import ui.SettingsUI;
+import ui.Sizes;
 
 public final class SettingsApp extends App {
 
@@ -14,7 +15,8 @@ public final class SettingsApp extends App {
     private ColorPicker colorPicker;
 
     public SettingsApp(MainApp mainApp) {
-        super(900, 650, Window.NORMAL, true, "Settings", mainApp);
+        super((int) Sizes.SETTINGS_APP.width, (int) Sizes.SETTINGS_APP.height, Window.NORMAL, true, "Settings",
+                mainApp);
 
         customColorButtonArray = new ColorButtonArray(SettingsUI.NUM_UI_BASE_COLOR_BUTTONS);
 

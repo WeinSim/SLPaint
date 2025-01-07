@@ -3,73 +3,80 @@ package ui;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 
-public class Sizes {
+public enum Sizes {
+
+    MAIN_APP(1280, 720),
+    SETTINGS_APP(900, 650),
+    TEXT(18),
+    MARGIN(10),
+    PADDING(10),
+    STROKE_WEIGHT(1.5, true),
+    COLOR_BUTTON(28),
+    BIG_COLOR_BUTTON(36),
+    UI_SCALE_MARGIN(13),
+    COLOR_PICKER_SIDE_PANEL(200),
+    COLOR_PICKER_EXTRA_WINDOW(300),
+    COLOR_PICKER_PREVIEW(120, 80);
+
+    public final double size;
+    public final double width;
+    public final double height;
+
+    private Sizes(double size) {
+        this(size, false);
+    }
+
+    private Sizes(double size, boolean forceInteger) {
+        this(size, size, size, forceInteger);
+    }
+
+    private Sizes(double width, double height) {
+        this(width, height, false);
+    }
+
+    private Sizes(double width, double height, boolean forceInteger) {
+        this(0, width, height, false);
+    }
+
+    private Sizes(double size, double width, double height, boolean forceInteger) {
+        size = size * Inner.uiScale;
+        width = width * Inner.uiScale;
+        height = height * Inner.uiScale;
+        if (forceInteger) {
+            size = (int) size;
+            width = (int) width;
+            height = (int) height;
+        }
+        this.size = size;
+        this.width = width;
+        this.height = height;
+    }
+
+    public static double getUIScale() {
+        return Inner.uiScale;
+    }
 
     /**
-     * Values for a 1920x1080 screen
+     * The reason why this class exists (instead of uiScale being a static variable
+     * of Sizes directly) is that enum values are initiated before static
+     * variables, and so its value cannot be used in the Sizes() constructor.
      */
-    private static final double TEXT_SIZE = 18,
-        MARGIN = 10,
-        PADDING = 10,
-        COLOR_BUTTON_SIZE = 28,
-        BIG_COLOR_BUTTON_SIZE = 36,
-        COLOR_PICKER_SIZE_SIDE_PANEL = 200,
-        COLOR_PICKER_SIZE_EXTRA_WINDOW = 300,
-        COLOR_PICKER_PREVIEW_WIDTH = 120,
-        COLOR_PICKER_PREVIEW_HEIGHT = 80;
+    private static class Inner {
 
-    private static double uiScale;
+        private static final double uiScale;
 
-    static {
-        // This returns the virtual screenSize (1440 on my surface, which is exactly
-        // half the actual resolution because the system's uiScale factor has already
-        // been applied)
-        // Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        // System.out.format("Toolkit: width = %d\n", (int) screenSize.getWidth());
+        static {
+            // This returns the virtual screenSize (width=1440 on my surface, which is
+            // exactly
+            // half the actual resolution because the system's uiScale factor has already
+            // been applied)
+            // Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            // System.out.format("Toolkit: width = %d\n", (int) screenSize.getWidth());
 
-        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-        int width = gd.getDisplayMode().getWidth();
+            GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+            int width = gd.getDisplayMode().getWidth();
 
-        uiScale = width / 1920.0;
-    }
-
-    private Sizes() {
-
-    }
-
-    public static double getTextSize() {
-        return TEXT_SIZE * uiScale;
-    }
-
-    public static double getMargin() {
-        return MARGIN * uiScale;
-    }
-
-    public static double getPadding() {
-        return PADDING * uiScale;
-    }
-
-    public static double getColorButtonSize() {
-        return COLOR_BUTTON_SIZE * uiScale;
-    }
-
-    public static double getBigColorButtonSize() {
-        return BIG_COLOR_BUTTON_SIZE * uiScale;
-    }
-
-    public static double getColorPickerSizeSidePanel() {
-        return COLOR_PICKER_SIZE_SIDE_PANEL * uiScale;
-    }
-
-    public static double getColorPickerSizeExtraWindow() {
-        return COLOR_PICKER_SIZE_EXTRA_WINDOW * uiScale;
-    }
-
-    public static double getColorPickerPreviewWidth() {
-        return COLOR_PICKER_PREVIEW_WIDTH * uiScale;
-    }
-
-    public static double getColorPickerPreviewHeight() {
-        return COLOR_PICKER_PREVIEW_HEIGHT * uiScale;
+            uiScale = width / 1920.0;
+        }
     }
 }

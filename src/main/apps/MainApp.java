@@ -24,6 +24,7 @@ import renderEngine.Window;
 import sutil.SUtil;
 import sutil.math.SVector;
 import ui.MainUI;
+import ui.Sizes;
 import ui.components.ImageCanvas;
 
 /**
@@ -161,7 +162,7 @@ public final class MainApp extends App {
     private ArrayList<Integer> customUIBaseColors;
 
     public MainApp() {
-        super(1280, 720, Window.MAXIMIZED, "SLPaint");
+        super((int) Sizes.MAIN_APP.width, (int) Sizes.MAIN_APP.height, Window.MAXIMIZED, "SLPaint");
 
         window.setCloseOnEscape(false);
 
@@ -211,11 +212,18 @@ public final class MainApp extends App {
         // canvas actions
         if (canvas.mouseTrulyAbove()) {
             // scroll actions
-            double scrollAmount = (prevMouseScroll.y - mouseScroll.y) * MOUSE_WHEEL_SENSITIVITY;
-            if (keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
+            // double scrollAmount = MOUSE_WHEEL_SENSITIVITY *
+            // (keys[GLFW.GLFW_KEY_LEFT_SHIFT]
+            // ? prevMouseScroll.x - mouseScroll.x
+            // : mouseScroll.y - mouseScroll.y);
+            // double scrollAmount = (prevMouseScroll.y - mouseScroll.y) *
+            // MOUSE_WHEEL_SENSITIVITY;
+            SVector scrollAmount = new SVector(mouseScroll).sub(prevMouseScroll).scale(MOUSE_WHEEL_SENSITIVITY);
+            boolean shiftPressed = keys[GLFW.GLFW_KEY_LEFT_CONTROL];
+            if (shiftPressed) {
                 // zoom
                 double prevZoom = getImageZoom();
-                imageZoomLevel -= (int) Math.signum(scrollAmount);
+                imageZoomLevel += (int) Math.signum(scrollAmount.y);
                 imageZoomLevel = Math.min(Math.max(MIN_ZOOM_LEVEL, imageZoomLevel), MAX_ZOOM_LEVEL);
                 double zoom = getImageZoom();
                 imageTranslation.set(imageTranslation.sub(mousePos).scale(zoom / prevZoom).add(mousePos));
@@ -223,11 +231,12 @@ public final class MainApp extends App {
                 window.setHandCursor();
             } else {
                 // scroll
-                if (keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
-                    imageTranslation.x -= scrollAmount;
-                } else {
-                    imageTranslation.y -= scrollAmount;
-                }
+                imageTranslation.add(scrollAmount);
+                // if (keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
+                // imageTranslation.x -= scrollAmount;
+                // } else {
+                // imageTranslation.y -= scrollAmount;
+                // }
             }
 
             // selection - left click
@@ -496,7 +505,7 @@ public final class MainApp extends App {
     }
 
     public double getImageZoom() {
-        return Math.pow(ZOOM_BASE, imageZoomLevel);
+        return Math.pow(ZOOM_BASE, imageZoomLevel) * Sizes.getUIScale();
     }
 
     public void setCanvas(ImageCanvas element) {
@@ -594,11 +603,6 @@ public final class MainApp extends App {
     public ColorButtonArray getCustomColorButtonArray() {
         return customColorButtonArray;
     }
-
-    // public void setCustomColorContainer(CustomColorContainer
-    // customColorContainer) {
-    // this.customColorContainer = customColorContainer;
-    // }
 
     public long getFilesize() {
         ImageFile imageFile = imageFileManager.getImageFile();

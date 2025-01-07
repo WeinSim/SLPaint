@@ -12,7 +12,7 @@ public class CustomColorContainer extends UIContainer {
 
         for (int i = 0; i < colors.getLength(); i++) {
             final int j = i;
-            UIColorElement button = new UIColorElement(() -> colors.getColor(j), Sizes.getColorButtonSize(), true);
+            UIColorElement button = new UIColorElement(() -> colors.getColor(j), Sizes.COLOR_BUTTON.size, true);
             button.setClickAction(() -> clickAction.set(colors.getColor(j)));
             add(button);
         }

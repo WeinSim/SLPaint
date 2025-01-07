@@ -11,7 +11,7 @@ public class UIButton extends UILabel {
                 ? panel.getBackgroundHighlightColor()
                 : panel.getBackgroundNormalColor();
         UIGetter<SVector> ol = () -> panel.getOutlineNormalColor();
-        UIGetter<Double> sw = () -> 1.0;
+        UIGetter<Double> sw = () -> panel.getStrokeWeight();
         setStyle(new UIStyle(bg, ol, sw));
 
         setClickAction(clickAction);

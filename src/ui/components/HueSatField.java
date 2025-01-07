@@ -8,6 +8,7 @@ import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIStyle;
 import ui.Colors;
+import ui.Sizes;
 
 public class HueSatField extends UIContainer implements DragTarget {
 
@@ -118,7 +119,7 @@ public class HueSatField extends UIContainer implements DragTarget {
         public CursorLine(boolean vertical) {
             this.vertical = vertical;
 
-            setStyle(new UIStyle(() -> Colors.getTextColor(), () -> null, () -> 1.0));
+            setStyle(new UIStyle(() -> Colors.getTextColor(), () -> null, () -> Sizes.STROKE_WEIGHT.size));
         }
 
         @Override

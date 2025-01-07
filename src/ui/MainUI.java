@@ -81,7 +81,7 @@ public class MainUI extends AppUI<MainApp> {
             colorContainer.setSelectable(true);
 
             UIGetter<Integer> cg = i == 0 ? () -> app.getPrimaryColor() : () -> app.getSecondaryColor();
-            colorContainer.add(new UIColorElement(cg, Sizes.getBigColorButtonSize(), true));
+            colorContainer.add(new UIColorElement(cg, Sizes.BIG_COLOR_BUTTON.size, true));
             UILabel label = new UILabel("%s\nColor".formatted(i == 0 ? "Primary" : "Secondary"));
             label.setAlignment(UIContainer.CENTER);
             label.zeroMargin();
@@ -102,7 +102,7 @@ public class MainUI extends AppUI<MainApp> {
             }
 
             final int color = MainApp.DEFAULT_COLORS[i];
-            UIColorElement button = new UIColorElement(() -> color, Sizes.getColorButtonSize(), true);
+            UIColorElement button = new UIColorElement(() -> color, Sizes.COLOR_BUTTON.size, true);
             button.setClickAction(() -> app.selectColor(color));
             currentRow.add(button);
 
@@ -151,7 +151,7 @@ public class MainUI extends AppUI<MainApp> {
 
         sidePanel.add(new ColorPickContainer(
                 app.getSelectedColorPicker(),
-                Sizes.getColorPickerSizeSidePanel(),
+                Sizes.COLOR_PICKER_SIDE_PANEL.size,
                 UIContainer.VERTICAL,
                 true,
                 false));

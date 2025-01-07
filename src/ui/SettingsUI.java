@@ -50,7 +50,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         // gap.setMaximalSize();
         baseColorHeading.add(gap);
         UIColorElement baseColorButton = new UIColorElement(() -> MainApp.toInt(Colors.getBaseColor()),
-                Sizes.getColorButtonSize(), true);
+                Sizes.COLOR_BUTTON.size, true);
         baseColorHeading.add(baseColorButton);
         ColorPicker colorPicker = app.getColorPicker();
         // baseColorRow1.add(new UIButton("Reset", () ->
@@ -82,7 +82,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         for (int i = 0; i < numDefaultColors; i++) {
             final int j = i;
             UIColorElement button = new UIColorElement(() -> MainApp.toInt(Colors.getDefaultColors()[j]),
-                    Sizes.getColorButtonSize(), true);
+                    Sizes.COLOR_BUTTON.size, true);
             button.setClickAction(() -> app.setUIColor(MainApp.toInt(Colors.getDefaultColors()[j])));
             defaultColorContainer.add(button);
         }
@@ -110,7 +110,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         baseColorExpand.add(new UISeparator());
 
-        baseColorExpand.add(new ColorPickContainer(colorPicker, Sizes.getColorPickerSizeSidePanel(),
+        baseColorExpand.add(new ColorPickContainer(colorPicker, Sizes.COLOR_PICKER_SIDE_PANEL.size,
                 UIContainer.HORIZONTAL, false, true));
 
         baseColorButton.setClickAction(() -> app.queueEvent(() -> {

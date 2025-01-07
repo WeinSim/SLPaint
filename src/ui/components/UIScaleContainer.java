@@ -4,6 +4,7 @@ import sutil.math.SVector;
 import sutil.ui.UIContainer;
 import sutil.ui.UIStyle;
 import ui.Colors;
+import ui.Sizes;
 
 public class UIScaleContainer extends UIContainer {
 
@@ -11,7 +12,10 @@ public class UIScaleContainer extends UIContainer {
 
     protected UIScale scale;
 
-    private static final UIStyle SLIDER_STYLE = new UIStyle(() -> Colors.getTextColor(), () -> null, () -> 1.0);
+    private static final UIStyle SLIDER_STYLE = new UIStyle(
+            () -> Colors.getTextColor(),
+            () -> null,
+            () -> Sizes.STROKE_WEIGHT.size);
 
     public UIScaleContainer(UIScale scale) {
         super(1 - scale.getOrientation(), TOP);

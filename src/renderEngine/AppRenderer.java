@@ -11,6 +11,7 @@ import sutil.ui.UIElement;
 import sutil.ui.UIText;
 import ui.AppUI;
 import ui.Colors;
+import ui.Sizes;
 import ui.components.AlphaScale;
 import ui.components.HueSatField;
 import ui.components.LightnessScale;
@@ -116,7 +117,7 @@ public class AppRenderer<T extends App> {
         if (App.showDebugOutline()) {
             SVector orange = new SVector(1, 0.7, 0.1);
             uiMaster.stroke(orange);
-            uiMaster.strokeWeight(1);
+            uiMaster.strokeWeight(Sizes.STROKE_WEIGHT.size);
             uiMaster.noFill();
             uiMaster.rect(position, size);
         }
