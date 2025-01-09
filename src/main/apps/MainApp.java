@@ -28,8 +28,8 @@ import ui.Sizes;
 import ui.components.ImageCanvas;
 
 /**
- * TODO: continue: Sizes class (window sizes)
- * UIToggles?
+ * TODO: continue:
+ * UIToggle
  * App:
  * * Selection
  * * * Clipboard (Copy / Paste / Cut)

@@ -8,6 +8,7 @@ import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
+import sutil.ui.UIToggle;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.UIColorElement;
@@ -125,28 +126,38 @@ public class SettingsUI extends AppUI<SettingsApp> {
     }
 
     private UIContainer createDarkModeToggle() {
-        // UIContainer darkModeToggle = new UIContainer(UIContainer.HORIZONTAL,
-        // UIContainer.CENTER);
+        // UIButton button = new UIButton("", () -> app.toggleDarkMode());
+        // button.setText(() -> String.format("Mode: %s", Colors.isDarkMode() ? "Dark" :
+        // "Light"));
+        // return button;
 
-        UIButton button = new UIButton("", () -> app.toggleDarkMode());
-        button.setText(() -> String.format("Mode: %s", Colors.isDarkMode() ? "Dark" : "Light"));
-
-        return button;
-
-        // darkModeToggle.add(button);
-        // return darkModeToggle;
+        UIContainer container = new UIContainer(UIContainer.HORIZONTAL,
+                UIContainer.CENTER);
+        UIText label = new UIText(() -> String.format("Mode: %s",
+                Colors.isDarkMode()
+                        ? "Dark"
+                        : "Light"));
+        container.add(label);
+        UIToggle toggle = new UIToggle(() -> Colors.isDarkMode(), (Boolean _) -> app.toggleDarkMode());
+        container.add(toggle);
+        return container;
     }
 
     private UIContainer createHueSatFieldToggle() {
-        // UIContainer hueSatToggle = new UIContainer(UIContainer.HORIZONTAL,
-        // UIContainer.CENTER);
+        // UIButton button = new UIButton("", () -> App.toggleCircularHueSatField());
+        // button.setText(() -> String.format("HueSatField: %s",
+        // App.isCircularHueSatField() ? "Circle" : "Square"));
+        // return button;
 
-        UIButton button = new UIButton("", () -> App.toggleCircularHueSatField());
-        button.setText(() -> String.format("HueSatField: %s", App.isCircularHueSatField() ? "Circle" : "Square"));
-
-        return button;
-
-        // hueSatToggle.add(button);
-        // return hueSatToggle;
+        UIContainer container = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIText label = new UIText(() -> String.format("HueSatField: %s",
+                App.isCircularHueSatField()
+                        ? "Circle"
+                        : "Square"));
+        container.add(label);
+        UIToggle toggle = new UIToggle(() -> App.isCircularHueSatField(),
+                (Boolean _) -> App.toggleCircularHueSatField());
+        container.add(toggle);
+        return container;
     }
 }

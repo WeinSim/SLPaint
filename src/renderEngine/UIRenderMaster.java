@@ -26,6 +26,7 @@ public class UIRenderMaster {
     private ShaderProgram textShader;
     private ShaderProgram imageShader;
     private ShaderProgram hslShader;
+    private ShaderProgram ellipseShader;
     private ShaderProgram activeShader;
 
     private Matrix3f uiMatrix;
@@ -55,6 +56,7 @@ public class UIRenderMaster {
 
         textShader = new ShaderProgram("text", new String[] { "position", "textureCoords", "size" }, true);
         rectShader = new ShaderProgram("rect", null, true);
+        ellipseShader = new ShaderProgram("ellipse", null, true);
         imageShader = new ShaderProgram("image", null, true);
         hslShader = new ShaderProgram("hsl", null, true);
 
@@ -112,6 +114,24 @@ public class UIRenderMaster {
         GL30.glBindVertexArray(dummyVAO.getVaoID());
         GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
         GL30.glBindVertexArray(0);
+    }
+
+    public void ellipse(SVector position, SVector size) {
+        activateShader(ellipseShader);
+
+        pushMatrix();
+        translate(position);
+        scale(size);
+
+        ellipseShader.loadUniform("fill", fill);
+        ellipseShader.loadUniform("uiMatrix", uiMatrix);
+        ellipseShader.loadUniform("viewMatrix", createViewMatrix());
+
+        GL30.glBindVertexArray(dummyVAO.getVaoID());
+        GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
+        GL30.glBindVertexArray(0);
+
+        popMatrix();
     }
 
     public void text(String text, SVector position) {

@@ -9,6 +9,7 @@ import sutil.math.SVector;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIText;
+import sutil.ui.UIToggle;
 import ui.AppUI;
 import ui.Colors;
 import ui.Sizes;
@@ -100,6 +101,24 @@ public class AppRenderer<T extends App> {
             // color gradient
             uiMaster.fill(MainApp.toSVector(scale.getRGB()));
             uiMaster.alphaScale(position, size, scale.getOrientation());
+        }
+        if (element instanceof UIToggle toggle) {
+            uiMaster.fill(Colors.getBackgroundHighlightColor2());
+            double wh = size.y;
+            double difference = size.x - size.y;
+            uiMaster.ellipse(new SVector(position.x, position.y), new SVector(wh, wh));
+            uiMaster.ellipse(new SVector(position.x + size.x - wh, position.y), new SVector(wh, wh));
+            uiMaster.noStroke();
+            uiMaster.rect(new SVector(position.x + wh / 2, position.y), new SVector(difference, wh));
+
+            uiMaster.fill(Colors.getTextColor());
+            double x = position.x + (toggle.getState() ? difference : 0);
+            SVector pos = new SVector(x, position.y);
+            SVector s = new SVector(wh, wh);
+            final double factor = 0.7;
+            pos.add(s.copy().scale((1 - factor) / 2));
+            s.scale(factor);
+            uiMaster.ellipse(pos, s);
         }
         if (element instanceof UIContainer container) {
             uiMaster.pushMatrix();
