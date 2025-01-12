@@ -22,7 +22,7 @@ void main(void) {
         vec3 screenPos = viewMatrix * uiMatrix * vec3(offset, 1.0);
         gl_Position = vec4(screenPos.xy, 0, 1);
 
-        uvCoords = offset;
+        uvCoords = 2 * offset - 1;
         EmitVertex();
     }
     EndPrimitive();

@@ -11,9 +11,11 @@ import sutil.ui.UIGetter;
 import sutil.ui.UILabel;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
+import sutil.ui.UIToggle;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.ImageCanvas;
+import ui.components.SeparatorContainer;
 import ui.components.ToolButton;
 import ui.components.UIColorElement;
 
@@ -31,48 +33,39 @@ public class MainUI extends AppUI<MainApp> {
         root.setAlignment(UIContainer.LEFT);
         root.zeroMargin().zeroPadding().noOutline();
 
-        // UIContainer mainField = new UIContainer(UIContainer.VERTICAL,
-        // UIContainer.LEFT);
-        // mainField.zeroMargin().zeroPadding().noOutline();
-
-        UIContainer topRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER) {
-            @Override
-            public double getMargin() {
-                return 2 * super.getMargin();
-            }
-        };
+        SeparatorContainer topRow = new SeparatorContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         topRow.setFillSize();
         topRow.withBackground().noOutline();
 
         UIContainer settings = addTopRowSection(topRow, "Settings");
         settings.add(new UIButton("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG)));
 
-        topRow.add(new UISeparator());
+        // topRow.add(new UISeparator());
 
         UIContainer fileOptions = addTopRowSection(topRow, "File");
         fileOptions.add(new UIButton("New", () -> app.newImage()));
         fileOptions.add(new UIButton("Open", () -> app.openImage()));
         fileOptions.add(new UIButton("Save", () -> app.saveImage()));
 
-        topRow.add(new UISeparator());
+        // topRow.add(new UISeparator());
 
         UIContainer imageOptions = addTopRowSection(topRow, "Image");
         imageOptions.add(new UIButton("Change Size", () -> app.showDialog(MainApp.CHANGE_SIZE_DIALOG)));
         imageOptions.add(new UIButton("Rotate", () -> app.showDialog(MainApp.ROTATE_DIALOG)));
         imageOptions.add(new UIButton("Flip", () -> app.showDialog(MainApp.FLIP_DIALOG)));
 
-        topRow.add(new UISeparator());
+        // topRow.add(new UISeparator());
 
         UIContainer toolbox = addTopRowSection(topRow, "Tools");
         for (ImageTool tool : ImageTool.values()) {
             toolbox.add(new ToolButton(app, tool));
         }
 
-        topRow.add(new UISeparator());
+        // topRow.add(new UISeparator());
 
         addTopRowSection(topRow, "Size");
 
-        topRow.add(new UISeparator());
+        // topRow.add(new UISeparator());
 
         for (int i = 0; i < 2; i++) {
             final int index = i;
@@ -122,10 +115,10 @@ public class MainUI extends AppUI<MainApp> {
         allColors.add(ccc);
         topRow.add(allColors);
 
-        UILabel newColor = new UILabel("+");
-        setButtonStyle1(newColor);
-        newColor.setClickAction(() -> app.showDialog(MainApp.NEW_COLOR_DIALOG));
-        topRow.add(newColor);
+        // UILabel newColor = new UILabel("+");
+        // setButtonStyle1(newColor);
+        // newColor.setClickAction(() -> app.showDialog(MainApp.NEW_COLOR_DIALOG));
+        // topRow.add(newColor);
 
         // mainField.add(topRow);
         root.add(topRow);
@@ -134,20 +127,22 @@ public class MainUI extends AppUI<MainApp> {
         canvas.noOutline();
         root.add(canvas);
 
-        UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT) {
-            @Override
-            public double getMargin() {
-                return 2 * super.getMargin();
-            }
-        };
+        SeparatorContainer sidePanel = new SeparatorContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         sidePanel.withBackground().noOutline();
-        UIButton transparentSelection = new UIButton("", () -> app.toggleTransparentSelection());
-        transparentSelection.setText(() -> String.format(
-                "Transparent selection: %s",
-                app.isTransparentSelection() ? "On" : "Off"));
+        UIContainer transparentSelection = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        transparentSelection.zeroMargin().noOutline();
+        transparentSelection.setFillSize();
+        UIContainer fill = new UIContainer(0, 0);
+        fill.noOutline();
+        fill.setMaximalSize();
+        transparentSelection.add(new UIText( "Transparent selection"));
+        transparentSelection.add(fill);
+        UIToggle toggle = new UIToggle(() -> app.isTransparentSelection(),
+                (Boolean _) -> app.toggleTransparentSelection());
+        transparentSelection.add(toggle);
         sidePanel.add(transparentSelection);
 
-        sidePanel.add(new UISeparator());
+        // sidePanel.add(new UISeparator());
 
         sidePanel.add(new ColorPickContainer(
                 app.getSelectedColorPicker(),
@@ -205,7 +200,7 @@ public class MainUI extends AppUI<MainApp> {
             }
             return ret;
         }));
-        UIContainer fill = new UIContainer(0, 0);
+        fill = new UIContainer(0, 0);
         fill.noOutline().noBackground();
         fill.setMaximalSize();
         statusBar.add(fill);

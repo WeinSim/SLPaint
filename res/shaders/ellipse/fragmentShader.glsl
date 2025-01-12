@@ -7,8 +7,7 @@ out vec4 outColor;
 uniform vec3 fill;
 
 void main(void) {
-    vec2 centerCoords = 2 * uvCoords - 1;
-    float mag = centerCoords.x * centerCoords.x + centerCoords.y * centerCoords.y;
+    float mag = uvCoords.x * uvCoords.x + uvCoords.y * uvCoords.y;
     if (mag > 1) {
         discard;
     }

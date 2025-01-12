@@ -11,6 +11,7 @@ import sutil.ui.UIText;
 import sutil.ui.UIToggle;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
+import ui.components.SeparatorContainer;
 import ui.components.UIColorElement;
 
 public class SettingsUI extends AppUI<SettingsApp> {
@@ -58,12 +59,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         // colorPicker.setRGB(MainApp.toInt(App.DEFAULT_BASE_COLOR))));
         baseColor.add(baseColorHeading);
 
-        UIContainer baseColorExpand = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT) {
-            @Override
-            public double getMargin() {
-                return 2 * super.getMargin();
-            }
-        };
+        SeparatorContainer baseColorExpand = new SeparatorContainer(UIContainer.VERTICAL, UIContainer.LEFT);
 
         UIContainer allColorsContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
         allColorsContainer.zeroMargin().noOutline();
@@ -108,8 +104,6 @@ public class SettingsUI extends AppUI<SettingsApp> {
         allColorsContainer.add(customColors);
 
         baseColorExpand.add(allColorsContainer);
-
-        baseColorExpand.add(new UISeparator());
 
         baseColorExpand.add(new ColorPickContainer(colorPicker, Sizes.COLOR_PICKER_SIDE_PANEL.size,
                 UIContainer.HORIZONTAL, false, true));

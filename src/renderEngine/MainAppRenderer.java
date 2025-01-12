@@ -66,6 +66,7 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
                 w = selectionManager.getWidth();
                 h = selectionManager.getHeight();
             }
+            // TODO: remove these magic numbers
             uiMaster.checkerboardStroke(SELECTION_BORDER_COLORS, 15);
             uiMaster.strokeWeight(2);
             uiMaster.noFill();

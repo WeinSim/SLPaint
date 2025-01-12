@@ -1,5 +1,7 @@
 package main;
 
+import java.awt.image.BufferedImage;
+
 import main.apps.MainApp;
 import sutil.math.SVector;
 
@@ -100,6 +102,23 @@ public class SelectionManager {
         width = app.getImage().getWidth();
         height = app.getImage().getHeight();
         createSubImage();
+
+        phase = IDLE;
+    }
+
+    public void selectClipboard(BufferedImage image) {
+        selectClipboard(new Image(image));
+    }
+
+    public void selectClipboard(Image image) {
+        cancel();
+
+        x = 0;
+        y = 0;
+        width = image.getWidth();
+        height = image.getHeight();
+
+        selection = image;
 
         phase = IDLE;
     }

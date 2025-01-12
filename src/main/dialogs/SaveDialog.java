@@ -53,8 +53,8 @@ public class SaveDialog extends UserDialog {
             System.out.println("(defaulting to PNG instead)");
             format = ImageFormat.PNG;
         }
-        final File finalFile = selectedFile;
-        final ImageFormat finalFormat = format;
+        // final File finalFile = selectedFile;
+        // final ImageFormat finalFormat = format;
         // app.queueEvent(() -> app.attemptSave(finalFile, finalFormat));
     }
 }

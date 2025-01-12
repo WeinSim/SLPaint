@@ -1,5 +1,6 @@
 package main.apps;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 
 import org.lwjgl.glfw.GLFW;
 
+import main.ClipboardManager;
 import main.ColorButtonArray;
 import main.ColorPicker;
 import main.Image;
@@ -28,16 +30,13 @@ import ui.Sizes;
 import ui.components.ImageCanvas;
 
 /**
- * TODO: continue:
- * UIToggle
+ * TODO:
  * App:
- * * Selection
- * * * Clipboard (Copy / Paste / Cut)
  * * Resizing
  * * * Selection resizing
  * * * Selection Ctrl+Shift+X
  * * Save user settings (ui base color, light / dark mode, transparent
- * selection)
+ * * * selection)
  * * Undo / redo
  * * Pencil
  * * * Add different sizes
@@ -61,26 +60,25 @@ import ui.components.ImageCanvas;
  * * * Only one at a time
  * * * Keep track of all file locks in one centralized place to avoid leaking
  * UI:
- * * Add UIToggle component (for dark mode and hueSatField settings)
- * * UI scale (based on screen resolution)
- * * * Add a static Sizes class that handles all the sizes of the entire UI
- * * * * (similar to what Colors does with colors). Maybe combine Sizes and
- * * * * Colors
- * * * * into a single UIProperties class
- * * General design: containers with separators should double their margin!
  * * Scrolling
  * * Tool icons & cursors
+ * * UIFloat element (e.g. dropdown menues): doesn't affect parent's size
  * * (Add hMargin and vMargin in UIContainer)
  * * * Not neccessary for now. UISeparators now extend fully even without
  * * * hMargin and vMargin
  * Rendering:
+ * * Weird rendering bugs:
+ * * * Anti aliasing doesn't work despite being enabled
+ * * * * (glfwWindowHint(GLFW_SAMPLES, 4) and glEnable(GL_MULTISAMPLE))
+ * * * Selection border sometimes has artifacts on bottom and right inner edges
+ * * * AlphaScale has artifacts on bottom edge (whose size depends on wether a
+ * * * * text cursor is currently visible?!?)
  * * Clean up UIRenderMaster API and UI shaders (especially with regards to
  * * * transparency!)
  * * Ellipse rendering (for color buttons maybe?)
  * * Premultiply view matrix and transformation matrix (for rect and text
  * * shader)
  * * Rename transformationMatrix to uiMatrix
- * * Anti aliasing
  * Maximized windows don't show up correctly on Windows 11
  * Error handling
  * 3D UI view?
@@ -211,13 +209,6 @@ public final class MainApp extends App {
         Image image = imageFileManager.getImage();
         // canvas actions
         if (canvas.mouseTrulyAbove()) {
-            // scroll actions
-            // double scrollAmount = MOUSE_WHEEL_SENSITIVITY *
-            // (keys[GLFW.GLFW_KEY_LEFT_SHIFT]
-            // ? prevMouseScroll.x - mouseScroll.x
-            // : mouseScroll.y - mouseScroll.y);
-            // double scrollAmount = (prevMouseScroll.y - mouseScroll.y) *
-            // MOUSE_WHEEL_SENSITIVITY;
             SVector scrollAmount = new SVector(mouseScroll).sub(prevMouseScroll).scale(MOUSE_WHEEL_SENSITIVITY);
             boolean shiftPressed = keys[GLFW.GLFW_KEY_LEFT_CONTROL];
             if (shiftPressed) {
@@ -232,11 +223,6 @@ public final class MainApp extends App {
             } else {
                 // scroll
                 imageTranslation.add(scrollAmount);
-                // if (keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
-                // imageTranslation.x -= scrollAmount;
-                // } else {
-                // imageTranslation.y -= scrollAmount;
-                // }
             }
 
             // selection - left click
@@ -338,12 +324,38 @@ public final class MainApp extends App {
             // R -> reset viewport transform
             resetImageTransform();
         }
+
         if (keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
             // Ctrl + A -> select everything
             if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_A)) {
                 setActiveTool(ImageTool.SELECTION);
                 selectionManager.selectEverything();
             }
+
+            // Ctrl + V -> paste clipboard
+            if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_V)) {
+                BufferedImage paste = ClipboardManager.getImage();
+                if (paste != null) {
+                    setActiveTool(ImageTool.SELECTION);
+                    selectionManager.selectClipboard(paste);
+                }
+            }
+
+            // Ctrl + C -> copy to clipboard
+            if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_C)) {
+                if (selectionManager.getPhase() == SelectionManager.IDLE) {
+                    ClipboardManager.setImage(selectionManager.getSelection().getBufferedImage());
+                }
+            }
+
+            // Ctrl + X -> cut to clipboard
+            if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_X)) {
+                if (selectionManager.getPhase() == SelectionManager.IDLE) {
+                    ClipboardManager.setImage(selectionManager.getSelection().getBufferedImage());
+                    selectionManager.cancel();
+                }
+            }
+
             // Ctr (+ Shift) + S -> save (as)
             if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_S)) {
                 if (keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {

@@ -3,7 +3,6 @@
 in vec4 color;
 in vec4 color2;
 in float applyCheckerboard;
-in float distAlongEdge;
 in vec2 relativePos;
 
 out vec4 outColor;
@@ -29,11 +28,5 @@ void main(void) {
         int xComp = int(relPosClip.x / checkerboardSize);
         int yComp = int(relPosClip.y / checkerboardSize);
         outColor = (xComp + yComp) % 2 == 0 ? color : color2;
-
-        // int segment = int(abs(distAlongEdge) / checkerboardStrokeSize);
-        // // if (distAlongEdge < 0) {
-        // //     segment = -1 - segment;
-        // // }
-        // outColor = segment % 2 == 0 ? color : color2;
     }
 }
