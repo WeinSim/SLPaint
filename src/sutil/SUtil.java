@@ -13,8 +13,7 @@ public class SUtil {
         int numLinesNoSUtil = getNumLines(false);
         int numLinesSUtil = numLinesTotal - numLinesNoSUtil;
 
-        System.out
-                .println("Number of lines: " + numLinesTotal + " (" + numLinesNoSUtil + " + " + numLinesSUtil + " S)");
+        System.out.format("Number of lines: %d (%d + %d S)\n", numLinesTotal, numLinesNoSUtil, numLinesSUtil);
     }
 
     private static int getNumLines(boolean includeSU) {

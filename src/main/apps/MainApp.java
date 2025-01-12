@@ -32,6 +32,12 @@ import ui.components.ImageCanvas;
 /**
  * TODO:
  * App:
+ * * Dialogs
+ * * * Save dialog
+ * * * * Keep track of unsaved changes, ask user to save before quitting if
+ * * * * there are unsaved changes
+ * * * Only one at a time
+ * * * Keep track of all file locks in one centralized place to avoid leaking
  * * Resizing
  * * * Selection resizing
  * * * Selection Ctrl+Shift+X
@@ -53,12 +59,6 @@ import ui.components.ImageCanvas;
  * * * * unaffected. What is the expected behavior here?
  * * Recognize remapping from CAPS_LOCK to ESCAPE
  * * When parent app closes, shouldren should also close
- * * Dialogs
- * * * Save dialog
- * * * * Keep track of unsaved changes, ask user to save before quitting if
- * * * * there are unsaved changes
- * * * Only one at a time
- * * * Keep track of all file locks in one centralized place to avoid leaking
  * UI:
  * * Scrolling
  * * Tool icons & cursors
@@ -66,6 +66,7 @@ import ui.components.ImageCanvas;
  * * (Add hMargin and vMargin in UIContainer)
  * * * Not neccessary for now. UISeparators now extend fully even without
  * * * hMargin and vMargin
+ * * HueSatField's hitbox should adjust (rect / circle) depending on the setting
  * Rendering:
  * * Weird rendering bugs:
  * * * Anti aliasing doesn't work despite being enabled
@@ -73,11 +74,12 @@ import ui.components.ImageCanvas;
  * * * Selection border sometimes has artifacts on bottom and right inner edges
  * * * AlphaScale has artifacts on bottom edge (whose size depends on wether a
  * * * * text cursor is currently visible?!?)
+ * * Fix stuttering artifact when resizing windows on Linux
+ * * * (see https://www.glfw.org/docs/latest/window.html#window_refresh)
  * * Clean up UIRenderMaster API and UI shaders (especially with regards to
  * * * transparency!)
- * * Ellipse rendering (for color buttons maybe?)
  * * Premultiply view matrix and transformation matrix (for rect and text
- * * shader)
+ * * * shader)
  * * Rename transformationMatrix to uiMatrix
  * Maximized windows don't show up correctly on Windows 11
  * Error handling
@@ -170,7 +172,7 @@ public final class MainApp extends App {
         selectionManager = new SelectionManager(this);
 
         // imageFileManager = new ImageFileManager(this);
-        imageFileManager = new ImageFileManager(this, "dialogFlowchart.png");
+        imageFileManager = new ImageFileManager(this, "test.png");
 
         primaryColor = SUtil.toARGB(0);
         secondaryColor = SUtil.toARGB(255);
