@@ -7,6 +7,7 @@ import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjglx.util.vector.Matrix3f;
+import org.lwjglx.util.vector.Vector3f;
 
 import main.apps.App;
 import renderEngine.fonts.TextFont;
@@ -291,6 +292,28 @@ public class UIRenderMaster {
 
     public void noClip() {
         clip = false;
+    }
+
+    public void scissor(SVector position, SVector size) {
+        Vector3f pos3f = new Vector3f((float) position.x, (float) position.y, 1);
+        Matrix3f.transform(uiMatrix, pos3f, pos3f);
+
+        Vector3f size3f = new Vector3f((float) size.x, (float) size.y, 0);
+        Matrix3f.transform(uiMatrix, size3f, size3f);
+
+        // not entirely sure why, but this functions returns 4 ints (0, 0, w, h)
+        int[] dims = new int[4];
+        GL11.glGetIntegerv(GL11.GL_VIEWPORT, dims);
+
+        int w = (int) size3f.x, h = (int) size3f.y;
+        int x = (int) pos3f.x, y = dims[3] - h - (int) pos3f.y;
+        GL11.glScissor(x, y, w, h);
+
+        GL11.glEnable(GL11.GL_SCISSOR_TEST);
+    }
+
+    public void noScissor() {
+        GL11.glDisable(GL11.GL_SCISSOR_TEST);
     }
 
     public void translate(SVector translation) {

@@ -10,6 +10,8 @@ public abstract class UIPanel {
 
     protected UIRoot root;
 
+    protected double mouseWheelSensitivity = 100;
+
     protected double textSize = 32;
 
     /**
@@ -58,6 +60,10 @@ public abstract class UIPanel {
             }
         }
         root.keyPressed(key);
+    }
+
+    public void mouseWheel(double scroll, SVector mousePos) {
+        root.mouseWheel(scroll * mouseWheelSensitivity, mousePos);
     }
 
     private void cycleSelectedElement(boolean backwards) {

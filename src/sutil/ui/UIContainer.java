@@ -93,7 +93,7 @@ public class UIContainer extends UIElement {
     public void update(SVector mouse) {
         super.update(mouse);
 
-        SVector relativeMouse = new SVector(mouse).sub(position);
+        SVector relativeMouse = mouse == null ? null : new SVector(mouse).sub(position);
         for (UIElement child : children) {
             child.update(relativeMouse);
         }
@@ -106,6 +106,16 @@ public class UIContainer extends UIElement {
         SVector relativeMouse = new SVector(mouse).sub(position);
         for (UIElement child : children) {
             child.mousePressed(relativeMouse);
+        }
+    }
+
+    @Override
+    public void mouseWheel(double scroll, SVector mousePos) {
+        super.mouseWheel(scroll, mousePos);
+
+        SVector relativeMouse = new SVector(mousePos).sub(position);
+        for (UIElement child : children) {
+            child.mouseWheel(scroll, relativeMouse);
         }
     }
 
@@ -159,10 +169,12 @@ public class UIContainer extends UIElement {
                 case HORIZONTAL -> expandY = true;
             }
         }
-        if (expandX)
-            size.x = Math.max(size.x, remainingSize.x);
-        if (expandY)
-            size.y = Math.max(size.y, remainingSize.y);
+        if (expandX) {
+            size.x = remainingSize.x;
+        }
+        if (expandY) {
+            size.y = remainingSize.y;
+        }
 
         double margin = getMargin();
         double padding = getPadding();
@@ -205,7 +217,7 @@ public class UIContainer extends UIElement {
         }
     }
 
-    private SVector getChildrenBoundingBox(double margin, double padding, boolean includeMaxChildren) {
+    protected SVector getChildrenBoundingBox(double margin, double padding, boolean includeMaxChildren) {
         double sum = 0;
         double max = 0;
         for (UIElement child : children) {

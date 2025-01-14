@@ -31,7 +31,11 @@ public abstract class UIElement {
     }
 
     public void update(SVector mouse) {
-        mouseAbove = SUtil.pointInsideRect(mouse, position, size);
+        updateMouseAboveReference(mouse);
+    }
+
+    protected void updateMouseAboveReference(SVector mouse) {
+        mouseAbove = mouse == null ? false : SUtil.pointInsideRect(mouse, position, size);
     }
 
     public void mousePressed(SVector mouse) {
@@ -45,8 +49,10 @@ public abstract class UIElement {
         }
     }
 
-    public void keyPressed(char key) {
+    public void mouseWheel(double scroll, SVector mousePos) {
+    }
 
+    public void keyPressed(char key) {
     }
 
     public boolean isSelectable() {

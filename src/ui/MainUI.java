@@ -40,32 +40,22 @@ public class MainUI extends AppUI<MainApp> {
         UIContainer settings = addTopRowSection(topRow, "Settings");
         settings.add(new UIButton("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG)));
 
-        // topRow.add(new UISeparator());
-
         UIContainer fileOptions = addTopRowSection(topRow, "File");
         fileOptions.add(new UIButton("New", () -> app.newImage()));
         fileOptions.add(new UIButton("Open", () -> app.openImage()));
         fileOptions.add(new UIButton("Save", () -> app.saveImage()));
-
-        // topRow.add(new UISeparator());
 
         UIContainer imageOptions = addTopRowSection(topRow, "Image");
         imageOptions.add(new UIButton("Change Size", () -> app.showDialog(MainApp.CHANGE_SIZE_DIALOG)));
         imageOptions.add(new UIButton("Rotate", () -> app.showDialog(MainApp.ROTATE_DIALOG)));
         imageOptions.add(new UIButton("Flip", () -> app.showDialog(MainApp.FLIP_DIALOG)));
 
-        // topRow.add(new UISeparator());
-
         UIContainer toolbox = addTopRowSection(topRow, "Tools");
         for (ImageTool tool : ImageTool.values()) {
             toolbox.add(new ToolButton(app, tool));
         }
 
-        // topRow.add(new UISeparator());
-
         addTopRowSection(topRow, "Size");
-
-        // topRow.add(new UISeparator());
 
         for (int i = 0; i < 2; i++) {
             final int index = i;
@@ -125,7 +115,6 @@ public class MainUI extends AppUI<MainApp> {
 
         ImageCanvas canvas = new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, app);
         canvas.noOutline();
-        root.add(canvas);
 
         SeparatorContainer sidePanel = new SeparatorContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         sidePanel.withBackground().noOutline();
@@ -151,6 +140,8 @@ public class MainUI extends AppUI<MainApp> {
                 true,
                 false));
         canvas.add(sidePanel);
+
+        root.add(canvas);
 
         UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.BOTTOM);
         // statusBar.zeroMargin().noOutline().withBackground();

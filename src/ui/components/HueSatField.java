@@ -81,7 +81,6 @@ public class HueSatField extends UIContainer implements DragTarget {
 
     @Override
     public void positionChildren() {
-
         ((UIContainer) children.get(0)).positionChildren();
     }
 

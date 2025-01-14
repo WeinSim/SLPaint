@@ -6,6 +6,8 @@ import main.apps.MainApp;
 import main.apps.SettingsApp;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
+import sutil.ui.UILabel;
+import sutil.ui.UIScrollArea;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
 import sutil.ui.UIToggle;
@@ -27,12 +29,19 @@ public class SettingsUI extends AppUI<SettingsApp> {
         root.setZeroMargin(false);
         root.setZeroPadding(false);
 
-        UIContainer mainContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
-        mainContainer.setMaximalSize();
+        UIScrollArea mainContainer = new UIScrollArea(UIContainer.VERTICAL, UIContainer.LEFT);
+
+        for (int i = 0; i < 20; i++) {
+            mainContainer.add(new UILabel(String.format("Label %d", i)));
+        }
 
         mainContainer.add(createBaseColor());
         mainContainer.add(createDarkModeToggle());
         mainContainer.add(createHueSatFieldToggle());
+
+        for (int i = 0; i < 20; i++) {
+            mainContainer.add(new UILabel(String.format("Label %d", i)));
+        }
 
         root.add(mainContainer);
 
@@ -68,13 +77,6 @@ public class SettingsUI extends AppUI<SettingsApp> {
         defaultColors.zeroMargin().noOutline();
         UIContainer defaultColorContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         defaultColorContainer.zeroMargin().noOutline();
-        // for (SVector color : Colors.DEFAULT_UI_COLORS_DARK) {
-        // int colorInt = MainApp.toInt(color);
-        // ColorButton button = new ColorButton(() -> colorInt,
-        // MainUI.COLOR_BUTTON_SIZE);
-        // button.setClickAction(() -> app.setUIColor(colorInt));
-        // defaultColorContainer.add(button);
-        // }
         int numDefaultColors = Colors.getNumDefaultColors();
         for (int i = 0; i < numDefaultColors; i++) {
             final int j = i;

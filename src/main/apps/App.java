@@ -95,6 +95,8 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         SVector mousePos = window.getMousePosition();
         boolean[] mouseButtons = window.getMouseButtons();
         boolean[] prevMouseButtons = window.getPrevMouseButtons();
+        SVector mouseScroll = window.getMouseScroll();
+        SVector prevMouseScroll = window.getPrevMouseScroll();
 
         // toggle debug outline
         if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_COMMA)) {
@@ -118,6 +120,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         boolean focus = window.isFocused();
         // mouse should not be above anything when the window isn't focused
         if (!focus) {
+            // TODO this is quite ugly
             mousePos.set(-10000, -10000);
         }
         ui.update(mousePos);
@@ -128,6 +131,13 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
                 ui.mousePressed(mousePos);
             }
 
+            // UI mouse scroll
+            double scrollAmount = mouseScroll.y - prevMouseScroll.y;
+            if (scrollAmount != 0) {
+                ui.mouseWheel(scrollAmount, mousePos);
+            }
+
+            // UI key presses
             boolean shift = keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT];
             for (char c : window.getCharBuffer().toCharArray()) {
                 ui.keyPressed(c, shift);

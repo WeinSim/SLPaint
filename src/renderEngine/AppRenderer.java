@@ -8,6 +8,7 @@ import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
+import sutil.ui.UIScrollArea;
 import sutil.ui.UIText;
 import sutil.ui.UIToggle;
 import ui.AppUI;
@@ -120,17 +121,24 @@ public class AppRenderer<T extends App> {
             s.scale(factor);
             uiMaster.ellipse(pos, s);
         }
+        if (element instanceof UIText text) {
+            uiMaster.fill(Colors.getTextColor());
+            uiMaster.text(text.getText(), position);
+        }
+
         if (element instanceof UIContainer container) {
             uiMaster.pushMatrix();
+            if (container instanceof UIScrollArea) {
+                uiMaster.scissor(position, size);
+            }
             uiMaster.translate(position);
             for (UIElement child : container.getChildren()) {
                 renderUIElement(child);
             }
+            if (container instanceof UIScrollArea) {
+                uiMaster.noScissor();
+            }
             uiMaster.popMatrix();
-        }
-        if (element instanceof UIText text) {
-            uiMaster.fill(Colors.getTextColor());
-            uiMaster.text(text.getText(), position);
         }
 
         if (App.showDebugOutline()) {

@@ -31,6 +31,9 @@ import ui.components.ImageCanvas;
 
 /**
  * TODO:
+ * UI scroll and float:
+ * * Dropdown menues
+ * * Scroll bar
  * App:
  * * Dialogs
  * * * Save dialog
@@ -60,7 +63,7 @@ import ui.components.ImageCanvas;
  * * Recognize remapping from CAPS_LOCK to ESCAPE
  * * When parent app closes, shouldren should also close
  * UI:
- * * Scrolling
+ * * Two dimensional scrolling?
  * * Tool icons & cursors
  * * UIFloat element (e.g. dropdown menues): doesn't affect parent's size
  * * (Add hMargin and vMargin in UIContainer)
@@ -189,6 +192,8 @@ public final class MainApp extends App {
         prevTool = ImageTool.PENCIL;
 
         transparentSelection = false;
+
+        showDialog(SETTINGS_DIALOG);
     }
 
     @Override
