@@ -137,8 +137,8 @@ public class MainUI extends AppUI<MainApp> {
         fill.setMaximalSize();
         transparentSelection.add(new UIText( "Transparent selection"));
         transparentSelection.add(fill);
-        UIToggle toggle = new UIToggle(() -> app.isTransparentSelection(),
-                (Boolean _) -> app.toggleTransparentSelection());
+        UIToggle toggle = new UIToggle(() -> MainApp.isTransparentSelection(),
+                (Boolean _) -> MainApp.toggleTransparentSelection());
         transparentSelection.add(toggle);
         sidePanel.add(transparentSelection);
 

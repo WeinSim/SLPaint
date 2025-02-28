@@ -7,6 +7,14 @@ public final class JSONObject extends JSONValue {
 
     private LinkedHashMap<String, JSONValue> value;
 
+    public JSONObject() {
+        this(new LinkedHashMap<String, JSONValue>());
+    }
+
+    public JSONObject(JSONObject other) {
+        this(new LinkedHashMap<String, JSONValue>(other.value));
+    }
+
     public JSONObject(LinkedHashMap<String, JSONValue> value) {
         this.value = value;
     }

@@ -1,0 +1,13 @@
+package main.settings;
+
+public final class ExampleObjectSetting extends ObjectSetting {
+
+    public ExampleObjectSetting(String identifier) {
+        super(identifier);
+    }
+
+    @Override
+    protected Setting<?> createNew(String name) {
+        return new BooleanSetting(name);
+    }
+}

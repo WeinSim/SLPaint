@@ -1,0 +1,42 @@
+package main.settings;
+
+import sutil.SUtil;
+import sutil.json.values.JSONArray;
+import sutil.json.values.JSONValue;
+
+public final class ColorSetting extends Setting<Integer> {
+
+    public ColorSetting(String identifier) {
+        super(identifier);
+    }
+
+    @Override
+    public JSONValue getJSONValue() {
+        return getJSONValueFromColor(value);
+    }
+
+    @Override
+    public void setJSONValue(JSONValue value) {
+        this.value = getColorFromJSONValue(value);
+    }
+
+    public static JSONValue getJSONValueFromColor(int color) {
+        JSONArray array = new JSONArray();
+        array.add(SUtil.red(color));
+        array.add(SUtil.green(color));
+        array.add(SUtil.blue(color));
+        return array;
+    }
+
+    public static int getColorFromJSONValue(JSONValue value) {
+        if (value instanceof JSONArray array) {
+            int r = array.getInteger(0, 0);
+            int g = array.getInteger(1, 0);
+            int b = array.getInteger(2, 0);
+            return SUtil.toARGB(r, g, b);
+        } else {
+            handleIncorrectJSONType("JSONArray", value.getClass().getName());
+            return 0;
+        }
+    }
+}

@@ -1,5 +1,7 @@
 package ui;
 
+import main.settings.BooleanSetting;
+import main.settings.ColorSetting;
 import sutil.math.SVector;
 
 public class Colors {
@@ -40,14 +42,15 @@ public class Colors {
         }
     }
 
-    private static boolean darkMode = true;
-    private static SVector baseColor = new SVector(darkMode ? DEFAULT_UI_COLORS_DARK[0] : DEFAULT_UI_COLORS_LIGHT[0]);
+    private static BooleanSetting darkMode = new BooleanSetting("darkMode");
+    // private static SVector baseColor = new SVector(isDarkMode() ? DEFAULT_UI_COLORS_DARK[0] : DEFAULT_UI_COLORS_LIGHT[0]);
+    private static ColorSetting baseColor = new ColorSetting("baseColor");
 
     private Colors() {
     }
 
     public static SVector[] getDefaultColors() {
-        return darkMode ? DEFAULT_UI_COLORS_DARK : DEFAULT_UI_COLORS_LIGHT;
+        return isDarkMode() ? DEFAULT_UI_COLORS_DARK : DEFAULT_UI_COLORS_LIGHT;
     }
 
     public static int getNumDefaultColors() {
@@ -55,11 +58,11 @@ public class Colors {
     }
 
     public static boolean isDarkMode() {
-        return darkMode;
+        return darkMode.get();
     }
 
     public static void setDarkMode(boolean darkMode) {
-        Colors.darkMode = darkMode;
+        Colors.darkMode.set(darkMode);
     }
 
     public static void setBaseColor(SVector baseColor) {
@@ -67,7 +70,7 @@ public class Colors {
     }
 
     public static SVector getBaseColor() {
-        return baseColor;
+        return baseColor.get();
     }
 
     public static SVector getBackgroundNormalColor() {
@@ -103,7 +106,7 @@ public class Colors {
     }
 
     private static SVector getUIColor(UIColor colorType) {
-        double brightness = darkMode ? colorType.darkModeBrightness : colorType.lightModeBrightness;
+        double brightness = isDarkMode() ? colorType.darkModeBrightness : colorType.lightModeBrightness;
 
         brightness = switch (colorType) {
             // case TRANSPARENCY_1 -> 0.6;
@@ -111,10 +114,13 @@ public class Colors {
             default -> brightness;
         };
 
-        return new SVector(baseColor).scale(brightness);
+        // This method is being called ~5520 times per second (which is too much!)
+        // Maybe cache the results?
+
+        return getBaseColor().copy().scale(brightness);
     }
 
     public static SVector getTextColor() {
-        return darkMode ? new SVector(1, 1, 1) : new SVector(0, 0, 0);
+        return isDarkMode() ? new SVector(1, 1, 1) : new SVector(0, 0, 0);
     }
 }

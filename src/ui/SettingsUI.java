@@ -16,8 +16,6 @@ import ui.components.UIColorElement;
 
 public class SettingsUI extends AppUI<SettingsApp> {
 
-    public static final int NUM_UI_BASE_COLOR_BUTTONS = 10;
-
     public SettingsUI(SettingsApp app) {
         super(app);
     }
@@ -61,7 +59,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         SeparatorContainer baseColorExpand = new SeparatorContainer(UIContainer.VERTICAL, UIContainer.LEFT);
 
-        UIContainer allColorsContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
+        UIContainer allColorsContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         allColorsContainer.zeroMargin().noOutline();
 
         UIContainer defaultColors = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
@@ -91,7 +89,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         UIContainer customColors = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
         customColors.zeroMargin().noOutline();
-        CustomColorContainer ccc = new CustomColorContainer(app.getCustomColorButtonArray(),
+        CustomColorContainer ccc = new CustomColorContainer(MainApp.getCustomUIBaseColors(),
                 (Integer color) -> {
                     if (color == null) {
                         return;
@@ -102,6 +100,8 @@ public class SettingsUI extends AppUI<SettingsApp> {
         customColors.add(ccc);
         customColors.add(new UIText("Custom Colors"));
         allColorsContainer.add(customColors);
+
+        allColorsContainer.add(new UIButton("Clear", () -> MainApp.getCustomUIBaseColors().clear()));
 
         baseColorExpand.add(allColorsContainer);
 

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import org.lwjgl.glfw.GLFW;
 
 import main.ClipboardManager;
-import main.ColorButtonArray;
+import main.ColorArray;
 import main.ColorPicker;
 import main.Image;
 import main.ImageFile;
@@ -21,6 +21,9 @@ import main.SelectionManager;
 import main.dialogs.SaveDialog;
 import main.dialogs.UnableToSaveImageDialog;
 import main.dialogs.UnimplementedDialog;
+import main.settings.BooleanSetting;
+import main.settings.ColorArraySetting;
+import main.settings.Settings;
 import renderEngine.MainAppRenderer;
 import renderEngine.Window;
 import sutil.SUtil;
@@ -31,11 +34,13 @@ import ui.components.ImageCanvas;
 
 /**
  * TODO:
+ * Settings: How to update them? How to store them in the file?
+ * Move todo's scattered across different files into this central todo list
  * App:
  * * Dialogs
  * * * Save dialog
  * * * * Keep track of unsaved changes, ask user to save before quitting if
- * * * * there are unsaved changes
+ * * * * * there are unsaved changes
  * * * Only one at a time
  * * * Keep track of all file locks in one centralized place to avoid leaking
  * * Resizing
@@ -67,6 +72,7 @@ import ui.components.ImageCanvas;
  * * * Not neccessary for now. UISeparators now extend fully even without
  * * * hMargin and vMargin
  * * HueSatField's hitbox should adjust (rect / circle) depending on the setting
+ * * Fix small bug in UILabel (see {@link sutil.ui.UILabel#textUpdater})
  * Rendering:
  * * Weird rendering bugs:
  * * * Anti aliasing doesn't work despite being enabled
@@ -81,6 +87,10 @@ import ui.components.ImageCanvas;
  * * Premultiply view matrix and transformation matrix (for rect and text
  * * * shader)
  * * Rename transformationMatrix to uiMatrix
+ * * Remove magic numbers in {@link renderEngine.MainAppRenderer#render()}
+ * * "Activate alpha blending" in
+ * * * {@link renderEngine.UIRenderMaster#image(int, SVector, SVector)}
+ * * * (whatever that means??)
  * Maximized windows don't show up correctly on Windows 11
  * Error handling
  * 3D UI view?
@@ -124,6 +134,10 @@ public final class MainApp extends App {
 
     private static final double MOUSE_WHEEL_SENSITIVITY = 120;
 
+    private static BooleanSetting transparentSelection = new BooleanSetting("transparentSelection");
+
+    private static ColorArraySetting customUIBaseColors = new ColorArraySetting("customUIColors");
+
     private ImageFileManager imageFileManager;
 
     // private Image image;
@@ -147,9 +161,7 @@ public final class MainApp extends App {
      * 0 = primary color is selected, 1 = secondary color is selcted
      */
     private int colorSelection;
-    private ColorButtonArray customColorButtonArray;
-
-    private boolean transparentSelection;
+    private ColorArray customColorButtonArray;
 
     private SVector imageTranslation;
     private int imageZoomLevel;
@@ -159,16 +171,16 @@ public final class MainApp extends App {
 
     // private ColorEditorApp colorEditorApp;
     // private SettingsApp settingsApp;
-    private ArrayList<Integer> customUIBaseColors;
 
     public MainApp() {
         super((int) Sizes.MAIN_APP.width, (int) Sizes.MAIN_APP.height, Window.MAXIMIZED, "SLPaint");
 
         window.setCloseOnEscape(false);
 
+        Settings.loadSettings();
+
         // customColors = new ArrayList<>();
-        customColorButtonArray = new ColorButtonArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
-        customUIBaseColors = new ArrayList<>();
+        customColorButtonArray = new ColorArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
         selectionManager = new SelectionManager(this);
 
         // imageFileManager = new ImageFileManager(this);
@@ -177,7 +189,7 @@ public final class MainApp extends App {
         primaryColor = SUtil.toARGB(0);
         secondaryColor = SUtil.toARGB(255);
         colorSelection = PRIMARY_COLOR;
-        selectedColorPicker = new ColorPicker(this, getSelectedColor(), (Integer color) -> addCustomColor(color));
+        selectedColorPicker = new ColorPicker(this, getSelectedColor(), color -> addCustomColor(color));
 
         createUI();
 
@@ -187,8 +199,6 @@ public final class MainApp extends App {
 
         activeTool = ImageTool.PENCIL;
         prevTool = ImageTool.PENCIL;
-
-        transparentSelection = false;
     }
 
     @Override
@@ -382,6 +392,13 @@ public final class MainApp extends App {
         image.updateOpenGLTexture();
     }
 
+    @Override
+    public void finish() {
+        super.finish();
+
+        Settings.finish();
+    }
+
     public void selectColor(int color) {
         if (colorSelection == PRIMARY_COLOR) {
             setPrimaryColor(color);
@@ -497,8 +514,12 @@ public final class MainApp extends App {
         imageFileManager.saveAs();
     }
 
-    public ArrayList<Integer> getCustomUIBaseColors() {
-        return customUIBaseColors;
+    public static ColorArray getCustomUIBaseColors() {
+        return customUIBaseColors.get();
+    }
+
+    public static void addCustomUIBaseColor(int color) {
+        customUIBaseColors.get().addColor(color);
     }
 
     public void resetImageTransform() {
@@ -581,12 +602,12 @@ public final class MainApp extends App {
         activeTool = tool;
     }
 
-    public boolean isTransparentSelection() {
-        return transparentSelection;
+    public static boolean isTransparentSelection() {
+        return transparentSelection.get();
     }
 
-    public void toggleTransparentSelection() {
-        transparentSelection = !transparentSelection;
+    public static void toggleTransparentSelection() {
+        transparentSelection.set(!transparentSelection.get());
     }
 
     public int[] getMouseImagePosition() {
@@ -614,7 +635,7 @@ public final class MainApp extends App {
         return window.getDisplaySize();
     }
 
-    public ColorButtonArray getCustomColorButtonArray() {
+    public ColorArray getCustomColorButtonArray() {
         return customColorButtonArray;
     }
 

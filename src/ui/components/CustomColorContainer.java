@@ -1,13 +1,13 @@
 package ui.components;
 
-import main.ColorButtonArray;
+import main.ColorArray;
 import sutil.ui.UIContainer;
 import sutil.ui.UISetter;
 import ui.Sizes;
 
 public class CustomColorContainer extends UIContainer {
 
-    public CustomColorContainer(ColorButtonArray colors, UISetter<Integer> clickAction) {
+    public CustomColorContainer(ColorArray colors, UISetter<Integer> clickAction) {
         super(HORIZONTAL, CENTER);
 
         for (int i = 0; i < colors.getLength(); i++) {

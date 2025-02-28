@@ -73,6 +73,17 @@ public class SVector {
         return String.format("[ %.3f, %.3f, %.3f ]", x, y, z);
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj instanceof SVector v) {
+            return x == v.x && y == v.y && z == v.z;
+        }
+        return false;
+    }
+
     public SVector add(SVector v) {
         x += v.x;
         y += v.y;

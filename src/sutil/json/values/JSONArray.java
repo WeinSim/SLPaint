@@ -6,6 +6,10 @@ public final class JSONArray extends JSONValue {
 
     private ArrayList<JSONValue> value;
 
+    public JSONArray() {
+        this(new ArrayList<JSONValue>());
+    }
+
     public JSONArray(ArrayList<JSONValue> value) {
         this.value = value;
     }

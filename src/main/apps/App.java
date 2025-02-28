@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import org.lwjgl.glfw.GLFW;
 
 import main.MainLoop;
+import main.settings.BooleanSetting;
 import renderEngine.AppRenderer;
 import renderEngine.Loader;
 import renderEngine.Window;
@@ -22,7 +23,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
     private static final double FRAME_TIME_GAMMA = 0.05;
 
     private static boolean showDebugOutline = false;
-    private static boolean circularHueSatField = true;
+    private static BooleanSetting circularHueSatField = new BooleanSetting("hueSatCircle");
 
     protected Window window;
 
@@ -139,7 +140,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
             };
             for (int i = 0; i < specialKeys.length; i++) {
                 if (keyPressed(keys, prevKeys, specialKeys[i])) {
-                    // TODO this is just a hack for now.
+                    // this is just a hack for now.
                     // GLFW offers key callbacks and char callbacks. Properly combining both would
                     // make things quite complicated.
                     ui.keyPressed((char) specialKeys[i], shift);
@@ -215,11 +216,11 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
     }
 
     public static boolean isCircularHueSatField() {
-        return circularHueSatField;
+        return circularHueSatField.get();
     }
 
     public static void toggleCircularHueSatField() {
-        circularHueSatField = !circularHueSatField;
+        circularHueSatField.set(!isCircularHueSatField());
     }
 
     public double getFrameRate() {

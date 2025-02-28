@@ -1,16 +1,12 @@
 package main.apps;
 
-import main.ColorButtonArray;
 import main.ColorPicker;
 import renderEngine.Window;
 import sutil.math.SVector;
 import ui.Colors;
-import ui.SettingsUI;
 import ui.Sizes;
 
 public final class SettingsApp extends App {
-
-    private ColorButtonArray customColorButtonArray;
 
     private ColorPicker colorPicker;
 
@@ -18,10 +14,8 @@ public final class SettingsApp extends App {
         super((int) Sizes.SETTINGS_APP.width, (int) Sizes.SETTINGS_APP.height, Window.NORMAL, true, "Settings",
                 mainApp);
 
-        customColorButtonArray = new ColorButtonArray(SettingsUI.NUM_UI_BASE_COLOR_BUTTONS);
-
         colorPicker = new ColorPicker(this, MainApp.toInt(Colors.getBaseColor()),
-                (Integer color) -> addCustomColor(color));
+                (Integer color) -> MainApp.addCustomUIBaseColor(color));
 
         createUI();
     }
@@ -45,21 +39,12 @@ public final class SettingsApp extends App {
 
         int baseRGB = MainApp.toInt(Colors.getBaseColor());
 
-        // TODO: this is a bit of a hack
+        // this is a bit of a hack
         for (int i = 0; i < oldColors.length; i++) {
             if (baseRGB == MainApp.toInt(oldColors[i])) {
                 setUIColor(MainApp.toInt(newColors[i]));
             }
         }
-    }
-
-    public ColorButtonArray getCustomColorButtonArray() {
-        return customColorButtonArray;
-    }
-
-    public void addCustomColor(Integer color) {
-        customColorButtonArray.addColor(color);
-        // App.setBaseColor(MainApp.toSVector(color));
     }
 
     @Override

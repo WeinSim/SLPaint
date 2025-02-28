@@ -7,7 +7,6 @@ import sutil.math.SVector;
 public class UILabel extends UIContainer {
 
     /**
-     * TODO
      * As it is currently implemented, there is a bug with the textUpdater:
      * When a UILabel is initialized with a textUpdater, then calling
      * setText(String) will not work because the textUpdater is still in action.

@@ -1,10 +1,16 @@
 package main;
 
-public class ColorButtonArray {
+public class ColorArray {
 
     private Integer[] colors;
+    private int length;
 
-    public ColorButtonArray(int length) {
+    public ColorArray(int length) {
+        this.length = length;
+        clear();
+    }
+
+    public void clear() {
         colors = new Integer[length];
     }
 
@@ -14,7 +20,7 @@ public class ColorButtonArray {
         }
         colors[0] = color;
     }
-    
+
     public Integer getColor(int index) {
         return colors[index];
     }

@@ -178,7 +178,7 @@ public class UIRenderMaster {
     public void image(int textureID, SVector position, SVector size) {
         activateShader(imageShader);
 
-        // TODO continue: activate alpha blending
+        // activate alpha blending
 
         pushMatrix();
         translate(position);

@@ -120,8 +120,7 @@ public class ImageFileManager {
      */
     private void open(File file) {
         ImageFile newImageFile = null;
-        // TODO
-        // edge case: user tries to open the file that is already open
+        // unhandled edge case: user tries to open the file that is already open
         if (imageFile != null) { // && imageFile.getFile().equals(file)) {
             // avoid OverlappingFileLockException
             imageFile.close();

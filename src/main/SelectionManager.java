@@ -47,7 +47,6 @@ public class SelectionManager {
                 y = dragStartY + (int) Math.round(delta.y);
             }
             case RESIZING -> {
-                // TODO
             }
         }
     }
@@ -88,7 +87,7 @@ public class SelectionManager {
 
     private void createSubImage() {
         selection = new Image(app.getImage().getSubImage(x, y, width, height,
-                app.isTransparentSelection() ? app.getSecondaryColor() : null));
+                MainApp.isTransparentSelection() ? app.getSecondaryColor() : null));
         app.getImage().setPixels(x, y, width, height, app.getSecondaryColor());
     }
 
