@@ -108,32 +108,36 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
             renderer.reloadShaders();
         }
 
+        // reload UI
         if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_R) && keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
             createUI();
         }
 
-        // UI update
         int[] displaySize = window.getDisplaySize();
         // adding 1 to the width ensures that the "topRow"'s right edge isn't visible on
         // screen
         ui.setRootSize(displaySize[0] + 1, displaySize[1]);
-        boolean focus = window.isFocused();
-        // mouse should not be above anything when the window isn't focused
-        if (!focus) {
-            // TODO this is quite ugly
-            mousePos.set(-10000, -10000);
-        }
-        ui.update(mousePos);
 
+        boolean focus = window.isFocused();
+        // UI mouse and keyboard inputs
         if (focus) {
             // UI mouse pressed
             if (mouseButtons[0] && !prevMouseButtons[0]) {
                 ui.mousePressed(mousePos);
             }
+            if (!mouseButtons[0] && prevMouseButtons[0]) {
+                ui.mouseReleased();
+            }
 
             // UI mouse scroll
-            double scrollAmount = mouseScroll.y - prevMouseScroll.y;
-            if (scrollAmount != 0) {
+            SVector scrollAmount = mouseScroll.copy().sub(prevMouseScroll);
+            boolean shiftPressed = keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT];
+            if (shiftPressed) {
+                double temp = scrollAmount.x;
+                scrollAmount.x = scrollAmount.y;
+                scrollAmount.y = temp;
+            }
+            if (scrollAmount.magSq() > 0) {
                 ui.mouseWheel(scrollAmount, mousePos);
             }
 
@@ -155,7 +159,13 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
                     ui.keyPressed((char) specialKeys[i], shift);
                 }
             }
+        } else {
+            // mouse should not be above anything when the window isn't focused
+            // TODO this is quite ugly
+            mousePos.set(-10000, -10000);
         }
+
+        ui.update(mousePos);
 
         window.setArrowCursor();
         if (ui.mouseAboveTextInput()) {

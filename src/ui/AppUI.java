@@ -52,7 +52,7 @@ public abstract class AppUI<T extends App> extends UIPanel{
     public static <T extends UIElement> T setButtonStyle2(T element, UIGetter<Boolean> selectedGetter) {
         UIGetter<SVector> backgroundColorGetter = () -> selectedGetter.get() ? Colors.getBackgroundHighlightColor2()
                 : null;
-        UIGetter<SVector> outlineColorGetter = () -> element.mouseAbove() ? Colors.getOutlineHighlightColor() : null;
+        UIGetter<SVector> outlineColorGetter = () -> element.mouseAbove() ? Colors.getOutlineNormalColor() : null;
         UIGetter<Double> strokeWeightGetter = () -> Sizes.STROKE_WEIGHT.size;
         element.setStyle(new UIStyle(backgroundColorGetter, outlineColorGetter, strokeWeightGetter));
         return element;

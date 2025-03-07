@@ -49,7 +49,7 @@ public abstract class UIElement {
         }
     }
 
-    public void mouseWheel(double scroll, SVector mousePos) {
+    public void mouseWheel(SVector scroll, SVector mousePos) {
     }
 
     public void keyPressed(char key) {

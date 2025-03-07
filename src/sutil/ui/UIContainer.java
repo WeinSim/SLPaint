@@ -55,7 +55,7 @@ public class UIContainer extends UIElement {
     protected ArrayList<UIElement> children;
 
     public UIContainer(int orientation, int alignment) {
-        if (orientation < 0 || orientation > 1 || alignment < 0 || alignment > 2) {
+        if (orientation < 0 || orientation >= 2 || alignment < 0 || alignment >= 3) {
             throw new IllegalArgumentException(String.format(
                     "Invalid orientation or alignment. orientation = %d, alignment = %d",
                     orientation, alignment));
@@ -110,7 +110,7 @@ public class UIContainer extends UIElement {
     }
 
     @Override
-    public void mouseWheel(double scroll, SVector mousePos) {
+    public void mouseWheel(SVector scroll, SVector mousePos) {
         super.mouseWheel(scroll, mousePos);
 
         SVector relativeMouse = new SVector(mousePos).sub(position);
@@ -317,10 +317,16 @@ public class UIContainer extends UIElement {
     }
 
     public void setOrientation(int orientation) {
+        if (orientation < 0 || orientation >= 2) {
+            throw new IllegalArgumentException(String.format("Invalid orientation (%d)", orientation));
+        }
         this.orientation = orientation;
     }
 
     public void setAlignment(int alignment) {
+        if (alignment < 0 || alignment >= 3) {
+            throw new IllegalArgumentException(String.format("Invalid alignment (%d)", alignment));
+        }
         this.alignment = alignment;
     }
 }

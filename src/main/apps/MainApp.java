@@ -32,8 +32,11 @@ import ui.components.ImageCanvas;
 /**
  * TODO:
  * UI scroll and float:
+ * * All other current instances of draggable things (i.e. AlphaScale and
+ * * * HueSatField) should be able to be written as implementations of
+ * * * DragContainer.
  * * Dropdown menues
- * * Scroll bar
+ * * * Dropdown menues can themsevles contain scroll areas!!
  * App:
  * * Dialogs
  * * * Save dialog
@@ -193,7 +196,7 @@ public final class MainApp extends App {
 
         transparentSelection = false;
 
-        showDialog(SETTINGS_DIALOG);
+        // showDialog(SETTINGS_DIALOG);
     }
 
     @Override
@@ -217,8 +220,8 @@ public final class MainApp extends App {
         // canvas actions
         if (canvas.mouseTrulyAbove()) {
             SVector scrollAmount = new SVector(mouseScroll).sub(prevMouseScroll).scale(MOUSE_WHEEL_SENSITIVITY);
-            boolean shiftPressed = keys[GLFW.GLFW_KEY_LEFT_CONTROL];
-            if (shiftPressed) {
+            boolean ctrlPressed = keys[GLFW.GLFW_KEY_LEFT_CONTROL];
+            if (ctrlPressed) {
                 // zoom
                 double prevZoom = getImageZoom();
                 imageZoomLevel += (int) Math.signum(scrollAmount.y);
@@ -229,6 +232,12 @@ public final class MainApp extends App {
                 window.setHandCursor();
             } else {
                 // scroll
+                boolean shiftPressed = keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT];
+                if (shiftPressed) {
+                    double temp = scrollAmount.x;
+                    scrollAmount.x = scrollAmount.y;
+                    scrollAmount.y = temp;
+                }
                 imageTranslation.add(scrollAmount);
             }
 

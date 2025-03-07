@@ -26,7 +26,7 @@ public class Colors {
         BACKGROUND_HIGHLIGHT(0.5, 0.9),
         BACKGROUND_HIGHLIGHT_2(0.7, 0.85),
         OUTLINE_NORMAL(1.1, 0.45),
-        OUTLINE_HIGHLIGHT(1.1, 0.45),
+        OUTLINE_HIGHLIGHT(0.9, 0.6),
         SEPARATOR(0.56, 0.7),
         CANVAS(0.4, 0.85),
         TRANSPARENCY_1(0.6, 1),

@@ -51,7 +51,7 @@ public class Window {
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, resizable ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
 
         // anti-aliasing
-        GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4);
+        // GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4);
 
         if (windowMode == MAXIMIZED) {
             GLFW.glfwWindowHint(GLFW.GLFW_MAXIMIZED, GLFW.GLFW_TRUE);

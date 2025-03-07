@@ -36,25 +36,31 @@ public class SVector {
         set(values);
     }
 
-    public void set(double x, double y, double z) {
+    public SVector set(double x, double y, double z) {
         this.x = x;
         this.y = y;
         this.z = z;
+
+        return this;
     }
 
-    public void set(double x, double y) {
+    public SVector set(double x, double y) {
         this.x = x;
         this.y = y;
         this.z = 0;
+
+        return this;
     }
 
-    public void set(double[] values) {
+    public SVector set(double[] values) {
         x = values[0];
         y = values[1];
         z = values[2];
+
+        return this;
     }
 
-    public void set(SVector other) {
+    public SVector set(SVector other) {
         x = other.x;
         y = other.y;
         z = other.z;
@@ -62,6 +68,8 @@ public class SVector {
         ly = other.ly;
         lz = other.lz;
         lastMag = other.lastMag;
+
+        return this;
     }
 
     public SVector copy() {

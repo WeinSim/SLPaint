@@ -29,9 +29,9 @@ public class SettingsUI extends AppUI<SettingsApp> {
         root.setZeroMargin(false);
         root.setZeroPadding(false);
 
-        UIScrollArea mainContainer = new UIScrollArea(UIContainer.VERTICAL, UIContainer.LEFT);
+        UIScrollArea mainContainer = new UIScrollArea(UIContainer.VERTICAL, UIContainer.LEFT, UIScrollArea.BOTH);
 
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 7; i++) {
             mainContainer.add(new UILabel(String.format("Label %d", i)));
         }
 
@@ -39,18 +39,20 @@ public class SettingsUI extends AppUI<SettingsApp> {
         mainContainer.add(createDarkModeToggle());
         mainContainer.add(createHueSatFieldToggle());
 
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 7; i++) {
             mainContainer.add(new UILabel(String.format("Label %d", i)));
         }
 
-        root.add(mainContainer);
+        // root.add(mainContainer);
+        root.add(mainContainer.addScrollBars());
 
         root.add(new UIButton("Done", () -> app.getWindow().requestClose()));
     }
 
     private UIContainer createBaseColor() {
         UIContainer baseColor = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
-        baseColor.setFillSize();
+        // baseColor.setFillSize();
+        baseColor.setMinimalSize();
 
         UIContainer baseColorHeading = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         baseColorHeading.zeroMargin().noOutline();
@@ -63,7 +65,9 @@ public class SettingsUI extends AppUI<SettingsApp> {
         UIColorElement baseColorButton = new UIColorElement(() -> MainApp.toInt(Colors.getBaseColor()),
                 Sizes.COLOR_BUTTON.size, true);
         baseColorHeading.add(baseColorButton);
-        ColorPicker colorPicker = app.getColorPicker();
+        for (int i = 0; i <= 24; i++) {
+            baseColorHeading.add(new UILabel(Integer.toString(1 << i)));
+        }
         // baseColorRow1.add(new UIButton("Reset", () ->
         // colorPicker.setRGB(MainApp.toInt(App.DEFAULT_BASE_COLOR))));
         baseColor.add(baseColorHeading);
@@ -107,6 +111,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         baseColorExpand.add(allColorsContainer);
 
+        ColorPicker colorPicker = app.getColorPicker();
         baseColorExpand.add(new ColorPickContainer(colorPicker, Sizes.COLOR_PICKER_SIDE_PANEL.size,
                 UIContainer.HORIZONTAL, false, true));
 
@@ -134,7 +139,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
                         ? "Dark"
                         : "Light"));
         container.add(label);
-        UIToggle toggle = new UIToggle(() -> Colors.isDarkMode(), (Boolean _) -> app.toggleDarkMode());
+        UIToggle toggle = new UIToggle(() -> Colors.isDarkMode(), _ -> app.toggleDarkMode());
         container.add(toggle);
         return container;
     }
@@ -152,7 +157,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
                         : "Square"));
         container.add(label);
         UIToggle toggle = new UIToggle(() -> App.isCircularHueSatField(),
-                (Boolean _) -> App.toggleCircularHueSatField());
+                _ -> App.toggleCircularHueSatField());
         container.add(toggle);
         return container;
     }
