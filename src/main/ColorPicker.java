@@ -5,20 +5,12 @@ import renderEngine.Window;
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UISetter;
-import ui.components.DragTarget;
-import ui.components.HueSatField;
-import ui.components.UIScale;
 
 public class ColorPicker {
 
     private App app;
 
     private UISetter<Integer> closeAction;
-
-    private HueSatField hueSatField;
-    private UIScale lightnessScale;
-    private UIScale alphaScale;
-    private DragTarget dragTarget;
 
     private int initialColor;
     private int rgb;
@@ -33,24 +25,6 @@ public class ColorPicker {
         this.closeAction = closeAction;
 
         setRGB(initialColor);
-
-        dragTarget = null;
-    }
-
-    public void update() {
-        boolean[] mouseButtons = app.getWindow().getMouseButtons();
-        if (!mouseButtons[0]) {
-            dragTarget = null;
-        }
-        if (dragTarget != null) {
-            dragTarget.drag();
-        }
-
-        updateCursorPositions();
-    }
-
-    public void setDragTarget(DragTarget dragTarget) {
-        this.dragTarget = dragTarget;
     }
 
     public void setRGB(int rgb) {
@@ -84,6 +58,10 @@ public class ColorPicker {
         this.alpha = alpha;
     }
 
+    public int getAlpha() {
+        return alpha;
+    }
+
     public void setComponent(int shiftAmount, int component) {
         int mask = 0xFF << shiftAmount;
         rgb &= ~mask;
@@ -93,19 +71,16 @@ public class ColorPicker {
     public void setHue(double hue) {
         this.hue = hue;
         updateRGB();
-        // updateCursorPositions();
     }
 
     public void setSaturation(double saturation) {
         this.saturation = saturation;
         updateRGB();
-        // updateCursorPositions();
     }
 
     public void setLightness(double lightness) {
         this.lightness = lightness;
         updateRGB();
-        // updateCursorPositions();
     }
 
     public double getHue() {
@@ -127,28 +102,6 @@ public class ColorPicker {
         saturation = hsl.y;
         lightness = hsl.z;
         alpha = SUtil.alpha(rgb);
-
-        // updateCursorPositions();
-    }
-
-    private void updateCursorPositions() {
-        hueSatField.updateCursorPosition();
-        lightnessScale.updateCursorPosition();
-        if (alphaScale != null) {
-            alphaScale.updateCursorPosition();
-        }
-    }
-
-    public void setLightnessScale(UIScale lightnessScale) {
-        this.lightnessScale = lightnessScale;
-    }
-
-    public void setAlphaScale(UIScale alphaScale) {
-        this.alphaScale = alphaScale;
-    }
-
-    public void setHueSatField(HueSatField hueSatField) {
-        this.hueSatField = hueSatField;
     }
 
     public int getInitialColor() {

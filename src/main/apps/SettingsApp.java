@@ -30,7 +30,6 @@ public final class SettingsApp extends App {
     public void update(double deltaT) {
         super.update(deltaT);
 
-        colorPicker.update();
         Colors.setBaseColor(MainApp.toSVector(colorPicker.getRGB()));
     }
 

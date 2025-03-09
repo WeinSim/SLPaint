@@ -2,7 +2,7 @@ package sutil.ui;
 
 import sutil.math.SVector;
 
-public abstract class UIDragContainer<D extends Draggable> extends UIContainer {
+public abstract class UIDragContainer<D extends UIElement & Draggable> extends UIContainer {
 
     protected D draggable;
 
@@ -15,7 +15,6 @@ public abstract class UIDragContainer<D extends Draggable> extends UIContainer {
 
         this.draggable = draggable;
         super.add(draggable);
-        draggable.setDragContainer(this);
 
         dragStartMouse = new SVector();
         dragStartD = new SVector();
@@ -33,9 +32,9 @@ public abstract class UIDragContainer<D extends Draggable> extends UIContainer {
         }
     }
 
-    private void drag(SVector mouse) {
-        SVector newDragPos = new SVector(mouse).sub(dragStartMouse).add(dragStartD);
-        clampDraggablePosition(newDragPos);
+    protected void drag(SVector mouse) {
+        SVector newDragPos = new SVector(mouse).sub(position).sub(dragStartMouse).add(dragStartD);
+        // clampDraggablePosition(newDragPos);
 
         double relativeX = newDragPos.x / (size.x - draggable.size.x);
         if (!Double.isFinite(relativeX)) {
@@ -59,10 +58,10 @@ public abstract class UIDragContainer<D extends Draggable> extends UIContainer {
             dragStartD.set(draggable.position);
             if (!draggable.mouseAbove) {
                 dragStartD.set(draggable.size).scale(-0.5);
-                dragStartD.add(mouse);
+                dragStartD.add(mouse).sub(position);
                 clampDraggablePosition(dragStartD);
             }
-            dragStartMouse.set(mouse);
+            dragStartMouse.set(mouse).sub(position);
         }
     }
 

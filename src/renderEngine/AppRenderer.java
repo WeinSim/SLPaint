@@ -101,7 +101,7 @@ public class AppRenderer<T extends App> {
 
             // color gradient
             uiMaster.fill(MainApp.toSVector(scale.getRGB()));
-            uiMaster.alphaScale(position, size, scale.getOrientation());
+            uiMaster.alphaScale(position, size, 1 - scale.getOrientation());
         }
         if (element instanceof UIToggle toggle) {
             uiMaster.fill(Colors.getBackgroundHighlightColor2());

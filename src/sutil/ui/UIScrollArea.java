@@ -145,6 +145,8 @@ public class UIScrollArea extends UIContainer {
         UIScrollBarContainer(UIScrollArea scrollArea, int orientation) {
             super(new UIScrollBar(scrollArea, orientation));
 
+            draggable.setScrollBarContainer(this);
+
             withOutline();
             withBackground();
             setFillSize();
@@ -159,17 +161,19 @@ public class UIScrollArea extends UIContainer {
         }
     }
 
-    private class UIScrollBar extends Draggable {
+    private class UIScrollBar extends UIElement implements Draggable {
+
+        private int orientation;
 
         private UIScrollArea scrollArea;
-        private int orientation;
+        private UIScrollBarContainer scrollBarContainer;
 
         UIScrollBar(UIScrollArea scrollArea, int orientation) {
             this.scrollArea = scrollArea;
             this.orientation = orientation;
 
             UIStyle style = new UIStyle(
-                    () -> mouseAbove || isBeingDragged()
+                    () -> mouseAbove || scrollBarContainer.isDragging()
                             ? panel.getOutlineNormalColor()
                             : panel.getOutlineHighlightColor(),
                     () -> null,
@@ -189,6 +193,10 @@ public class UIScrollArea extends UIContainer {
             } else {
                 size.x = scrollArea.getWidthFraction() * parent.size.x;
             }
+        }
+
+        public void setScrollBarContainer(UIScrollBarContainer scrollBarContainer) {
+            this.scrollBarContainer = scrollBarContainer;
         }
 
         @Override

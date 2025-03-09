@@ -1,55 +1,96 @@
 package ui.components;
 
-import main.ColorPicker;
-import renderEngine.Window;
 import sutil.math.SVector;
-import sutil.ui.UIContainer;
+import sutil.ui.Draggable;
+import sutil.ui.UIDragContainer;
+import sutil.ui.UIElement;
+import sutil.ui.UIGetter;
+import sutil.ui.UISetter;
+import sutil.ui.UIStyle;
+import ui.Colors;
 import ui.Sizes;
 
-public abstract class UIScale extends UIContainer implements DragTarget {
+/**
+ * Formerly UIScaleContainer
+ */
+public class UIScale extends UIDragContainer<UIScale.Slider> {
 
-    private UIScaleContainer parent;
+    private static final UIStyle SLIDER_STYLE = new UIStyle(
+            () -> Colors.getTextColor(),
+            () -> null,
+            () -> Sizes.STROKE_WEIGHT.size);
 
-    protected ColorPicker colorPicker;
-
-    public UIScale(int orientation, ColorPicker colorPicker) {
-        super(orientation, 0);
-        this.colorPicker = colorPicker;
+    public UIScale(int orientation, UIGetter<Double> getter, UISetter<Double> setter) {
+        super(new Slider(orientation, getter, setter));
 
         setFillSize();
         noOutline();
-        setClickAction(() -> colorPicker.setDragTarget(this));
     }
 
-    @Override
-    public void drag() {
-        Window window = colorPicker.getWindow();
-        SVector mousePos = window.getMousePosition();
-        SVector absolutePos = getAbsolutePosition();
-        mousePos = new SVector(mousePos).sub(absolutePos);
-        if (orientation == VERTICAL) {
-            mousePos.y = Math.min(Math.max(0, mousePos.y), size.y);
-        } else {
-            mousePos.x = Math.min(Math.max(0, mousePos.x), size.x);
-        }
-        setColorDimension(mousePos);
+    public SVector getScaleOffset() {
+        return orientation == VERTICAL
+                ? new SVector(super.getMargin(), 0)
+                : new SVector(0, super.getMargin());
     }
-
-    public abstract void setColorDimension(SVector mousePos);
-
-    @Override
-    public void updateCursorPosition() {
-        parent.setSliderPosition(getSliderCoord());
-    }
-
-    protected abstract double getSliderCoord();
 
     @Override
     public double getMargin() {
-        return Sizes.UI_SCALE_MARGIN.size;
+        // return 2 * super.getMargin() + Sizes.UI_SCALE_MARGIN.size;
+        return 0;
     }
 
-    public void setParent(UIScaleContainer parent) {
-        this.parent = parent;
+    /**
+     * The white visual indicators
+     */
+    protected static class Slider extends UIElement implements Draggable {
+
+        private static final double WIDTH = 20;
+
+        private int orientation;
+
+        private UIGetter<Double> getter;
+        private UISetter<Double> setter;
+
+        public Slider(int orientation, UIGetter<Double> getter, UISetter<Double> setter) {
+            this.orientation = orientation;
+
+            this.getter = getter;
+            this.setter = setter;
+
+            setStyle(SLIDER_STYLE);
+        }
+
+        @Override
+        public void setMinSize() {
+            if (orientation == VERTICAL) {
+                size.set(WIDTH, 2);
+            } else {
+                size.set(2, WIDTH);
+            }
+        }
+
+        @Override
+        public double getRelativeX() {
+            return orientation == VERTICAL ? 0 : getter.get();
+        }
+
+        @Override
+        public double getRelativeY() {
+            return orientation == VERTICAL ? getter.get() : 0;
+        }
+
+        @Override
+        public void setRelativeX(double x) {
+            if (orientation == HORIZONTAL) {
+                setter.set(Math.min(Math.max(0, x), 1));
+            }
+        }
+
+        @Override
+        public void setRelativeY(double y) {
+            if (orientation == VERTICAL) {
+                setter.set(Math.min(Math.max(0, y), 1));
+            }
+        }
     }
 }

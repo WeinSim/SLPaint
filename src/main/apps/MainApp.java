@@ -32,9 +32,6 @@ import ui.components.ImageCanvas;
 /**
  * TODO:
  * UI scroll and float:
- * * All other current instances of draggable things (i.e. AlphaScale and
- * * * HueSatField) should be able to be written as implementations of
- * * * DragContainer.
  * * Dropdown menues
  * * * Dropdown menues can themsevles contain scroll areas!!
  * App:
@@ -381,8 +378,6 @@ public final class MainApp extends App {
                 }
             }
         }
-
-        selectedColorPicker.update();
 
         if (colorSelection == PRIMARY_COLOR) {
             primaryColor = selectedColorPicker.getRGB();

@@ -70,7 +70,7 @@ public class ColorPickContainer extends UIContainer {
         row1.zeroMargin().noOutline();
         HueSatField hueSatField = new HueSatField(colorPicker, size);
         row1.add(hueSatField);
-        UIScaleContainer lightnessScale = new UIScaleContainer(new LightnessScale(UIContainer.VERTICAL, colorPicker));
+        UIScale lightnessScale = new LightnessScale(UIContainer.VERTICAL, colorPicker);
         row1.add(lightnessScale);
         return row1;
     }
@@ -98,7 +98,7 @@ public class ColorPickContainer extends UIContainer {
         UITextInput alphaInput = new UITextInput(textUpdater, valueUpdater);
         row2.add(alphaInput);
 
-        UIScaleContainer alphaScale = new UIScaleContainer(new AlphaScale(UIContainer.HORIZONTAL, colorPicker));
+        UIScale alphaScale = new AlphaScale(UIContainer.HORIZONTAL, colorPicker);
         alphaScale.setMaximalSize();
         row2.add(alphaScale);
         return row2;

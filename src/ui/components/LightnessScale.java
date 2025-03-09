@@ -1,31 +1,14 @@
 package ui.components;
 
 import main.ColorPicker;
-import sutil.math.SVector;
-import sutil.ui.UIContainer;
 
 public class LightnessScale extends UIScale {
 
+    private ColorPicker colorPicker;
+
     public LightnessScale(int orientation, ColorPicker colorPicker) {
-        super(orientation, colorPicker);
-
-        colorPicker.setLightnessScale(this);
-    }
-
-    @Override
-    public void setColorDimension(SVector mousePos) {
-        if (orientation == VERTICAL) {
-            colorPicker.setLightness(1 - mousePos.y / size.y);
-        } else {
-            colorPicker.setLightness(mousePos.x / size.x);
-        }
-    }
-
-    @Override
-    protected double getSliderCoord() {
-        return orientation == UIContainer.VERTICAL
-                ? (1 - colorPicker.getLightness()) * size.y
-                : colorPicker.getLightness() * size.x;
+        super(orientation, () -> 1 - colorPicker.getLightness(), d -> colorPicker.setLightness(1 - d));
+        this.colorPicker = colorPicker;
     }
 
     public double getHue() {
