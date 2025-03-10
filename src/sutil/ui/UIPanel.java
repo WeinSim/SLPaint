@@ -135,10 +135,6 @@ public abstract class UIPanel {
         return padding;
     }
 
-    public void setRoot(UIRoot root) {
-        this.root = root;
-    }
-
     public SVector getBackgroundNormalColor() {
         return new SVector(1, 1, 1).scale(0.1);
     }
@@ -169,5 +165,9 @@ public abstract class UIPanel {
 
     public boolean isMousePressed() {
         return mousePressed;
+    }
+
+    public void setRoot(UIRoot root) {
+        this.root = root;
     }
 }

@@ -170,10 +170,10 @@ public class UIContainer extends UIElement {
             }
         }
         if (expandX) {
-            size.x = remainingSize.x;
+            size.x = Math.max(size.x, remainingSize.x);
         }
         if (expandY) {
-            size.y = remainingSize.y;
+            size.y = Math.max(size.y, remainingSize.y);
         }
 
         double margin = getMargin();

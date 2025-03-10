@@ -66,11 +66,17 @@ public class ColorPickContainer extends UIContainer {
     }
 
     private UIContainer createRow1() {
-        UIContainer row1 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
+        UIContainer row1 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP) {
+            @Override
+            public double getPadding() {
+                return 2 * super.getPadding();
+            }
+        };
         row1.zeroMargin().noOutline();
         HueSatField hueSatField = new HueSatField(colorPicker, size);
         row1.add(hueSatField);
         UIScale lightnessScale = new LightnessScale(UIContainer.VERTICAL, colorPicker);
+        lightnessScale.setFillSize();
         row1.add(lightnessScale);
         return row1;
     }
@@ -100,6 +106,7 @@ public class ColorPickContainer extends UIContainer {
 
         UIScale alphaScale = new AlphaScale(UIContainer.HORIZONTAL, colorPicker);
         alphaScale.setMaximalSize();
+        // alphaScale.setFillSize();
         row2.add(alphaScale);
         return row2;
     }

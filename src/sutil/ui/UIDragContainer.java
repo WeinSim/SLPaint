@@ -53,7 +53,7 @@ public abstract class UIDragContainer<D extends UIElement & Draggable> extends U
     public void mousePressed(SVector mouse) {
         super.mousePressed(mouse);
 
-        if (mouseAbove) {
+        if (mouseAbove()) {
             dragging = true;
             dragStartD.set(draggable.position);
             if (!draggable.mouseAbove) {

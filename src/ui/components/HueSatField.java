@@ -31,6 +31,17 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
         ((Cursor) children.get(0)).positionChildren();
     }
 
+    @Override
+    protected void updateMouseAboveReference(SVector mouse) {
+        if (App.isCircularHueSatField()) {
+            double x = (mouse.x - position.x) / size.x - 0.5,
+                    y = (mouse.y - position.y) / size.y - 0.5;
+            mouseAbove = x * x + y * y < 0.25;
+        } else {
+            super.updateMouseAboveReference(mouse);
+        }
+    }
+
     protected static class Cursor extends UIContainer implements Draggable {
 
         private ColorPicker colorPicker;
@@ -101,6 +112,7 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
                 y -= 0.5;
                 double x = nextX - 0.5;
                 double angle = Math.atan2(y, x) / Math.PI * 180;
+                angle = (angle + 360) % 360;
                 colorPicker.setHue(angle);
                 colorPicker.setSaturation(Math.min(1, 2 * Math.sqrt(x * x + y * y)));
             } else {

@@ -22,29 +22,41 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
 
     public UIScale(int orientation, UIGetter<Double> getter, UISetter<Double> setter) {
         super(new Slider(orientation, getter, setter));
+        this.orientation = orientation;
 
-        setFillSize();
         noOutline();
+    }
+
+    public SVector getScaleSize() {
+        return getScaleOffset().scale(-2).add(size);
     }
 
     public SVector getScaleOffset() {
         return orientation == VERTICAL
-                ? new SVector(super.getMargin(), 0)
-                : new SVector(0, super.getMargin());
+                ? new SVector(getMargin(), 0)
+                : new SVector(0, getMargin());
+    }
+
+    @Override
+    public void setMinSize() {
+        super.setMinSize();
+
+        size.set(1, 1).scale(2 * getMargin() + getScaleWidth());
+    }
+
+    protected double getScaleWidth() {
+        return 2 * super.getMargin();
     }
 
     @Override
     public double getMargin() {
-        // return 2 * super.getMargin() + Sizes.UI_SCALE_MARGIN.size;
-        return 0;
+        return 1.3 * super.getMargin();
     }
 
     /**
      * The white visual indicators
      */
     protected static class Slider extends UIElement implements Draggable {
-
-        private static final double WIDTH = 20;
 
         private int orientation;
 
@@ -62,10 +74,14 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
 
         @Override
         public void setMinSize() {
+            double width = orientation == VERTICAL
+                    ? parent.getSize().x
+                    : parent.getSize().y;
+
             if (orientation == VERTICAL) {
-                size.set(WIDTH, 2);
+                size.set(width, 2 * getStrokeWeight());
             } else {
-                size.set(2, WIDTH);
+                size.set(2 * getStrokeWeight(), width);
             }
         }
 

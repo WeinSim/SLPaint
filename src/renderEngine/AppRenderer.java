@@ -18,6 +18,7 @@ import ui.components.AlphaScale;
 import ui.components.HueSatField;
 import ui.components.LightnessScale;
 import ui.components.UIColorElement;
+import ui.components.UIScale;
 
 public class AppRenderer<T extends App> {
 
@@ -90,19 +91,6 @@ public class AppRenderer<T extends App> {
         if (element instanceof HueSatField) {
             uiMaster.hueSatField(position, size, App.isCircularHueSatField());
         }
-        if (element instanceof LightnessScale scale) {
-            uiMaster.lightnessScale(position, size, scale.getHue(), scale.getSaturation(), scale.getOrientation());
-        }
-        if (element instanceof AlphaScale scale) {
-            // checkerboard background
-            uiMaster.noStroke();
-            uiMaster.checkerboardFill(Colors.getTransparentColors(), size.y / 2);
-            uiMaster.rect(position, size);
-
-            // color gradient
-            uiMaster.fill(MainApp.toSVector(scale.getRGB()));
-            uiMaster.alphaScale(position, size, 1 - scale.getOrientation());
-        }
         if (element instanceof UIToggle toggle) {
             uiMaster.fill(Colors.getBackgroundHighlightColor2());
             double wh = size.y;
@@ -125,7 +113,6 @@ public class AppRenderer<T extends App> {
             uiMaster.fill(Colors.getTextColor());
             uiMaster.text(text.getText(), position);
         }
-
         if (element instanceof UIContainer container) {
             uiMaster.pushMatrix();
             if (container instanceof UIScrollArea) {
@@ -139,6 +126,23 @@ public class AppRenderer<T extends App> {
                 uiMaster.noScissor();
             }
             uiMaster.popMatrix();
+        }
+        if (element instanceof UIScale scale) {
+            SVector pos = new SVector(position).add(scale.getScaleOffset());
+            SVector siz = scale.getScaleSize();
+            if (scale instanceof LightnessScale l) {
+                uiMaster.lightnessScale(pos, siz, l.getHue(), l.getSaturation(), l.getOrientation());
+            }
+            if (scale instanceof AlphaScale a) {
+                // checkerboard background
+                uiMaster.noStroke();
+                uiMaster.checkerboardFill(Colors.getTransparentColors(), siz.y / 2);
+                uiMaster.rect(pos, siz);
+
+                // color gradient
+                uiMaster.fill(MainApp.toSVector(a.getRGB()));
+                uiMaster.alphaScale(pos, siz, a.getOrientation());
+            }
         }
 
         if (App.showDebugOutline()) {

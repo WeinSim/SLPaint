@@ -10,9 +10,6 @@ public class UIScrollArea extends UIContainer {
     private SVector areaOvershoot;
     private int scrollMode;
 
-    private UIScrollBarContainer hScrollBarContainer = null;
-    private UIScrollBarContainer vScrollBarContainer = null;
-
     public UIScrollArea(int orientation, int alignment, int scrollMode) {
         super(orientation, alignment);
         this.scrollMode = scrollMode;
@@ -124,8 +121,7 @@ public class UIScrollArea extends UIContainer {
         wrapper.zeroMargin().zeroPadding().setMinimalSize();
 
         wrapper.add(container);
-        hScrollBarContainer = new UIScrollBarContainer(this, HORIZONTAL);
-        wrapper.add(hScrollBarContainer);
+        wrapper.add(new UIScrollBarContainer(this, HORIZONTAL));
         return wrapper;
     }
 
@@ -135,8 +131,7 @@ public class UIScrollArea extends UIContainer {
         wrapper.zeroMargin().zeroPadding().setMinimalSize();
 
         wrapper.add(container);
-        vScrollBarContainer = new UIScrollBarContainer(this, VERTICAL);
-        wrapper.add(vScrollBarContainer);
+        wrapper.add(new UIScrollBarContainer(this, VERTICAL));
         return wrapper;
     }
 
