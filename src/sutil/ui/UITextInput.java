@@ -8,16 +8,21 @@ public class UITextInput extends UIContainer {
 
     private boolean numberInput;
 
+    private UIText uiText;
+    private Cursor cursor;
+
     private UISetter<String> valueUpdater;
 
     public UITextInput(UIGetter<String> textUpdater, UISetter<String> valueUpdater) {
         super(HORIZONTAL, CENTER);
         this.valueUpdater = valueUpdater;
 
-        add(new UIText(() -> textUpdater.get()));
+        uiText = new UIText(() -> textUpdater.get());
+        add(uiText);
 
         outlineNormal = true;
-        add(new Cursor());
+        cursor = new Cursor();
+        add(cursor);
 
         setClickAction(() -> {
             panel.setSelectedElement(this);
@@ -28,7 +33,6 @@ public class UITextInput extends UIContainer {
     @Override
     public void keyPressed(char key) {
         if (active()) {
-            UIText uiText = (UIText) children.get(0);
             String text = uiText.getText();
             String newText = text;
             if (key == GLFW.GLFW_KEY_BACKSPACE) {
@@ -64,7 +68,7 @@ public class UITextInput extends UIContainer {
     }
 
     private void showCursor() {
-        ((Cursor) children.get(1)).resetTimer();
+        cursor.resetTimer();
     }
 
     @Override
@@ -90,7 +94,7 @@ public class UITextInput extends UIContainer {
     }
 
     public String getText() {
-        return ((UIText) children.get(0)).getText();
+        return uiText.getText();
     }
 
     public void setNumberInput(boolean numberInput) {

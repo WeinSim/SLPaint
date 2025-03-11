@@ -219,10 +219,8 @@ public class Window {
         long primaryMonitor = GLFW.glfwGetPrimaryMonitor();
         GLFWVidMode pmVideoMode = GLFW.glfwGetVideoMode(primaryMonitor);
         PointerBuffer monitors = GLFW.glfwGetMonitors();
-        int count;
-        for (count = 0; monitors.hasRemaining(); monitors.get(), count++)
-            ;
-        int offset = count == 2 ? 1920 : 0;
+        int offset = monitors.capacity() == 2 ? 1920 : 0;
+        offset = 0;
         GLFW.glfwSetWindowPos(windowHandle,
                 offset + (pmVideoMode.width() - width) / 2,
                 (pmVideoMode.height() - height) / 2);

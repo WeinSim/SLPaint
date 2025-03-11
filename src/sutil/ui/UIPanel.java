@@ -2,6 +2,7 @@ package sutil.ui;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.function.Consumer;
 
 import org.lwjgl.glfw.GLFW;
 
@@ -26,6 +27,8 @@ public abstract class UIPanel {
     protected UIRoot root;
     private UIElement selectedElement;
 
+    protected ArrayList<UIElement> floatElements;
+
     private boolean mousePressed;
 
     private LinkedList<UIAction> eventQueue;
@@ -34,6 +37,7 @@ public abstract class UIPanel {
         selectedElement = null;
         mousePressed = false;
 
+        floatElements = new ArrayList<>();
         eventQueue = new LinkedList<>();
     }
 
@@ -42,23 +46,48 @@ public abstract class UIPanel {
             eventQueue.removeFirst().run();
         }
 
-        root.update(mousePos);
+        forAllElements(element -> element.update(mousePos));
 
         updateSize();
     }
 
+    public void addFloatElement(UIElement element) {
+        floatElements.add(element);
+        element.setPanel(this);
+    }
+
+    public void removeFloatElement(UIElement element) {
+        floatElements.remove(element);
+    }
+
+    private void forAllElements(Consumer<? super UIElement> action) {
+        action.accept(root);
+        floatElements.forEach(action);
+    }
+
+    private void forAllContainers(Consumer<? super UIContainer> action) {
+        action.accept(root);
+        for (UIElement floatElement : floatElements) {
+            if (floatElement instanceof UIContainer container) {
+                action.accept(container);
+            }
+        }
+    }
+
     protected void updateSize() {
-        root.updateSizeReferences();
-        root.setMinSize();
-        root.expandAsNeccessary(null);
-        root.positionChildren();
+        forAllContainers(container -> {
+            container.updateSizeReferences();
+            container.setMinSize();
+            container.expandAsNeccessary(null);
+            container.positionChildren();
+        });
     }
 
     public void mousePressed(SVector mousePos) {
         eventQueue.add(() -> {
             selectedElement = null;
             mousePressed = true;
-            root.mousePressed(mousePos);
+            forAllElements(element -> element.mousePressed(mousePos));
         });
     }
 
@@ -78,12 +107,17 @@ public abstract class UIPanel {
                     }
                 }
             }
-            root.keyPressed(key);
+            forAllElements(element -> element.keyPressed(key));
         });
     }
 
     public void mouseWheel(SVector scroll, SVector mousePos) {
-        eventQueue.add(() -> root.mouseWheel(scroll.copy().scale(mouseWheelSensitivity), mousePos));
+        eventQueue.add(() -> forAllElements(
+                element -> element.mouseWheel(scroll.copy().scale(mouseWheelSensitivity), mousePos)));
+    }
+
+    public void queueEvent(UIAction action) {
+        eventQueue.add(action);
     }
 
     private void cycleSelectedElement(boolean backwards) {
@@ -101,17 +135,16 @@ public abstract class UIPanel {
     }
 
     private ArrayList<UIElement> getSelectableElements() {
-        return getSelectableElements(root);
+        return getSelectableElements(root, new ArrayList<UIElement>());
     }
 
-    private ArrayList<UIElement> getSelectableElements(UIContainer parent) {
-        ArrayList<UIElement> elements = new ArrayList<>();
+    private ArrayList<UIElement> getSelectableElements(UIContainer parent, ArrayList<UIElement> elements) {
         for (UIElement child : parent.getChildren()) {
             if (child.isSelectable()) {
                 elements.add(child);
             }
             if (child instanceof UIContainer container) {
-                elements.addAll(getSelectableElements(container));
+                getSelectableElements(container, elements);
             }
         }
         return elements;
@@ -119,6 +152,10 @@ public abstract class UIPanel {
 
     public UIRoot getRoot() {
         return root;
+    }
+
+    public ArrayList<UIElement> getFloatElements() {
+        return floatElements;
     }
 
     public abstract double textWidth(String text);

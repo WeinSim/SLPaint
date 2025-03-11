@@ -57,7 +57,7 @@ public class UILabel extends UIContainer {
     }
 
     public void setText(String[] text) {
-        children.clear();
+        clearChildren();
         for (String line : text) {
             add(new UIText(line));
         }

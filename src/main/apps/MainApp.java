@@ -30,10 +30,14 @@ import ui.Sizes;
 import ui.components.ImageCanvas;
 
 /**
- * TODO:
+ * TODO: continue: float elements: make them visible, perhaps add
+ * * UIGetter<SVector> for position / anchor modes?
  * UI scroll and float:
  * * Dropdown menues
  * * * Dropdown menues can themsevles contain scroll areas!!
+ * * Clean up UIScale, UISeparator (and perhaps a few more): things outside of
+ * * * sutil are being refernced!!!
+ * * Scroll areas inside of scroll areas
  * App:
  * * Dialogs
  * * * Save dialog
@@ -62,14 +66,13 @@ import ui.components.ImageCanvas;
  * * * * unaffected. What is the expected behavior here?
  * * Recognize remapping from CAPS_LOCK to ESCAPE
  * * When parent app closes, shouldren should also close
+ * * Add HSV color selection mode (in addition to HSL)?
  * UI:
- * * Two dimensional scrolling?
  * * Tool icons & cursors
  * * UIFloat element (e.g. dropdown menues): doesn't affect parent's size
  * * (Add hMargin and vMargin in UIContainer)
  * * * Not neccessary for now. UISeparators now extend fully even without
  * * * hMargin and vMargin
- * * HueSatField's hitbox should adjust (rect / circle) depending on the setting
  * Rendering:
  * * Weird rendering bugs:
  * * * Anti aliasing doesn't work despite being enabled
@@ -86,7 +89,9 @@ import ui.components.ImageCanvas;
  * * Rename transformationMatrix to uiMatrix
  * Maximized windows don't show up correctly on Windows 11
  * Error handling
- * 3D UI view?
+ * UI extras: (optional)
+ * * 3D view
+ * * Debug view
  */
 public final class MainApp extends App {
 
@@ -193,7 +198,7 @@ public final class MainApp extends App {
 
         transparentSelection = false;
 
-        // showDialog(SETTINGS_DIALOG);
+        showDialog(SETTINGS_DIALOG);
     }
 
     @Override

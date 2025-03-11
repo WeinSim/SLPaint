@@ -52,7 +52,7 @@ public class UIContainer extends UIElement {
     protected boolean zeroMargin = false;
     protected boolean zeroPadding = false;
 
-    protected ArrayList<UIElement> children;
+    private ArrayList<UIElement> children;
 
     public UIContainer(int orientation, int alignment) {
         if (orientation < 0 || orientation >= 2 || alignment < 0 || alignment >= 3) {
@@ -79,7 +79,16 @@ public class UIContainer extends UIElement {
         }
     }
 
+    /**
+     * Adds {@code child} as a non-floating child element.
+     * 
+     * @param child The child {@code UIElement} to add to this {@code UIContainer}.
+     */
     public void add(UIElement child) {
+        if (children.contains(child)) {
+            return;
+        }
+
         children.add(child);
         child.setPanel(panel);
         child.parent = this;
@@ -87,6 +96,10 @@ public class UIContainer extends UIElement {
 
     public void remove(UIElement child) {
         children.remove(child);
+    }
+
+    public void clearChildren() {
+        children.clear();
     }
 
     @Override
@@ -170,10 +183,10 @@ public class UIContainer extends UIElement {
             }
         }
         if (expandX) {
-            size.x = Math.max(size.x, remainingSize.x);
+            size.x = remainingSize.x;
         }
         if (expandY) {
-            size.y = Math.max(size.y, remainingSize.y);
+            size.y = remainingSize.y;
         }
 
         double margin = getMargin();
@@ -197,7 +210,7 @@ public class UIContainer extends UIElement {
         double padding = getPadding();
 
         double runningTotal = margin;
-        for (UIElement child : children) {
+        for (UIElement child :children) {
             SVector childPos = child.getPosition();
             SVector childSize = child.getSize();
 

@@ -1,5 +1,7 @@
 package ui.components;
 
+import java.util.ArrayList;
+
 import main.ColorPicker;
 import main.apps.App;
 import sutil.math.SVector;
@@ -28,12 +30,16 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
     public void positionChildren() {
         super.positionChildren();
 
-        ((Cursor) children.get(0)).positionChildren();
+        draggable.positionChildren();
     }
 
     @Override
     protected void updateMouseAboveReference(SVector mouse) {
         if (App.isCircularHueSatField()) {
+            if (mouse == null) {
+                mouseAbove = false;
+                return;
+            }
             double x = (mouse.x - position.x) / size.x - 0.5,
                     y = (mouse.y - position.y) / size.y - 0.5;
             mouseAbove = x * x + y * y < 0.25;
@@ -68,6 +74,8 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
             final double a = CURSOR_LINE_WIDTH / 2;
             final double b = CURSOR_LINE_LENGTH + CURSOR_CENTER_GAP / 2;
             final double c = CURSOR_CENTER_GAP / 2;
+
+            ArrayList<UIElement> children = getChildren();
             children.get(0).getPosition().set(-a, -b);
             children.get(1).getPosition().set(c, -a);
             children.get(2).getPosition().set(-a, c);

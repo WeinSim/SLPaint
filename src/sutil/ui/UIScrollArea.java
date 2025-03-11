@@ -24,7 +24,7 @@ public class UIScrollArea extends UIContainer {
         updateMouseAboveReference(mouse);
 
         SVector relativeMouse = mouseAbove ? new SVector(mouse).sub(position) : null;
-        for (UIElement child : children) {
+        for (UIElement child : getChildren()) {
             child.update(relativeMouse);
         }
     }
@@ -46,7 +46,7 @@ public class UIScrollArea extends UIContainer {
     public void positionChildren() {
         super.positionChildren();
 
-        for (UIElement child : children) {
+        for (UIElement child : getChildren()) {
             child.getPosition().add(scrollOffset);
         }
     }

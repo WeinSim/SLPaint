@@ -78,12 +78,7 @@ public class AppRenderer<T extends App> {
         } else {
             uiMaster.noFill();
         }
-        if (olColor != null) {
-            uiMaster.strokeWeight(element.getStrokeWeight());
-            uiMaster.stroke(olColor);
-        } else {
-            uiMaster.noStroke();
-        }
+        uiMaster.noStroke();
         uiMaster.rect(position, size);
 
         uiMaster.fillAlpha(1.0);
@@ -145,10 +140,17 @@ public class AppRenderer<T extends App> {
             }
         }
 
+        boolean doOutline = false;
         if (App.showDebugOutline()) {
-            SVector orange = new SVector(1, 0.7, 0.1);
-            uiMaster.stroke(orange);
+            uiMaster.stroke(new SVector(1, 0.7, 0.1));
             uiMaster.strokeWeight(Sizes.STROKE_WEIGHT.size);
+            doOutline = true;
+        } else if (olColor != null) {
+            uiMaster.stroke(olColor);
+            uiMaster.strokeWeight(element.getStrokeWeight());
+            doOutline = true;
+        }
+        if (doOutline) {
             uiMaster.noFill();
             uiMaster.rect(position, size);
         }

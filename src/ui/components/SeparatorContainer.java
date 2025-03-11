@@ -12,7 +12,7 @@ public class SeparatorContainer extends UIContainer {
 
     @Override
     public void add(UIElement child) {
-        if (children.size() > 0) {
+        if (getChildren().size() > 0) {
             super.add(new UISeparator());
         }
         super.add(child);

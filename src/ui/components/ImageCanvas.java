@@ -18,7 +18,7 @@ public class ImageCanvas extends UIContainer {
             return false;
         }
 
-        for (UIElement child : children) {
+        for (UIElement child : getChildren()) {
             if (child.mouseAbove()) {
                 return false;
             }

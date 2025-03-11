@@ -6,6 +6,7 @@ import main.apps.MainApp;
 import main.apps.SettingsApp;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
+import sutil.ui.UIDropdown;
 import sutil.ui.UILabel;
 import sutil.ui.UIScrollArea;
 import sutil.ui.UISeparator;
@@ -30,6 +31,9 @@ public class SettingsUI extends AppUI<SettingsApp> {
         root.setZeroPadding(false);
 
         UIScrollArea mainContainer = new UIScrollArea(UIContainer.VERTICAL, UIContainer.LEFT, UIScrollArea.BOTH);
+
+        UIDropdown dropdown = new UIDropdown(new String[] {"Option 1", "Option 2", "Option 3"});
+        mainContainer.add(dropdown);
 
         for (int i = 0; i < 7; i++) {
             mainContainer.add(new UILabel(String.format("Label %d", i)));
@@ -115,7 +119,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         baseColorExpand.add(new ColorPickContainer(colorPicker, Sizes.COLOR_PICKER_SIDE_PANEL.size,
                 UIContainer.HORIZONTAL, false, true));
 
-        baseColorButton.setClickAction(() -> app.queueEvent(() -> {
+        baseColorButton.setClickAction(() -> queueEvent(() -> {
             if (baseColor.getChildren().contains(baseColorExpand)) {
                 baseColor.remove(baseColorExpand);
             } else {
