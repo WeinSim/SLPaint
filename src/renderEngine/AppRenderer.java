@@ -56,6 +56,9 @@ public class AppRenderer<T extends App> {
         uiMaster.textSize(ui.getTextSize());
 
         renderUIElement(ui.getRoot());
+        for (UIElement floatElement : ui.getFloatElements()) {
+            renderUIElement(floatElement);
+        }
     }
 
     private void renderUIElement(UIElement element) {

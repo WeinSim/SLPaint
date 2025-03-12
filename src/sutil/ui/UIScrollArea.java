@@ -10,6 +10,12 @@ public class UIScrollArea extends UIContainer {
     private SVector areaOvershoot;
     private int scrollMode;
 
+    /**
+     * Indicates wether a scroll bar should be hidden if there is not enough content
+     * to allow scrolling.
+     */
+    private boolean hideScrollbars;
+
     public UIScrollArea(int orientation, int alignment, int scrollMode) {
         super(orientation, alignment);
         this.scrollMode = scrollMode;
@@ -17,6 +23,7 @@ public class UIScrollArea extends UIContainer {
         setMaximalSize();
 
         scrollOffset = new SVector();
+        hideScrollbars = true;
     }
 
     @Override
@@ -59,13 +66,6 @@ public class UIScrollArea extends UIContainer {
         scrollOffset.y += isVScroll() ? scroll.y : 0;
     }
 
-    public void setScrollMode(int scrollMode) {
-        if (scrollMode < 0 || scrollMode >= 4) {
-            throw new IllegalArgumentException(String.format("Invalid scrollMode (%d)", scrollMode));
-        }
-        this.scrollMode = scrollMode;
-    }
-
     public UIContainer addScrollBars() {
         UIContainer ret = this;
         if (isHScroll()) {
@@ -77,19 +77,19 @@ public class UIScrollArea extends UIContainer {
         return ret;
     }
 
-    public void setRelativeScrollX(double scrollX) {
+    private void setRelativeScrollX(double scrollX) {
         scrollOffset.x = -areaOvershoot.x * Math.min(Math.max(0, scrollX), 1);
     }
 
-    public void setRelativeScrollY(double scrollY) {
+    private void setRelativeScrollY(double scrollY) {
         scrollOffset.y = -areaOvershoot.y * Math.min(Math.max(0, scrollY), 1);
     }
 
-    public double getRelativeScrollX() {
+    private double getRelativeScrollX() {
         return areaOvershoot.x <= 0.0 ? 0 : -scrollOffset.x / areaOvershoot.x;
     }
 
-    public double getRelativeScrollY() {
+    private double getRelativeScrollY() {
         return areaOvershoot.y <= 0.0 ? 0 : -scrollOffset.y / areaOvershoot.y;
     }
 
@@ -116,26 +116,60 @@ public class UIScrollArea extends UIContainer {
     }
 
     private UIContainer wrapHScroll(UIContainer container) {
-        UIContainer wrapper = new UIContainer(UIContainer.VERTICAL, 0);
-        wrapper.noBackground().noOutline();
-        wrapper.zeroMargin().zeroPadding().setMinimalSize();
-
-        wrapper.add(container);
-        wrapper.add(new UIScrollBarContainer(this, HORIZONTAL));
-        return wrapper;
+        return new UIScrollbarContainerWrapper(HORIZONTAL, container, this);
     }
 
     private UIContainer wrapVScroll(UIContainer container) {
-        UIContainer wrapper = new UIContainer(UIContainer.HORIZONTAL, 0);
-        wrapper.noBackground().noOutline();
-        wrapper.zeroMargin().zeroPadding().setMinimalSize();
-
-        wrapper.add(container);
-        wrapper.add(new UIScrollBarContainer(this, VERTICAL));
-        return wrapper;
+        return new UIScrollbarContainerWrapper(VERTICAL, container, this);
     }
 
-    private class UIScrollBarContainer extends UIDragContainer<UIScrollBar> {
+    public void setHideScrollbars(boolean hideScrollbars) {
+        this.hideScrollbars = hideScrollbars;
+    }
+
+    private boolean hideScrollbar(int orientation) {
+        return orientation == VERTICAL
+                ? isVScroll() && areaOvershoot.y <= 0.0
+                : isHScroll() && areaOvershoot.x <= 0.0;
+    }
+
+    private static class UIScrollbarContainerWrapper extends UIContainer {
+
+        UIScrollArea scrollArea;
+        UIScrollBarContainer scrollBarContainer;
+
+        boolean hideScrollbar;
+
+        UIScrollbarContainerWrapper(int orientation, UIContainer container, UIScrollArea scrollArea) {
+            super(1 - orientation, 0);
+
+            this.scrollArea = scrollArea;
+
+            noBackground().noOutline();
+            zeroMargin().zeroPadding().setMinimalSize();
+
+            add(container);
+            scrollBarContainer = new UIScrollBarContainer(scrollArea, orientation);
+            add(scrollBarContainer);
+
+            hideScrollbar = false;
+        }
+
+        @Override
+        public void expandAsNeccessary(SVector remainingSize) {
+            super.expandAsNeccessary(remainingSize);
+
+            boolean shouldHideScrollbar = scrollArea.hideScrollbar(1 - orientation);
+            if (shouldHideScrollbar && !hideScrollbar) {
+                panel.queueEvent(() -> remove(scrollBarContainer));
+            } else if (!shouldHideScrollbar && hideScrollbar) {
+                panel.queueEvent(() -> add(scrollBarContainer));
+            }
+            hideScrollbar = shouldHideScrollbar;
+        }
+    }
+
+    private static class UIScrollBarContainer extends UIDragContainer<UIScrollBar> {
 
         UIScrollBarContainer(UIScrollArea scrollArea, int orientation) {
             super(new UIScrollBar(scrollArea, orientation));
@@ -156,7 +190,7 @@ public class UIScrollArea extends UIContainer {
         }
     }
 
-    private class UIScrollBar extends UIElement implements Draggable {
+    private static class UIScrollBar extends UIElement implements Draggable {
 
         private int orientation;
 
@@ -178,7 +212,7 @@ public class UIScrollArea extends UIContainer {
 
         @Override
         public void setMinSize() {
-            double min = 2 * getMargin();
+            double min = 2 * scrollArea.getMargin();
             size.set(min, min);
         }
 
@@ -218,4 +252,5 @@ public class UIScrollArea extends UIContainer {
             }
         }
     }
+
 }

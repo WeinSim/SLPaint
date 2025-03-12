@@ -11,7 +11,6 @@ import sutil.ui.UILabel;
 import sutil.ui.UIScrollArea;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
-import sutil.ui.UIToggle;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.SeparatorContainer;
@@ -32,22 +31,15 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         UIScrollArea mainContainer = new UIScrollArea(UIContainer.VERTICAL, UIContainer.LEFT, UIScrollArea.BOTH);
 
-        UIDropdown dropdown = new UIDropdown(new String[] {"Option 1", "Option 2", "Option 3"});
-        mainContainer.add(dropdown);
-
-        for (int i = 0; i < 7; i++) {
-            mainContainer.add(new UILabel(String.format("Label %d", i)));
-        }
-
         mainContainer.add(createBaseColor());
-        mainContainer.add(createDarkModeToggle());
-        mainContainer.add(createHueSatFieldToggle());
+        mainContainer.add(createDarkModeDropdown());
+        mainContainer.add(new UISeparator());
+        mainContainer.add(createHueSatDropdown());
 
         for (int i = 0; i < 7; i++) {
             mainContainer.add(new UILabel(String.format("Label %d", i)));
         }
 
-        // root.add(mainContainer);
         root.add(mainContainer.addScrollBars());
 
         root.add(new UIButton("Done", () -> app.getWindow().requestClose()));
@@ -130,39 +122,29 @@ public class SettingsUI extends AppUI<SettingsApp> {
         return baseColor;
     }
 
-    private UIContainer createDarkModeToggle() {
-        // UIButton button = new UIButton("", () -> app.toggleDarkMode());
-        // button.setText(() -> String.format("Mode: %s", Colors.isDarkMode() ? "Dark" :
-        // "Light"));
-        // return button;
-
+    private UIContainer createDarkModeDropdown() {
         UIContainer container = new UIContainer(UIContainer.HORIZONTAL,
                 UIContainer.CENTER);
-        UIText label = new UIText(() -> String.format("Mode: %s",
-                Colors.isDarkMode()
-                        ? "Dark"
-                        : "Light"));
-        container.add(label);
-        UIToggle toggle = new UIToggle(() -> Colors.isDarkMode(), _ -> app.toggleDarkMode());
-        container.add(toggle);
+        container.zeroMargin().noOutline();
+
+        container.add(new UIText("Theme:"));
+        container.add(new UIDropdown(
+                new String[] { "Light", "Dark" },
+                () -> Colors.isDarkMode() ? 1 : 0,
+                i -> app.setDarkMode(i != 0)));
         return container;
     }
 
-    private UIContainer createHueSatFieldToggle() {
-        // UIButton button = new UIButton("", () -> App.toggleCircularHueSatField());
-        // button.setText(() -> String.format("HueSatField: %s",
-        // App.isCircularHueSatField() ? "Circle" : "Square"));
-        // return button;
-
+    private UIContainer createHueSatDropdown() {
         UIContainer container = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
-        UIText label = new UIText(() -> String.format("HueSatField: %s",
-                App.isCircularHueSatField()
-                        ? "Circle"
-                        : "Square"));
-        container.add(label);
-        UIToggle toggle = new UIToggle(() -> App.isCircularHueSatField(),
-                _ -> App.toggleCircularHueSatField());
-        container.add(toggle);
+        container.zeroMargin().noOutline();
+
+        container.add(new UIText("Shape of Hue-Saturation Field:"));
+        container.add(new UIDropdown(
+            new String[] {"Circle", "Square"},
+            () -> App.isCircularHueSatField() ? 0 : 1,
+                i -> App.setCircularHueSatField(i == 0)
+                ));
         return container;
     }
 }

@@ -30,68 +30,79 @@ import ui.Sizes;
 import ui.components.ImageCanvas;
 
 /**
- * TODO: continue: float elements: make them visible, perhaps add
- * * UIGetter<SVector> for position / anchor modes?
+ * <pre>
+ * TODO:
+ * Replace UIGetter and UISetter with Supplier and Consumer
  * UI scroll and float:
- * * Dropdown menues
- * * * Dropdown menues can themsevles contain scroll areas!!
- * * Clean up UIScale, UISeparator (and perhaps a few more): things outside of
- * * * sutil are being refernced!!!
- * * Scroll areas inside of scroll areas
+ *   Scroll areas:
+ *     UIEmpty does not fully expand (should expand to size + areaOvershoot,
+ *       only expands to size)
+ *   Dropdown menues:
+ *     Dropdown menues can themsevles contain scroll areas!!
+ *   Clean up UIScale, UISeparator (and perhaps a few more): things outside of
+ *     sutil are being refernced!!!
+ *   Scroll areas inside of scroll areas
+ *   Re-read and check all of the new UI code before merging into main
  * App:
- * * Dialogs
- * * * Save dialog
- * * * * Keep track of unsaved changes, ask user to save before quitting if
- * * * * there are unsaved changes
- * * * Only one at a time
- * * * Keep track of all file locks in one centralized place to avoid leaking
- * * Resizing
- * * * Selection resizing
- * * * Selection Ctrl+Shift+X
- * * Save user settings (ui base color, light / dark mode, transparent
- * * * selection)
- * * Undo / redo
- * * Pencil
- * * * Add different sizes
- * * * Fix bug: pencil draws when mouse is clicked outside of canvas and dragged
- * * * * onto canvas
- * * Text tool
- * * Line tool
- * * Transparency
- * * * Grey-white squares should always appear the same size
- * * * Simply selecting a transparent area and unselecting it causes the
- * * * * transparency to go away. Reason: selecting the area replaces that part
- * * * * of the image with the secondary color. Placing the transparent
- * * * * selection back onto the opaque background leaves the background
- * * * * unaffected. What is the expected behavior here?
- * * Recognize remapping from CAPS_LOCK to ESCAPE
- * * When parent app closes, shouldren should also close
- * * Add HSV color selection mode (in addition to HSL)?
+ *   Dialogs
+ *     Save dialog
+ *       Keep track of unsaved changes, ask user to save before quitting if
+ *       there are unsaved changes
+ *     Only one at a time
+ *     Keep track of all file locks in one centralized place to avoid leaking
+ *   Resizing
+ *     Selection resizing
+ *     Selection Ctrl+Shift+X
+ *   Save user settings (ui base color, light / dark mode, transparent
+ *     selection)
+ *   Undo / redo
+ *   Pencil
+ *     Add different sizes
+ *     Fix bug: pencil draws when mouse is clicked outside of canvas and dragged
+ *       onto canvas
+ *   Text tool
+ *   Line tool
+ *   Transparency
+ *     Grey-white squares should always appear the same size
+ *     Simply selecting a transparent area and unselecting it causes the
+ *       transparency to go away. Reason: selecting the area replaces that part
+ *       of the image with the secondary color. Placing the transparent
+ *       selection back onto the opaque background leaves the background
+ *       unaffected. What is the expected behavior here?
+ *   Recognize remapping from CAPS_LOCK to ESCAPE
+ *   When parent app closes, shouldren should also close
+ *   Add HSV color selection mode (in addition to HSL)?
  * UI:
- * * Tool icons & cursors
- * * UIFloat element (e.g. dropdown menues): doesn't affect parent's size
- * * (Add hMargin and vMargin in UIContainer)
- * * * Not neccessary for now. UISeparators now extend fully even without
- * * * hMargin and vMargin
+ *   Tool icons & cursors
+ *   (Add hMargin and vMargin in UIContainer)
+ *     Not neccessary for now. UISeparators now extend fully even without
+ *     hMargin and vMargin
+ *   Independent horizontal and vertical size modes? (see Nic Barker's CLAY)
+ *   Note: currently, mouse and keyboard events are processed before update()
+ *     called on the UI. This causes a mismatch between the mousePos parameter
+ *     in the UIElement.mousePressed() and UIElement.mouseWheel() methods and
+ *     the element's mouseAbove field (which is only updated in
+ *     UIElement.update()).
  * Rendering:
- * * Weird rendering bugs:
- * * * Anti aliasing doesn't work despite being enabled
- * * * * (glfwWindowHint(GLFW_SAMPLES, 4) and glEnable(GL_MULTISAMPLE))
- * * * Selection border sometimes has artifacts on bottom and right inner edges
- * * * AlphaScale has artifacts on bottom edge (whose size depends on wether a
- * * * * text cursor is currently visible?!?)
- * * Fix stuttering artifact when resizing windows on Linux
- * * * (see https://www.glfw.org/docs/latest/window.html#window_refresh)
- * * Clean up UIRenderMaster API and UI shaders (especially with regards to
- * * * transparency!)
- * * Premultiply view matrix and transformation matrix (for rect and text
- * * * shader)
- * * Rename transformationMatrix to uiMatrix
+ *   Weird rendering bugs:
+ *     Anti aliasing doesn't work despite being enabled
+ *       (glfwWindowHint(GLFW_SAMPLES, 4) and glEnable(GL_MULTISAMPLE))
+ *     Selection border sometimes has artifacts on bottom and right inner edges
+ *     AlphaScale has artifacts on bottom edge (whose size depends on wether a
+ *       text cursor is currently visible?!?)
+ *   Fix stuttering artifact when resizing windows on Linux
+ *     (see https://www.glfw.org/docs/latest/window.html#window_refresh)
+ *   Clean up UIRenderMaster API and UI shaders (especially with regards to
+ *     transparency!)
+ *   Premultiply view matrix and transformation matrix (for rect and text
+ *     shader)
+ *   Rename transformationMatrix to uiMatrix
  * Maximized windows don't show up correctly on Windows 11
  * Error handling
  * UI extras: (optional)
- * * 3D view
- * * Debug view
+ *   3D view
+ *   Debug view
+ * </pre>
  */
 public final class MainApp extends App {
 

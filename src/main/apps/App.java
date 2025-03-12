@@ -161,8 +161,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
             }
         } else {
             // mouse should not be above anything when the window isn't focused
-            // TODO this is quite ugly
-            mousePos.set(-10000, -10000);
+            mousePos = null;
         }
 
         ui.update(mousePos);
@@ -238,8 +237,8 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         return circularHueSatField;
     }
 
-    public static void toggleCircularHueSatField() {
-        circularHueSatField = !circularHueSatField;
+    public static void setCircularHueSatField(boolean circularHueSatField) {
+        App.circularHueSatField = circularHueSatField;
     }
 
     public double getFrameRate() {

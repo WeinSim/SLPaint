@@ -27,7 +27,7 @@ public abstract class UIPanel {
     protected UIRoot root;
     private UIElement selectedElement;
 
-    protected ArrayList<UIElement> floatElements;
+    protected ArrayList<UIFloatContainer> floatElements;
 
     private boolean mousePressed;
 
@@ -46,32 +46,17 @@ public abstract class UIPanel {
             eventQueue.removeFirst().run();
         }
 
-        forAllElements(element -> element.update(mousePos));
+        boolean mouseAboveFloat = false;
+        for (UIElement floatElement : floatElements) {
+            floatElement.update(mousePos);
+            mouseAboveFloat |= floatElement.mouseAbove();
+        }
+        if (mouseAboveFloat) {
+            mousePos = null;
+        }
+        root.update(mousePos);
 
         updateSize();
-    }
-
-    public void addFloatElement(UIElement element) {
-        floatElements.add(element);
-        element.setPanel(this);
-    }
-
-    public void removeFloatElement(UIElement element) {
-        floatElements.remove(element);
-    }
-
-    private void forAllElements(Consumer<? super UIElement> action) {
-        action.accept(root);
-        floatElements.forEach(action);
-    }
-
-    private void forAllContainers(Consumer<? super UIContainer> action) {
-        action.accept(root);
-        for (UIElement floatElement : floatElements) {
-            if (floatElement instanceof UIContainer container) {
-                action.accept(container);
-            }
-        }
     }
 
     protected void updateSize() {
@@ -150,11 +135,30 @@ public abstract class UIPanel {
         return elements;
     }
 
+    public void addFloatContainer(UIFloatContainer container) {
+        floatElements.add(container);
+        container.setPanel(this);
+    }
+
+    public void removeFloatContainer(UIElement element) {
+        floatElements.remove(element);
+    }
+
+    private void forAllElements(Consumer<? super UIElement> action) {
+        action.accept(root);
+        floatElements.forEach(action);
+    }
+
+    private void forAllContainers(Consumer<? super UIContainer> action) {
+        action.accept(root);
+        floatElements.forEach(action);
+    }
+
     public UIRoot getRoot() {
         return root;
     }
 
-    public ArrayList<UIElement> getFloatElements() {
+    public ArrayList<UIFloatContainer> getFloatElements() {
         return floatElements;
     }
 
