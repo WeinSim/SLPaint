@@ -32,7 +32,6 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO:
- * Replace UIGetter and UISetter with Supplier and Consumer
  * UI scroll and float:
  *   Scroll areas:
  *     UIEmpty does not fully expand (should expand to size + areaOvershoot,
@@ -42,6 +41,9 @@ import ui.components.ImageCanvas;
  *   Clean up UIScale, UISeparator (and perhaps a few more): things outside of
  *     sutil are being refernced!!!
  *   Scroll areas inside of scroll areas
+ *   UIDragContainers inside of UIScrollAreas (e.g. AlphaScale inside of
+ *     SettingsUI) cannot recognize mouse whil being dragged and mouse is
+ *     outside of UIScrollArea (because inside of update(), mousePos == null)
  *   Re-read and check all of the new UI code before merging into main
  * App:
  *   Dialogs

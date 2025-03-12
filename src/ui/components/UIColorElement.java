@@ -1,33 +1,34 @@
 package ui.components;
 
+import java.util.function.Supplier;
+
 import main.apps.MainApp;
 import sutil.math.SVector;
 import sutil.ui.UIElement;
-import sutil.ui.UIGetter;
 import sutil.ui.UIStyle;
 import ui.Colors;
 import ui.Sizes;
 
 public class UIColorElement extends UIElement {
 
-    private UIGetter<Integer> colorGetter;
+    private Supplier<Integer> colorGetter;
 
-    public UIColorElement(UIGetter<Integer> colorGetter, double wh, boolean outline) {
+    public UIColorElement(Supplier<Integer> colorGetter, double wh, boolean outline) {
         this(colorGetter, new SVector(wh, wh), outline);
     }
 
-    public UIColorElement(UIGetter<Integer> colorGetter, SVector size, boolean outline) {
+    public UIColorElement(Supplier<Integer> colorGetter, SVector size, boolean outline) {
         this.colorGetter = colorGetter;
         this.size = size;
 
-        UIGetter<SVector> backgroundColorGetter = () -> MainApp.toSVector(getColor());
-        UIGetter<SVector> outlineColorGetter = outline
+        Supplier<SVector> backgroundColorGetter = () -> MainApp.toSVector(getColor());
+        Supplier<SVector> outlineColorGetter = outline
                 ? () -> getColor() == null
                         ? new SVector(0.5, 0.5, 0.5)
                         : Colors.getTextColor()
                 // : Colors.getOutlineNormalColor()
                 : () -> null;
-        UIGetter<Double> strokeWeightGetter = () -> Sizes.STROKE_WEIGHT.size;
+        Supplier<Double> strokeWeightGetter = () -> Sizes.STROKE_WEIGHT.size;
         setStyle(new UIStyle(backgroundColorGetter, outlineColorGetter, strokeWeightGetter));
     }
 

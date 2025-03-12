@@ -53,6 +53,7 @@ public class UIContainer extends UIElement {
     protected boolean zeroPadding = false;
 
     private ArrayList<UIElement> children;
+    private ArrayList<UIElement> visibleChildren;
 
     public UIContainer(int orientation, int alignment) {
         if (orientation < 0 || orientation >= 2 || alignment < 0 || alignment >= 3) {
@@ -65,6 +66,7 @@ public class UIContainer extends UIElement {
         this.alignment = alignment;
 
         children = new ArrayList<>();
+        visibleChildren = new ArrayList<>();
         sizeType = SizeType.MINIMAL;
 
         outlineNormal = true;
@@ -92,14 +94,20 @@ public class UIContainer extends UIElement {
         children.add(child);
         child.setPanel(panel);
         child.parent = this;
+
+        if (child.isVisible()) {
+            visibleChildren.add(child);
+        }
     }
 
     public void remove(UIElement child) {
         children.remove(child);
+        visibleChildren.remove(child);
     }
 
     public void clearChildren() {
         children.clear();
+        visibleChildren.clear();
     }
 
     @Override
@@ -107,7 +115,7 @@ public class UIContainer extends UIElement {
         super.update(mouse);
 
         SVector relativeMouse = mouse == null ? null : new SVector(mouse).sub(position);
-        for (UIElement child : children) {
+        for (UIElement child : getChildren()) {
             child.update(relativeMouse);
         }
     }
@@ -117,7 +125,7 @@ public class UIContainer extends UIElement {
         super.mousePressed(mouse);
 
         SVector relativeMouse = new SVector(mouse).sub(position);
-        for (UIElement child : children) {
+        for (UIElement child : getChildren()) {
             child.mousePressed(relativeMouse);
         }
     }
@@ -127,7 +135,7 @@ public class UIContainer extends UIElement {
         super.mouseWheel(scroll, mousePos);
 
         SVector relativeMouse = new SVector(mousePos).sub(position);
-        for (UIElement child : children) {
+        for (UIElement child : getChildren()) {
             child.mouseWheel(scroll, relativeMouse);
         }
     }
@@ -136,8 +144,21 @@ public class UIContainer extends UIElement {
     public void keyPressed(char key) {
         super.keyPressed(key);
 
-        for (UIElement child : children) {
+        for (UIElement child : getChildren()) {
             child.keyPressed(key);
+        }
+    }
+
+    public void determineChildVisibility() {
+        visibleChildren.clear();
+        for (UIElement child : children) {
+            if (child.isVisible()) {
+                visibleChildren.add(child);
+
+                if (child instanceof UIContainer container) {
+                    container.determineChildVisibility();
+                }
+            }
         }
     }
 
@@ -150,7 +171,7 @@ public class UIContainer extends UIElement {
                 current = current.parent;
             }
         }
-        for (UIElement child : children) {
+        for (UIElement child : getChildren()) {
             if (child instanceof UIContainer container) {
                 container.updateSizeReferences();
             }
@@ -159,7 +180,7 @@ public class UIContainer extends UIElement {
 
     @Override
     public void setMinSize() {
-        for (UIElement child : children) {
+        for (UIElement child : getChildren()) {
             child.setMinSize();
         }
 
@@ -210,7 +231,7 @@ public class UIContainer extends UIElement {
         double padding = getPadding();
 
         double runningTotal = margin;
-        for (UIElement child :children) {
+        for (UIElement child : getChildren()) {
             SVector childPos = child.getPosition();
             SVector childSize = child.getSize();
 
@@ -233,7 +254,7 @@ public class UIContainer extends UIElement {
     protected SVector getChildrenBoundingBox(double margin, double padding, boolean includeMaxChildren) {
         double sum = 0;
         double max = 0;
-        for (UIElement child : children) {
+        for (UIElement child : getChildren()) {
             if (!includeMaxChildren && child instanceof UIContainer container && container.effectivelyMaximal) {
                 continue;
             }
@@ -246,7 +267,7 @@ public class UIContainer extends UIElement {
                 sum += childSize.x;
             }
         }
-        sum += 2 * margin + Math.max(0, (children.size() - 1)) * padding;
+        sum += 2 * margin + Math.max(0, (getChildren().size() - 1)) * padding;
         max += 2 * margin;
 
         return switch (orientation) {
@@ -298,7 +319,7 @@ public class UIContainer extends UIElement {
     }
 
     public ArrayList<UIElement> getChildren() {
-        return children;
+        return visibleChildren;
     }
 
     public void setZeroMargin(boolean zeroMargin) {

@@ -1,5 +1,8 @@
 package sutil.ui;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import org.lwjgl.glfw.GLFW;
 
 import sutil.math.SVector;
@@ -11,9 +14,9 @@ public class UITextInput extends UIContainer {
     private UIText uiText;
     private Cursor cursor;
 
-    private UISetter<String> valueUpdater;
+    private Consumer<String> valueUpdater;
 
-    public UITextInput(UIGetter<String> textUpdater, UISetter<String> valueUpdater) {
+    public UITextInput(Supplier<String> textUpdater, Consumer<String> valueUpdater) {
         super(HORIZONTAL, CENTER);
         this.valueUpdater = valueUpdater;
 
@@ -57,7 +60,7 @@ public class UITextInput extends UIContainer {
                 newText = text + key;
             }
             // uiText.setText(newText);
-            valueUpdater.set(newText);
+            valueUpdater.accept(newText);
 
             showCursor();
         }

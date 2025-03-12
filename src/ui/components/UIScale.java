@@ -1,11 +1,12 @@
 package ui.components;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import sutil.math.SVector;
 import sutil.ui.Draggable;
 import sutil.ui.UIDragContainer;
 import sutil.ui.UIElement;
-import sutil.ui.UIGetter;
-import sutil.ui.UISetter;
 import sutil.ui.UIStyle;
 import ui.Colors;
 import ui.Sizes;
@@ -20,7 +21,7 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
             () -> null,
             () -> Sizes.STROKE_WEIGHT.size);
 
-    public UIScale(int orientation, UIGetter<Double> getter, UISetter<Double> setter) {
+    public UIScale(int orientation, Supplier<Double> getter, Consumer<Double> setter) {
         super(new Slider(orientation, getter, setter));
         this.orientation = orientation;
 
@@ -60,10 +61,10 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
 
         private int orientation;
 
-        private UIGetter<Double> getter;
-        private UISetter<Double> setter;
+        private Supplier<Double> getter;
+        private Consumer<Double> setter;
 
-        public Slider(int orientation, UIGetter<Double> getter, UISetter<Double> setter) {
+        public Slider(int orientation, Supplier<Double> getter, Consumer<Double> setter) {
             this.orientation = orientation;
 
             this.getter = getter;
@@ -98,14 +99,14 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
         @Override
         public void setRelativeX(double x) {
             if (orientation == HORIZONTAL) {
-                setter.set(Math.min(Math.max(0, x), 1));
+                setter.accept(Math.min(Math.max(0, x), 1));
             }
         }
 
         @Override
         public void setRelativeY(double y) {
             if (orientation == VERTICAL) {
-                setter.set(Math.min(Math.max(0, y), 1));
+                setter.accept(Math.min(Math.max(0, y), 1));
             }
         }
     }

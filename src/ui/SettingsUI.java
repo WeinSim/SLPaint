@@ -7,7 +7,6 @@ import main.apps.SettingsApp;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UIDropdown;
-import sutil.ui.UILabel;
 import sutil.ui.UIScrollArea;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
@@ -20,8 +19,12 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
     public static final int NUM_UI_BASE_COLOR_BUTTONS = 10;
 
+    private boolean colorSelectionExpanded;
+
     public SettingsUI(SettingsApp app) {
         super(app);
+
+        colorSelectionExpanded = false;
     }
 
     @Override
@@ -36,42 +39,31 @@ public class SettingsUI extends AppUI<SettingsApp> {
         mainContainer.add(new UISeparator());
         mainContainer.add(createHueSatDropdown());
 
-        for (int i = 0; i < 7; i++) {
-            mainContainer.add(new UILabel(String.format("Label %d", i)));
-        }
-
         root.add(mainContainer.addScrollBars());
 
         root.add(new UIButton("Done", () -> app.getWindow().requestClose()));
     }
 
     private UIContainer createBaseColor() {
-        UIContainer baseColor = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
-        // baseColor.setFillSize();
-        baseColor.setMinimalSize();
+        SeparatorContainer baseColor = new SeparatorContainer(UIContainer.VERTICAL, UIContainer.LEFT);
 
         UIContainer baseColorHeading = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         baseColorHeading.zeroMargin().noOutline();
+        baseColorHeading.setBackgroundHighlight(true);
         baseColorHeading.setFillSize();
-        baseColorHeading.add(new UIText("UI Base Color"));
+        baseColorHeading.add(new UIText("UI Base Color:"));
         UIContainer gap = new UIContainer(0, 0).zeroMargin().zeroPadding();
         gap.noOutline();
-        // gap.setMaximalSize();
         baseColorHeading.add(gap);
-        UIColorElement baseColorButton = new UIColorElement(() -> MainApp.toInt(Colors.getBaseColor()),
+        UIColorElement baseColorButton = new UIColorElement(
+                () -> MainApp.toInt(Colors.getBaseColor()),
                 Sizes.COLOR_BUTTON.size, true);
         baseColorHeading.add(baseColorButton);
-        for (int i = 0; i <= 24; i++) {
-            baseColorHeading.add(new UILabel(Integer.toString(1 << i)));
-        }
-        // baseColorRow1.add(new UIButton("Reset", () ->
-        // colorPicker.setRGB(MainApp.toInt(App.DEFAULT_BASE_COLOR))));
         baseColor.add(baseColorHeading);
-
-        SeparatorContainer baseColorExpand = new SeparatorContainer(UIContainer.VERTICAL, UIContainer.LEFT);
 
         UIContainer allColorsContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
         allColorsContainer.zeroMargin().noOutline();
+        allColorsContainer.setVisibilitySupplier(() -> colorSelectionExpanded);
 
         UIContainer defaultColors = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
         defaultColors.zeroMargin().noOutline();
@@ -94,7 +86,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         UIContainer customColors = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
         customColors.zeroMargin().noOutline();
         CustomColorContainer ccc = new CustomColorContainer(app.getCustomColorButtonArray(),
-                (Integer color) -> {
+                color -> {
                     if (color == null) {
                         return;
                     }
@@ -105,19 +97,17 @@ public class SettingsUI extends AppUI<SettingsApp> {
         customColors.add(new UIText("Custom Colors"));
         allColorsContainer.add(customColors);
 
-        baseColorExpand.add(allColorsContainer);
+        baseColor.add(allColorsContainer);
 
         ColorPicker colorPicker = app.getColorPicker();
-        baseColorExpand.add(new ColorPickContainer(colorPicker, Sizes.COLOR_PICKER_SIDE_PANEL.size,
-                UIContainer.HORIZONTAL, false, true));
+        ColorPickContainer colorPickContainer = new ColorPickContainer(
+                colorPicker,
+                Sizes.COLOR_PICKER_SIDE_PANEL.size,
+                UIContainer.HORIZONTAL, false, true);
+        colorPickContainer.setVisibilitySupplier(() -> colorSelectionExpanded);
+        baseColor.add(colorPickContainer);
 
-        baseColorButton.setClickAction(() -> queueEvent(() -> {
-            if (baseColor.getChildren().contains(baseColorExpand)) {
-                baseColor.remove(baseColorExpand);
-            } else {
-                baseColor.add(baseColorExpand);
-            }
-        }));
+        baseColorHeading.setClickAction(() -> colorSelectionExpanded = !colorSelectionExpanded);
 
         return baseColor;
     }
@@ -129,9 +119,9 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         container.add(new UIText("Theme:"));
         container.add(new UIDropdown(
-                new String[] { "Light", "Dark" },
-                () -> Colors.isDarkMode() ? 1 : 0,
-                i -> app.setDarkMode(i != 0)));
+                new String[] { "Dark", "Light" },
+                () -> Colors.isDarkMode() ? 0 : 1,
+                i -> app.setDarkMode(i == 0)));
         return container;
     }
 
@@ -141,10 +131,9 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         container.add(new UIText("Shape of Hue-Saturation Field:"));
         container.add(new UIDropdown(
-            new String[] {"Circle", "Square"},
-            () -> App.isCircularHueSatField() ? 0 : 1,
-                i -> App.setCircularHueSatField(i == 0)
-                ));
+                new String[] { "Circle", "Square" },
+                () -> App.isCircularHueSatField() ? 0 : 1,
+                i -> App.setCircularHueSatField(i == 0)));
         return container;
     }
 }

@@ -1,5 +1,7 @@
 package ui;
 
+import java.util.function.Supplier;
+
 import main.Image;
 import main.ImageFormat;
 import main.ImageTool;
@@ -7,7 +9,6 @@ import main.SelectionManager;
 import main.apps.MainApp;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
-import sutil.ui.UIGetter;
 import sutil.ui.UILabel;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
@@ -63,7 +64,7 @@ public class MainUI extends AppUI<MainApp> {
             setButtonStyle2(colorContainer, () -> app.getColorSelection() == index);
             colorContainer.setSelectable(true);
 
-            UIGetter<Integer> cg = i == 0 ? () -> app.getPrimaryColor() : () -> app.getSecondaryColor();
+            Supplier<Integer> cg = i == 0 ? () -> app.getPrimaryColor() : () -> app.getSecondaryColor();
             colorContainer.add(new UIColorElement(cg, Sizes.BIG_COLOR_BUTTON.size, true));
             UILabel label = new UILabel("%s\nColor".formatted(i == 0 ? "Primary" : "Secondary"));
             label.setAlignment(UIContainer.CENTER);

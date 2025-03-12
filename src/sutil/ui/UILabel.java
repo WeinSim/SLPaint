@@ -1,6 +1,7 @@
 package sutil.ui;
 
 import java.util.ArrayList;
+import java.util.function.Supplier;
 
 import sutil.math.SVector;
 
@@ -11,9 +12,9 @@ public class UILabel extends UIContainer {
      * As it is currently implemented, there is a bug with the textUpdater:
      * When a UILabel is initialized with a textUpdater, then calling
      * setText(String) will not work because the textUpdater is still in action.
-     * You would have to call {@code setText((UIGetter<String>) null)} separately.
+     * You would have to call {@code setText((Supplier<String>) null)} separately.
      */
-    private UIGetter<String> textUpdater;
+    private Supplier<String> textUpdater;
 
     private UILabel() {
         super(VERTICAL, LEFT);
@@ -39,7 +40,7 @@ public class UILabel extends UIContainer {
         setText(text);
     }
 
-    public UILabel(UIGetter<String> textUpdater) {
+    public UILabel(Supplier<String> textUpdater) {
         this();
         this.textUpdater = textUpdater;
     }
@@ -69,7 +70,7 @@ public class UILabel extends UIContainer {
         }
     }
 
-    public void setText(UIGetter<String> textUpdater) {
+    public void setText(Supplier<String> textUpdater) {
         this.textUpdater = textUpdater;
     }
 }

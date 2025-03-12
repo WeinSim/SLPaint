@@ -33,6 +33,9 @@ public abstract class UIDragContainer<D extends UIElement & Draggable> extends U
     }
 
     protected void drag(SVector mouse) {
+        if (mouse == null) {
+            return;
+        }
         SVector newDragPos = new SVector(mouse).sub(position).sub(dragStartMouse).add(dragStartD);
         // clampDraggablePosition(newDragPos);
 

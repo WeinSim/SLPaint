@@ -1,15 +1,17 @@
 package sutil.ui;
 
+import java.util.function.Supplier;
+
 import sutil.math.SVector;
 
 public class UIStyle {
 
-    protected UIGetter<SVector> backgroundColorGetter;
-    protected UIGetter<SVector> outlineColorGetter;
-    protected UIGetter<Double> strokeWeightGetter;
+    protected Supplier<SVector> backgroundColorGetter;
+    protected Supplier<SVector> outlineColorGetter;
+    protected Supplier<Double> strokeWeightGetter;
 
-    public UIStyle(UIGetter<SVector> backgroundColorGetter, UIGetter<SVector> outlineColorGetter,
-            UIGetter<Double> strokeWeightGetter) {
+    public UIStyle(Supplier<SVector> backgroundColorGetter, Supplier<SVector> outlineColorGetter,
+            Supplier<Double> strokeWeightGetter) {
         this.backgroundColorGetter = backgroundColorGetter;
         this.outlineColorGetter = outlineColorGetter;
         this.strokeWeightGetter = strokeWeightGetter;
@@ -27,15 +29,15 @@ public class UIStyle {
         return strokeWeightGetter.get();
     }
 
-    public void setBackgroundColorGetter(UIGetter<SVector> backgroundColorGetter) {
+    public void setBackgroundColorGetter(Supplier<SVector> backgroundColorGetter) {
         this.backgroundColorGetter = backgroundColorGetter;
     }
 
-    public void setOutlineColorGetter(UIGetter<SVector> outlineColorGetter) {
+    public void setOutlineColorGetter(Supplier<SVector> outlineColorGetter) {
         this.outlineColorGetter = outlineColorGetter;
     }
 
-    public void setStrokeWeightGetter(UIGetter<Double> strokeWeightGetter) {
+    public void setStrokeWeightGetter(Supplier<Double> strokeWeightGetter) {
         this.strokeWeightGetter = strokeWeightGetter;
     }
 }

@@ -1,11 +1,12 @@
 package ui;
 
+import java.util.function.Supplier;
+
 import main.apps.App;
 import renderEngine.fonts.TextFont;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
-import sutil.ui.UIGetter;
 import sutil.ui.UIPanel;
 import sutil.ui.UIRoot;
 import sutil.ui.UIStyle;
@@ -49,11 +50,11 @@ public abstract class AppUI<T extends App> extends UIPanel{
         return element;
     }
 
-    public static <T extends UIElement> T setButtonStyle2(T element, UIGetter<Boolean> selectedGetter) {
-        UIGetter<SVector> backgroundColorGetter = () -> selectedGetter.get() ? Colors.getBackgroundHighlightColor2()
+    public static <T extends UIElement> T setButtonStyle2(T element, Supplier<Boolean> selectedGetter) {
+        Supplier<SVector> backgroundColorGetter = () -> selectedGetter.get() ? Colors.getBackgroundHighlightColor2()
                 : null;
-        UIGetter<SVector> outlineColorGetter = () -> element.mouseAbove() ? Colors.getOutlineNormalColor() : null;
-        UIGetter<Double> strokeWeightGetter = () -> Sizes.STROKE_WEIGHT.size;
+        Supplier<SVector> outlineColorGetter = () -> element.mouseAbove() ? Colors.getOutlineNormalColor() : null;
+        Supplier<Double> strokeWeightGetter = () -> Sizes.STROKE_WEIGHT.size;
         element.setStyle(new UIStyle(backgroundColorGetter, outlineColorGetter, strokeWeightGetter));
         return element;
     }

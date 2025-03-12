@@ -51,11 +51,6 @@ public class UIDropdown extends UIContainer {
     }
 
     @Override
-    public void update(SVector mouse) {
-        super.update(mouse);
-    }
-
-    @Override
     public void mousePressed(SVector mouse) {
         super.mousePressed(mouse);
 

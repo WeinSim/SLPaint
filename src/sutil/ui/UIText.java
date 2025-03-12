@@ -1,19 +1,21 @@
 package sutil.ui;
 
+import java.util.function.Supplier;
+
 import sutil.math.SVector;
 
 public class UIText extends UIElement {
 
     private String text;
 
-    private UIGetter<String> textUpdater;
+    private Supplier<String> textUpdater;
 
     public UIText(String text) {
         this.text = text;
         textUpdater = null;
     }
 
-    public UIText(UIGetter<String> textUpdater) {
+    public UIText(Supplier<String> textUpdater) {
         text = "";
         this.textUpdater = textUpdater;
     }
@@ -41,7 +43,7 @@ public class UIText extends UIElement {
         textUpdater = null;
     }
 
-    public void setTextUpdater(UIGetter<String> textUpdater) {
+    public void setTextUpdater(Supplier<String> textUpdater) {
         text = null;
         this.textUpdater = textUpdater;
     }

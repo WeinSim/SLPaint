@@ -1,5 +1,7 @@
 package sutil.ui;
 
+import java.util.function.Supplier;
+
 import sutil.SUtil;
 import sutil.math.SVector;
 
@@ -22,6 +24,8 @@ public abstract class UIElement {
     protected boolean selectable = false;
 
     protected UIStyle style;
+
+    protected Supplier<Boolean> visibilitySupplier = null;
 
     public UIElement() {
         position = new SVector();
@@ -67,6 +71,15 @@ public abstract class UIElement {
      * basically the old updateSize() (before different SizeTypes existed)
      */
     public abstract void setMinSize();
+
+    public boolean isVisible() {
+        return visibilitySupplier == null ? true : visibilitySupplier.get();
+    }
+
+    public UIElement setVisibilitySupplier(Supplier<Boolean> visibilitySupplier) {
+        this.visibilitySupplier = visibilitySupplier;
+        return this;
+    }
 
     public SVector getSize() {
         return size;
@@ -165,7 +178,7 @@ public abstract class UIElement {
     }
 
     public void setDefaultStyle() {
-        UIGetter<SVector> backgroundColorGetter = () -> {
+        Supplier<SVector> backgroundColorGetter = () -> {
             SVector bgColor = null;
             if (backgroundNormal) {
                 bgColor = panel.getBackgroundNormalColor();
@@ -175,7 +188,7 @@ public abstract class UIElement {
             }
             return bgColor;
         };
-        UIGetter<SVector> outlineColorGetter = () -> {
+        Supplier<SVector> outlineColorGetter = () -> {
             SVector outlineColor = null;
             if (outlineNormal) {
                 outlineColor = panel.getOutlineNormalColor();
@@ -185,7 +198,7 @@ public abstract class UIElement {
             }
             return outlineColor;
         };
-        UIGetter<Double> strokeWeightGetter = () -> panel.getStrokeWeight();
+        Supplier<Double> strokeWeightGetter = () -> panel.getStrokeWeight();
 
         style = new UIStyle(backgroundColorGetter, outlineColorGetter, strokeWeightGetter);
     }

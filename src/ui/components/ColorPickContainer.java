@@ -1,12 +1,13 @@
 package ui.components;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import main.ColorPicker;
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
-import sutil.ui.UIGetter;
-import sutil.ui.UISetter;
 import sutil.ui.UIStyle;
 import sutil.ui.UIText;
 import sutil.ui.UITextInput;
@@ -88,8 +89,8 @@ public class ColorPickContainer extends UIContainer {
 
         row2.add(new UIText("Alpha:"));
 
-        UIGetter<String> textUpdater = () -> Integer.toString(SUtil.alpha(colorPicker.getRGB()));
-        UISetter<String> valueUpdater = (String s) -> {
+        Supplier<String> textUpdater = () -> Integer.toString(SUtil.alpha(colorPicker.getRGB()));
+        Consumer<String> valueUpdater = (String s) -> {
             int alpha = 0;
             if (s.length() > 0) {
                 try {
@@ -134,7 +135,7 @@ public class ColorPickContainer extends UIContainer {
         }
         // double width = addPreview ? previewWidth / 2 : previewWidth;
         for (int i = addPreview ? 0 : 1; i < 2; i++) {
-            UIGetter<Integer> bgColorGetter = i == 0
+            Supplier<Integer> bgColorGetter = i == 0
                     ? () -> colorPicker.getInitialColor()
                     : () -> colorPicker.getRGB();
             colorBox.add(new UIColorElement(bgColorGetter, new SVector(previewWidth, previewHeight), false));
@@ -155,14 +156,14 @@ public class ColorPickContainer extends UIContainer {
             UIContainer colorRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
             colorRow.zeroMargin().noOutline();
             colorRow.add(new UIText(HSL_NAMES[i] + ":"));
-            UIGetter<String> textUpdater = switch (i) {
+            Supplier<String> textUpdater = switch (i) {
                 case 0 -> () -> Integer.toString((int) colorPicker.getHue());
                 case 1 -> () -> Integer.toString((int) (colorPicker.getSaturation() * 100));
                 case 2 -> () -> Integer.toString((int) (colorPicker.getLightness() * 100));
                 default -> null;
             };
             final int j = i;
-            UISetter<String> valueUpdater = (String s) -> {
+            Consumer<String> valueUpdater = (String s) -> {
                 int component = 0;
                 if (s.length() > 0) {
                     try {
@@ -191,14 +192,14 @@ public class ColorPickContainer extends UIContainer {
             UIContainer colorRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
             colorRow.zeroMargin().noOutline();
             colorRow.add(new UIText(RGB_NAMES[i] + ":"));
-            UIGetter<String> textUpdater = switch (i) {
+            Supplier<String> textUpdater = switch (i) {
                 case 0 -> () -> Integer.toString(SUtil.red(colorPicker.getRGB()));
                 case 1 -> () -> Integer.toString(SUtil.green(colorPicker.getRGB()));
                 case 2 -> () -> Integer.toString(SUtil.blue(colorPicker.getRGB()));
                 default -> null;
             };
             final int j = i;
-            UISetter<String> valueUpdater = (String s) -> {
+            Consumer<String> valueUpdater = (String s) -> {
                 int component = 0;
                 if (s.length() > 0) {
                     try {
@@ -226,7 +227,7 @@ public class ColorPickContainer extends UIContainer {
 
     private UIContainer createRow4() {
         UIButton customColor = new UIButton("Add to Custom Colors",
-                () -> colorPicker.getCloseAction().set(colorPicker.getRGB()));
+                () -> colorPicker.getCloseAction().accept(colorPicker.getRGB()));
         customColor.setAlignment(UIContainer.CENTER);
         customColor.setFillSize();
         return customColor;

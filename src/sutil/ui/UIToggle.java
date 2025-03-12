@@ -1,15 +1,17 @@
 package sutil.ui;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 public class UIToggle extends UIElement {
 
-    private UIGetter<Boolean> stateGetter;
-    // private UISetter<Boolean> stateSetter;
+    private Supplier<Boolean> stateGetter;
 
-    public UIToggle(UIGetter<Boolean> stateGetter, UISetter<Boolean> stateSetter) {
+    public UIToggle(Supplier<Boolean> stateGetter, Consumer<Boolean> stateSetter) {
         this.stateGetter = stateGetter;
         // this.stateSetter = stateSetter;
 
-        setClickAction(() -> stateSetter.set(!stateGetter.get()));
+        setClickAction(() -> stateSetter.accept(!stateGetter.get()));
     }
 
     @Override

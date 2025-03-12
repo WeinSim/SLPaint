@@ -46,6 +46,8 @@ public abstract class UIPanel {
             eventQueue.removeFirst().run();
         }
 
+        forAllContainers(container -> container.determineChildVisibility());
+
         boolean mouseAboveFloat = false;
         for (UIElement floatElement : floatElements) {
             floatElement.update(mousePos);

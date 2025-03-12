@@ -1,16 +1,17 @@
 package main;
 
+import java.util.function.Consumer;
+
 import main.apps.App;
 import renderEngine.Window;
 import sutil.SUtil;
 import sutil.math.SVector;
-import sutil.ui.UISetter;
 
 public class ColorPicker {
 
     private App app;
 
-    private UISetter<Integer> closeAction;
+    private Consumer<Integer> closeAction;
 
     private int initialColor;
     private int rgb;
@@ -19,7 +20,7 @@ public class ColorPicker {
     private double lightness;
     private int alpha;
 
-    public ColorPicker(App app, int initialColor, UISetter<Integer> closeAction) {
+    public ColorPicker(App app, int initialColor, Consumer<Integer> closeAction) {
         this.app = app;
         this.initialColor = initialColor;
         this.closeAction = closeAction;
@@ -112,7 +113,7 @@ public class ColorPicker {
         return app.getWindow();
     }
 
-    public UISetter<Integer> getCloseAction() {
+    public Consumer<Integer> getCloseAction() {
         return closeAction;
     }
 }
