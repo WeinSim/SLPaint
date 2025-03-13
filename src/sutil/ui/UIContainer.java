@@ -100,11 +100,6 @@ public class UIContainer extends UIElement {
         }
     }
 
-    public void remove(UIElement child) {
-        children.remove(child);
-        visibleChildren.remove(child);
-    }
-
     public void clearChildren() {
         children.clear();
         visibleChildren.clear();
@@ -210,20 +205,23 @@ public class UIContainer extends UIElement {
             size.y = remainingSize.y;
         }
 
-        double margin = getMargin();
-        double padding = getPadding();
-        SVector boundingBox = getChildrenBoundingBox(margin, padding, false);
-        remainingSize = new SVector(size);
-        switch (orientation) {
-            case VERTICAL -> boundingBox.x = 2 * margin;
-            case HORIZONTAL -> boundingBox.y = 2 * margin;
-        }
-        remainingSize.sub(boundingBox);
+        remainingSize = getRemainingSize();
         for (UIElement child : children) {
             if (child instanceof UIContainer container) {
                 container.expandAsNeccessary(remainingSize);
             }
         }
+    }
+
+    protected SVector getRemainingSize() {
+        double margin = getMargin(),
+                padding = getPadding();
+        SVector boundingBox = getChildrenBoundingBox(margin, padding, false);
+        switch (orientation) {
+            case VERTICAL -> boundingBox.x = 2 * margin;
+            case HORIZONTAL -> boundingBox.y = 2 * margin;
+        }
+        return new SVector(size).sub(boundingBox);
     }
 
     public void positionChildren() {

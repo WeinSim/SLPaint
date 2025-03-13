@@ -33,9 +33,6 @@ import ui.components.ImageCanvas;
  * <pre>
  * TODO:
  * UI scroll and float:
- *   Scroll areas:
- *     UIEmpty does not fully expand (should expand to size + areaOvershoot,
- *       only expands to size)
  *   Dropdown menues:
  *     Dropdown menues can themsevles contain scroll areas!!
  *   Clean up UIScale, UISeparator (and perhaps a few more): things outside of
@@ -43,7 +40,7 @@ import ui.components.ImageCanvas;
  *   Scroll areas inside of scroll areas
  *   UIDragContainers inside of UIScrollAreas (e.g. AlphaScale inside of
  *     SettingsUI) cannot recognize mouse whil being dragged and mouse is
- *     outside of UIScrollArea (because inside of update(), mousePos == null)
+ *     outside of UIScrollArea (because inside of update(), mousePos == null).
  *   Re-read and check all of the new UI code before merging into main
  * App:
  *   Dialogs

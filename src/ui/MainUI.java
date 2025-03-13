@@ -106,12 +106,6 @@ public class MainUI extends AppUI<MainApp> {
         allColors.add(ccc);
         topRow.add(allColors);
 
-        // UILabel newColor = new UILabel("+");
-        // setButtonStyle1(newColor);
-        // newColor.setClickAction(() -> app.showDialog(MainApp.NEW_COLOR_DIALOG));
-        // topRow.add(newColor);
-
-        // mainField.add(topRow);
         root.add(topRow);
 
         ImageCanvas canvas = new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, app);

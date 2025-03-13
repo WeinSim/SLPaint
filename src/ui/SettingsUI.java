@@ -59,6 +59,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
                 () -> MainApp.toInt(Colors.getBaseColor()),
                 Sizes.COLOR_BUTTON.size, true);
         baseColorHeading.add(baseColorButton);
+        baseColorHeading.setClickAction(() -> colorSelectionExpanded = !colorSelectionExpanded);
         baseColor.add(baseColorHeading);
 
         UIContainer allColorsContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
@@ -106,8 +107,6 @@ public class SettingsUI extends AppUI<SettingsApp> {
                 UIContainer.HORIZONTAL, false, true);
         colorPickContainer.setVisibilitySupplier(() -> colorSelectionExpanded);
         baseColor.add(colorPickContainer);
-
-        baseColorHeading.setClickAction(() -> colorSelectionExpanded = !colorSelectionExpanded);
 
         return baseColor;
     }

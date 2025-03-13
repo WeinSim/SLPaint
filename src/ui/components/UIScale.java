@@ -45,6 +45,13 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
         size.set(1, 1).scale(2 * getMargin() + getScaleWidth());
     }
 
+    @Override
+    public void expandAsNeccessary(SVector remainingSize) {
+        super.expandAsNeccessary(remainingSize);
+
+        draggable.expandAsNeccessary();
+    }
+
     protected double getScaleWidth() {
         return 2 * super.getMargin();
     }
@@ -75,6 +82,10 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
 
         @Override
         public void setMinSize() {
+            size.set(1, 1);
+        }
+
+        public void expandAsNeccessary() {
             double width = orientation == VERTICAL
                     ? parent.getSize().x
                     : parent.getSize().y;

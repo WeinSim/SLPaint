@@ -37,6 +37,21 @@ public class UIScrollArea extends UIContainer {
     }
 
     @Override
+    protected SVector getRemainingSize() {
+        double margin = getMargin(), padding = getPadding();
+        SVector remainingSize = getChildrenBoundingBox(margin, padding, false);
+        switch (orientation) {
+            case VERTICAL -> remainingSize.x -= 2 * margin;
+            case HORIZONTAL -> remainingSize.y -= 2 * margin;
+        }
+        // SVector superRemainingSize = super.getRemainingSize();
+        // return new SVector(
+        //         Math.max(remainingSize.x, superRemainingSize.x),
+        //         Math.max(remainingSize.y, superRemainingSize.y));
+        return remainingSize;
+    }
+
+    @Override
     public void expandAsNeccessary(SVector remainingSize) {
         super.expandAsNeccessary(remainingSize);
 
@@ -128,6 +143,9 @@ public class UIScrollArea extends UIContainer {
     }
 
     private boolean hideScrollbar(int orientation) {
+        if (!hideScrollbars || areaOvershoot == null) {
+            return true;
+        }
         return orientation == VERTICAL
                 ? isVScroll() && areaOvershoot.y <= 0.0
                 : isHScroll() && areaOvershoot.x <= 0.0;
@@ -135,15 +153,10 @@ public class UIScrollArea extends UIContainer {
 
     private static class UIScrollbarContainerWrapper extends UIContainer {
 
-        UIScrollArea scrollArea;
         UIScrollBarContainer scrollBarContainer;
-
-        boolean hideScrollbar;
 
         UIScrollbarContainerWrapper(int orientation, UIContainer container, UIScrollArea scrollArea) {
             super(1 - orientation, 0);
-
-            this.scrollArea = scrollArea;
 
             noBackground().noOutline();
             zeroMargin().zeroPadding().setMinimalSize();
@@ -151,28 +164,18 @@ public class UIScrollArea extends UIContainer {
             add(container);
             scrollBarContainer = new UIScrollBarContainer(scrollArea, orientation);
             add(scrollBarContainer);
-
-            hideScrollbar = false;
-        }
-
-        @Override
-        public void expandAsNeccessary(SVector remainingSize) {
-            super.expandAsNeccessary(remainingSize);
-
-            boolean shouldHideScrollbar = scrollArea.hideScrollbar(1 - orientation);
-            if (shouldHideScrollbar && !hideScrollbar) {
-                panel.queueEvent(() -> remove(scrollBarContainer));
-            } else if (!shouldHideScrollbar && hideScrollbar) {
-                panel.queueEvent(() -> add(scrollBarContainer));
-            }
-            hideScrollbar = shouldHideScrollbar;
         }
     }
 
     private static class UIScrollBarContainer extends UIDragContainer<UIScrollBar> {
 
+        UIScrollArea scrollArea;
+
         UIScrollBarContainer(UIScrollArea scrollArea, int orientation) {
             super(new UIScrollBar(scrollArea, orientation));
+
+            this.orientation = orientation;
+            this.scrollArea = scrollArea;
 
             draggable.setScrollBarContainer(this);
 
@@ -180,6 +183,11 @@ public class UIScrollArea extends UIContainer {
             withBackground();
             setFillSize();
             zeroMargin();
+        }
+
+        @Override
+        public boolean isVisible() {
+            return !scrollArea.hideScrollbar(orientation);
         }
 
         @Override
@@ -252,5 +260,4 @@ public class UIScrollArea extends UIContainer {
             }
         }
     }
-
 }
