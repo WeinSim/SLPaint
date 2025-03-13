@@ -49,11 +49,14 @@ public class UIContainer extends UIElement {
      */
     private boolean effectivelyMaximal;
 
-    protected boolean zeroMargin = false;
-    protected boolean zeroPadding = false;
+    protected double marginScale = 1;
+    protected double paddingScale = 1;
 
     private ArrayList<UIElement> children;
     private ArrayList<UIElement> visibleChildren;
+
+    protected boolean addSeparators = false;
+    protected boolean addInitialSeparator = false;
 
     public UIContainer(int orientation, int alignment) {
         if (orientation < 0 || orientation >= 2 || alignment < 0 || alignment >= 3) {
@@ -87,6 +90,18 @@ public class UIContainer extends UIElement {
      * @param child The child {@code UIElement} to add to this {@code UIContainer}.
      */
     public void add(UIElement child) {
+        if (addSeparators) {
+            if (addInitialSeparator || children.size() > 0) {
+                UISeparator separator = new UISeparator();
+                separator.setVisibilitySupplier(() -> child.isVisible());
+                addActual(separator);
+            }
+        }
+
+        addActual(child);
+    }
+
+    private void addActual(UIElement child) {
         if (children.contains(child)) {
             return;
         }
@@ -280,7 +295,7 @@ public class UIContainer extends UIElement {
      * @return the space around the outside.
      */
     public double getMargin() {
-        return zeroMargin ? 0 : panel.getMargin();
+        return panel.getMargin() * marginScale;
     }
 
     /**
@@ -288,7 +303,7 @@ public class UIContainer extends UIElement {
      * @return the space between the children.
      */
     public double getPadding() {
-        return zeroPadding ? 0 : panel.getPadding();
+        return panel.getPadding() * paddingScale;
     }
 
     public void setMinimalSize() {
@@ -320,12 +335,14 @@ public class UIContainer extends UIElement {
         return visibleChildren;
     }
 
-    public void setZeroMargin(boolean zeroMargin) {
-        this.zeroMargin = zeroMargin;
+    public UIContainer setMarginScale(double marginScale) {
+        this.marginScale = marginScale;
+        return this;
     }
 
-    public void setZeroPadding(boolean zeroPadding) {
-        this.zeroPadding = zeroPadding;
+    public UIContainer setPaddingScale(double paddingScale) {
+        this.paddingScale = paddingScale;
+        return this;
     }
 
     /**
@@ -334,7 +351,7 @@ public class UIContainer extends UIElement {
      * @param zeroMargin
      */
     public UIContainer zeroMargin() {
-        setZeroMargin(true);
+        setMarginScale(0);
         return this;
     }
 
@@ -344,21 +361,42 @@ public class UIContainer extends UIElement {
      * @return
      */
     public UIContainer zeroPadding() {
-        setZeroPadding(true);
+        setPaddingScale(0);
         return this;
     }
 
-    public void setOrientation(int orientation) {
+    public UIContainer setOrientation(int orientation) {
         if (orientation < 0 || orientation >= 2) {
             throw new IllegalArgumentException(String.format("Invalid orientation (%d)", orientation));
         }
         this.orientation = orientation;
+
+        return this;
     }
 
-    public void setAlignment(int alignment) {
+    public UIContainer setAlignment(int alignment) {
         if (alignment < 0 || alignment >= 3) {
             throw new IllegalArgumentException(String.format("Invalid alignment (%d)", alignment));
         }
         this.alignment = alignment;
+
+        return this;
+    }
+
+    public UIContainer withSeparators() {
+        return withSeparators(true, false);
+    }
+
+    public UIContainer withSeparators(boolean initialSeparator) {
+        return withSeparators(true, initialSeparator);
+    }
+
+    public UIContainer withSeparators(boolean addSeparators, boolean addInitialSeparator) {
+        this.addSeparators = addSeparators;
+        this.addInitialSeparator = addInitialSeparator;
+
+        marginScale = 2.0;
+
+        return this;
     }
 }

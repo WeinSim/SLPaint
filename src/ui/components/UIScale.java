@@ -26,6 +26,8 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
         this.orientation = orientation;
 
         noOutline();
+
+        marginScale = 1.3;
     }
 
     public SVector getScaleSize() {
@@ -54,11 +56,6 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
 
     protected double getScaleWidth() {
         return 2 * super.getMargin();
-    }
-
-    @Override
-    public double getMargin() {
-        return 1.3 * super.getMargin();
     }
 
     /**

@@ -12,7 +12,6 @@ import sutil.ui.UISeparator;
 import sutil.ui.UIText;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
-import ui.components.SeparatorContainer;
 import ui.components.UIColorElement;
 
 public class SettingsUI extends AppUI<SettingsApp> {
@@ -29,10 +28,10 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
     @Override
     protected void init() {
-        root.setZeroMargin(false);
-        root.setZeroPadding(false);
+        root.setMarginScale(1);
+        root.setPaddingScale(1);
 
-        UIScrollArea mainContainer = new UIScrollArea(UIContainer.VERTICAL, UIContainer.LEFT, UIScrollArea.BOTH);
+        UIScrollArea mainContainer = new UIScrollArea(UIContainer.VERTICAL, UIContainer.RIGHT, UIScrollArea.BOTH);
 
         mainContainer.add(createBaseColor());
         mainContainer.add(createDarkModeDropdown());
@@ -45,7 +44,8 @@ public class SettingsUI extends AppUI<SettingsApp> {
     }
 
     private UIContainer createBaseColor() {
-        SeparatorContainer baseColor = new SeparatorContainer(UIContainer.VERTICAL, UIContainer.LEFT);
+        UIContainer baseColor = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
+        baseColor.withSeparators();
 
         UIContainer baseColorHeading = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         baseColorHeading.zeroMargin().noOutline();

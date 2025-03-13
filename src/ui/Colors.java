@@ -40,7 +40,7 @@ public class Colors {
         }
     }
 
-    private static boolean darkMode = true;
+    private static boolean darkMode = false;
     private static SVector baseColor = new SVector(darkMode ? DEFAULT_UI_COLORS_DARK[0] : DEFAULT_UI_COLORS_LIGHT[0]);
 
     private Colors() {

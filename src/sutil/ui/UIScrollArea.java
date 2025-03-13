@@ -220,7 +220,7 @@ public class UIScrollArea extends UIContainer {
 
         @Override
         public void setMinSize() {
-            double min = 2 * scrollArea.getMargin();
+            double min = 2 * panel.getMargin();
             size.set(min, min);
         }
 

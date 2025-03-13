@@ -38,6 +38,8 @@ public class ColorPickContainer extends UIContainer {
         zeroMargin();
         noOutline();
 
+        paddingScale = 2;
+
         UIContainer row1 = createRow1();
         UIContainer row2 = addAlpha ? createRow2() : null;
         UIContainer row3 = createRow3(addPreview);
@@ -67,12 +69,8 @@ public class ColorPickContainer extends UIContainer {
     }
 
     private UIContainer createRow1() {
-        UIContainer row1 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP) {
-            @Override
-            public double getPadding() {
-                return 2 * super.getPadding();
-            }
-        };
+        UIContainer row1 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
+        row1.setPaddingScale(2);
         row1.zeroMargin().noOutline();
         HueSatField hueSatField = new HueSatField(colorPicker, size);
         row1.add(hueSatField);
@@ -113,12 +111,8 @@ public class ColorPickContainer extends UIContainer {
     }
 
     private UIContainer createRow3(boolean addPreview) {
-        UIContainer row3 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP) {
-            @Override
-            public double getPadding() {
-                return 2 * super.getPadding();
-            }
-        };
+        UIContainer row3 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
+        row3.setPaddingScale(2);
         row3.zeroMargin().noOutline();
         row3.setFillSize();
 
@@ -231,10 +225,5 @@ public class ColorPickContainer extends UIContainer {
         customColor.setAlignment(UIContainer.CENTER);
         customColor.setFillSize();
         return customColor;
-    }
-
-    @Override
-    public double getPadding() {
-        return 2 * super.getPadding();
     }
 }

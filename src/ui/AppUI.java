@@ -34,7 +34,7 @@ public abstract class AppUI<T extends App> extends UIPanel{
 
         init();
 
-        updateSize();
+        // updateSize();
     }
 
     protected abstract void init();

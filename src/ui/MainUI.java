@@ -10,13 +10,13 @@ import main.apps.MainApp;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UILabel;
+import sutil.ui.UIScrollArea;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
 import sutil.ui.UIToggle;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.ImageCanvas;
-import ui.components.SeparatorContainer;
 import ui.components.ToolButton;
 import ui.components.UIColorElement;
 
@@ -34,9 +34,8 @@ public class MainUI extends AppUI<MainApp> {
         root.setAlignment(UIContainer.LEFT);
         root.zeroMargin().zeroPadding().noOutline();
 
-        SeparatorContainer topRow = new SeparatorContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
-        topRow.setFillSize();
-        topRow.withBackground().noOutline();
+        UIScrollArea topRow = new UIScrollArea(UIContainer.HORIZONTAL, UIContainer.CENTER, UIScrollArea.HORIZONTAL);
+        topRow.withSeparators().withBackground().noOutline();
 
         UIContainer settings = addTopRowSection(topRow, "Settings");
         settings.add(new UIButton("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG)));
@@ -106,13 +105,15 @@ public class MainUI extends AppUI<MainApp> {
         allColors.add(ccc);
         topRow.add(allColors);
 
-        root.add(topRow);
+        UIContainer topRowScrollBars = topRow.addScrollBars();
+        topRowScrollBars.setFillSize();
+        root.add(topRowScrollBars);
 
         ImageCanvas canvas = new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, app);
         canvas.noOutline();
 
-        SeparatorContainer sidePanel = new SeparatorContainer(UIContainer.VERTICAL, UIContainer.LEFT);
-        sidePanel.withBackground().noOutline();
+        UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+        sidePanel.withSeparators().withBackground().noOutline();
         UIContainer transparentSelection = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         transparentSelection.zeroMargin().noOutline();
         transparentSelection.setFillSize();
