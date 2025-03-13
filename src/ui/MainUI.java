@@ -31,11 +31,11 @@ public class MainUI extends AppUI<MainApp> {
     @Override
     protected void init() {
         root.setOrientation(UIContainer.VERTICAL);
-        root.setAlignment(UIContainer.LEFT);
+        root.setHAlignment(UIContainer.LEFT);
         root.zeroMargin().zeroPadding().noOutline();
 
         UIScrollArea topRow = new UIScrollArea(UIContainer.HORIZONTAL, UIContainer.CENTER, UIScrollArea.HORIZONTAL);
-        topRow.withSeparators().withBackground().noOutline();
+        topRow.withSeparators().setHFillSize().setHAlignment(UIContainer.LEFT).withBackground().noOutline();
 
         UIContainer settings = addTopRowSection(topRow, "Settings");
         settings.add(new UIButton("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG)));
@@ -105,29 +105,26 @@ public class MainUI extends AppUI<MainApp> {
         allColors.add(ccc);
         topRow.add(allColors);
 
-        UIContainer topRowScrollBars = topRow.addScrollBars();
-        topRowScrollBars.setFillSize();
+        UIContainer topRowScrollBars = topRow.addScrollBars().setHFillSize();
         root.add(topRowScrollBars);
 
-        ImageCanvas canvas = new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, app);
+        ImageCanvas canvas = new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, UIContainer.TOP, app);
         canvas.noOutline();
 
         UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
         sidePanel.withSeparators().withBackground().noOutline();
         UIContainer transparentSelection = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         transparentSelection.zeroMargin().noOutline();
-        transparentSelection.setFillSize();
+        transparentSelection.setHFillSize();
         UIContainer fill = new UIContainer(0, 0);
         fill.noOutline();
-        fill.setMaximalSize();
+        fill.setHFillSize();
         transparentSelection.add(new UIText("Transparent selection"));
         transparentSelection.add(fill);
         UIToggle toggle = new UIToggle(() -> app.isTransparentSelection(),
-                (Boolean _) -> app.toggleTransparentSelection());
+                _ -> app.toggleTransparentSelection());
         transparentSelection.add(toggle);
         sidePanel.add(transparentSelection);
-
-        // sidePanel.add(new UISeparator());
 
         sidePanel.add(new ColorPickContainer(
                 app.getSelectedColorPicker(),
@@ -142,7 +139,7 @@ public class MainUI extends AppUI<MainApp> {
         UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.BOTTOM);
         // statusBar.zeroMargin().noOutline().withBackground();
         statusBar.withBackground().noOutline();
-        statusBar.setFillSize();
+        statusBar.setHFillSize();
         statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate())));
         statusBar.add(new UISeparator());
         statusBar.add(new UILabel(() -> {
@@ -189,7 +186,7 @@ public class MainUI extends AppUI<MainApp> {
         }));
         fill = new UIContainer(0, 0);
         fill.noOutline().noBackground();
-        fill.setMaximalSize();
+        fill.setHFillSize();
         statusBar.add(fill);
         // canvas.add(statusBar);
         // mainField.add(canvas);
@@ -201,11 +198,11 @@ public class MainUI extends AppUI<MainApp> {
     private UIContainer addTopRowSection(UIContainer topRow, String name) {
         UIContainer options = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
         options.zeroMargin().noOutline();
-        options.setFillSize();
+        options.setVFillSize();
 
         UIContainer optionButtons = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         optionButtons.zeroMargin().noOutline();
-        optionButtons.setMaximalSize();
+        // optionButtons.setMaximalSize();
 
         options.add(optionButtons);
         options.add(new UIText(name));

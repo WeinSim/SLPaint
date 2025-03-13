@@ -17,8 +17,12 @@ public class UITextInput extends UIContainer {
     private Consumer<String> valueUpdater;
 
     public UITextInput(Supplier<String> textUpdater, Consumer<String> valueUpdater) {
-        super(HORIZONTAL, CENTER);
+        super(HORIZONTAL, LEFT, CENTER);
         this.valueUpdater = valueUpdater;
+
+        hMarginScale = 0.5;
+        vMarginScale = 0.5;
+        paddingScale = 0.33;
 
         uiText = new UIText(() -> textUpdater.get());
         add(uiText);
@@ -86,16 +90,6 @@ public class UITextInput extends UIContainer {
         return true;
     }
 
-    @Override
-    public double getMargin() {
-        return super.getMargin() / 2;
-    }
-
-    @Override
-    public double getPadding() {
-        return super.getPadding() / 3;
-    }
-
     public String getText() {
         return uiText.getText();
     }
@@ -114,16 +108,11 @@ public class UITextInput extends UIContainer {
             super(VERTICAL, 0);
 
             zeroMargin();
-            setFillSize();
-
-            hide();
+            setVFillSize();
         }
 
         public void resetTimer() {
             blinkStart = System.nanoTime() * 1e-9;
-        }
-
-        public void hide() {
         }
 
         @Override

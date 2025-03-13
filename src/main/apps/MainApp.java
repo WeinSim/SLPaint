@@ -73,9 +73,6 @@ import ui.components.ImageCanvas;
  *   Add HSV color selection mode (in addition to HSL)?
  * UI:
  *   Tool icons & cursors
- *   (Add hMargin and vMargin in UIContainer)
- *     Not neccessary for now. UISeparators now extend fully even without
- *     hMargin and vMargin
  *   Independent horizontal and vertical size modes? (see Nic Barker's CLAY)
  *   Note: currently, mouse and keyboard events are processed before update()
  *     called on the UI. This causes a mismatch between the mousePos parameter
@@ -527,7 +524,7 @@ public final class MainApp extends App {
 
     public void resetImageTransform() {
         imageZoomLevel = 0;
-        imageTranslation = canvas.getAbsolutePosition().add(new SVector(1, 1).scale(canvas.getMargin()));
+        imageTranslation = canvas.getAbsolutePosition().add(new SVector(canvas.getHMargin(), canvas.getVMargin()));
     }
 
     public SelectionManager getSelectionManager() {

@@ -11,9 +11,6 @@ import sutil.ui.UIStyle;
 import ui.Colors;
 import ui.Sizes;
 
-/**
- * Formerly UIScaleContainer
- */
 public class UIScale extends UIDragContainer<UIScale.Slider> {
 
     private static final UIStyle SLIDER_STYLE = new UIStyle(
@@ -26,8 +23,6 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
         this.orientation = orientation;
 
         noOutline();
-
-        marginScale = 1.3;
     }
 
     public SVector getScaleSize() {
@@ -36,15 +31,19 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
 
     public SVector getScaleOffset() {
         return orientation == VERTICAL
-                ? new SVector(getMargin(), 0)
-                : new SVector(0, getMargin());
+                ? new SVector(getHMargin(), 0)
+                : new SVector(0, getVMargin());
     }
 
     @Override
     public void setMinSize() {
         super.setMinSize();
 
-        size.set(1, 1).scale(2 * getMargin() + getScaleWidth());
+        if (orientation == VERTICAL) {
+            size.set(2 * getHMargin() + getScaleWidth(), 0);
+        } else {
+            size.set(0, 2 * getVMargin() + getScaleWidth());
+        }
     }
 
     @Override
@@ -55,7 +54,7 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
     }
 
     protected double getScaleWidth() {
-        return 2 * super.getMargin();
+        return 2 * (orientation == VERTICAL ? super.getHMargin() : super.getVMargin());
     }
 
     /**

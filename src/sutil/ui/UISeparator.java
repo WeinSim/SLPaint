@@ -9,37 +9,40 @@ public class UISeparator extends UIContainer {
         super(VERTICAL, LEFT);
         outlineNormal = false;
 
-        setFillSize();
-
-        zeroMargin();
-
-        add(new UISeparatorMargin());
         add(new UISeparatorInside());
-        add(new UISeparatorMargin());
     }
 
     @Override
     public void update(SVector mouse) {
-        orientation = parent.getOrientation();
+        if (parent.getOrientation() == VERTICAL) {
+            setHFillSize();
+            setVMinimalSize();
+        } else {
+            setHMinimalSize();
+            setVFillSize();
+        }
         super.update(mouse);
+    }
+
+    @Override
+    public double getHMargin() {
+        return parent.orientation == VERTICAL ? 0 : panel.getMargin();
+    }
+
+    @Override
+    public double getVMargin() {
+        return parent.orientation == VERTICAL ? panel.getMargin() : 0;
     }
 
     private class UISeparatorInside extends UIContainer {
 
         public UISeparatorInside() {
             super(VERTICAL, LEFT);
-            setFillSize();
+            setHFillSize();
+            setVFillSize();
             zeroMargin();
 
             style.setOutlineColorGetter(() -> Colors.getSeparatorColor());
-        }
-    }
-
-    private class UISeparatorMargin extends UIElement {
-
-        @Override
-        public void setMinSize() {
-            size.set(getMargin(), 0);
         }
     }
 }

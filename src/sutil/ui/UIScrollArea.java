@@ -20,8 +20,6 @@ public class UIScrollArea extends UIContainer {
         super(orientation, alignment);
         this.scrollMode = scrollMode;
 
-        setMaximalSize();
-
         scrollOffset = new SVector();
         hideScrollbars = true;
     }
@@ -38,16 +36,17 @@ public class UIScrollArea extends UIContainer {
 
     @Override
     protected SVector getRemainingSize() {
-        double margin = getMargin(), padding = getPadding();
-        SVector remainingSize = getChildrenBoundingBox(margin, padding, false);
+        double hMargin = getHMargin(), vMargin = getVMargin();
+        double padding = getPadding();
+        SVector remainingSize = getChildrenBoundingBox(hMargin, vMargin, padding, false);
         switch (orientation) {
-            case VERTICAL -> remainingSize.x -= 2 * margin;
-            case HORIZONTAL -> remainingSize.y -= 2 * margin;
+            case VERTICAL -> remainingSize.x -= 2 * hMargin;
+            case HORIZONTAL -> remainingSize.y -= 2 * vMargin;
         }
         // SVector superRemainingSize = super.getRemainingSize();
         // return new SVector(
-        //         Math.max(remainingSize.x, superRemainingSize.x),
-        //         Math.max(remainingSize.y, superRemainingSize.y));
+        // Math.max(remainingSize.x, superRemainingSize.x),
+        // Math.max(remainingSize.y, superRemainingSize.y));
         return remainingSize;
     }
 
@@ -55,7 +54,7 @@ public class UIScrollArea extends UIContainer {
     public void expandAsNeccessary(SVector remainingSize) {
         super.expandAsNeccessary(remainingSize);
 
-        SVector boundingBox = getChildrenBoundingBox(getMargin(), getPadding(), true);
+        SVector boundingBox = getChildrenBoundingBox(getHMargin(), getVMargin(), getPadding(), true);
         areaOvershoot = new SVector(
                 Math.max(0, boundingBox.x - size.x),
                 Math.max(0, boundingBox.y - size.y));
@@ -181,8 +180,13 @@ public class UIScrollArea extends UIContainer {
 
             withOutline();
             withBackground();
-            setFillSize();
             zeroMargin();
+
+            if (orientation == VERTICAL) {
+                setVFillSize();
+            } else {
+                setHFillSize();
+            }
         }
 
         @Override

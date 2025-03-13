@@ -31,7 +31,8 @@ public class SettingsUI extends AppUI<SettingsApp> {
         root.setMarginScale(1);
         root.setPaddingScale(1);
 
-        UIScrollArea mainContainer = new UIScrollArea(UIContainer.VERTICAL, UIContainer.RIGHT, UIScrollArea.BOTH);
+        UIScrollArea mainContainer = new UIScrollArea(UIContainer.VERTICAL, UIContainer.LEFT, UIScrollArea.BOTH);
+        mainContainer.setMaximalSize();
 
         mainContainer.add(createBaseColor());
         mainContainer.add(createDarkModeDropdown());
@@ -47,10 +48,10 @@ public class SettingsUI extends AppUI<SettingsApp> {
         UIContainer baseColor = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         baseColor.withSeparators();
 
-        UIContainer baseColorHeading = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIContainer baseColorHeading = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
         baseColorHeading.zeroMargin().noOutline();
         baseColorHeading.setBackgroundHighlight(true);
-        baseColorHeading.setFillSize();
+        baseColorHeading.setHFillSize();
         baseColorHeading.add(new UIText("UI Base Color:"));
         UIContainer gap = new UIContainer(0, 0).zeroMargin().zeroPadding();
         gap.noOutline();

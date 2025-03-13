@@ -43,7 +43,7 @@ public class UIDropdown extends UIContainer {
                 valueSetter.accept(j);
                 minimize();
             });
-            label.setFillSize();
+            label.setHFillSize();
             dropdown.add(label);
         }
 

@@ -40,16 +40,17 @@ public class UIContainer extends UIElement {
     }
 
     protected int orientation;
-    protected int alignment;
+    protected int hAlignment, vAlignment;
 
-    protected SizeType sizeType;
+    protected SizeType hSizeType, vSizeType;
 
     /**
-     * Indicates if this container or one of its children is {@code MAXIMAL}.
+     * Indicates wether this container or one of its children is {@code MAXIMAL} in
+     * the corresponding direction.
      */
-    private boolean effectivelyMaximal;
+    private boolean hEffectivelyMaximal, vEffectivelyMaximal;
 
-    protected double marginScale = 1;
+    protected double hMarginScale = 1, vMarginScale = 1;
     protected double paddingScale = 1;
 
     private ArrayList<UIElement> children;
@@ -59,21 +60,21 @@ public class UIContainer extends UIElement {
     protected boolean addInitialSeparator = false;
 
     public UIContainer(int orientation, int alignment) {
-        if (orientation < 0 || orientation >= 2 || alignment < 0 || alignment >= 3) {
-            throw new IllegalArgumentException(String.format(
-                    "Invalid orientation or alignment. orientation = %d, alignment = %d",
-                    orientation, alignment));
-        }
+        this(orientation, alignment, alignment);
+    }
 
-        this.orientation = orientation;
-        this.alignment = alignment;
+    public UIContainer(int orientation, int hAlignment, int vAlignment) {
+        setOrientation(orientation);
+        setHAlignment(hAlignment);
+        setVAlignment(vAlignment);
 
         children = new ArrayList<>();
         visibleChildren = new ArrayList<>();
-        sizeType = SizeType.MINIMAL;
+
+        hSizeType = SizeType.MINIMAL;
+        vSizeType = SizeType.MINIMAL;
 
         outlineNormal = true;
-        // backgroundNormal = true;
     }
 
     @Override
@@ -173,14 +174,28 @@ public class UIContainer extends UIElement {
     }
 
     public void updateSizeReferences() {
-        effectivelyMaximal = false;
-        if (sizeType == SizeType.MAXIMAL) {
+        hEffectivelyMaximal = false;
+        if (hSizeType == SizeType.MAXIMAL || hSizeType == SizeType.FILL) {
             UIContainer current = this;
-            while (current.sizeType != SizeType.FIXED && current.sizeType != SizeType.FILL) {
-                current.effectivelyMaximal = true;
+            do {
+                current.hEffectivelyMaximal = true;
                 current = current.parent;
-            }
+            } while (current != null
+                    && hSizeType == SizeType.MAXIMAL
+                    && current.hSizeType == SizeType.MINIMAL);
         }
+
+        vEffectivelyMaximal = false;
+        if (vSizeType == SizeType.MAXIMAL || vSizeType == SizeType.FILL) {
+            UIContainer current = this;
+            do {
+                current.vEffectivelyMaximal = true;
+                current = current.parent;
+            } while (current != null
+                    && vSizeType == SizeType.MAXIMAL
+                    && current.vSizeType == SizeType.MINIMAL);
+        }
+
         for (UIElement child : getChildren()) {
             if (child instanceof UIContainer container) {
                 container.updateSizeReferences();
@@ -194,30 +209,34 @@ public class UIContainer extends UIElement {
             child.setMinSize();
         }
 
-        if (sizeType != SizeType.FIXED) {
-            double margin = getMargin();
-            double padding = getPadding();
-            SVector boundingBox = getChildrenBoundingBox(margin, padding, true);
-            size.set(boundingBox);
+        if (hSizeType == SizeType.FIXED && vSizeType == SizeType.FIXED) {
+            return;
+        }
+
+        double hMargin = getHMargin(), vMargin = getVMargin();
+        double padding = getPadding();
+        SVector boundingBox = getChildrenBoundingBox(hMargin, vMargin, padding, true);
+
+        if (hSizeType != SizeType.FIXED) {
+            size.x = boundingBox.x;
+        }
+        if (vSizeType != SizeType.FIXED) {
+            size.y = boundingBox.y;
         }
     }
 
     public void expandAsNeccessary(SVector remainingSize) {
-        boolean expandX = false, expandY = false;
-        if (effectivelyMaximal) {
-            expandX = true;
-            expandY = true;
-        } else if (sizeType == SizeType.FILL) {
-            switch (parent.orientation) {
-                case VERTICAL -> expandX = true;
-                case HORIZONTAL -> expandY = true;
-            }
-        }
-        if (expandX) {
+        if (hEffectivelyMaximal) {
             size.x = remainingSize.x;
+            // if (parent.orientation == HORIZONTAL) {
+            // remainingSize.x = 0;
+            // }
         }
-        if (expandY) {
+        if (vEffectivelyMaximal) {
             size.y = remainingSize.y;
+            // if (parent.orientation == VERTICAL) {
+            // remainingSize.y = 0;
+            // }
         }
 
         remainingSize = getRemainingSize();
@@ -229,31 +248,33 @@ public class UIContainer extends UIElement {
     }
 
     protected SVector getRemainingSize() {
-        double margin = getMargin(),
-                padding = getPadding();
-        SVector boundingBox = getChildrenBoundingBox(margin, padding, false);
+        double hMargin = getHMargin(),
+                vMargin = getVMargin();
+        double padding = getPadding();
+        SVector boundingBox = getChildrenBoundingBox(hMargin, vMargin, padding, false);
         switch (orientation) {
-            case VERTICAL -> boundingBox.x = 2 * margin;
-            case HORIZONTAL -> boundingBox.y = 2 * margin;
+            case VERTICAL -> boundingBox.x = 2 * hMargin;
+            case HORIZONTAL -> boundingBox.y = 2 * vMargin;
         }
         return new SVector(size).sub(boundingBox);
     }
 
     public void positionChildren() {
-        double margin = getMargin();
+        double hMargin = getHMargin(), vMargin = getVMargin();
         double padding = getPadding();
+        SVector boundingBox = getChildrenBoundingBox(hMargin, vMargin, padding, true);
 
-        double runningTotal = margin;
+        double runningTotal = 0;
         for (UIElement child : getChildren()) {
             SVector childPos = child.getPosition();
             SVector childSize = child.getSize();
 
             childPos.x = orientation == VERTICAL
-                    ? margin + (size.x - 2 * margin - childSize.x) * alignment / 2.0
-                    : runningTotal;
+                    ? hMargin + (size.x - 2 * hMargin - childSize.x) * hAlignment / 2.0
+                    : hMargin + runningTotal + (size.x - boundingBox.x) * hAlignment / 2.0;
             childPos.y = orientation == VERTICAL
-                    ? runningTotal
-                    : margin + (size.y - 2 * margin - childSize.y) * alignment / 2.0;
+                    ? vMargin + runningTotal + (size.y - boundingBox.y) * vAlignment / 2.0
+                    : vMargin + (size.y - 2 * vMargin - childSize.y) * vAlignment / 2.0;
 
             runningTotal += orientation == VERTICAL ? childSize.y : childSize.x;
             runningTotal += padding;
@@ -264,11 +285,15 @@ public class UIContainer extends UIElement {
         }
     }
 
-    protected SVector getChildrenBoundingBox(double margin, double padding, boolean includeMaxChildren) {
+    protected SVector getChildrenBoundingBox(double hMargin, double vMargin, double padding,
+            boolean includeMaxChildren) {
+
         double sum = 0;
         double max = 0;
         for (UIElement child : getChildren()) {
-            if (!includeMaxChildren && child instanceof UIContainer container && container.effectivelyMaximal) {
+            if (!includeMaxChildren
+                    && child instanceof UIContainer container
+                    && (orientation == VERTICAL ? container.vEffectivelyMaximal : container.hEffectivelyMaximal)) {
                 continue;
             }
             SVector childSize = child.getSize();
@@ -280,22 +305,33 @@ public class UIContainer extends UIElement {
                 sum += childSize.x;
             }
         }
-        sum += 2 * margin + Math.max(0, (getChildren().size() - 1)) * padding;
-        max += 2 * margin;
 
-        return switch (orientation) {
+        sum += Math.max(0, (getChildren().size() - 1)) * padding;
+        SVector ret = switch (orientation) {
             case VERTICAL -> new SVector(max, sum);
             case HORIZONTAL -> new SVector(sum, max);
             default -> null;
         };
+        ret.x += 2 * hMargin;
+        ret.y += 2 * vMargin;
+
+        return ret;
     }
 
     /**
      * 
-     * @return the space around the outside.
+     * @return the space around the outside (left and right).
      */
-    public double getMargin() {
-        return panel.getMargin() * marginScale;
+    public double getHMargin() {
+        return panel.getMargin() * hMarginScale;
+    }
+
+    /**
+     * 
+     * @return the space around the outside (top and bottom).
+     */
+    public double getVMargin() {
+        return panel.getMargin() * vMarginScale;
     }
 
     /**
@@ -306,29 +342,75 @@ public class UIContainer extends UIElement {
         return panel.getPadding() * paddingScale;
     }
 
-    public void setMinimalSize() {
-        sizeType = SizeType.MINIMAL;
+    public UIContainer setMinimalSize() {
+        hSizeType = SizeType.MINIMAL;
+        vSizeType = SizeType.MINIMAL;
+        return this;
     }
 
-    public void setFixedSize(SVector size) {
+    public UIContainer setHMinimalSize() {
+        hSizeType = SizeType.MINIMAL;
+        return this;
+    }
+
+    public UIContainer setVMinimalSize() {
+        vSizeType = SizeType.MINIMAL;
+        return this;
+    }
+
+    public UIContainer setFixedSize(SVector size) {
         this.size.set(size);
-        sizeType = SizeType.FIXED;
+        hSizeType = SizeType.FIXED;
+        vSizeType = SizeType.FIXED;
+        return this;
     }
 
-    public void setFillSize() {
-        sizeType = SizeType.FILL;
+    public UIContainer setHFixedSize(double width) {
+        size.x = width;
+        hSizeType = SizeType.FIXED;
+        return this;
     }
 
-    public void setMaximalSize() {
-        sizeType = SizeType.MAXIMAL;
+    public UIContainer setVFixedSize(double height) {
+        size.y = height;
+        vSizeType = SizeType.FIXED;
+        return this;
+    }
+
+    // public UIContainer setFillSize() {
+    // hSizeType = SizeType.FILL;
+    // vSizeType = SizeType.FILL;
+    // return this;
+    // }
+
+    public UIContainer setHFillSize() {
+        hSizeType = SizeType.FILL;
+        return this;
+    }
+
+    public UIContainer setVFillSize() {
+        vSizeType = SizeType.FILL;
+        return this;
+    }
+
+    public UIContainer setMaximalSize() {
+        hSizeType = SizeType.MAXIMAL;
+        vSizeType = SizeType.MAXIMAL;
+        return this;
+    }
+
+    public UIContainer setHMaximalSize() {
+        hSizeType = SizeType.MAXIMAL;
+        return this;
+    }
+
+    public UIContainer setVMaximalSize() {
+        vSizeType = SizeType.MAXIMAL;
+        return this;
     }
 
     public int getOrientation() {
         return orientation;
-    }
-
-    public int getAlignment() {
-        return alignment;
     }
 
     public ArrayList<UIElement> getChildren() {
@@ -336,7 +418,18 @@ public class UIContainer extends UIElement {
     }
 
     public UIContainer setMarginScale(double marginScale) {
-        this.marginScale = marginScale;
+        hMarginScale = marginScale;
+        vMarginScale = marginScale;
+        return this;
+    }
+
+    public UIContainer setHMarginScale(double hMarginScale) {
+        this.hMarginScale = hMarginScale;
+        return this;
+    }
+
+    public UIContainer setVMarginScale(double vMarginScale) {
+        this.vMarginScale = vMarginScale;
         return this;
     }
 
@@ -351,7 +444,8 @@ public class UIContainer extends UIElement {
      * @param zeroMargin
      */
     public UIContainer zeroMargin() {
-        setMarginScale(0);
+        setHMarginScale(0);
+        setVMarginScale(0);
         return this;
     }
 
@@ -375,10 +469,29 @@ public class UIContainer extends UIElement {
     }
 
     public UIContainer setAlignment(int alignment) {
-        if (alignment < 0 || alignment >= 3) {
-            throw new IllegalArgumentException(String.format("Invalid alignment (%d)", alignment));
+        return setAlignment(alignment, alignment);
+    }
+
+    public UIContainer setAlignment(int hAlignment, int vAlignment) {
+        setHAlignment(hAlignment);
+        setVAlignment(vAlignment);
+        return this;
+    }
+
+    public UIContainer setHAlignment(int hAlignment) {
+        if (hAlignment < 0 || hAlignment >= 3) {
+            throw new IllegalArgumentException(String.format("Invalid horizontal alignment: %d", hAlignment));
         }
-        this.alignment = alignment;
+        this.hAlignment = hAlignment;
+
+        return this;
+    }
+
+    public UIContainer setVAlignment(int vAlignment) {
+        if (vAlignment < 0 || vAlignment >= 3) {
+            throw new IllegalArgumentException(String.format("Invalid vertical alignment: %d", vAlignment));
+        }
+        this.vAlignment = vAlignment;
 
         return this;
     }
@@ -395,7 +508,7 @@ public class UIContainer extends UIElement {
         this.addSeparators = addSeparators;
         this.addInitialSeparator = addInitialSeparator;
 
-        marginScale = 2.0;
+        setMarginScale(2.0);
 
         return this;
     }

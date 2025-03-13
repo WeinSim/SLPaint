@@ -34,9 +34,7 @@ public class ColorPickContainer extends UIContainer {
         this.colorPicker = colorPicker;
         this.size = size;
 
-        setMinimalSize();
-        zeroMargin();
-        noOutline();
+        zeroMargin().noOutline();
 
         paddingScale = 2;
 
@@ -75,7 +73,7 @@ public class ColorPickContainer extends UIContainer {
         HueSatField hueSatField = new HueSatField(colorPicker, size);
         row1.add(hueSatField);
         UIScale lightnessScale = new LightnessScale(UIContainer.VERTICAL, colorPicker);
-        lightnessScale.setFillSize();
+        lightnessScale.setVFillSize();
         row1.add(lightnessScale);
         return row1;
     }
@@ -83,7 +81,7 @@ public class ColorPickContainer extends UIContainer {
     private UIContainer createRow2() {
         UIContainer row2 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         row2.zeroMargin().noOutline();
-        row2.setFillSize();
+        row2.setHFillSize();
 
         row2.add(new UIText("Alpha:"));
 
@@ -104,8 +102,7 @@ public class ColorPickContainer extends UIContainer {
         row2.add(alphaInput);
 
         UIScale alphaScale = new AlphaScale(UIContainer.HORIZONTAL, colorPicker);
-        alphaScale.setMaximalSize();
-        // alphaScale.setFillSize();
+        alphaScale.setHFillSize();
         row2.add(alphaScale);
         return row2;
     }
@@ -114,7 +111,7 @@ public class ColorPickContainer extends UIContainer {
         UIContainer row3 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
         row3.setPaddingScale(2);
         row3.zeroMargin().noOutline();
-        row3.setFillSize();
+        row3.setHFillSize();
 
         // if (addPreview) {
         UIContainer colorPreview = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
@@ -140,7 +137,7 @@ public class ColorPickContainer extends UIContainer {
 
         UIContainer gap = new UIContainer(0, 0);
         gap.zeroMargin().noOutline();
-        gap.setMaximalSize();
+        gap.setHFillSize();
         row3.add(gap);
         // }
 
@@ -223,7 +220,7 @@ public class ColorPickContainer extends UIContainer {
         UIButton customColor = new UIButton("Add to Custom Colors",
                 () -> colorPicker.getCloseAction().accept(colorPicker.getRGB()));
         customColor.setAlignment(UIContainer.CENTER);
-        customColor.setFillSize();
+        customColor.setHFillSize();
         return customColor;
     }
 }
