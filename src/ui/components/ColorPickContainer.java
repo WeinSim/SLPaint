@@ -19,6 +19,7 @@ public class ColorPickContainer extends UIContainer {
     // private static final String[] HSL_NAMES = { "Hue", "Sat", "Light" };
     private static final String[] RGB_NAMES = { "R", "G", "B" };
     private static final String[] HSL_NAMES = { "H", "S", "L" };
+    private static final String[] HSV_NAMES = { "H", "S", "V" };
 
     private ColorPicker colorPicker;
     private double size;
@@ -150,7 +151,7 @@ public class ColorPickContainer extends UIContainer {
             colorRow.add(new UIText(HSL_NAMES[i] + ":"));
             UIGetter<String> textUpdater = switch (i) {
                 case 0 -> () -> Integer.toString((int) colorPicker.getHue());
-                case 1 -> () -> Integer.toString((int) (colorPicker.getSaturation() * 100));
+                case 1 -> () -> Integer.toString((int) (colorPicker.getHSLSaturation() * 100));
                 case 2 -> () -> Integer.toString((int) (colorPicker.getLightness() * 100));
                 default -> null;
             };
@@ -167,8 +168,8 @@ public class ColorPickContainer extends UIContainer {
                 int max = j == 0 ? 360 : 100;
                 component = Math.min(Math.max(0, component), max);
                 switch (j) {
-                    case 0 -> colorPicker.setHue(component);
-                    case 1 -> colorPicker.setSaturation(component / 100.0);
+                    case 0 -> colorPicker.setHSLHue(component);
+                    case 1 -> colorPicker.setHSLSaturation(component / 100.0);
                     case 2 -> colorPicker.setLightness(component / 100.0);
                 }
             };
@@ -177,6 +178,42 @@ public class ColorPickContainer extends UIContainer {
             hslInput.add(colorRow);
         }
         row3.add(hslInput);
+
+        UIContainer hsvInput = new UIContainer(UIContainer.VERTICAL, UIContainer.RIGHT);
+        hsvInput.zeroMargin().noOutline();
+        for (int i = 0; i < HSV_NAMES.length; i++) {
+            UIContainer colorRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+            colorRow.zeroMargin().noOutline();
+            colorRow.add(new UIText(HSV_NAMES[i] + ":"));
+            UIGetter<String> textUpdater = switch (i) {
+                case 0 -> () -> Integer.toString((int) colorPicker.getHue());
+                case 1 -> () -> Integer.toString((int) (colorPicker.getHSVSaturation() * 100));
+                case 2 -> () -> Integer.toString((int) (colorPicker.getValue() * 100));
+                default -> null;
+            };
+            final int j = i;
+            UISetter<String> valueUpdater = (String s) -> {
+                int component = 0;
+                if (s.length() > 0) {
+                    try {
+                        component = Integer.parseInt(s);
+                    } catch (NumberFormatException e) {
+                        return;
+                    }
+                }
+                int max = j == 0 ? 360 : 100;
+                component = Math.min(Math.max(0, component), max);
+                switch (j) {
+                    case 0 -> colorPicker.setHSVHue(component);
+                    case 1 -> colorPicker.setHSVSaturation(component / 100.0);
+                    case 2 -> colorPicker.setValue(component / 100.0);
+                }
+            };
+            UITextInput colorInput = new UITextInput(textUpdater, valueUpdater);
+            colorRow.add(colorInput);
+            hsvInput.add(colorRow);
+        }
+        row3.add(hsvInput);
 
         UIContainer rgbInput = new UIContainer(UIContainer.VERTICAL, UIContainer.RIGHT);
         rgbInput.zeroMargin().noOutline();

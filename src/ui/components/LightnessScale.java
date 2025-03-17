@@ -1,6 +1,7 @@
 package ui.components;
 
 import main.ColorPicker;
+import main.apps.App;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
 
@@ -14,18 +15,24 @@ public class LightnessScale extends UIScale {
 
     @Override
     public void setColorDimension(SVector mousePos) {
-        if (orientation == VERTICAL) {
-            colorPicker.setLightness(1 - mousePos.y / size.y);
+        double value = orientation == VERTICAL
+                ? 1 - mousePos.y / size.y
+                : mousePos.x / size.x;
+        if (App.isHSLColorSpace()) {
+            colorPicker.setLightness(value);
         } else {
-            colorPicker.setLightness(mousePos.x / size.x);
+            colorPicker.setValue(value);
         }
     }
 
     @Override
     protected double getSliderCoord() {
+        double value = App.isHSLColorSpace()
+                ? colorPicker.getLightness()
+                : colorPicker.getValue();
         return orientation == UIContainer.VERTICAL
-                ? (1 - colorPicker.getLightness()) * size.y
-                : colorPicker.getLightness() * size.x;
+                ? (1 - value) * size.y
+                : value * size.x;
     }
 
     public double getHue() {
@@ -33,6 +40,6 @@ public class LightnessScale extends UIScale {
     }
 
     public double getSaturation() {
-        return colorPicker.getSaturation();
+        return colorPicker.getHSLSaturation();
     }
 }

@@ -9,6 +9,7 @@
         "values": []
     },
     "darkMode": true,
-    "hueSatCircle": true,
+    "hueSatCircle" : true,
+    "hslColorSpace": true,
     "transparentSelection": false
 }

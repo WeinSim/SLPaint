@@ -37,6 +37,6 @@ public class AlphaScale extends UIScale {
     }
 
     public double getSaturation() {
-        return colorPicker.getSaturation();
+        return colorPicker.getHSLSaturation();
     }
 }

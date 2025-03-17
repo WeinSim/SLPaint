@@ -24,6 +24,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
 
     private static boolean showDebugOutline = false;
     private static BooleanSetting circularHueSatField = new BooleanSetting("hueSatCircle");
+    private static BooleanSetting hslColorSpace = new BooleanSetting("hslColorSpace");
 
     protected Window window;
 
@@ -221,6 +222,14 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
 
     public static void toggleCircularHueSatField() {
         circularHueSatField.set(!isCircularHueSatField());
+    }
+
+    public static boolean isHSLColorSpace() {
+        return hslColorSpace.get();
+    }
+
+    public static void setHSLColorSpace(boolean hslColorSpace) {
+        App.hslColorSpace.set(hslColorSpace);
     }
 
     public double getFrameRate() {

@@ -34,7 +34,6 @@ import ui.components.ImageCanvas;
 
 /**
  * TODO:
- * Settings: How to update them? How to store them in the file?
  * Move todo's scattered across different files into this central todo list
  * App:
  * * Dialogs
@@ -73,6 +72,9 @@ import ui.components.ImageCanvas;
  * * * hMargin and vMargin
  * * HueSatField's hitbox should adjust (rect / circle) depending on the setting
  * * Fix small bug in UILabel (see {@link sutil.ui.UILabel#textUpdater})
+ * * In ColorPickContainer hide either HSL or HSV input (depending on the user
+ * * * setting. (do after pulling ui_layers because of UIElement.visible
+ * * * stautus)
  * Rendering:
  * * Weird rendering bugs:
  * * * Anti aliasing doesn't work despite being enabled

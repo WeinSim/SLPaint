@@ -223,6 +223,7 @@ public class Window {
         for (count = 0; monitors.hasRemaining(); monitors.get(), count++)
             ;
         int offset = count == 2 ? 1920 : 0;
+        offset = 0;
         GLFW.glfwSetWindowPos(windowHandle,
                 offset + (pmVideoMode.width() - width) / 2,
                 (pmVideoMode.height() - height) / 2);

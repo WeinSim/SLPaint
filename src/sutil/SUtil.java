@@ -282,6 +282,27 @@ public class SUtil {
         return new SVector(r, g, b);
     }
 
+    public static SVector hsvToSHL(SVector hsv) {
+        return hsvToHSL(hsv.x, hsv.y, hsv.z);
+    }
+
+    public static SVector hsvToHSL(double h, double s, double v) {
+        double l = v * (1 - s / 2);
+        double min = Math.min(l, 1 - l);
+        double sl = min < 0.0001 ? 0 : (v - l) / min;
+        return new SVector(h, sl, l);
+    }
+
+    public static SVector hslToHSV(SVector hsl) {
+        return hslToHSV(hsl.x, hsl.y, hsl.z);
+    }
+
+    public static SVector hslToHSV(double h, double s, double l) {
+        double v = l + s * Math.min(l, 1 - l);
+        double sv = v < 0.0001 ? 0 : 2 * (1 - l / v); 
+        return new SVector(h, sv, v);
+    }
+
     public static int[][] intLine(int x0, int y0, int x1, int y1) {
         int dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
         int[][] ret = new int[Math.max(dx, dy) + 1][2];

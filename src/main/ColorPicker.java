@@ -22,9 +22,13 @@ public class ColorPicker {
 
     private int initialColor;
     private int rgb;
+
     private double hue;
-    private double saturation;
+    private double hslSaturation;
+    private double hsvSaturation;
     private double lightness;
+    private double value;
+
     private int alpha;
 
     public ColorPicker(App app, int initialColor, UISetter<Integer> closeAction) {
@@ -52,31 +56,61 @@ public class ColorPicker {
     public void setDragTarget(DragTarget dragTarget) {
         this.dragTarget = dragTarget;
     }
+    // public void setRed(int red) {
+    // setComponent(16, red);
+    // }
+
+    // public void setGreen(int green) {
+    // setComponent(8, green);
+    // }
+
+    // public void setBlue(int blue) {
+    // setComponent(0, blue);
+    // }
 
     public void setRGB(int rgb) {
         this.rgb = rgb;
-        updateHSL();
+        updateHSLFromRGB();
+        updateHSVFromRGB();
     }
 
-    public int getRGB() {
-        return rgb;
+    public void setHSLHue(double hue) {
+        this.hue = hue;
+        updateRGBFromHSL();
+        updateHSVFromHSL();
+        // updateCursorPositions();
     }
 
-    private void updateRGB() {
-        SVector v = SUtil.hslToRGB(hue, saturation, lightness);
-        rgb = SUtil.toARGB(v.x, v.y, v.z, alpha);
+    public void setHSVHue(double hue) {
+        this.hue = hue;
+        updateRGBFromHSV();
+        updateHSLFromHSV();
     }
 
-    public void setRed(int red) {
-        setComponent(16, red);
+    public void setHSLSaturation(double hslSaturation) {
+        this.hslSaturation = hslSaturation;
+        updateRGBFromHSL();
+        updateHSVFromHSL();
+        // updateCursorPositions();
     }
 
-    public void setGreen(int green) {
-        setComponent(8, green);
+    public void setHSVSaturation(double hsvSaturation) {
+        this.hsvSaturation = hsvSaturation;
+        updateRGBFromHSV();
+        updateHSLFromHSV();
     }
 
-    public void setBlue(int blue) {
-        setComponent(0, blue);
+    public void setLightness(double lightness) {
+        this.lightness = lightness;
+        updateRGBFromHSL();
+        updateHSVFromHSL();
+        // updateCursorPositions();
+    }
+
+    public void setValue(double value) {
+        this.value = value;
+        updateRGBFromHSV();
+        updateHSLFromHSV();
     }
 
     public void setAlpha(int alpha) {
@@ -84,51 +118,76 @@ public class ColorPicker {
         this.alpha = alpha;
     }
 
-    public void setComponent(int shiftAmount, int component) {
+    private void setComponent(int shiftAmount, int component) {
         int mask = 0xFF << shiftAmount;
         rgb &= ~mask;
         rgb |= component << shiftAmount;
     }
 
-    public void setHue(double hue) {
-        this.hue = hue;
-        updateRGB();
-        // updateCursorPositions();
-    }
-
-    public void setSaturation(double saturation) {
-        this.saturation = saturation;
-        updateRGB();
-        // updateCursorPositions();
-    }
-
-    public void setLightness(double lightness) {
-        this.lightness = lightness;
-        updateRGB();
-        // updateCursorPositions();
+    public int getRGB() {
+        return rgb;
     }
 
     public double getHue() {
         return hue;
     }
 
-    public double getSaturation() {
-        return saturation;
+    public double getHSLSaturation() {
+        return hslSaturation;
+    }
+
+    public double getHSVSaturation() {
+        return hsvSaturation;
     }
 
     public double getLightness() {
         return lightness;
     }
 
-    private void updateHSL() {
-        SVector hsl = SUtil.rgbToHSL(SUtil.red(rgb), SUtil.green(rgb),
-                SUtil.blue(rgb));
+    public double getValue() {
+        return value;
+    }
+
+    private void updateRGBFromHSL() {
+        SVector v = SUtil.hslToRGB(hue, hslSaturation, lightness);
+        rgb = SUtil.toARGB(v.x, v.y, v.z, alpha);
+    }
+
+    private void updateRGBFromHSV() {
+        SVector v = SUtil.hsvToRGB(hue, hsvSaturation, value);
+        rgb = SUtil.toARGB(v.x, v.y, v.z, alpha);
+    }
+
+    private void updateHSLFromRGB() {
+        SVector hsl = SUtil.rgbToHSL(SUtil.red(rgb), SUtil.green(rgb), SUtil.blue(rgb));
         hue = hsl.x;
-        saturation = hsl.y;
+        hslSaturation = hsl.y;
         lightness = hsl.z;
         alpha = SUtil.alpha(rgb);
 
         // updateCursorPositions();
+    }
+
+    private void updateHSLFromHSV() {
+        SVector hsl = SUtil.hsvToHSL(hue, hsvSaturation, value);
+        hue = hsl.x;
+        hslSaturation = hsl.y;
+        lightness = hsl.z;
+    }
+
+    private void updateHSVFromRGB() {
+        SVector hsv = SUtil.rgbToHSV(SUtil.red(rgb), SUtil.green(rgb), SUtil.blue(rgb));
+        hue = hsv.x;
+        hsvSaturation = hsv.y;
+        value = hsv.z;
+        alpha = SUtil.alpha(rgb);
+    }
+
+    private void updateHSVFromHSL() {
+        SVector hsv = SUtil.hslToHSV(hue, hslSaturation, lightness);
+        hue = hsv.x;
+        hsvSaturation = hsv.y;
+        value = hsv.z;
     }
 
     private void updateCursorPositions() {

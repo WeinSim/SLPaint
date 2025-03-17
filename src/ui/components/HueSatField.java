@@ -52,14 +52,25 @@ public class HueSatField extends UIContainer implements DragTarget {
             if (angle < 0) {
                 angle += 2 * Math.PI;
             }
-            colorPicker.setHue(angle / Math.PI * 180);
-            colorPicker.setSaturation(mag);
+
+            if (App.isHSLColorSpace()) {
+                colorPicker.setHSLHue(angle / Math.PI * 180);
+                colorPicker.setHSLSaturation(mag);
+            } else {
+                colorPicker.setHSVHue(angle / Math.PI * 180);
+                colorPicker.setHSVSaturation(mag);
+            }
         } else {
             mousePos.x = Math.min(Math.max(0, mousePos.x), size.x);
             mousePos.y = Math.min(Math.max(0, mousePos.y), size.y);
 
-            colorPicker.setHue(mousePos.x / size.x * 360);
-            colorPicker.setSaturation(1 - mousePos.y / size.y);
+            if (App.isHSLColorSpace()) {
+                colorPicker.setHSLHue(mousePos.x / size.x * 360);
+                colorPicker.setHSLSaturation(1 - mousePos.y / size.y);
+            } else {
+                colorPicker.setHSVHue(mousePos.x / size.x * 360);
+                colorPicker.setHSVSaturation(1 - mousePos.y / size.y);
+            }
         }
 
     }
@@ -67,7 +78,9 @@ public class HueSatField extends UIContainer implements DragTarget {
     @Override
     public void updateCursorPosition() {
         double hue = colorPicker.getHue(),
-                saturation = colorPicker.getSaturation();
+                saturation = App.isHSLColorSpace()
+                        ? colorPicker.getHSLSaturation()
+                        : colorPicker.getHSVSaturation();
         SVector pos;
         if (App.isCircularHueSatField()) {
             hue *= Math.PI / 180;

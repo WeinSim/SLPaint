@@ -31,6 +31,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         mainContainer.add(createBaseColor());
         mainContainer.add(createDarkModeToggle());
         mainContainer.add(createHueSatFieldToggle());
+        mainContainer.add(createHSLHSVToggle());
 
         root.add(mainContainer);
 
@@ -151,6 +152,17 @@ public class SettingsUI extends AppUI<SettingsApp> {
         container.add(label);
         UIToggle toggle = new UIToggle(() -> App.isCircularHueSatField(),
                 (Boolean _) -> App.toggleCircularHueSatField());
+        container.add(toggle);
+        return container;
+    }
+
+    private UIContainer createHSLHSVToggle() {
+        UIContainer container = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIText label = new UIText(() -> String.format("Color space: %s",
+                App.isHSLColorSpace() ? "HSL" : "HSV"));
+        container.add(label);
+        UIToggle toggle = new UIToggle(() -> App.isHSLColorSpace(),
+                b -> App.setHSLColorSpace(b));
         container.add(toggle);
         return container;
     }

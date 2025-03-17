@@ -210,13 +210,14 @@ public class UIRenderMaster {
         popMatrix();
     }
 
-    public void hueSatField(SVector position, SVector size, boolean circular) {
+    public void hueSatField(SVector position, SVector size, boolean circular, boolean hsl) {
         pushMatrix();
         translate(position);
         scale(size);
 
         activateShader(hslShader);
         hslShader.loadUniform("hueSatAlpha", circular ? 3 : 1);
+        hslShader.loadUniform("hsv", hsl ? 0 : 1);
         hslShader.loadUniform("viewMatrix", createViewMatrix());
         hslShader.loadUniform("transformationMatrix", uiMatrix);
 
@@ -227,13 +228,15 @@ public class UIRenderMaster {
         popMatrix();
     }
 
-    public void lightnessScale(SVector position, SVector size, double hue, double saturation, int orientation) {
+    public void lightnessScale(SVector position, SVector size, double hue, double saturation, int orientation,
+            boolean hsl) {
         pushMatrix();
         translate(position);
         scale(size);
 
         activateShader(hslShader);
         hslShader.loadUniform("hueSatAlpha", 0);
+        hslShader.loadUniform("hsv", hsl ? 0 : 1);
         hslShader.loadUniform("orientation", orientation);
         hslShader.loadUniform("hue", hue);
         hslShader.loadUniform("saturation", saturation);
