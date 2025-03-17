@@ -38,6 +38,13 @@ public class UITextInput extends UIContainer {
     }
 
     @Override
+    public void update(SVector mouse) {
+        super.update(mouse);
+
+        setHFixedSize(panel.getTextSize() * 3.3333);
+    }
+
+    @Override
     public void keyPressed(char key) {
         if (active()) {
             String text = uiText.getText();
@@ -76,13 +83,6 @@ public class UITextInput extends UIContainer {
 
     private void showCursor() {
         cursor.resetTimer();
-    }
-
-    @Override
-    public void setMinSize() {
-        super.setMinSize();
-        // size.x = 60;
-        size.x = panel.getTextSize() * 3.3333;
     }
 
     @Override

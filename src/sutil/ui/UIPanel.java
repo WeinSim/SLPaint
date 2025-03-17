@@ -65,7 +65,8 @@ public abstract class UIPanel {
         forAllContainers(container -> {
             container.updateSizeReferences();
             container.setMinSize();
-            container.expandAsNeccessary(null);
+            container.setPreferredSize();
+            container.expandAsNeccessary();
             container.positionChildren();
         });
     }

@@ -10,27 +10,19 @@ public class UIContainer extends UIElement {
     public static final int VERTICAL = 0, HORIZONTAL = 1;
 
     /**
-     * Every {@code UIContainer} has one of four size types:
+     * Every {@code UIContainer} has one of four size types in both directions
+     * (vertical and horizontal):
      * <ul>
-     * <li>{@code MINIMAL}: The size of the container is the smallest size that fits
-     * all of its children, the padding between the children and the margin around
-     * the border.</li>
-     * <li>{@code FIXED}: A fixed size is specified, which the container will always
-     * have.</li>
-     * <li>{@code FILL}: The container tries to fill up all available space in the
-     * direction perpendicular to its parent's orientation (i.e. if it is
-     * contained in a vertically aligned container, it expands horizontally but not
-     * vertically).</li>
-     * <li>{@code MAXIMAL}: The container tries to fill up all available space in
-     * both directions.</li>
+     * <li>{@code MINIMAL}: The width / height of the container is the smallest
+     * width / height that fits all of its children, the padding between the
+     * children and the margin around the border.</li>
+     * <li>{@code FIXED}: A fixed width / height is specified, which the container
+     * will always have.</li>
+     * <li>{@code FILL}: The container expands horizontally / vertically as much as
+     * possible.</li>
+     * <li>{@code MAXIMAL}: Like {@code FILL}, except it also turns any
+     * {@code MIMINAL} ascestors effectively maximal.</li>
      * </ul>
-     * 
-     * <h3>Size type priorities</h3>
-     * If a {@code MAXIMAL} container is placed inside of a {@code MINIMAL}
-     * container, the {@code MINIMAL} container will effectively act as a
-     * {@code MAXIMAL} container, i.e. it will also try to use all of the
-     * available space of its parent. This chain continues upwards until a
-     * {@code FIXED} or {@code FILL} container is reached.
      */
     protected enum SizeType {
         MINIMAL,
@@ -50,6 +42,8 @@ public class UIContainer extends UIElement {
      */
     private boolean hEffectivelyMaximal, vEffectivelyMaximal;
 
+    protected SVector minSize;
+
     protected double hMarginScale = 1, vMarginScale = 1;
     protected double paddingScale = 1;
 
@@ -67,6 +61,8 @@ public class UIContainer extends UIElement {
         setOrientation(orientation);
         setHAlignment(hAlignment);
         setVAlignment(vAlignment);
+
+        minSize = new SVector();
 
         children = new ArrayList<>();
         visibleChildren = new ArrayList<>();
@@ -203,19 +199,51 @@ public class UIContainer extends UIElement {
         }
     }
 
-    @Override
-    public void setMinSize() {
+    public final void setMinSize() {
         for (UIElement child : getChildren()) {
-            child.setMinSize();
+            if (child instanceof UIContainer container) {
+                container.setMinSize();
+            } else {
+                child.setPreferredSize();
+            }
         }
 
+        setSizeAccordingToBoundingBox();
+
+        SVector override = overrideMinSize();
+        if (override != null) {
+            if (override.x > 0) {
+                size.x = override.x;
+            }
+            if (override.y > 0) {
+                size.y = override.y;
+            }
+        }
+
+        minSize.set(size);
+    }
+
+    protected SVector overrideMinSize() {
+        return null;
+    }
+
+    @Override
+    public final void setPreferredSize() {
+        for (UIElement child : getChildren()) {
+            child.setPreferredSize();
+        }
+
+        setSizeAccordingToBoundingBox();
+    }
+
+    private void setSizeAccordingToBoundingBox() {
         if (hSizeType == SizeType.FIXED && vSizeType == SizeType.FIXED) {
             return;
         }
 
         double hMargin = getHMargin(), vMargin = getVMargin();
         double padding = getPadding();
-        SVector boundingBox = getChildrenBoundingBox(hMargin, vMargin, padding, true);
+        SVector boundingBox = getChildrenBoundingBox(hMargin, vMargin, padding);
 
         if (hSizeType != SizeType.FIXED) {
             size.x = boundingBox.x;
@@ -225,44 +253,203 @@ public class UIContainer extends UIElement {
         }
     }
 
-    public void expandAsNeccessary(SVector remainingSize) {
-        if (hEffectivelyMaximal) {
-            size.x = remainingSize.x;
-            // if (parent.orientation == HORIZONTAL) {
-            // remainingSize.x = 0;
-            // }
-        }
-        if (vEffectivelyMaximal) {
-            size.y = remainingSize.y;
-            // if (parent.orientation == VERTICAL) {
-            // remainingSize.y = 0;
-            // }
-        }
+    public void expandAsNeccessary() {
+        adjustAcrossAxis();
 
-        remainingSize = getRemainingSize();
-        for (UIElement child : children) {
+        adjustAlongAxis();
+
+        for (UIElement child : getChildren()) {
             if (child instanceof UIContainer container) {
-                container.expandAsNeccessary(remainingSize);
+                container.expandAsNeccessary();
             }
         }
     }
 
-    protected SVector getRemainingSize() {
+    private void adjustAlongAxis() {
         double hMargin = getHMargin(),
                 vMargin = getVMargin();
         double padding = getPadding();
-        SVector boundingBox = getChildrenBoundingBox(hMargin, vMargin, padding, false);
-        switch (orientation) {
-            case VERTICAL -> boundingBox.x = 2 * hMargin;
-            case HORIZONTAL -> boundingBox.y = 2 * vMargin;
+        SVector boundingBox = getChildrenBoundingBox(hMargin, vMargin, padding);
+        double remainingSize = orientation == VERTICAL ? size.y - boundingBox.y : size.x - boundingBox.x;
+
+        boolean expand = remainingSize > 0;
+
+        ArrayList<UIContainer> hvChildren = new ArrayList<>();
+        for (UIElement child : getChildren()) {
+            if (child instanceof UIContainer container) {
+                boolean condition = expand
+                        ? (orientation == VERTICAL ? container.vEffectivelyMaximal : container.hEffectivelyMaximal)
+                        : container.getSizeAlongAxis() > container.getMinSizeAlongAxis();
+                if (condition) {
+                    hvChildren.add(container);
+                }
+            }
         }
-        return new SVector(size).sub(boundingBox);
+
+        if (expand) {
+            expandChildren(hvChildren, remainingSize);
+        } else {
+            shrinkChildren(hvChildren, remainingSize);
+        }
+    }
+
+    /**
+     * 
+     * @see https://github.com/nicbarker/clay/blob/main/clay.h#L2190
+     */
+    private void expandChildren(ArrayList<UIContainer> expandChildren, double remainingSize) {
+        final double epsilon = 1e-6;
+        if (expandChildren.isEmpty()) {
+            return;
+        }
+        while (remainingSize > epsilon) {
+            double smallest = expandChildren.get(0).getSizeAlongAxis();
+            double secondSmallest = Double.POSITIVE_INFINITY;
+            double sizeToAdd = remainingSize;
+
+            for (UIContainer child : expandChildren) {
+                double component = child.getSizeAlongAxis();
+                if (lessThan(component, smallest, epsilon)) {
+                    secondSmallest = smallest;
+                    smallest = component;
+                }
+                if (lessThan(smallest, component, epsilon)) {
+                    secondSmallest = Math.min(secondSmallest, component);
+                    sizeToAdd = secondSmallest - smallest;
+                }
+            }
+
+            sizeToAdd = Math.min(sizeToAdd, remainingSize / expandChildren.size());
+
+            for (UIContainer child : expandChildren) {
+                double component = child.getSizeAlongAxis();
+                if (equalTo(component, smallest, epsilon)) {
+                    child.setSizeAlongAxis(component + sizeToAdd);
+                    remainingSize -= sizeToAdd;
+                }
+            }
+        }
+    }
+
+    private void shrinkChildren(ArrayList<UIContainer> shrinkChildren, double remainingSize) {
+        final double epsilon = 1e-6;
+        if (shrinkChildren.isEmpty()) {
+            return;
+        }
+        remainingSize *= -1;
+        while (remainingSize > epsilon) {
+            for (int i = shrinkChildren.size() - 1; i >= 0; i--) {
+                UIContainer child = shrinkChildren.get(i);
+                if (child.getSizeAlongAxis() - child.getMinSizeAlongAxis() < epsilon) {
+                    shrinkChildren.remove(i);
+                }
+            }
+            if (shrinkChildren.isEmpty()) {
+                return;
+            }
+
+            double biggest = shrinkChildren.get(0).getSizeAlongAxis();
+            double secondBiggest = Double.NEGATIVE_INFINITY;
+            double sizeToRemove = remainingSize;
+
+            for (UIContainer child : shrinkChildren) {
+                double component = child.getSizeAlongAxis();
+                if (lessThan(biggest, component, epsilon)) {
+                    secondBiggest = biggest;
+                    biggest = component;
+                }
+                if (lessThan(component, biggest, epsilon)) {
+                    secondBiggest = Math.max(secondBiggest, component);
+                    sizeToRemove = biggest - secondBiggest;
+                }
+            }
+
+            sizeToRemove = Math.min(sizeToRemove, remainingSize / shrinkChildren.size());
+
+            for (UIContainer child : shrinkChildren) {
+                double component = child.getSizeAlongAxis();
+                if (equalTo(component, biggest, epsilon)) {
+                    double maxRemoveAmount = child.getSizeAlongAxis() - child.getMinSizeAlongAxis();
+                    double removing = Math.min(maxRemoveAmount, sizeToRemove);
+                    child.setSizeAlongAxis(component - removing);
+                    remainingSize -= removing;
+                }
+            }
+        }
+    }
+
+    private void adjustAcrossAxis() {
+        double availableSpace = getAvailableSpaceAcrossAxis();
+        for (UIElement child : getChildren()) {
+            if (child instanceof UIContainer container) {
+                if (container.getSizeAcrossAxis() < availableSpace) {
+                    // expand
+                    boolean effectivelyMaximal = orientation == VERTICAL
+                            ? container.hEffectivelyMaximal
+                            : container.vEffectivelyMaximal;
+                    if (effectivelyMaximal) {
+                        container.setSizeAcrossAxis(availableSpace);
+                    }
+                } else {
+                    // shrink
+                    double newWH = Math.max(availableSpace, container.getMinSizeAcrossAxis());
+                    container.setSizeAcrossAxis(newWH);
+                }
+            }
+        }
+    }
+
+    protected double getAvailableSpaceAcrossAxis() {
+        return orientation == VERTICAL
+                ? size.x - 2 * getHMargin()
+                : size.y - 2 * getVMargin();
+    }
+
+    private double getSizeAlongAxis() {
+        return parent.orientation == VERTICAL ? size.y : size.x;
+    }
+
+    private double getSizeAcrossAxis() {
+        return parent.orientation == VERTICAL ? size.x : size.y;
+    }
+
+    private double getMinSizeAlongAxis() {
+        return parent.orientation == VERTICAL ? minSize.y : minSize.x;
+    }
+
+    private double getMinSizeAcrossAxis() {
+        return parent.orientation == VERTICAL ? minSize.x : minSize.y;
+    }
+
+    private void setSizeAlongAxis(double wh) {
+        if (parent.orientation == VERTICAL) {
+            size.y = wh;
+        } else {
+            size.x = wh;
+        }
+    }
+
+    private void setSizeAcrossAxis(double wh) {
+        if (parent.orientation == VERTICAL) {
+            size.x = wh;
+        } else {
+            size.y = wh;
+        }
+    }
+
+    private boolean lessThan(double a, double b, double epsilon) {
+        return a + epsilon < b;
+    }
+
+    private boolean equalTo(double a, double b, double epsilon) {
+        double difference = a - b;
+        return difference > -epsilon && difference < epsilon;
     }
 
     public void positionChildren() {
         double hMargin = getHMargin(), vMargin = getVMargin();
         double padding = getPadding();
-        SVector boundingBox = getChildrenBoundingBox(hMargin, vMargin, padding, true);
+        SVector boundingBox = getChildrenBoundingBox(hMargin, vMargin, padding);
 
         double runningTotal = 0;
         for (UIElement child : getChildren()) {
@@ -285,17 +472,10 @@ public class UIContainer extends UIElement {
         }
     }
 
-    protected SVector getChildrenBoundingBox(double hMargin, double vMargin, double padding,
-            boolean includeMaxChildren) {
-
+    protected SVector getChildrenBoundingBox(double hMargin, double vMargin, double padding) {
         double sum = 0;
         double max = 0;
         for (UIElement child : getChildren()) {
-            if (!includeMaxChildren
-                    && child instanceof UIContainer container
-                    && (orientation == VERTICAL ? container.vEffectivelyMaximal : container.hEffectivelyMaximal)) {
-                continue;
-            }
             SVector childSize = child.getSize();
             if (orientation == VERTICAL) {
                 max = Math.max(max, childSize.x);

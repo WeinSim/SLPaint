@@ -33,7 +33,7 @@ public class UIColorElement extends UIElement {
     }
 
     @Override
-    public void setMinSize() {
+    public void setPreferredSize() {
     }
 
     public Integer getColor() {

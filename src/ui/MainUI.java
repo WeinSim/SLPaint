@@ -111,8 +111,8 @@ public class MainUI extends AppUI<MainApp> {
         ImageCanvas canvas = new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, UIContainer.TOP, app);
         canvas.noOutline();
 
-        UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
-        sidePanel.withSeparators().withBackground().noOutline();
+        UIScrollArea sidePanel = new UIScrollArea(UIContainer.VERTICAL, UIContainer.TOP, UIScrollArea.VERTICAL);
+        sidePanel.withSeparators().setVFillSize().withBackground().noOutline();
         UIContainer transparentSelection = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         transparentSelection.zeroMargin().noOutline();
         transparentSelection.setHFillSize();
@@ -132,12 +132,16 @@ public class MainUI extends AppUI<MainApp> {
                 UIContainer.VERTICAL,
                 true,
                 false));
-        canvas.add(sidePanel);
+        canvas.add(sidePanel.addScrollBars());
+
+        UIContainer sidePanel2 = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+        sidePanel2.setVFillSize().withBackground().noOutline();
+        sidePanel2.add(new UIText("Second side panel"));
+        canvas.add(sidePanel2);
 
         root.add(canvas);
 
-        UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.BOTTOM);
-        // statusBar.zeroMargin().noOutline().withBackground();
+        UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
         statusBar.withBackground().noOutline();
         statusBar.setHFillSize();
         statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate())));
@@ -184,10 +188,6 @@ public class MainUI extends AppUI<MainApp> {
             }
             return ret;
         }));
-        fill = new UIContainer(0, 0);
-        fill.noOutline().noBackground();
-        fill.setHFillSize();
-        statusBar.add(fill);
         // canvas.add(statusBar);
         // mainField.add(canvas);
         root.add(statusBar);

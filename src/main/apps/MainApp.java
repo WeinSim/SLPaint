@@ -73,7 +73,6 @@ import ui.components.ImageCanvas;
  *   Add HSV color selection mode (in addition to HSL)?
  * UI:
  *   Tool icons & cursors
- *   Independent horizontal and vertical size modes? (see Nic Barker's CLAY)
  *   Note: currently, mouse and keyboard events are processed before update()
  *     called on the UI. This causes a mismatch between the mousePos parameter
  *     in the UIElement.mousePressed() and UIElement.mouseWheel() methods and

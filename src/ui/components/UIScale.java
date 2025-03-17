@@ -25,6 +25,17 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
         noOutline();
     }
 
+    @Override
+    public void update(SVector mouse) {
+        super.update(mouse);
+
+        if (orientation == VERTICAL) {
+            setHFixedSize(2 * getHMargin() + getScaleWidth());
+        } else {
+            setVFixedSize(2 * getVMargin() + getScaleWidth());
+        }
+    }
+
     public SVector getScaleSize() {
         return getScaleOffset().scale(-2).add(size);
     }
@@ -36,19 +47,8 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
     }
 
     @Override
-    public void setMinSize() {
-        super.setMinSize();
-
-        if (orientation == VERTICAL) {
-            size.set(2 * getHMargin() + getScaleWidth(), 0);
-        } else {
-            size.set(0, 2 * getVMargin() + getScaleWidth());
-        }
-    }
-
-    @Override
-    public void expandAsNeccessary(SVector remainingSize) {
-        super.expandAsNeccessary(remainingSize);
+    public void expandAsNeccessary() {
+        super.expandAsNeccessary();
 
         draggable.expandAsNeccessary();
     }
@@ -77,7 +77,7 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
         }
 
         @Override
-        public void setMinSize() {
+        public void setPreferredSize() {
             size.set(1, 1);
         }
 

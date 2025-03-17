@@ -67,10 +67,7 @@ public abstract class UIElement {
         this.selectable = selectable;
     }
 
-    /**
-     * basically the old updateSize() (before different SizeTypes existed)
-     */
-    public abstract void setMinSize();
+    public abstract void setPreferredSize();
 
     public boolean isVisible() {
         return visibilitySupplier == null ? true : visibilitySupplier.get();

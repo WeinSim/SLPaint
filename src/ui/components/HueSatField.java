@@ -141,7 +141,7 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
         }
 
         @Override
-        public void setMinSize() {
+        public void setPreferredSize() {
             if (vertical) {
                 size.set(CURSOR_LINE_WIDTH, CURSOR_LINE_LENGTH);
             } else {

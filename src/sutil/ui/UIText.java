@@ -21,7 +21,7 @@ public class UIText extends UIElement {
     }
 
     @Override
-    public void setMinSize() {
+    public void setPreferredSize() {
         double tw = panel.textWidth(getText());
         size = new SVector(tw, panel.getTextSize());
     }
