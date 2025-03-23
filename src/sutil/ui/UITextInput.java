@@ -5,13 +5,12 @@ import java.util.function.Supplier;
 
 import org.lwjgl.glfw.GLFW;
 
-import sutil.math.SVector;
-
 public class UITextInput extends UIContainer {
 
     private boolean numberInput;
 
     private UIText uiText;
+
     private Cursor cursor;
 
     private Consumer<String> valueUpdater;
@@ -31,16 +30,17 @@ public class UITextInput extends UIContainer {
         cursor = new Cursor();
         add(cursor);
 
-        setClickAction(() -> {
-            panel.setSelectedElement(this);
-            showCursor();
+        selectable = true;
+        selectOnClick = true;
+
+        setLeftClickAction(() -> {
+            cursor.resetTimer();
         });
     }
 
     @Override
-    public void update(SVector mouse) {
-        super.update(mouse);
-
+    public void update() {
+        super.update();
         setHFixedSize(panel.getTextSize() * 3.3333);
     }
 
@@ -70,24 +70,14 @@ public class UITextInput extends UIContainer {
                     return;
                 newText = text + key;
             }
-            // uiText.setText(newText);
             valueUpdater.accept(newText);
 
-            showCursor();
+            cursor.resetTimer();
         }
     }
 
     private boolean active() {
         return panel.getSelectedElement() == this;
-    }
-
-    private void showCursor() {
-        cursor.resetTimer();
-    }
-
-    @Override
-    public boolean isSelectable() {
-        return true;
     }
 
     public String getText() {
@@ -116,8 +106,8 @@ public class UITextInput extends UIContainer {
         }
 
         @Override
-        public void update(SVector mouse) {
-            super.update(mouse);
+        public void update() {
+            super.update();
 
             outlineNormal = active() && ((System.nanoTime() * 1e-9 - blinkStart) / BLINK_INTERVAL) % 2 < 1;
         }

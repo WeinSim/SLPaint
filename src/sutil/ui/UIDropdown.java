@@ -8,76 +8,68 @@ import sutil.math.SVector;
 public class UIDropdown extends UIContainer {
 
     private boolean expanded;
-    private UIFloatContainer dropdown;
 
-    public UIDropdown(String[] options, Supplier<Integer> valueGetter, Consumer<Integer> valueSetter) {
+    private Supplier<Integer> valueGetter;
+    private String[] options;
+    private UIText text;
+
+    private final UIFloatMenu dropdown;
+
+    public UIDropdown(UIPanel panel, String[] options, Supplier<Integer> valueGetter, Consumer<Integer> valueSetter) {
+        this(panel, options, valueGetter, valueSetter, false);
+    }
+
+    public UIDropdown(UIPanel panel, String[] options, Supplier<Integer> valueGetter, Consumer<Integer> valueSetter,
+            boolean scroll) {
+
         super(0, 0);
+        this.options = options;
+        this.valueGetter = valueGetter;
 
-        zeroMargin();
         noBackground();
         withOutline();
         zeroPadding();
+        backgroundHighlight = true;
 
-        UILabel top = new UILabel(() -> options[valueGetter.get()]);
-        top.setClickAction(() -> {
-            if (expanded)
-                minimize();
-            else
-                expand();
+        text = new UIText("");
+        add(text);
+
+        setLeftClickAction(() -> {
+            expanded = !expanded;
         });
-        top.backgroundNormal = false;
-        top.backgroundHighlight = true;
-        add(top);
 
-        dropdown = new UIFloatContainer(
-                VERTICAL, LEFT,
-                () -> getAbsolutePosition().add(new SVector(0, size.y)));
-        dropdown.zeroMargin().zeroPadding().withBackground();
-        // dropdown.add(new UISeparator().withBackground());
-        for (int i = 0; i < options.length; i++) {
-            UILabel label = new UILabel(options[i]);
-            label.backgroundNormal = true;
-            label.backgroundHighlight = true;
+        dropdown = new UIFloatMenu(panel, () -> new SVector(0, size.y), this::isExpanded, scroll);
+        UIAction[] clickActions = new UIAction[options.length];
+        for (int i = 0; i < clickActions.length; i++) {
             final int j = i;
-            label.setClickAction(() -> {
+            dropdown.addLabel(options[i], () -> {
                 valueSetter.accept(j);
-                minimize();
+                expanded = false;
             });
-            label.setHFillSize();
-            dropdown.add(label);
         }
+
+        add(dropdown);
 
         expanded = false;
     }
 
     @Override
-    public void mousePressed(SVector mouse) {
-        super.mousePressed(mouse);
+    public void update() {
+        super.update();
 
-        if (!mouseAbove()) {
-            minimize();
+        text.setText(options[valueGetter.get()]);
+    }
+
+    @Override
+    public void mousePressed(int mouseButton) {
+        super.mousePressed(mouseButton);
+
+        if (!mouseAbove() && !dropdown.mouseAbove()) {
+            expanded = false;
         }
     }
 
-    public void expand() {
-        panel.queueEvent(() -> {
-            if (expanded) {
-                return;
-            }
-            expanded = true;
-            // dropdown.getPosition().set(getAbsolutePosition().add(new SVector(0,
-            // size.y)));
-            panel.addFloatContainer(dropdown);
-        });
-    }
-
-    public void minimize() {
-        panel.queueEvent(() -> {
-            if (!expanded) {
-                return;
-            }
-            expanded = false;
-            panel.removeFloatContainer(dropdown);
-        });
+    private boolean isExpanded() {
+        return expanded;
     }
 }

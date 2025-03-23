@@ -11,7 +11,7 @@ public class UIToggle extends UIElement {
         this.stateGetter = stateGetter;
         // this.stateSetter = stateSetter;
 
-        setClickAction(() -> stateSetter.accept(!stateGetter.get()));
+        setLeftClickAction(() -> stateSetter.accept(!stateGetter.get()));
     }
 
     @Override

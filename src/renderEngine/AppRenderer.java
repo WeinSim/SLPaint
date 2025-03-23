@@ -8,6 +8,7 @@ import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
+import sutil.ui.UIFloatContainer;
 import sutil.ui.UIScrollArea;
 import sutil.ui.UIText;
 import sutil.ui.UIToggle;
@@ -25,6 +26,8 @@ public class AppRenderer<T extends App> {
     protected T app;
 
     protected UIRenderMaster uiMaster;
+
+    protected double depth;
 
     public AppRenderer(T app) {
         this.app = app;
@@ -45,7 +48,7 @@ public class AppRenderer<T extends App> {
 
     protected void setBGColor(SVector bgColor) {
         GL11.glClearColor((float) bgColor.x, (float) bgColor.y, (float) bgColor.z, 1);
-        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
     }
 
     protected void renderUI() {
@@ -55,10 +58,10 @@ public class AppRenderer<T extends App> {
         uiMaster.textFont(ui.getFont());
         uiMaster.textSize(ui.getTextSize());
 
+        depth = 0.5;
+        // uiMaster.depth(0.5);
+
         renderUIElement(ui.getRoot());
-        for (UIElement floatElement : ui.getFloatElements()) {
-            renderUIElement(floatElement);
-        }
     }
 
     private void renderUIElement(UIElement element) {
@@ -67,6 +70,14 @@ public class AppRenderer<T extends App> {
 
         SVector bgColor = element.getBackgroundColor();
         SVector olColor = element.getOutlineColor();
+
+        if (element instanceof UIFloatContainer) {
+            depth -= 0.1;
+            // uiMaster.depth(-0.5);
+            uiMaster.pushScissor();
+            uiMaster.noScissor();
+        }
+        uiMaster.depth(depth);
 
         if (element instanceof UIColorElement e && bgColor != null) {
             uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
@@ -113,17 +124,20 @@ public class AppRenderer<T extends App> {
         }
         if (element instanceof UIContainer container) {
             uiMaster.pushMatrix();
+            uiMaster.translate(position);
             if (container instanceof UIScrollArea) {
+                uiMaster.pushScissor();
                 uiMaster.scissor(position, size);
             }
-            uiMaster.translate(position);
+
             for (UIElement child : container.getChildren()) {
                 renderUIElement(child);
             }
-            if (container instanceof UIScrollArea) {
-                uiMaster.noScissor();
-            }
+
             uiMaster.popMatrix();
+            if (container instanceof UIScrollArea) {
+                uiMaster.popScissor();
+            }
         }
         if (element instanceof UIScale scale) {
             SVector pos = new SVector(position).add(scale.getScaleOffset());
@@ -156,6 +170,12 @@ public class AppRenderer<T extends App> {
         if (doOutline) {
             uiMaster.noFill();
             uiMaster.rect(position, size);
+        }
+
+        if (element instanceof UIFloatContainer) {
+            depth += 0.1;
+            // uiMaster.depth(0.5);
+            uiMaster.popScissor();
         }
     }
 

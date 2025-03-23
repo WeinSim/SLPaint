@@ -32,12 +32,16 @@ public class UIScrollArea extends UIContainer {
     }
 
     @Override
-    public void update(SVector mouse) {
-        updateMouseAboveReference(mouse);
+    public void updateMousePosition(SVector mouse, boolean valid) {
+        super.updateMousePosition(mouse, valid);
 
-        SVector relativeMouse = mouseAbove ? new SVector(mouse).sub(position) : null;
+        boolean childMouseAbove = false;
+        SVector relativeMouse = new SVector(mouse).sub(position);
         for (UIElement child : getChildren()) {
-            child.update(relativeMouse);
+            if (!(child instanceof UIFloatContainer)) {
+                child.updateMousePosition(relativeMouse, valid && mouseAbove() && !childMouseAbove);
+                childMouseAbove |= child.mouseAbove();
+            }
         }
     }
 
@@ -65,7 +69,10 @@ public class UIScrollArea extends UIContainer {
 
     @Override
     public void positionChildren() {
-        SVector boundingBox = getChildrenBoundingBox(getHMargin(), getVMargin(), getPadding());
+        double hMargin = getHMargin(), vMargin = getVMargin();
+        double padding = getPadding();
+
+        SVector boundingBox = getChildrenBoundingBox(hMargin, vMargin, padding);
         areaOvershoot = new SVector(
                 Math.max(0, boundingBox.x - size.x),
                 Math.max(0, boundingBox.y - size.y));
@@ -73,21 +80,48 @@ public class UIScrollArea extends UIContainer {
         scrollOffset.x = Math.min(0, Math.max(scrollOffset.x, -areaOvershoot.x));
         scrollOffset.y = Math.min(0, Math.max(scrollOffset.y, -areaOvershoot.y));
 
-        super.positionChildren();
-
+        double runningTotal = 0;
         for (UIElement child : getChildren()) {
-            child.getPosition().add(scrollOffset);
+            if (child instanceof UIFloatContainer floatContainer) {
+                floatContainer.setPosition();
+            } else {
+                SVector childPos = child.getPosition();
+                SVector childSize = child.getSize();
+
+                childPos.x = orientation == VERTICAL
+                        ? hMargin + (size.x - 2 * hMargin - childSize.x) * hAlignment / 2.0
+                        : hMargin + runningTotal + (size.x - boundingBox.x) * hAlignment / 2.0;
+                childPos.y = orientation == VERTICAL
+                        ? vMargin + runningTotal + (size.y - boundingBox.y) * vAlignment / 2.0
+                        : vMargin + (size.y - 2 * vMargin - childSize.y) * vAlignment / 2.0;
+
+                runningTotal += orientation == VERTICAL ? childSize.y : childSize.x;
+                runningTotal += padding;
+            }
+
+            if (child instanceof UIContainer container) {
+                if (!(child instanceof UIFloatContainer)) {
+                    child.getPosition().add(scrollOffset);
+                }
+
+                container.positionChildren();
+            }
         }
     }
 
     @Override
-    public void mouseWheel(SVector scroll, SVector mousePos) {
-        super.mouseWheel(scroll, mousePos);
+    public boolean mouseWheel(SVector scroll, SVector mousePos) {
+        if (super.mouseWheel(scroll, mousePos)) {
+            return true;
+        }
 
         if (mouseAbove()) {
             scrollOffset.x += isHScroll() ? scroll.x : 0;
             scrollOffset.y += isVScroll() ? scroll.y : 0;
+            return true;
         }
+
+        return false;
     }
 
     public UIContainer addScrollBars() {
@@ -100,37 +134,6 @@ public class UIScrollArea extends UIContainer {
         }
         return ret;
     }
-
-    // @Override
-    // public void setMinSize() {
-    // for (UIElement child : getChildren()) {
-    // child.setMinSize();
-    // }
-
-    // if (hSizeType == SizeType.FIXED && vSizeType == SizeType.FIXED) {
-    // return;
-    // }
-
-    // double hMargin = getHMargin(), vMargin = getVMargin();
-    // double padding = getPadding();
-    // SVector boundingBox = getChildrenBoundingBox(hMargin, vMargin, padding,
-    // true);
-
-    // if (hSizeType != SizeType.FIXED) {
-    // if (isHScroll()) {
-    // size.x = 2 * hMargin;
-    // } else {
-    // size.x = boundingBox.x;
-    // }
-    // }
-    // if (vSizeType != SizeType.FIXED) {
-    // if (isVScroll()) {
-    // size.y = 2 * vMargin;
-    // } else {
-    // size.y = boundingBox.y;
-    // }
-    // }
-    // }
 
     @Override
     public UIContainer setHMinimalSize() {
@@ -228,8 +231,8 @@ public class UIScrollArea extends UIContainer {
         }
 
         @Override
-        public void update(SVector mouse) {
-            super.update(mouse);
+        public void update() {
+            super.update();
 
             if (orientation == VERTICAL) {
                 hSizeType = scrollArea.hSizeType;
@@ -247,13 +250,10 @@ public class UIScrollArea extends UIContainer {
 
     private static class UIScrollBarContainer extends UIDragContainer<UIScrollBar> {
 
-        UIScrollArea scrollArea;
-
         UIScrollBarContainer(UIScrollArea scrollArea, int orientation) {
             super(new UIScrollBar(scrollArea, orientation));
 
             this.orientation = orientation;
-            this.scrollArea = scrollArea;
 
             draggable.setScrollBarContainer(this);
 
@@ -266,11 +266,8 @@ public class UIScrollArea extends UIContainer {
             } else {
                 setHFillSize();
             }
-        }
 
-        @Override
-        public boolean isVisible() {
-            return !scrollArea.hideScrollbar(orientation);
+            setVisibilitySupplier(() -> !scrollArea.hideScrollbar(orientation));
         }
 
         @Override

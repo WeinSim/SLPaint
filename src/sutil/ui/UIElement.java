@@ -17,43 +17,71 @@ public abstract class UIElement {
     protected boolean outlineHighlight = false;
     protected boolean backgroundNormal = false;
     protected boolean backgroundHighlight = false;
+    protected UIStyle style;
 
+    protected SVector mousePosition;
     protected boolean mouseAbove;
-    protected UIAction clickAction = null;
+
+    protected UIAction leftClickAction = null,
+            rightClickAction = null;
     protected boolean selectOnClick = false;
     protected boolean selectable = false;
 
-    protected UIStyle style;
-
-    protected Supplier<Boolean> visibilitySupplier = null;
+    private Supplier<Boolean> visibilitySupplier = UIElement::getTrue;
 
     public UIElement() {
         position = new SVector();
         size = new SVector();
 
+        mousePosition = new SVector();
+        mouseAbove =false;
+
         setDefaultStyle();
     }
 
-    public void update(SVector mouse) {
-        updateMouseAboveReference(mouse);
+    public void update() {
     }
 
-    protected void updateMouseAboveReference(SVector mouse) {
-        mouseAbove = mouse == null ? false : SUtil.pointInsideRect(mouse, position, size);
+    public void updateMousePosition(SVector mouse, boolean valid) {
+        updateMouseAboveReference(mouse, valid);
+        mousePosition.set(mouse);
     }
 
-    public void mousePressed(SVector mouse) {
-        if (mouseAbove) {
-            if (clickAction != null) {
-                clickAction.run();
+    protected void updateMouseAboveReference(SVector mouse, boolean valid) {
+        mouseAbove = valid ? SUtil.pointInsideRect(mouse, position, size) : false;
+    }
+
+    public void mousePressed(int mouseButton) {
+        if (!mouseAbove) {
+            return;
+        }
+
+        switch (mouseButton) {
+            case UIPanel.LEFT -> {
+                if (leftClickAction != null) {
+                    leftClickAction.run();
+                }
             }
-            if (selectOnClick) {
-                panel.setSelectedElement(this);
+            case UIPanel.RIGHT -> {
+                if (rightClickAction != null) {
+                    rightClickAction.run();
+                }
             }
+        }
+
+        if (selectOnClick) {
+            panel.setSelectedElement(this);
         }
     }
 
-    public void mouseWheel(SVector scroll, SVector mousePos) {
+    /**
+     * @param scroll
+     * @param mousePos
+     * @return Wether the mouse scroll action has been "used up" by this
+     *         {@code UIElement}.
+     */
+    public boolean mouseWheel(SVector scroll, SVector mousePos) {
+        return false;
     }
 
     public void keyPressed(char key) {
@@ -69,8 +97,12 @@ public abstract class UIElement {
 
     public abstract void setPreferredSize();
 
-    public boolean isVisible() {
-        return visibilitySupplier == null ? true : visibilitySupplier.get();
+    public final boolean isVisible() {
+        return visibilitySupplier.get();
+    }
+
+    private static boolean getTrue() {
+        return true;
     }
 
     public UIElement setVisibilitySupplier(Supplier<Boolean> visibilitySupplier) {
@@ -94,12 +126,20 @@ public abstract class UIElement {
         return mouseAbove;
     }
 
-    public void setClickAction(UIAction clickAction) {
-        this.clickAction = clickAction;
+    public void setLeftClickAction(UIAction leftClickAction) {
+        this.leftClickAction = leftClickAction;
     }
 
-    public UIAction getClickAction() {
-        return clickAction;
+    public UIAction getLeftClickAction() {
+        return leftClickAction;
+    }
+
+    public void setRightClickAction(UIAction rightClickAction) {
+        this.rightClickAction = rightClickAction;
+    }
+
+    public UIAction getRightClickAction() {
+        return rightClickAction;
     }
 
     public SVector getAbsolutePosition() {

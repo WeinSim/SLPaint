@@ -1,6 +1,5 @@
 package sutil.ui;
 
-import sutil.math.SVector;
 import ui.Colors;
 
 public class UISeparator extends UIContainer {
@@ -13,7 +12,9 @@ public class UISeparator extends UIContainer {
     }
 
     @Override
-    public void update(SVector mouse) {
+    public void update() {
+        super.update();
+
         if (parent.getOrientation() == VERTICAL) {
             setHFillSize();
             setVMinimalSize();
@@ -21,7 +22,6 @@ public class UISeparator extends UIContainer {
             setHMinimalSize();
             setVFillSize();
         }
-        super.update(mouse);
     }
 
     @Override

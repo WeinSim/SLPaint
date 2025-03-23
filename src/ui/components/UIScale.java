@@ -26,8 +26,8 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
     }
 
     @Override
-    public void update(SVector mouse) {
-        super.update(mouse);
+    public void update() {
+        super.update();
 
         if (orientation == VERTICAL) {
             setHFixedSize(2 * getHMargin() + getScaleWidth());

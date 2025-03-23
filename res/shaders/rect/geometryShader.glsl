@@ -23,6 +23,7 @@ uniform vec3 checkerboardColor2;
 
 uniform mat3 viewMatrix;
 uniform mat3 uiMatrix;
+uniform float depth;
 
 const vec2[4] cornerOffsets = vec2[4](
     vec2(0, 0),
@@ -47,7 +48,7 @@ void main(void) {
         for (int i = 0; i < 4; i++) {
             relativePos = cornerOffsets[i] * size;
             vec3 screenPos = viewMatrix * uiMatrix * vec3(position + cornerOffsets[i] * size, 1.0);
-            gl_Position = vec4(screenPos.xy, 0, 1);
+            gl_Position = vec4(screenPos.xy, depth, 1.0);
             EmitVertex();
         }
         EndPrimitive();
@@ -88,13 +89,13 @@ void main(void) {
             // distAlongEdge = distsAlongEdge[i];
             vec3 screenPos = vec3(basePos + swOffset, 1.0);
             screenPos = viewMatrix * uiMatrix * screenPos;
-            gl_Position = vec4(screenPos.xy, 0, 1);
+            gl_Position = vec4(screenPos.xy, depth, 1.0);
             relativePos = offset * size + swOffset;
             EmitVertex();
 
             screenPos = vec3(basePos - swOffset, 1.0);
             screenPos = viewMatrix * uiMatrix * screenPos;
-            gl_Position = vec4(screenPos.xy, 0, 1);
+            gl_Position = vec4(screenPos.xy, depth, 1.0);
             relativePos = offset * size - swOffset;
             EmitVertex();
         }

@@ -70,7 +70,7 @@ public class MainUI extends AppUI<MainApp> {
             label.zeroMargin();
             colorContainer.add(label);
 
-            colorContainer.setClickAction(() -> app.setColorSelection(index));
+            colorContainer.setLeftClickAction(() -> app.setColorSelection(index));
 
             topRow.add(colorContainer);
         }
@@ -86,7 +86,7 @@ public class MainUI extends AppUI<MainApp> {
 
             final int color = MainApp.DEFAULT_COLORS[i];
             UIColorElement button = new UIColorElement(() -> color, Sizes.COLOR_BUTTON.size, true);
-            button.setClickAction(() -> app.selectColor(color));
+            button.setLeftClickAction(() -> app.selectColor(color));
             currentRow.add(button);
 
             if ((i + 1) % NUM_COLOR_BUTTONS_PER_ROW == 0 || i + 1 == MainApp.DEFAULT_COLORS.length) {

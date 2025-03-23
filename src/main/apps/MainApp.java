@@ -31,16 +31,14 @@ import ui.components.ImageCanvas;
 
 /**
  * <pre>
- * TODO:
  * UI scroll and float:
- *   Dropdown menues:
- *     Dropdown menues can themsevles contain scroll areas!!
+ *   Text inputs and other selectables inside of float elements:
+ *     Should they be made selectable?
+ *   Merge UIContainer and UIScrollArea?
  *   Clean up UIScale, UISeparator (and perhaps a few more): things outside of
  *     sutil are being refernced!!!
- *   Scroll areas inside of scroll areas
- *   UIDragContainers inside of UIScrollAreas (e.g. AlphaScale inside of
- *     SettingsUI) cannot recognize mouse whil being dragged and mouse is
- *     outside of UIScrollArea (because inside of update(), mousePos == null).
+ *   Performance: try to re-write certain lambdas using the this::methodName
+ *     syntax (should be slightly faster according to ChatGPT).
  *   Re-read and check all of the new UI code before merging into main
  * App:
  *   Dialogs
@@ -73,11 +71,7 @@ import ui.components.ImageCanvas;
  *   Add HSV color selection mode (in addition to HSL)?
  * UI:
  *   Tool icons & cursors
- *   Note: currently, mouse and keyboard events are processed before update()
- *     called on the UI. This causes a mismatch between the mousePos parameter
- *     in the UIElement.mousePressed() and UIElement.mouseWheel() methods and
- *     the element's mouseAbove field (which is only updated in
- *     UIElement.update()).
+ *   Make side panel collapsable
  * Rendering:
  *   Weird rendering bugs:
  *     Anti aliasing doesn't work despite being enabled
@@ -136,7 +130,7 @@ public final class MainApp extends App {
     private static final int MAX_ZOOM_LEVEL = 8;
     private static final double ZOOM_BASE = 1.6;
 
-    private static final double MOUSE_WHEEL_SENSITIVITY = 120;
+    private static final double MOUSE_WHEEL_SENSITIVITY = 100;
 
     private ImageFileManager imageFileManager;
 

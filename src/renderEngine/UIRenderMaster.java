@@ -33,6 +33,11 @@ public class UIRenderMaster {
     private Matrix3f uiMatrix;
     private LinkedList<Matrix3f> uiMatrixStack;
 
+    private ScissorInfo scissorInfo;
+    private LinkedList<ScissorInfo> scissorStack;
+
+    private double depth;
+
     private SVector fill;
     private double fillAlpha;
     private int fillMode;
@@ -65,12 +70,16 @@ public class UIRenderMaster {
         // quadVAO = app.getLoader().loadToVAO(new double[] { 0, 0, 0, 1, 1, 0, 1, 1 });
 
         uiMatrixStack = new LinkedList<>();
+        scissorStack = new LinkedList<>();
+
         textFont = null;
 
         fill = new SVector();
         fillMode = NONE;
         stroke = new SVector();
         strokeMode = NONE;
+
+        depth = 0;
 
         checkerboardColors = new SVector[] { new SVector(), new SVector() };
 
@@ -86,10 +95,16 @@ public class UIRenderMaster {
         GL11.glEnable(GL13.GL_MULTISAMPLE);
 
         GL11.glDisable(GL11.GL_CULL_FACE);
+
         GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glDepthFunc(GL11.GL_LEQUAL);
 
         uiMatrixStack.clear();
         uiMatrix = new Matrix3f();
+
+        scissorStack.clear();
+        scissorInfo = new ScissorInfo();
+
         fill(new SVector(0.5, 0.5, 0.5));
         stroke(new SVector());
         strokeWeight(1);
@@ -113,6 +128,7 @@ public class UIRenderMaster {
         rectShader.loadUniform("checkerboardSize", checkerboardSize);
         rectShader.loadUniform("uiMatrix", uiMatrix);
         rectShader.loadUniform("viewMatrix", createViewMatrix());
+        rectShader.loadUniform("depth", depth);
 
         GL30.glBindVertexArray(dummyVAO.getVaoID());
         GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
@@ -129,6 +145,7 @@ public class UIRenderMaster {
         ellipseShader.loadUniform("fill", fill);
         ellipseShader.loadUniform("uiMatrix", uiMatrix);
         ellipseShader.loadUniform("viewMatrix", createViewMatrix());
+        ellipseShader.loadUniform("depth", depth);
 
         GL30.glBindVertexArray(dummyVAO.getVaoID());
         GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
@@ -161,6 +178,7 @@ public class UIRenderMaster {
         Matrix3f viewMatrix = createViewMatrix();
         textShader.loadUniform("viewMatrix", viewMatrix);
         textShader.loadUniform("transformationMatrix", uiMatrix);
+        textShader.loadUniform("depth", depth);
         textShader.loadUniform("fill", fill);
         textShader.loadUniform("doFill", fillMode == NONE ? 0 : 1);
 
@@ -220,6 +238,7 @@ public class UIRenderMaster {
         hslShader.loadUniform("hueSatAlpha", circular ? 3 : 1);
         hslShader.loadUniform("viewMatrix", createViewMatrix());
         hslShader.loadUniform("transformationMatrix", uiMatrix);
+        hslShader.loadUniform("depth", depth);
 
         GL30.glBindVertexArray(dummyVAO.getVaoID());
         GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
@@ -240,6 +259,7 @@ public class UIRenderMaster {
         hslShader.loadUniform("saturation", saturation);
         hslShader.loadUniform("viewMatrix", createViewMatrix());
         hslShader.loadUniform("transformationMatrix", uiMatrix);
+        hslShader.loadUniform("depth", depth);
 
         GL30.glBindVertexArray(dummyVAO.getVaoID());
         GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
@@ -258,6 +278,7 @@ public class UIRenderMaster {
         hslShader.loadUniform("orientation", orientation);
         hslShader.loadUniform("viewMatrix", createViewMatrix());
         hslShader.loadUniform("transformationMatrix", uiMatrix);
+        hslShader.loadUniform("depth", depth);
         hslShader.loadUniform("fill", fill);
 
         GL30.glBindVertexArray(dummyVAO.getVaoID());
@@ -295,6 +316,10 @@ public class UIRenderMaster {
     }
 
     public void scissor(SVector position, SVector size) {
+        scissor(position, size, true);
+    }
+
+    public void scissor(SVector position, SVector size, boolean clipToPrevScissor) {
         Vector3f pos3f = new Vector3f((float) position.x, (float) position.y, 1);
         Matrix3f.transform(uiMatrix, pos3f, pos3f);
 
@@ -307,6 +332,39 @@ public class UIRenderMaster {
 
         int w = (int) size3f.x, h = (int) size3f.y;
         int x = (int) pos3f.x, y = dims[3] - h - (int) pos3f.y;
+
+        if (clipToPrevScissor && scissorInfo.enabled) {
+            int x0 = scissorInfo.x,
+                    y0 = scissorInfo.y,
+                    w0 = scissorInfo.w,
+                    h0 = scissorInfo.h;
+
+            // left
+            if (x < x0) {
+                w -= x0 - x;
+                x = x0;
+            }
+            // right
+            if (x + w > x0 + w0) {
+                w = x0 + w0 - x;
+            }
+            // top
+            if (y < y0) {
+                h -= y0 - y;
+                y = y0;
+            }
+            // bottom
+            if (y + h > y0 + h0) {
+                h = y0 + h0 - y;
+            }
+        }
+
+        scissorInfo.set(x, y, w, h);
+
+        scissor(x, y, w, h);
+    }
+
+    private void scissor(int x, int y, int w, int h) {
         GL11.glScissor(x, y, w, h);
 
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
@@ -314,6 +372,31 @@ public class UIRenderMaster {
 
     public void noScissor() {
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
+
+        scissorInfo.clear();
+    }
+
+    public void pushScissor() {
+        scissorStack.add(new ScissorInfo(scissorInfo));
+    }
+
+    public void popScissor() {
+        scissorInfo = scissorStack.removeLast();
+
+        if (scissorInfo.enabled) {
+            scissor(scissorInfo.x, scissorInfo.y, scissorInfo.w, scissorInfo.h);
+        } else {
+            noScissor();
+        }
+    }
+
+    public void depth(double depth) {
+        this.depth = depth;
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+    }
+
+    public void noDepth() {
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
     }
 
     public void translate(SVector translation) {
@@ -435,5 +518,36 @@ public class UIRenderMaster {
         matrix.m20 = -1;
         matrix.m21 = 1;
         return matrix;
+    }
+
+    private class ScissorInfo {
+
+        boolean enabled;
+        int x, y, w, h;
+
+        ScissorInfo() {
+            clear();
+        }
+
+        public ScissorInfo(ScissorInfo other) {
+            this.enabled = other.enabled;
+            this.x = other.x;
+            this.y = other.y;
+            this.w = other.w;
+            this.h = other.h;
+        }
+
+        public void set(int x, int y, int w, int h) {
+            this.x = x;
+            this.y = y;
+            this.w = w;
+            this.h = h;
+            enabled = true;
+        }
+
+        public void clear() {
+            enabled = false;
+            x = y = w = h = 0;
+        }
     }
 }

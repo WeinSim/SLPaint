@@ -76,18 +76,14 @@ public class UIContainer extends UIElement {
     @Override
     public void setPanel(UIPanel panel) {
         super.setPanel(panel);
+
         for (UIElement child : children) {
             child.setPanel(panel);
         }
     }
 
-    /**
-     * Adds {@code child} as a non-floating child element.
-     * 
-     * @param child The child {@code UIElement} to add to this {@code UIContainer}.
-     */
     public void add(UIElement child) {
-        if (addSeparators) {
+        if (addSeparators && !(child instanceof UIFloatContainer)) {
             if (addInitialSeparator || children.size() > 0) {
                 UISeparator separator = new UISeparator();
                 separator.setVisibilitySupplier(() -> child.isVisible());
@@ -98,12 +94,16 @@ public class UIContainer extends UIElement {
         addActual(child);
     }
 
-    private void addActual(UIElement child) {
+    protected final void addActual(UIElement child) {
         if (children.contains(child)) {
             return;
         }
 
-        children.add(child);
+        if (child instanceof UIFloatContainer) {
+            children.addFirst(child);
+        } else {
+            children.add(child);
+        }
         child.setPanel(panel);
         child.parent = this;
 
@@ -118,33 +118,45 @@ public class UIContainer extends UIElement {
     }
 
     @Override
-    public void update(SVector mouse) {
-        super.update(mouse);
-
-        SVector relativeMouse = mouse == null ? null : new SVector(mouse).sub(position);
+    public void update() {
         for (UIElement child : getChildren()) {
-            child.update(relativeMouse);
+            child.update();
         }
     }
 
     @Override
-    public void mousePressed(SVector mouse) {
-        super.mousePressed(mouse);
+    public void updateMousePosition(SVector mouse, boolean valid) {
+        super.updateMousePosition(mouse, valid);
 
+        boolean childMouseAbove = false;
         SVector relativeMouse = new SVector(mouse).sub(position);
         for (UIElement child : getChildren()) {
-            child.mousePressed(relativeMouse);
+            if (!(child instanceof UIFloatContainer)) {
+                child.updateMousePosition(relativeMouse, valid && !childMouseAbove);
+                childMouseAbove |= child.mouseAbove();
+            }
         }
     }
 
     @Override
-    public void mouseWheel(SVector scroll, SVector mousePos) {
-        super.mouseWheel(scroll, mousePos);
+    public void mousePressed(int mouseButton) {
+        for (UIElement child : getChildren()) {
+            child.mousePressed(mouseButton);
+        }
 
+        super.mousePressed(mouseButton);
+    }
+
+    @Override
+    public boolean mouseWheel(SVector scroll, SVector mousePos) {
         SVector relativeMouse = new SVector(mousePos).sub(position);
         for (UIElement child : getChildren()) {
-            child.mouseWheel(scroll, relativeMouse);
+            if (child.mouseWheel(scroll, relativeMouse)) {
+                return true;
+            }
         }
+
+        return super.mouseWheel(scroll, mousePos);
     }
 
     @Override
@@ -212,10 +224,10 @@ public class UIContainer extends UIElement {
 
         SVector override = overrideMinSize();
         if (override != null) {
-            if (override.x > 0) {
+            if (override.x > 0 && hSizeType != SizeType.FIXED) {
                 size.x = override.x;
             }
-            if (override.y > 0) {
+            if (override.y > 0 && vSizeType != SizeType.FIXED) {
                 size.y = override.y;
             }
         }
@@ -453,18 +465,22 @@ public class UIContainer extends UIElement {
 
         double runningTotal = 0;
         for (UIElement child : getChildren()) {
-            SVector childPos = child.getPosition();
-            SVector childSize = child.getSize();
+            if (child instanceof UIFloatContainer floatContainer) {
+                floatContainer.setPosition();
+            } else {
+                SVector childPos = child.getPosition();
+                SVector childSize = child.getSize();
 
-            childPos.x = orientation == VERTICAL
-                    ? hMargin + (size.x - 2 * hMargin - childSize.x) * hAlignment / 2.0
-                    : hMargin + runningTotal + (size.x - boundingBox.x) * hAlignment / 2.0;
-            childPos.y = orientation == VERTICAL
-                    ? vMargin + runningTotal + (size.y - boundingBox.y) * vAlignment / 2.0
-                    : vMargin + (size.y - 2 * vMargin - childSize.y) * vAlignment / 2.0;
+                childPos.x = orientation == VERTICAL
+                        ? hMargin + (size.x - 2 * hMargin - childSize.x) * hAlignment / 2.0
+                        : hMargin + runningTotal + (size.x - boundingBox.x) * hAlignment / 2.0;
+                childPos.y = orientation == VERTICAL
+                        ? vMargin + runningTotal + (size.y - boundingBox.y) * vAlignment / 2.0
+                        : vMargin + (size.y - 2 * vMargin - childSize.y) * vAlignment / 2.0;
 
-            runningTotal += orientation == VERTICAL ? childSize.y : childSize.x;
-            runningTotal += padding;
+                runningTotal += orientation == VERTICAL ? childSize.y : childSize.x;
+                runningTotal += padding;
+            }
 
             if (child instanceof UIContainer container) {
                 container.positionChildren();
@@ -475,7 +491,11 @@ public class UIContainer extends UIElement {
     protected SVector getChildrenBoundingBox(double hMargin, double vMargin, double padding) {
         double sum = 0;
         double max = 0;
+        int numNonFloatChildren = 0;
         for (UIElement child : getChildren()) {
+            if (child instanceof UIFloatContainer) {
+                continue;
+            }
             SVector childSize = child.getSize();
             if (orientation == VERTICAL) {
                 max = Math.max(max, childSize.x);
@@ -484,9 +504,11 @@ public class UIContainer extends UIElement {
                 max = Math.max(max, childSize.y);
                 sum += childSize.x;
             }
+
+            numNonFloatChildren++;
         }
 
-        sum += Math.max(0, (getChildren().size() - 1)) * padding;
+        sum += Math.max(0, (numNonFloatChildren - 1)) * padding;
         SVector ret = switch (orientation) {
             case VERTICAL -> new SVector(max, sum);
             case HORIZONTAL -> new SVector(sum, max);
@@ -556,12 +578,6 @@ public class UIContainer extends UIElement {
         vSizeType = SizeType.FIXED;
         return this;
     }
-
-    // public UIContainer setFillSize() {
-    // hSizeType = SizeType.FILL;
-    // vSizeType = SizeType.FILL;
-    // return this;
-    // }
 
     public UIContainer setHFillSize() {
         hSizeType = SizeType.FILL;

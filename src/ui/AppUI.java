@@ -33,8 +33,6 @@ public abstract class AppUI<T extends App> extends UIPanel{
         root.setFixedSize(new SVector(displaySize[0], displaySize[1]));
 
         init();
-
-        // updateSize();
     }
 
     protected abstract void init();

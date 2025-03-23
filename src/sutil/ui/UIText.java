@@ -27,11 +27,10 @@ public class UIText extends UIElement {
     }
 
     @Override
-    public void update(SVector mouse) {
+    public void update() {
         if (textUpdater != null) {
             text = textUpdater.get();
         }
-        super.update(mouse);
     }
 
     public String getText() {

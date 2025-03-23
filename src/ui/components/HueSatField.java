@@ -34,9 +34,9 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
     }
 
     @Override
-    protected void updateMouseAboveReference(SVector mouse) {
+    protected void updateMouseAboveReference(SVector mouse, boolean valid) {
         if (App.isCircularHueSatField()) {
-            if (mouse == null) {
+            if (!valid) {
                 mouseAbove = false;
                 return;
             }
@@ -44,7 +44,7 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
                     y = (mouse.y - position.y) / size.y - 0.5;
             mouseAbove = x * x + y * y < 0.25;
         } else {
-            super.updateMouseAboveReference(mouse);
+            super.updateMouseAboveReference(mouse, valid);
         }
     }
 

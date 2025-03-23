@@ -2,13 +2,17 @@ package sutil.ui;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.function.Consumer;
 
 import org.lwjgl.glfw.GLFW;
 
 import sutil.math.SVector;
 
 public abstract class UIPanel {
+
+    /**
+     * Mouse buttons
+     */
+    public static final int LEFT = 0, RIGHT = 1;
 
     /**
      * Space around the outside
@@ -26,9 +30,11 @@ public abstract class UIPanel {
 
     protected UIRoot root;
     private UIElement selectedElement;
+    // protected ArrayList<UIFloatContainer> floatElements;
 
-    protected ArrayList<UIFloatContainer> floatElements;
-
+    /**
+     * Indicates wether the left mouse button is currently being pressed.
+     */
     private boolean mousePressed;
 
     private LinkedList<UIAction> eventQueue;
@@ -37,71 +43,58 @@ public abstract class UIPanel {
         selectedElement = null;
         mousePressed = false;
 
-        floatElements = new ArrayList<>();
+        // floatElements = new ArrayList<>();
         eventQueue = new LinkedList<>();
     }
 
-    public void update(SVector mousePos) {
+    public void update(SVector mousePos, boolean valid) {
+        root.determineChildVisibility();
+
+        root.updateMousePosition(mousePos, valid);
+
         while (!eventQueue.isEmpty()) {
             eventQueue.removeFirst().run();
         }
 
-        forAllContainers(container -> container.determineChildVisibility());
+        root.update();
 
-        boolean mouseAboveFloat = false;
-        for (UIElement floatElement : floatElements) {
-            floatElement.update(mousePos);
-            mouseAboveFloat |= floatElement.mouseAbove();
-        }
-        if (mouseAboveFloat) {
-            mousePos = null;
-        }
-        root.update(mousePos);
-
-        updateSize();
+        root.updateSize();
     }
 
-    protected void updateSize() {
-        forAllContainers(container -> {
-            container.updateSizeReferences();
-            container.setMinSize();
-            container.setPreferredSize();
-            container.expandAsNeccessary();
-            container.positionChildren();
-        });
-    }
-
-    public void mousePressed(SVector mousePos) {
-        eventQueue.add(() -> {
+    public void mousePressed(int mouseButton) {
+        queueEvent(() -> {
+            if (mouseButton == LEFT) {
+                mousePressed = true;
+            }
             selectedElement = null;
-            mousePressed = true;
-            forAllElements(element -> element.mousePressed(mousePos));
+            root.mousePressed(mouseButton);
         });
     }
 
-    public void mouseReleased() {
-        eventQueue.add(() -> mousePressed = false);
+    public void mouseReleased(int mouseButton) {
+        if (mouseButton == LEFT) {
+            queueEvent(() -> mousePressed = false);
+        }
     }
 
     public void keyPressed(char key, boolean shift) {
-        eventQueue.add(() -> {
+        queueEvent(() -> {
             if (key == GLFW.GLFW_KEY_TAB) {
                 cycleSelectedElement(shift);
             } else if (key == GLFW.GLFW_KEY_ENTER) {
                 if (selectedElement != null) {
-                    UIAction clickAction = selectedElement.getClickAction();
+                    UIAction clickAction = selectedElement.getLeftClickAction();
                     if (clickAction != null) {
                         clickAction.run();
                     }
                 }
             }
-            forAllElements(element -> element.keyPressed(key));
+            root.keyPressed(key);
         });
     }
 
     public void mouseWheel(SVector scroll, SVector mousePos) {
-        eventQueue.add(() -> forAllElements(
-                element -> element.mouseWheel(scroll.copy().scale(mouseWheelSensitivity), mousePos)));
+        queueEvent(() -> root.mouseWheel(scroll.copy().scale(mouseWheelSensitivity), mousePos));
     }
 
     public void queueEvent(UIAction action) {
@@ -138,31 +131,8 @@ public abstract class UIPanel {
         return elements;
     }
 
-    public void addFloatContainer(UIFloatContainer container) {
-        floatElements.add(container);
-        container.setPanel(this);
-    }
-
-    public void removeFloatContainer(UIElement element) {
-        floatElements.remove(element);
-    }
-
-    private void forAllElements(Consumer<? super UIElement> action) {
-        action.accept(root);
-        floatElements.forEach(action);
-    }
-
-    private void forAllContainers(Consumer<? super UIContainer> action) {
-        action.accept(root);
-        floatElements.forEach(action);
-    }
-
     public UIRoot getRoot() {
         return root;
-    }
-
-    public ArrayList<UIFloatContainer> getFloatElements() {
-        return floatElements;
     }
 
     public abstract double textWidth(String text);

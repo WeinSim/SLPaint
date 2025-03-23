@@ -3,8 +3,6 @@ package sutil.ui;
 import java.util.ArrayList;
 import java.util.function.Supplier;
 
-import sutil.math.SVector;
-
 public class UILabel extends UIContainer {
 
     /**
@@ -46,11 +44,12 @@ public class UILabel extends UIContainer {
     }
 
     @Override
-    public void update(SVector mouse) {
+    public void update() {
+        super.update();
+
         if (textUpdater != null) {
             setText(textUpdater.get().split("\n"));
         }
-        super.update(mouse);
     }
 
     public void setText(String text) {

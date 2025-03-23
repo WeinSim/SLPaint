@@ -18,17 +18,28 @@ public abstract class UIDragContainer<D extends UIElement & Draggable> extends U
 
         dragStartMouse = new SVector();
         dragStartD = new SVector();
+
+        setLeftClickAction(() -> {
+            dragging = true;
+            dragStartD.set(draggable.position);
+            if (!draggable.mouseAbove) {
+                dragStartD.set(draggable.size).scale(-0.5);
+                dragStartD.add(mousePosition).sub(position);
+                clampDraggablePosition(dragStartD);
+            }
+            dragStartMouse.set(mousePosition).sub(position);
+        });
     }
 
     @Override
-    public void update(SVector mouse) {
-        super.update(mouse);
+    public void update() {
+        super.update();
 
         if (!panel.isMousePressed()) {
             dragging = false;
         }
         if (dragging) {
-            drag(mouse);
+            drag(mousePosition);
         }
     }
 
@@ -53,18 +64,10 @@ public abstract class UIDragContainer<D extends UIElement & Draggable> extends U
     }
 
     @Override
-    public void mousePressed(SVector mouse) {
-        super.mousePressed(mouse);
+    public void mousePressed(int mouseButton) {
+        super.mousePressed(mouseButton);
 
-        if (mouseAbove()) {
-            dragging = true;
-            dragStartD.set(draggable.position);
-            if (!draggable.mouseAbove) {
-                dragStartD.set(draggable.size).scale(-0.5);
-                dragStartD.add(mouse).sub(position);
-                clampDraggablePosition(dragStartD);
-            }
-            dragStartMouse.set(mouse).sub(position);
+        if (mouseAbove() && mouseButton == LEFT) {
         }
     }
 

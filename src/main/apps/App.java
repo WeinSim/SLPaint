@@ -122,11 +122,13 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         // UI mouse and keyboard inputs
         if (focus) {
             // UI mouse pressed
-            if (mouseButtons[0] && !prevMouseButtons[0]) {
-                ui.mousePressed(mousePos);
-            }
-            if (!mouseButtons[0] && prevMouseButtons[0]) {
-                ui.mouseReleased();
+            for (int i = 0; i < mouseButtons.length; i++) {
+                if (mouseButtons[i] && !prevMouseButtons[i]) {
+                    ui.mousePressed(i);
+                }
+                if (!mouseButtons[i] && prevMouseButtons[i]) {
+                    ui.mouseReleased(i);
+                }
             }
 
             // UI mouse scroll
@@ -159,12 +161,9 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
                     ui.keyPressed((char) specialKeys[i], shift);
                 }
             }
-        } else {
-            // mouse should not be above anything when the window isn't focused
-            mousePos = null;
         }
 
-        ui.update(mousePos);
+        ui.update(mousePos, focus || true);
 
         window.setArrowCursor();
         if (ui.mouseAboveTextInput()) {

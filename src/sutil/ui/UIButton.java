@@ -26,7 +26,7 @@ public class UIButton extends UILabel {
         Supplier<Double> sw = () -> panel.getStrokeWeight();
         setStyle(new UIStyle(bg, ol, sw));
 
-        setClickAction(clickAction);
+        setLeftClickAction(clickAction);
         selectable = true;
     }
 }
