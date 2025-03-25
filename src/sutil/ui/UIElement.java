@@ -20,7 +20,7 @@ public abstract class UIElement {
     protected UIStyle style;
 
     protected SVector mousePosition;
-    protected boolean mouseAbove;
+    protected boolean mouseAbove = false;
 
     protected UIAction leftClickAction = null,
             rightClickAction = null;
@@ -34,12 +34,8 @@ public abstract class UIElement {
         size = new SVector();
 
         mousePosition = new SVector();
-        mouseAbove =false;
 
         setDefaultStyle();
-    }
-
-    public void update() {
     }
 
     public void updateMousePosition(SVector mouse, boolean valid) {
@@ -49,6 +45,9 @@ public abstract class UIElement {
 
     protected void updateMouseAboveReference(SVector mouse, boolean valid) {
         mouseAbove = valid ? SUtil.pointInsideRect(mouse, position, size) : false;
+    }
+
+    public void update() {
     }
 
     public void mousePressed(int mouseButton) {
@@ -61,16 +60,16 @@ public abstract class UIElement {
                 if (leftClickAction != null) {
                     leftClickAction.run();
                 }
+
+                if (selectOnClick) {
+                    panel.setSelectedElement(this);
+                }
             }
             case UIPanel.RIGHT -> {
                 if (rightClickAction != null) {
                     rightClickAction.run();
                 }
             }
-        }
-
-        if (selectOnClick) {
-            panel.setSelectedElement(this);
         }
     }
 
@@ -236,6 +235,7 @@ public abstract class UIElement {
             return outlineColor;
         };
         Supplier<Double> strokeWeightGetter = () -> panel.getStrokeWeight();
+        // Supplier<Double> strokeWeightGetter = panel::getStrokeWeight;
 
         style = new UIStyle(backgroundColorGetter, outlineColorGetter, strokeWeightGetter);
     }

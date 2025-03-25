@@ -22,16 +22,9 @@ public class UISeparator extends UIContainer {
             setHMinimalSize();
             setVFillSize();
         }
-    }
 
-    @Override
-    public double getHMargin() {
-        return parent.orientation == VERTICAL ? 0 : panel.getMargin();
-    }
-
-    @Override
-    public double getVMargin() {
-        return parent.orientation == VERTICAL ? panel.getMargin() : 0;
+        hMarginScale = parent.orientation == VERTICAL ? 0 : 1;
+        vMarginScale = 1 - hMarginScale;
     }
 
     private class UISeparatorInside extends UIContainer {

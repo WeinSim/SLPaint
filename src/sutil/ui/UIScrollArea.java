@@ -6,9 +6,10 @@ public class UIScrollArea extends UIContainer {
 
     public static final int NONE = 2, BOTH = 3;
 
+    private final int scrollMode;
+
     private SVector scrollOffset;
     private SVector areaOvershoot;
-    private final int scrollMode;
 
     /**
      * Indicates wether a scroll bar should be hidden if there is not enough content
@@ -215,7 +216,7 @@ public class UIScrollArea extends UIContainer {
     private static class UIScrollbarContainerWrapper extends UIContainer {
 
         UIScrollArea scrollArea;
-        UIScrollBarContainer scrollBarContainer;
+        UIScrollbarContainer scrollBarContainer;
 
         UIScrollbarContainerWrapper(int orientation, UIContainer container, UIScrollArea scrollArea) {
             super(1 - orientation, 0);
@@ -226,7 +227,7 @@ public class UIScrollArea extends UIContainer {
             zeroMargin().zeroPadding();
 
             add(container);
-            scrollBarContainer = new UIScrollBarContainer(scrollArea, orientation);
+            scrollBarContainer = new UIScrollbarContainer(scrollArea, orientation);
             add(scrollBarContainer);
         }
 
@@ -248,14 +249,14 @@ public class UIScrollArea extends UIContainer {
         }
     }
 
-    private static class UIScrollBarContainer extends UIDragContainer<UIScrollBar> {
+    private static class UIScrollbarContainer extends UIDragContainer<UIScrollBar> {
 
-        UIScrollBarContainer(UIScrollArea scrollArea, int orientation) {
+        UIScrollbarContainer(UIScrollArea scrollArea, int orientation) {
             super(new UIScrollBar(scrollArea, orientation));
 
             this.orientation = orientation;
 
-            draggable.setScrollBarContainer(this);
+            draggable.setScrollbarContainer(this);
 
             withOutline();
             withBackground();
@@ -283,7 +284,7 @@ public class UIScrollArea extends UIContainer {
         private int orientation;
 
         private UIScrollArea scrollArea;
-        private UIScrollBarContainer scrollBarContainer;
+        private UIScrollbarContainer scrollBarContainer;
 
         UIScrollBar(UIScrollArea scrollArea, int orientation) {
             this.scrollArea = scrollArea;
@@ -312,7 +313,7 @@ public class UIScrollArea extends UIContainer {
             }
         }
 
-        public void setScrollBarContainer(UIScrollBarContainer scrollBarContainer) {
+        public void setScrollbarContainer(UIScrollbarContainer scrollBarContainer) {
             this.scrollBarContainer = scrollBarContainer;
         }
 

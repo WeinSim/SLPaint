@@ -51,21 +51,22 @@ public class UIContainer extends UIElement {
     private ArrayList<UIElement> visibleChildren;
 
     protected boolean addSeparators = false;
-    protected boolean addInitialSeparator = false;
 
     public UIContainer(int orientation, int alignment) {
         this(orientation, alignment, alignment);
     }
 
     public UIContainer(int orientation, int hAlignment, int vAlignment) {
-        setOrientation(orientation);
-        setHAlignment(hAlignment);
-        setVAlignment(vAlignment);
+        super();
 
         minSize = new SVector();
 
         children = new ArrayList<>();
         visibleChildren = new ArrayList<>();
+
+        setOrientation(orientation);
+        setHAlignment(hAlignment);
+        setVAlignment(vAlignment);
 
         hSizeType = SizeType.MINIMAL;
         vSizeType = SizeType.MINIMAL;
@@ -84,9 +85,11 @@ public class UIContainer extends UIElement {
 
     public void add(UIElement child) {
         if (addSeparators && !(child instanceof UIFloatContainer)) {
-            if (addInitialSeparator || children.size() > 0) {
+            // TODO: this doesn't produce the exepcted behavior if at this point, this
+            // container already contains one or more float children
+            if (children.size() > 0) {
                 UISeparator separator = new UISeparator();
-                separator.setVisibilitySupplier(() -> child.isVisible());
+                separator.setVisibilitySupplier(child::isVisible);
                 addActual(separator);
             }
         }
@@ -95,18 +98,17 @@ public class UIContainer extends UIElement {
     }
 
     protected final void addActual(UIElement child) {
-        if (children.contains(child)) {
-            return;
-        }
-
         if (child instanceof UIFloatContainer) {
             children.addFirst(child);
         } else {
             children.add(child);
         }
-        child.setPanel(panel);
         child.parent = this;
 
+        // TODO: This should be removed becasue children should not be added after the
+        // UI has been created. So far, this is almost being followed, with the only
+        // exception being UILabel.
+        child.setPanel(panel);
         if (child.isVisible()) {
             visibleChildren.add(child);
         }
@@ -117,10 +119,16 @@ public class UIContainer extends UIElement {
         visibleChildren.clear();
     }
 
-    @Override
-    public void update() {
-        for (UIElement child : getChildren()) {
-            child.update();
+    public void determineChildVisibility() {
+        visibleChildren.clear();
+        for (UIElement child : children) {
+            if (child.isVisible()) {
+                visibleChildren.add(child);
+
+                if (child instanceof UIContainer container) {
+                    container.determineChildVisibility();
+                }
+            }
         }
     }
 
@@ -135,6 +143,13 @@ public class UIContainer extends UIElement {
                 child.updateMousePosition(relativeMouse, valid && !childMouseAbove);
                 childMouseAbove |= child.mouseAbove();
             }
+        }
+    }
+
+    @Override
+    public void update() {
+        for (UIElement child : getChildren()) {
+            child.update();
         }
     }
 
@@ -161,24 +176,11 @@ public class UIContainer extends UIElement {
 
     @Override
     public void keyPressed(char key) {
-        super.keyPressed(key);
-
         for (UIElement child : getChildren()) {
             child.keyPressed(key);
         }
-    }
 
-    public void determineChildVisibility() {
-        visibleChildren.clear();
-        for (UIElement child : children) {
-            if (child.isVisible()) {
-                visibleChildren.add(child);
-
-                if (child instanceof UIContainer container) {
-                    container.determineChildVisibility();
-                }
-            }
-        }
+        super.keyPressed(key);
     }
 
     public void updateSizeReferences() {
@@ -266,9 +268,9 @@ public class UIContainer extends UIElement {
     }
 
     public void expandAsNeccessary() {
-        adjustAcrossAxis();
-
+        // the order of these two doesn't matter
         adjustAlongAxis();
+        adjustAcrossAxis();
 
         for (UIElement child : getChildren()) {
             if (child instanceof UIContainer container) {
@@ -284,24 +286,30 @@ public class UIContainer extends UIElement {
         SVector boundingBox = getChildrenBoundingBox(hMargin, vMargin, padding);
         double remainingSize = orientation == VERTICAL ? size.y - boundingBox.y : size.x - boundingBox.x;
 
-        boolean expand = remainingSize > 0;
-
         ArrayList<UIContainer> hvChildren = new ArrayList<>();
-        for (UIElement child : getChildren()) {
-            if (child instanceof UIContainer container) {
-                boolean condition = expand
-                        ? (orientation == VERTICAL ? container.vEffectivelyMaximal : container.hEffectivelyMaximal)
-                        : container.getSizeAlongAxis() > container.getMinSizeAlongAxis();
-                if (condition) {
+        if (remainingSize > 0) {
+            // determine all children that can expand
+            for (UIElement child : getChildren()) {
+                if (child instanceof UIContainer container) {
+                    if (orientation == VERTICAL ? container.vEffectivelyMaximal : container.hEffectivelyMaximal) {
+                        hvChildren.add(container);
+                    }
+                }
+            }
+
+            // expandChildren(hvChildren, remainingSize);
+        } else {
+            for (UIElement child : getChildren()) {
+                if (child instanceof UIContainer container) {
                     hvChildren.add(container);
                 }
             }
+
+            // shrinkChildren(hvChildren, remainingSize);
         }
 
-        if (expand) {
-            expandChildren(hvChildren, remainingSize);
-        } else {
-            shrinkChildren(hvChildren, remainingSize);
+        if (!hvChildren.isEmpty()) {
+            expandOrShrinkChildren(hvChildren, remainingSize);
         }
     }
 
@@ -309,18 +317,31 @@ public class UIContainer extends UIElement {
      * 
      * @see https://github.com/nicbarker/clay/blob/main/clay.h#L2190
      */
-    private void expandChildren(ArrayList<UIContainer> expandChildren, double remainingSize) {
+    private void expandOrShrinkChildren(ArrayList<UIContainer> containers, double remainingSize) {
         final double epsilon = 1e-6;
-        if (expandChildren.isEmpty()) {
-            return;
-        }
-        while (remainingSize > epsilon) {
-            double smallest = expandChildren.get(0).getSizeAlongAxis();
-            double secondSmallest = Double.POSITIVE_INFINITY;
-            double sizeToAdd = remainingSize;
 
-            for (UIContainer child : expandChildren) {
-                double component = child.getSizeAlongAxis();
+        int sign = remainingSize < 0 ? -1 : 1;
+        remainingSize *= sign; // remaining size will now always be positive.
+
+        while (remainingSize > epsilon) {
+            if (sign == -1) {
+                for (int i = containers.size() - 1; i >= 0; i--) {
+                    UIContainer child = containers.get(i);
+                    if (child.getSizeAlongAxis() - child.getMinSizeAlongAxis() < epsilon) {
+                        containers.remove(i);
+                    }
+                }
+            }
+            if (containers.isEmpty()) {
+                return;
+            }
+
+            double smallest = containers.get(0).getSizeAlongAxis() * sign;
+            double secondSmallest = Double.POSITIVE_INFINITY;
+            double sizeToAdd = remainingSize; // or size to remove. always positive.
+
+            for (UIContainer child : containers) {
+                double component = child.getSizeAlongAxis() * sign;
                 if (lessThan(component, smallest, epsilon)) {
                     secondSmallest = smallest;
                     smallest = component;
@@ -331,60 +352,21 @@ public class UIContainer extends UIElement {
                 }
             }
 
-            sizeToAdd = Math.min(sizeToAdd, remainingSize / expandChildren.size());
+            sizeToAdd = Math.min(sizeToAdd, remainingSize / containers.size());
 
-            for (UIContainer child : expandChildren) {
-                double component = child.getSizeAlongAxis();
+            for (UIContainer child : containers) {
+                double component = child.getSizeAlongAxis() * sign;
                 if (equalTo(component, smallest, epsilon)) {
-                    child.setSizeAlongAxis(component + sizeToAdd);
-                    remainingSize -= sizeToAdd;
-                }
-            }
-        }
-    }
+                    double adding; // or removing. always positive.
+                    if (sign == 1) {
+                        adding = sizeToAdd;
+                    } else {
+                        double maxRemoveAmount = child.getSizeAlongAxis() - child.getMinSizeAlongAxis();
+                        adding = Math.min(maxRemoveAmount, sizeToAdd);
+                    }
 
-    private void shrinkChildren(ArrayList<UIContainer> shrinkChildren, double remainingSize) {
-        final double epsilon = 1e-6;
-        if (shrinkChildren.isEmpty()) {
-            return;
-        }
-        remainingSize *= -1;
-        while (remainingSize > epsilon) {
-            for (int i = shrinkChildren.size() - 1; i >= 0; i--) {
-                UIContainer child = shrinkChildren.get(i);
-                if (child.getSizeAlongAxis() - child.getMinSizeAlongAxis() < epsilon) {
-                    shrinkChildren.remove(i);
-                }
-            }
-            if (shrinkChildren.isEmpty()) {
-                return;
-            }
-
-            double biggest = shrinkChildren.get(0).getSizeAlongAxis();
-            double secondBiggest = Double.NEGATIVE_INFINITY;
-            double sizeToRemove = remainingSize;
-
-            for (UIContainer child : shrinkChildren) {
-                double component = child.getSizeAlongAxis();
-                if (lessThan(biggest, component, epsilon)) {
-                    secondBiggest = biggest;
-                    biggest = component;
-                }
-                if (lessThan(component, biggest, epsilon)) {
-                    secondBiggest = Math.max(secondBiggest, component);
-                    sizeToRemove = biggest - secondBiggest;
-                }
-            }
-
-            sizeToRemove = Math.min(sizeToRemove, remainingSize / shrinkChildren.size());
-
-            for (UIContainer child : shrinkChildren) {
-                double component = child.getSizeAlongAxis();
-                if (equalTo(component, biggest, epsilon)) {
-                    double maxRemoveAmount = child.getSizeAlongAxis() - child.getMinSizeAlongAxis();
-                    double removing = Math.min(maxRemoveAmount, sizeToRemove);
-                    child.setSizeAlongAxis(component - removing);
-                    remainingSize -= removing;
+                    child.setSizeAlongAxis((component + adding) * sign);
+                    remainingSize -= adding;
                 }
             }
         }
@@ -524,7 +506,7 @@ public class UIContainer extends UIElement {
      * 
      * @return the space around the outside (left and right).
      */
-    public double getHMargin() {
+    public final double getHMargin() {
         return panel.getMargin() * hMarginScale;
     }
 
@@ -532,7 +514,7 @@ public class UIContainer extends UIElement {
      * 
      * @return the space around the outside (top and bottom).
      */
-    public double getVMargin() {
+    public final double getVMargin() {
         return panel.getMargin() * vMarginScale;
     }
 
@@ -540,7 +522,7 @@ public class UIContainer extends UIElement {
      * 
      * @return the space between the children.
      */
-    public double getPadding() {
+    public final double getPadding() {
         return panel.getPadding() * paddingScale;
     }
 
@@ -693,16 +675,7 @@ public class UIContainer extends UIElement {
     }
 
     public UIContainer withSeparators() {
-        return withSeparators(true, false);
-    }
-
-    public UIContainer withSeparators(boolean initialSeparator) {
-        return withSeparators(true, initialSeparator);
-    }
-
-    public UIContainer withSeparators(boolean addSeparators, boolean addInitialSeparator) {
-        this.addSeparators = addSeparators;
-        this.addInitialSeparator = addInitialSeparator;
+        addSeparators = true;
 
         setMarginScale(2.0);
 

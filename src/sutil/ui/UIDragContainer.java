@@ -63,14 +63,6 @@ public abstract class UIDragContainer<D extends UIElement & Draggable> extends U
         draggable.setRelativeY(relativeY);
     }
 
-    @Override
-    public void mousePressed(int mouseButton) {
-        super.mousePressed(mouseButton);
-
-        if (mouseAbove() && mouseButton == LEFT) {
-        }
-    }
-
     private void clampDraggablePosition(SVector newDragPos) {
         newDragPos.x = Math.min(Math.max(0, newDragPos.x), size.x - draggable.size.x);
         newDragPos.y = Math.min(Math.max(0, newDragPos.y), size.y - draggable.size.y);

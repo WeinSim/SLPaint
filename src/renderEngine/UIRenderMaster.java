@@ -365,6 +365,12 @@ public class UIRenderMaster {
     }
 
     private void scissor(int x, int y, int w, int h) {
+        if (w < 0) {
+            w = 0;
+        }
+        if (h < 0) {
+            h = 0;
+        }
         GL11.glScissor(x, y, w, h);
 
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
