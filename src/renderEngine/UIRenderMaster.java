@@ -333,6 +333,7 @@ public class UIRenderMaster {
         int w = (int) size3f.x, h = (int) size3f.y;
         int x = (int) pos3f.x, y = dims[3] - h - (int) pos3f.y;
 
+        // no need to clip if the previous scissor was disabled
         if (clipToPrevScissor && scissorInfo.enabled) {
             int x0 = scissorInfo.x,
                     y0 = scissorInfo.y,
@@ -358,6 +359,12 @@ public class UIRenderMaster {
                 h = y0 + h0 - y;
             }
         }
+
+        // int dx = 100, dy = 100;
+        // x -= dx;
+        // w += 2 * dx;
+        // y -= dy;
+        // h += 2 * dy;
 
         scissorInfo.set(x, y, w, h);
 

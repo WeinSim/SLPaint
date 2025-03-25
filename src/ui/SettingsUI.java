@@ -10,7 +10,6 @@ import sutil.ui.UIContextMenu;
 import sutil.ui.UIDropdown;
 import sutil.ui.UIFloatMenu;
 import sutil.ui.UILabel;
-import sutil.ui.UIScrollArea;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
 import ui.components.ColorPickContainer;
@@ -34,7 +33,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         root.setMarginScale(1);
         root.setPaddingScale(1);
 
-        UIScrollArea mainContainer = new UIScrollArea(UIContainer.VERTICAL, UIContainer.LEFT, UIScrollArea.BOTH);
+        UIContainer mainContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.BOTH);
         mainContainer.setMaximalSize();
 
         mainContainer.add(createBaseColor());
@@ -122,7 +121,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         colorPickContainer.setVisibilitySupplier(() -> colorSelectionExpanded);
         baseColor.add(colorPickContainer);
 
-        UIScrollArea innerScrollArea = new UIScrollArea(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.VERTICAL);
+        UIContainer innerScrollArea = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.VERTICAL);
         innerScrollArea.setVFixedSize(200);
         for (int i = 0; i < 10; i++) {
             innerScrollArea.add(new UILabel(String.format("Label %d", i)));

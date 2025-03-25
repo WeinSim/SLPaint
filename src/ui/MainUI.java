@@ -10,7 +10,6 @@ import main.apps.MainApp;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UILabel;
-import sutil.ui.UIScrollArea;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
 import sutil.ui.UIToggle;
@@ -34,7 +33,7 @@ public class MainUI extends AppUI<MainApp> {
         root.setHAlignment(UIContainer.LEFT);
         root.zeroMargin().zeroPadding().noOutline();
 
-        UIScrollArea topRow = new UIScrollArea(UIContainer.HORIZONTAL, UIContainer.CENTER, UIScrollArea.HORIZONTAL);
+        UIContainer topRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER, UIContainer.HORIZONTAL);
         topRow.withSeparators().setHFillSize().setHAlignment(UIContainer.LEFT).withBackground().noOutline();
 
         UIContainer settings = addTopRowSection(topRow, "Settings");
@@ -111,7 +110,7 @@ public class MainUI extends AppUI<MainApp> {
         ImageCanvas canvas = new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, UIContainer.TOP, app);
         canvas.noOutline();
 
-        UIScrollArea sidePanel = new UIScrollArea(UIContainer.VERTICAL, UIContainer.TOP, UIScrollArea.VERTICAL);
+        UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.TOP, UIContainer.VERTICAL);
         sidePanel.withSeparators().setVFillSize().withBackground().noOutline();
         UIContainer transparentSelection = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         transparentSelection.zeroMargin().noOutline();

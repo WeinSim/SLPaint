@@ -9,7 +9,6 @@ import sutil.math.SVector;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIFloatContainer;
-import sutil.ui.UIScrollArea;
 import sutil.ui.UIText;
 import sutil.ui.UIToggle;
 import ui.AppUI;
@@ -62,6 +61,8 @@ public class AppRenderer<T extends App> {
         // uiMaster.depth(0.5);
 
         renderUIElement(ui.getRoot());
+
+        // System.exit(1);
     }
 
     private void renderUIElement(UIElement element) {
@@ -89,11 +90,9 @@ public class AppRenderer<T extends App> {
 
         if (bgColor != null) {
             uiMaster.fill(bgColor);
-        } else {
-            uiMaster.noFill();
+            uiMaster.noStroke();
+            uiMaster.rect(position, size);
         }
-        uiMaster.noStroke();
-        uiMaster.rect(position, size);
 
         uiMaster.fillAlpha(1.0);
 
@@ -123,21 +122,22 @@ public class AppRenderer<T extends App> {
             uiMaster.text(text.getText(), position);
         }
         if (element instanceof UIContainer container) {
+            // if (container instanceof UIScrollArea) {
+            uiMaster.pushScissor();
+            uiMaster.scissor(position, size);
+            // }
+
             uiMaster.pushMatrix();
             uiMaster.translate(position);
-            if (container instanceof UIScrollArea) {
-                uiMaster.pushScissor();
-                uiMaster.scissor(position, size);
-            }
 
             for (UIElement child : container.getChildren()) {
                 renderUIElement(child);
             }
 
             uiMaster.popMatrix();
-            if (container instanceof UIScrollArea) {
-                uiMaster.popScissor();
-            }
+            // if (container instanceof UIScrollArea) {
+            uiMaster.popScissor();
+            // }
         }
         if (element instanceof UIScale scale) {
             SVector pos = new SVector(position).add(scale.getScaleOffset());
