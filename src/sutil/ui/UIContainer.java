@@ -10,7 +10,7 @@ public class UIContainer extends UIElement {
     public static final int VERTICAL = 0, HORIZONTAL = 1, NONE = 2, BOTH = 3;
 
     /**
-     * Every {@code UIContainer} has one of four size types in both directions
+     * Every {@code UIContainer} has one of three size types in both directions
      * (vertical and horizontal):
      * <ul>
      * <li>{@code MINIMAL}: The width / height of the container is the smallest
@@ -19,16 +19,13 @@ public class UIContainer extends UIElement {
      * <li>{@code FIXED}: A fixed width / height is specified, which the container
      * will always have.</li>
      * <li>{@code FILL}: The container expands horizontally / vertically as much as
-     * possible.</li>
-     * <li>{@code MAXIMAL}: Like {@code FILL}, except it also turns any
-     * {@code MIMINAL} ascestors effectively maximal.</li>
+     * possible, withouth affecting its parent container.</li>
      * </ul>
      */
     protected enum SizeType {
         MINIMAL,
         FIXED,
-        FILL,
-        MAXIMAL;
+        FILL;
     }
 
     private ArrayList<UIElement> children;
@@ -48,12 +45,6 @@ public class UIContainer extends UIElement {
 
     protected SizeType hSizeType, vSizeType;
 
-    /**
-     * Indicates wether this container or one of its children is {@code MAXIMAL} in
-     * the corresponding direction.
-     */
-    private boolean hEffectivelyMaximal, vEffectivelyMaximal;
-
     protected SVector minSize;
 
     protected double hMarginScale = 1, vMarginScale = 1;
@@ -65,8 +56,8 @@ public class UIContainer extends UIElement {
         this(orientation, alignment, alignment, NONE);
     }
 
-    public UIContainer(int orientation, int alignment, int scrollMode) {
-        this(orientation, alignment, alignment, scrollMode);
+    public UIContainer(int orientation, int hAlignment, int vAlignment) {
+        this(orientation, hAlignment, vAlignment, NONE);
     }
 
     public UIContainer(int orientation, int hAlignment, int vAlignment, int scrollMode) {
@@ -83,10 +74,10 @@ public class UIContainer extends UIElement {
         hSizeType = SizeType.MINIMAL;
         vSizeType = SizeType.MINIMAL;
         if (isHScroll()) {
-            setHMaximalSize();
+            setHFillSize();
         }
         if (isVScroll()) {
-            setVMaximalSize();
+            setVFillSize();
         }
 
         minSize = new SVector();
@@ -221,36 +212,6 @@ public class UIContainer extends UIElement {
         super.keyPressed(key);
     }
 
-    public void updateSizeReferences() {
-        hEffectivelyMaximal = false;
-        if (hSizeType == SizeType.MAXIMAL || hSizeType == SizeType.FILL) {
-            UIContainer current = this;
-            do {
-                current.hEffectivelyMaximal = true;
-                current = current.parent;
-            } while (current != null
-                    && hSizeType == SizeType.MAXIMAL
-                    && current.hSizeType == SizeType.MINIMAL);
-        }
-
-        vEffectivelyMaximal = false;
-        if (vSizeType == SizeType.MAXIMAL || vSizeType == SizeType.FILL) {
-            UIContainer current = this;
-            do {
-                current.vEffectivelyMaximal = true;
-                current = current.parent;
-            } while (current != null
-                    && vSizeType == SizeType.MAXIMAL
-                    && current.vSizeType == SizeType.MINIMAL);
-        }
-
-        for (UIElement child : getChildren()) {
-            if (child instanceof UIContainer container) {
-                container.updateSizeReferences();
-            }
-        }
-    }
-
     public final void setMinSize() {
         for (UIElement child : getChildren()) {
             if (child instanceof UIContainer container) {
@@ -322,21 +283,18 @@ public class UIContainer extends UIElement {
             // determine all children that can expand
             for (UIElement child : getChildren()) {
                 if (child instanceof UIContainer container) {
-                    if (orientation == VERTICAL ? container.vEffectivelyMaximal : container.hEffectivelyMaximal) {
+                    if ((orientation == VERTICAL ? container.vSizeType : container.hSizeType) == SizeType.FILL) {
                         hvChildren.add(container);
                     }
                 }
             }
-
-            // expandChildren(hvChildren, remainingSize);
         } else {
+            // all children can shrink, but only up to minimumSize
             for (UIElement child : getChildren()) {
                 if (child instanceof UIContainer container) {
                     hvChildren.add(container);
                 }
             }
-
-            // shrinkChildren(hvChildren, remainingSize);
         }
 
         if (!hvChildren.isEmpty()) {
@@ -356,6 +314,7 @@ public class UIContainer extends UIElement {
 
         while (remainingSize > epsilon) {
             if (sign == -1) {
+                // containers cannot shrink below their minimum size
                 for (int i = containers.size() - 1; i >= 0; i--) {
                     UIContainer child = containers.get(i);
                     if (child.getSizeAlongAxis() - child.getMinSizeAlongAxis() < epsilon) {
@@ -409,10 +368,10 @@ public class UIContainer extends UIElement {
             if (child instanceof UIContainer container) {
                 if (container.getSizeAcrossAxis() < availableSpace) {
                     // expand
-                    boolean effectivelyMaximal = orientation == VERTICAL
-                            ? container.hEffectivelyMaximal
-                            : container.vEffectivelyMaximal;
-                    if (effectivelyMaximal) {
+                    SizeType sizeTypeAcrossAxis = orientation == VERTICAL
+                            ? container.hSizeType
+                            : container.vSizeType;
+                    if (sizeTypeAcrossAxis == SizeType.FILL) {
                         container.setSizeAcrossAxis(availableSpace);
                     }
                 } else {
@@ -552,17 +511,6 @@ public class UIContainer extends UIElement {
         return ret;
     }
 
-    public UIContainer addScrollBars() {
-        UIContainer ret = this;
-        if (isHScroll()) {
-            ret = wrapHScroll(this);
-        }
-        if (isVScroll()) {
-            ret = wrapVScroll(ret);
-        }
-        return ret;
-    }
-
     /**
      * 
      * @return the space around the outside (left and right).
@@ -594,19 +542,19 @@ public class UIContainer extends UIElement {
     }
 
     public UIContainer setHMinimalSize() {
-        if (isHScroll()) {
-            throw new IllegalArgumentException(
-                    "A ScrollArea's SizeType cannot be MINIMAL in the direction of scrolling.");
-        }
+        // if (isHScroll()) {
+        //     throw new IllegalArgumentException(
+        //             "A ScrollArea's SizeType cannot be MINIMAL in the direction of scrolling.");
+        // }
         hSizeType = SizeType.MINIMAL;
         return this;
     }
 
     public UIContainer setVMinimalSize() {
-        if (isVScroll()) {
-            throw new IllegalArgumentException(
-                    "A ScrollArea's SizeType cannot be MINIMAL in the direction of scrolling.");
-        }
+        // if (isVScroll()) {
+        //     throw new IllegalArgumentException(
+        //             "A ScrollArea's SizeType cannot be MINIMAL in the direction of scrolling.");
+        // }
         vSizeType = SizeType.MINIMAL;
         return this;
     }
@@ -630,6 +578,12 @@ public class UIContainer extends UIElement {
         return this;
     }
 
+    public UIContainer setFillSize() {
+        hSizeType = SizeType.FILL;
+        vSizeType = SizeType.FILL;
+        return this;
+    }
+
     public UIContainer setHFillSize() {
         hSizeType = SizeType.FILL;
         return this;
@@ -637,22 +591,6 @@ public class UIContainer extends UIElement {
 
     public UIContainer setVFillSize() {
         vSizeType = SizeType.FILL;
-        return this;
-    }
-
-    public UIContainer setMaximalSize() {
-        hSizeType = SizeType.MAXIMAL;
-        vSizeType = SizeType.MAXIMAL;
-        return this;
-    }
-
-    public UIContainer setHMaximalSize() {
-        hSizeType = SizeType.MAXIMAL;
-        return this;
-    }
-
-    public UIContainer setVMaximalSize() {
-        vSizeType = SizeType.MAXIMAL;
         return this;
     }
 
@@ -775,18 +713,29 @@ public class UIContainer extends UIElement {
         return size.y / (size.y + areaOvershoot.y);
     }
 
-    private boolean isHScroll() {
+    public boolean isHScroll() {
         return switch (scrollMode) {
             case HORIZONTAL, BOTH -> true;
             default -> false;
         };
     }
 
-    private boolean isVScroll() {
+    public boolean isVScroll() {
         return switch (scrollMode) {
             case VERTICAL, BOTH -> true;
             default -> false;
         };
+    }
+
+    public UIContainer addScrollbars() {
+        UIContainer ret = this;
+        if (isHScroll()) {
+            ret = wrapHScroll(this);
+        }
+        if (isVScroll()) {
+            ret = wrapVScroll(ret);
+        }
+        return ret;
     }
 
     private UIContainer wrapHScroll(UIContainer container) {
@@ -809,7 +758,7 @@ public class UIContainer extends UIElement {
     private static class UIScrollbarContainerWrapper extends UIContainer {
 
         UIContainer scrollArea;
-        UIScrollbarContainer scrollBarContainer;
+        UIScrollbarContainer scrollbarContainer;
 
         UIScrollbarContainerWrapper(int orientation, UIContainer container, UIContainer scrollArea) {
             super(1 - orientation, 0);
@@ -820,24 +769,21 @@ public class UIContainer extends UIElement {
             zeroMargin().zeroPadding();
 
             add(container);
-            scrollBarContainer = new UIScrollbarContainer(scrollArea, orientation);
-            add(scrollBarContainer);
+            scrollbarContainer = new UIScrollbarContainer(scrollArea, orientation);
+            add(scrollbarContainer);
         }
 
         @Override
         public void update() {
             super.update();
 
-            if (orientation == VERTICAL) {
-                hSizeType = scrollArea.hSizeType;
-                if (hSizeType == SizeType.FIXED) {
-                    hSizeType = SizeType.MINIMAL;
-                }
-            } else {
-                vSizeType = scrollArea.vSizeType;
-                if (vSizeType == SizeType.FIXED) {
-                    vSizeType = SizeType.MINIMAL;
-                }
+            hSizeType = scrollArea.hSizeType;
+            if (hSizeType == SizeType.FIXED) {
+                hSizeType = SizeType.MINIMAL;
+            }
+            vSizeType = scrollArea.vSizeType;
+            if (vSizeType == SizeType.FIXED) {
+                vSizeType = SizeType.MINIMAL;
             }
         }
     }
@@ -906,8 +852,8 @@ public class UIContainer extends UIElement {
             }
         }
 
-        public void setScrollbarContainer(UIScrollbarContainer scrollBarContainer) {
-            this.scrollbarContainer = scrollBarContainer;
+        public void setScrollbarContainer(UIScrollbarContainer scrollbarContainer) {
+            this.scrollbarContainer = scrollbarContainer;
         }
 
         @Override

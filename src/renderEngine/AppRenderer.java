@@ -22,11 +22,14 @@ import ui.components.UIScale;
 
 public class AppRenderer<T extends App> {
 
+    private static final double BACKGROUND_DEPTH = 0.0, FOREGROUND_DEPTH = -0.5;
+
     protected T app;
 
     protected UIRenderMaster uiMaster;
 
-    protected double depth;
+    // true while float elements are being drawn
+    protected boolean foregroundDraw;
 
     public AppRenderer(T app) {
         this.app = app;
@@ -57,12 +60,9 @@ public class AppRenderer<T extends App> {
         uiMaster.textFont(ui.getFont());
         uiMaster.textSize(ui.getTextSize());
 
-        depth = 0.5;
-        // uiMaster.depth(0.5);
+        foregroundDraw = false;
 
         renderUIElement(ui.getRoot());
-
-        // System.exit(1);
     }
 
     private void renderUIElement(UIElement element) {
@@ -72,13 +72,15 @@ public class AppRenderer<T extends App> {
         SVector bgColor = element.getBackgroundColor();
         SVector olColor = element.getOutlineColor();
 
+        boolean oldForegroundDraw = foregroundDraw;
+
         if (element instanceof UIFloatContainer) {
-            depth -= 0.1;
+            foregroundDraw = true;
             // uiMaster.depth(-0.5);
             uiMaster.pushScissor();
             uiMaster.noScissor();
         }
-        uiMaster.depth(depth);
+        uiMaster.depth(foregroundDraw ? FOREGROUND_DEPTH : BACKGROUND_DEPTH);
 
         if (element instanceof UIColorElement e && bgColor != null) {
             uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
@@ -122,10 +124,19 @@ public class AppRenderer<T extends App> {
             uiMaster.text(text.getText(), position);
         }
         if (element instanceof UIContainer container) {
-            // if (container instanceof UIScrollArea) {
-            uiMaster.pushScissor();
-            uiMaster.scissor(position, size);
-            // }
+            boolean isScrollable = container.isHScroll() || container.isVScroll();
+            // SVector pos = new SVector(position),
+            // siz = new SVector(size);
+            // double extra = 1;
+            // pos.x -= extra;
+            // pos.y -= extra;
+            // siz.x += 2 * extra;
+            // siz.y += 2 * extra;
+            // isScrollable = true;
+            if (isScrollable) {
+                uiMaster.pushScissor();
+                uiMaster.scissor(position, size);
+            }
 
             uiMaster.pushMatrix();
             uiMaster.translate(position);
@@ -135,9 +146,9 @@ public class AppRenderer<T extends App> {
             }
 
             uiMaster.popMatrix();
-            // if (container instanceof UIScrollArea) {
-            uiMaster.popScissor();
-            // }
+            if (isScrollable) {
+                uiMaster.popScissor();
+            }
         }
         if (element instanceof UIScale scale) {
             SVector pos = new SVector(position).add(scale.getScaleOffset());
@@ -173,10 +184,10 @@ public class AppRenderer<T extends App> {
         }
 
         if (element instanceof UIFloatContainer) {
-            depth += 0.1;
-            // uiMaster.depth(0.5);
             uiMaster.popScissor();
         }
+
+        foregroundDraw = oldForegroundDraw;
     }
 
     public void reloadShaders() {

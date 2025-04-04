@@ -14,7 +14,7 @@ public class ImageCanvas extends UIContainer {
         super(orientation, hAlignment, vAlignment);
 
         app.setCanvas(this);
-        setMaximalSize();
+        setFillSize();
     }
 
     public boolean mouseTrulyAbove() {

@@ -214,7 +214,7 @@ public abstract class UIElement {
     }
 
     public void setDefaultStyle() {
-        Supplier<SVector> backgroundColorGetter = () -> {
+        Supplier<SVector> backgroundColorSupplier = () -> {
             SVector bgColor = null;
             if (backgroundNormal) {
                 bgColor = panel.getBackgroundNormalColor();
@@ -224,7 +224,7 @@ public abstract class UIElement {
             }
             return bgColor;
         };
-        Supplier<SVector> outlineColorGetter = () -> {
+        Supplier<SVector> outlineColorSupplier = () -> {
             SVector outlineColor = null;
             if (outlineNormal) {
                 outlineColor = panel.getOutlineNormalColor();
@@ -234,9 +234,9 @@ public abstract class UIElement {
             }
             return outlineColor;
         };
-        Supplier<Double> strokeWeightGetter = () -> panel.getStrokeWeight();
-        // Supplier<Double> strokeWeightGetter = panel::getStrokeWeight;
+        Supplier<Double> strokeWeightSupplier = () -> panel.getStrokeWeight();
+        // Supplier<Double> strokeWeightSupplier = panel::getStrokeWeight;
 
-        style = new UIStyle(backgroundColorGetter, outlineColorGetter, strokeWeightGetter);
+        style = new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier);
     }
 }

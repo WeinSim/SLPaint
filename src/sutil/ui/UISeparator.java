@@ -1,7 +1,5 @@
 package sutil.ui;
 
-import ui.Colors;
-
 public class UISeparator extends UIContainer {
 
     public UISeparator() {
@@ -35,7 +33,7 @@ public class UISeparator extends UIContainer {
             setVFillSize();
             zeroMargin();
 
-            style.setOutlineColorGetter(() -> Colors.getSeparatorColor());
+            style.setOutlineColorSupplier(() -> panel.getSeparatorColor());
         }
     }
 }

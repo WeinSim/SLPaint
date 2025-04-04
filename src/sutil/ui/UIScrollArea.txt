@@ -125,7 +125,7 @@ public class UIScrollArea extends UIContainer {
         return false;
     }
 
-    public UIContainer addScrollBars() {
+    public UIContainer addScrollbars() {
         UIContainer ret = this;
         if (isHScroll()) {
             ret = wrapHScroll(this);
@@ -216,7 +216,7 @@ public class UIScrollArea extends UIContainer {
     private static class UIScrollbarContainerWrapper extends UIContainer {
 
         UIScrollArea scrollArea;
-        UIScrollbarContainer scrollBarContainer;
+        UIScrollbarContainer scrollbarContainer;
 
         UIScrollbarContainerWrapper(int orientation, UIContainer container, UIScrollArea scrollArea) {
             super(1 - orientation, 0);
@@ -227,8 +227,8 @@ public class UIScrollArea extends UIContainer {
             zeroMargin().zeroPadding();
 
             add(container);
-            scrollBarContainer = new UIScrollbarContainer(scrollArea, orientation);
-            add(scrollBarContainer);
+            scrollbarContainer = new UIScrollbarContainer(scrollArea, orientation);
+            add(scrollbarContainer);
         }
 
         @Override
@@ -249,10 +249,10 @@ public class UIScrollArea extends UIContainer {
         }
     }
 
-    private static class UIScrollbarContainer extends UIDragContainer<UIScrollBar> {
+    private static class UIScrollbarContainer extends UIDragContainer<UIScrollbar> {
 
         UIScrollbarContainer(UIScrollArea scrollArea, int orientation) {
-            super(new UIScrollBar(scrollArea, orientation));
+            super(new UIScrollbar(scrollArea, orientation));
 
             this.orientation = orientation;
 
@@ -279,19 +279,19 @@ public class UIScrollArea extends UIContainer {
         }
     }
 
-    private static class UIScrollBar extends UIElement implements Draggable {
+    private static class UIScrollbar extends UIElement implements Draggable {
 
         private int orientation;
 
         private UIScrollArea scrollArea;
-        private UIScrollbarContainer scrollBarContainer;
+        private UIScrollbarContainer scrollbarContainer;
 
-        UIScrollBar(UIScrollArea scrollArea, int orientation) {
+        UIScrollbar(UIScrollArea scrollArea, int orientation) {
             this.scrollArea = scrollArea;
             this.orientation = orientation;
 
             UIStyle style = new UIStyle(
-                    () -> mouseAbove || scrollBarContainer.isDragging()
+                    () -> mouseAbove || scrollbarContainer.isDragging()
                             ? panel.getOutlineNormalColor()
                             : panel.getOutlineHighlightColor(),
                     () -> null,
@@ -313,8 +313,8 @@ public class UIScrollArea extends UIContainer {
             }
         }
 
-        public void setScrollbarContainer(UIScrollbarContainer scrollBarContainer) {
-            this.scrollBarContainer = scrollBarContainer;
+        public void setScrollbarContainer(UIScrollbarContainer scrollbarContainer) {
+            this.scrollbarContainer = scrollbarContainer;
         }
 
         @Override

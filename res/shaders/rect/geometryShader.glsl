@@ -2,7 +2,6 @@
 
 layout (points) in;
 layout (triangle_strip, max_vertices = 14) out;
-// layout (line_strip, max_vertices = 5) out;
 
 out vec4 color;
 out vec4 color2;
@@ -32,6 +31,16 @@ const vec2[4] cornerOffsets = vec2[4](
     vec2(1, 1)
 );
 
+/* Before screen space coordinates ([0, 1920] x [0, 1080]) are converted
+ * to OpenGL coordinates ([-1, 1] x [-1, 1]), they are rounded to integer
+ * values. This is to avoid inconsistent stroke weights of rectangles (a
+ * stroke weight of 1px could appear as 0, 1 or 2 pixels without
+ * rounding).
+ */
+vec3 vecToInt(vec3 v) {
+    return vec3(floor(v.x), floor(v.y), floor(v.z));
+}
+
 void main(void) {
     if (fillMode > 0) {
         if (fillMode == 1) {
@@ -47,7 +56,7 @@ void main(void) {
 
         for (int i = 0; i < 4; i++) {
             relativePos = cornerOffsets[i] * size;
-            vec3 screenPos = viewMatrix * uiMatrix * vec3(position + cornerOffsets[i] * size, 1.0);
+            vec3 screenPos = viewMatrix * vecToInt(uiMatrix * vec3(position + cornerOffsets[i] * size, 1.0));
             gl_Position = vec4(screenPos.xy, depth, 1.0);
             EmitVertex();
         }
@@ -65,14 +74,6 @@ void main(void) {
             color2 = vec4(checkerboardColor2, 1.0);
         }
 
-        // float[5] distsAlongEdge = float[5](
-        //     0,
-        //     size.y,
-        //     size.y + size.x,
-        //     size.x,
-        //     0
-        // );
-
         for (int i = 0; i < 5; i++) {
             int offsetIndex = i % 4;
             if (offsetIndex >= 2) {
@@ -86,15 +87,14 @@ void main(void) {
             // add this line for inset outlines
             // basePos -= swOffset;
 
-            // distAlongEdge = distsAlongEdge[i];
             vec3 screenPos = vec3(basePos + swOffset, 1.0);
-            screenPos = viewMatrix * uiMatrix * screenPos;
+            screenPos = viewMatrix * vecToInt(uiMatrix * screenPos);
             gl_Position = vec4(screenPos.xy, depth, 1.0);
             relativePos = offset * size + swOffset;
             EmitVertex();
 
             screenPos = vec3(basePos - swOffset, 1.0);
-            screenPos = viewMatrix * uiMatrix * screenPos;
+            screenPos = viewMatrix * vecToInt(uiMatrix * screenPos);
             gl_Position = vec4(screenPos.xy, depth, 1.0);
             relativePos = offset * size - swOffset;
             EmitVertex();

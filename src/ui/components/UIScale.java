@@ -18,8 +18,8 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
             () -> null,
             () -> Sizes.STROKE_WEIGHT.size);
 
-    public UIScale(int orientation, Supplier<Double> getter, Consumer<Double> setter) {
-        super(new Slider(orientation, getter, setter));
+    public UIScale(int orientation, Supplier<Double> Supplier, Consumer<Double> setter) {
+        super(new Slider(orientation, Supplier, setter));
         this.orientation = orientation;
 
         noOutline();
@@ -64,13 +64,13 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
 
         private int orientation;
 
-        private Supplier<Double> getter;
+        private Supplier<Double> Supplier;
         private Consumer<Double> setter;
 
-        public Slider(int orientation, Supplier<Double> getter, Consumer<Double> setter) {
+        public Slider(int orientation, Supplier<Double> Supplier, Consumer<Double> setter) {
             this.orientation = orientation;
 
-            this.getter = getter;
+            this.Supplier = Supplier;
             this.setter = setter;
 
             setStyle(SLIDER_STYLE);
@@ -95,12 +95,12 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
 
         @Override
         public double getRelativeX() {
-            return orientation == VERTICAL ? 0 : getter.get();
+            return orientation == VERTICAL ? 0 : Supplier.get();
         }
 
         @Override
         public double getRelativeY() {
-            return orientation == VERTICAL ? getter.get() : 0;
+            return orientation == VERTICAL ? Supplier.get() : 0;
         }
 
         @Override

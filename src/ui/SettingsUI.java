@@ -33,8 +33,9 @@ public class SettingsUI extends AppUI<SettingsApp> {
         root.setMarginScale(1);
         root.setPaddingScale(1);
 
-        UIContainer mainContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.BOTH);
-        mainContainer.setMaximalSize();
+        UIContainer mainContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
+                UIContainer.BOTH);
+        mainContainer.setFillSize();
 
         mainContainer.add(createBaseColor());
         mainContainer.add(createDarkModeDropdown());
@@ -46,12 +47,14 @@ public class SettingsUI extends AppUI<SettingsApp> {
         contextMenu.addLabel("Label 1", () -> System.out.println("Label 1"));
         contextMenu.addSeparator();
 
-        UIFloatMenu nestedMenu = new UIFloatMenu(this, null, null, false);
-        nestedMenu.addLabel("Nested", null);
+        UIFloatMenu nestedMenu = new UIFloatMenu(this, null, false);
+        for (int i = 0; i < 10; i++) {
+            nestedMenu.addLabel(String.format("Nested %d", i), null);
+        }
         contextMenu.addNestedContextMenu("Nested Menu", nestedMenu);
         contextMenu.attachToContainer(mainContainer);
 
-        root.add(mainContainer.addScrollBars());
+        root.add(mainContainer.addScrollbars());
 
         root.add(new UIButton("Done", () -> app.getWindow().requestClose()));
     }
@@ -121,12 +124,13 @@ public class SettingsUI extends AppUI<SettingsApp> {
         colorPickContainer.setVisibilitySupplier(() -> colorSelectionExpanded);
         baseColor.add(colorPickContainer);
 
-        UIContainer innerScrollArea = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.VERTICAL);
+        UIContainer innerScrollArea = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
+                UIContainer.VERTICAL);
         innerScrollArea.setVFixedSize(200);
         for (int i = 0; i < 10; i++) {
             innerScrollArea.add(new UILabel(String.format("Label %d", i)));
         }
-        baseColor.add(innerScrollArea.addScrollBars());
+        baseColor.add(innerScrollArea.addScrollbars());
 
         return baseColor;
     }

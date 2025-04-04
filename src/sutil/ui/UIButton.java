@@ -12,8 +12,8 @@ public class UIButton extends UILabel {
         init(clickAction);
     }
 
-    public UIButton(Supplier<String> textGetter, UIAction clickAction) {
-        super(textGetter);
+    public UIButton(Supplier<String> textSupplier, UIAction clickAction) {
+        super(textSupplier);
 
         init(clickAction);
     }

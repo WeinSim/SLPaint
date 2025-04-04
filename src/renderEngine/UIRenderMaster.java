@@ -51,11 +51,8 @@ public class UIRenderMaster {
 
     private TextFont textFont;
     private double textSize;
-    private boolean clip;
-    private SVector clipPosition, clipSize;
 
     private RawModel dummyVAO;
-    // private RawModel quadVAO;
 
     public UIRenderMaster(App app) {
         this.app = app;
@@ -67,7 +64,6 @@ public class UIRenderMaster {
         hslShader = new ShaderProgram("hsl", null, true);
 
         dummyVAO = app.getLoader().loadToVAO(new double[] { 0, 0 });
-        // quadVAO = app.getLoader().loadToVAO(new double[] { 0, 0, 0, 1, 1, 0, 1, 1 });
 
         uiMatrixStack = new LinkedList<>();
         scissorStack = new LinkedList<>();
@@ -82,10 +78,6 @@ public class UIRenderMaster {
         depth = 0;
 
         checkerboardColors = new SVector[] { new SVector(), new SVector() };
-
-        clip = false;
-        clipPosition = new SVector();
-        clipSize = new SVector();
     }
 
     public void start() {
@@ -197,19 +189,12 @@ public class UIRenderMaster {
     public void image(int textureID, SVector position, SVector size) {
         activateShader(imageShader);
 
-        // TODO continue: activate alpha blending
-
         pushMatrix();
         translate(position);
         scale(size);
 
         imageShader.loadUniform("viewMatrix", createViewMatrix());
         imageShader.loadUniform("transformationMatrix", uiMatrix);
-        SVector[] imageViewport = clip
-                ? new SVector[] { clipPosition, clipPosition.copy().add(clipSize) }
-                : new SVector[] { new SVector(), new SVector(10000, 10000) };
-        imageShader.loadUniform("viewportTopLeft", imageViewport[0]);
-        imageShader.loadUniform("viewportBottomRight", imageViewport[1]);
 
         GL13.glActiveTexture(GL13.GL_TEXTURE0);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
@@ -219,12 +204,6 @@ public class UIRenderMaster {
         GL30.glBindVertexArray(dummyVAO.getVaoID());
         GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
         GL30.glBindVertexArray(0);
-
-        // GL30.glBindVertexArray(quadVAO.getVaoID());
-        // GL20.glEnableVertexAttribArray(0);
-        // GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, quadVAO.getVertexCount());
-        // GL20.glDisableVertexAttribArray(0);
-        // GL30.glBindVertexArray(0);
 
         popMatrix();
     }
@@ -297,22 +276,6 @@ public class UIRenderMaster {
         }
         shader.start();
         activeShader = shader;
-    }
-
-    /**
-     * Only applies to images
-     * 
-     * @param position
-     * @param size
-     */
-    public void clipArea(SVector position, SVector size) {
-        clip = true;
-        clipPosition.set(position);
-        clipSize.set(size);
-    }
-
-    public void noClip() {
-        clip = false;
     }
 
     public void scissor(SVector position, SVector size) {

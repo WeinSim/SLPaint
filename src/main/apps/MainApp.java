@@ -35,15 +35,6 @@ import ui.components.ImageCanvas;
  *   Design choices:
  *     Text inputs and other selectables inside of float elements:
  *       Should they be made selectable?
- *     What happens to a context menu / an open dropdown menu when its parent is
- *       being scrolled? (=> "attach points" as wrapper around positionGetter
- *       interface: specified parent component, parent corner and child corner?)
- *     What happens to a nested context menu that doesn't have enough space?
- *       (=> allow each context menu to set multiple attach points with
- *       different priorities?)
- *   Merge UIContainer and UIScrollArea?
- *   Clean up UIScale, UISeparator (and perhaps a few more): things outside of
- *     sutil are being refernced!!!
  *   Performance: try to re-write certain lambdas using the this::methodName
  *     syntax (should be slightly faster according to ChatGPT).
  *   Re-read and check all of the new UI code before merging into main

@@ -10,9 +10,9 @@ public class UIFloatMenu extends UIFloatContainer {
 
     protected CMLabel expandedLabel;
 
-    public UIFloatMenu(UIPanel panel, Supplier<SVector> positionGetter, Supplier<Boolean> visibilitySupplier,
+    public UIFloatMenu(UIPanel panel, Supplier<Boolean> visibilitySupplier,
             boolean scroll) {
-        super(panel, VERTICAL, LEFT, positionGetter);
+        super(panel, VERTICAL, LEFT);
 
         setVisibilitySupplier(visibilitySupplier);
 
@@ -20,10 +20,10 @@ public class UIFloatMenu extends UIFloatContainer {
         zeroPadding();
 
         if (scroll) {
-            UIContainer scrollArea = new UIContainer(VERTICAL, LEFT, UIContainer.VERTICAL);
+            UIContainer scrollArea = new UIContainer(VERTICAL, LEFT, TOP, UIContainer.VERTICAL);
             scrollArea.setVFixedSize(200).zeroMargin().zeroPadding();
             contents = scrollArea;
-            add(scrollArea.addScrollBars());
+            add(scrollArea.addScrollbars());
         } else {
             contents = this;
         }
@@ -48,10 +48,13 @@ public class UIFloatMenu extends UIFloatContainer {
         label.setHFillSize();
         contents.add(label);
 
-        contextMenu.setPositionGetter(() -> new SVector(label.position.x + label.size.x, label.position.y));
+        contextMenu.addAttachPoint(TOP_LEFT, label, TOP_RIGHT);
+        contextMenu.addAttachPoint(TOP_RIGHT, label, TOP_LEFT);
+        contextMenu.addAttachPoint(BOTTOM_LEFT, label, BOTTOM_RIGHT);
+        contextMenu.addAttachPoint(BOTTOM_RIGHT, label, BOTTOM_LEFT);
         contextMenu.setVisibilitySupplier(() -> expandedLabel == label);
 
-        label.style.backgroundColorGetter = () -> {
+        label.style.backgroundColorSupplier = () -> {
             SVector bgColor = null;
             if (backgroundNormal) {
                 bgColor = panel.getBackgroundNormalColor();

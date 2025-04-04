@@ -33,7 +33,7 @@ public class MainUI extends AppUI<MainApp> {
         root.setHAlignment(UIContainer.LEFT);
         root.zeroMargin().zeroPadding().noOutline();
 
-        UIContainer topRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER, UIContainer.HORIZONTAL);
+        UIContainer topRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER, UIContainer.HORIZONTAL);
         topRow.withSeparators().setHFillSize().setHAlignment(UIContainer.LEFT).withBackground().noOutline();
 
         UIContainer settings = addTopRowSection(topRow, "Settings");
@@ -104,14 +104,16 @@ public class MainUI extends AppUI<MainApp> {
         allColors.add(ccc);
         topRow.add(allColors);
 
-        UIContainer topRowScrollBars = topRow.addScrollBars().setHFillSize();
-        root.add(topRowScrollBars);
+        UIContainer topRowScrollbars = topRow.addScrollbars().setHFillSize();
+        root.add(topRowScrollbars);
 
         ImageCanvas canvas = new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, UIContainer.TOP, app);
         canvas.noOutline();
 
-        UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.TOP, UIContainer.VERTICAL);
-        sidePanel.withSeparators().setVFillSize().withBackground().noOutline();
+        UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER, UIContainer.TOP, UIContainer.VERTICAL);
+        sidePanel.withSeparators().withBackground().noOutline();
+        // sidePanel.setVFillSize();
+        sidePanel.setVMinimalSize();
         UIContainer transparentSelection = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         transparentSelection.zeroMargin().noOutline();
         transparentSelection.setHFillSize();
@@ -131,12 +133,7 @@ public class MainUI extends AppUI<MainApp> {
                 UIContainer.VERTICAL,
                 true,
                 false));
-        canvas.add(sidePanel.addScrollBars());
-
-        UIContainer sidePanel2 = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
-        sidePanel2.setVFillSize().withBackground().noOutline();
-        sidePanel2.add(new UIText("Second side panel"));
-        canvas.add(sidePanel2);
+        canvas.add(sidePanel.addScrollbars());
 
         root.add(canvas);
 

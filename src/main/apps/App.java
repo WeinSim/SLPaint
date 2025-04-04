@@ -114,9 +114,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         }
 
         int[] displaySize = window.getDisplaySize();
-        // adding 1 to the width ensures that the "topRow"'s right edge isn't visible on
-        // screen
-        ui.setRootSize(displaySize[0] + 1, displaySize[1]);
+        ui.setRootSize(displaySize[0], displaySize[1]);
 
         boolean focus = window.isFocused();
         // UI mouse and keyboard inputs
@@ -163,7 +161,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
             }
         }
 
-        ui.update(mousePos, focus || true);
+        ui.update(mousePos, focus);
 
         window.setArrowCursor();
         if (ui.mouseAboveTextInput()) {

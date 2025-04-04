@@ -126,10 +126,10 @@ public class ColorPickContainer extends UIContainer {
         }
         // double width = addPreview ? previewWidth / 2 : previewWidth;
         for (int i = addPreview ? 0 : 1; i < 2; i++) {
-            Supplier<Integer> bgColorGetter = i == 0
+            Supplier<Integer> bgColorSupplier = i == 0
                     ? () -> colorPicker.getInitialColor()
                     : () -> colorPicker.getRGB();
-            colorBox.add(new UIColorElement(bgColorGetter, new SVector(previewWidth, previewHeight), false));
+            colorBox.add(new UIColorElement(bgColorSupplier, new SVector(previewWidth, previewHeight), false));
         }
         colorPreview.add(colorBox);
         colorPreview.add(new UIText("Preview"));

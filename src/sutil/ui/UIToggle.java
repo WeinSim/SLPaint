@@ -5,13 +5,13 @@ import java.util.function.Supplier;
 
 public class UIToggle extends UIElement {
 
-    private Supplier<Boolean> stateGetter;
+    private Supplier<Boolean> stateSupplier;
 
-    public UIToggle(Supplier<Boolean> stateGetter, Consumer<Boolean> stateSetter) {
-        this.stateGetter = stateGetter;
+    public UIToggle(Supplier<Boolean> stateSupplier, Consumer<Boolean> stateSetter) {
+        this.stateSupplier = stateSupplier;
         // this.stateSetter = stateSetter;
 
-        setLeftClickAction(() -> stateSetter.accept(!stateGetter.get()));
+        setLeftClickAction(() -> stateSetter.accept(!stateSupplier.get()));
     }
 
     @Override
@@ -21,6 +21,6 @@ public class UIToggle extends UIElement {
     }
 
     public boolean getState() {
-        return stateGetter.get();
+        return stateSupplier.get();
     }
 }

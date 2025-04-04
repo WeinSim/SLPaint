@@ -165,6 +165,10 @@ public abstract class UIPanel {
         return new SVector(1, 1, 1).scale(0.75);
     }
 
+    public SVector getSeparatorColor() {
+        return new SVector(1, 1, 1).scale(0.15);
+    }
+
     public double getStrokeWeight() {
         return 1.0;
     }
