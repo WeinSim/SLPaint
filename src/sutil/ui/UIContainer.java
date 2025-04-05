@@ -1,6 +1,8 @@
 package sutil.ui;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import sutil.math.SVector;
 
@@ -28,8 +30,7 @@ public class UIContainer extends UIElement {
         FILL;
     }
 
-    private ArrayList<UIElement> children;
-    private ArrayList<UIElement> visibleChildren;
+    private ChildList children;
 
     protected int orientation;
     protected int hAlignment, vAlignment;
@@ -41,7 +42,7 @@ public class UIContainer extends UIElement {
      * Indicates wether a scroll bar should be hidden if there is not enough content
      * to allow scrolling.
      */
-    private boolean hideScrollbars = true;
+    protected boolean hideScrollbars = true;
 
     protected SizeType hSizeType, vSizeType;
 
@@ -82,8 +83,7 @@ public class UIContainer extends UIElement {
 
         minSize = new SVector();
 
-        children = new ArrayList<>();
-        visibleChildren = new ArrayList<>();
+        children = new ChildList();
 
         scrollOffset = new SVector();
     }
@@ -119,30 +119,28 @@ public class UIContainer extends UIElement {
         }
         child.parent = this;
 
-        // TODO: This should be removed becasue children should not be added after the
-        // UI has been created. So far, this is almost being followed, with the only
-        // exception being UILabel.
         child.setPanel(panel);
-        if (child.isVisible()) {
-            visibleChildren.add(child);
+    }
+
+    public void lock() {
+        children.lock();
+
+        for (UIElement child : children.children) {
+            if (child instanceof UIContainer container) {
+                container.lock();
+            }
         }
     }
 
-    public void clearChildren() {
-        children.clear();
-        visibleChildren.clear();
-    }
+    @Override
+    public void updateVisibility() {
+        super.updateVisibility();
+        if (!isVisible()) {
+            return;
+        }
 
-    public void determineChildVisibility() {
-        visibleChildren.clear();
-        for (UIElement child : children) {
-            if (child.isVisible()) {
-                visibleChildren.add(child);
-
-                if (child instanceof UIContainer container) {
-                    container.determineChildVisibility();
-                }
-            }
+        for (UIElement child : children.children) {
+            child.updateVisibility();
         }
     }
 
@@ -162,6 +160,8 @@ public class UIContainer extends UIElement {
 
     @Override
     public void update() {
+        super.update();
+
         for (UIElement child : getChildren()) {
             child.update();
         }
@@ -169,11 +169,11 @@ public class UIContainer extends UIElement {
 
     @Override
     public void mousePressed(int mouseButton) {
+        super.mousePressed(mouseButton);
+
         for (UIElement child : getChildren()) {
             child.mousePressed(mouseButton);
         }
-
-        super.mousePressed(mouseButton);
     }
 
     @Override
@@ -205,11 +205,11 @@ public class UIContainer extends UIElement {
 
     @Override
     public void keyPressed(char key) {
+        super.keyPressed(key);
+
         for (UIElement child : getChildren()) {
             child.keyPressed(key);
         }
-
-        super.keyPressed(key);
     }
 
     public final void setMinSize() {
@@ -542,19 +542,11 @@ public class UIContainer extends UIElement {
     }
 
     public UIContainer setHMinimalSize() {
-        // if (isHScroll()) {
-        //     throw new IllegalArgumentException(
-        //             "A ScrollArea's SizeType cannot be MINIMAL in the direction of scrolling.");
-        // }
         hSizeType = SizeType.MINIMAL;
         return this;
     }
 
     public UIContainer setVMinimalSize() {
-        // if (isVScroll()) {
-        //     throw new IllegalArgumentException(
-        //             "A ScrollArea's SizeType cannot be MINIMAL in the direction of scrolling.");
-        // }
         vSizeType = SizeType.MINIMAL;
         return this;
     }
@@ -598,8 +590,8 @@ public class UIContainer extends UIElement {
         return orientation;
     }
 
-    public ArrayList<UIElement> getChildren() {
-        return visibleChildren;
+    public Iterable<UIElement> getChildren() {
+        return children;
     }
 
     public UIContainer setMarginScale(double marginScale) {
@@ -878,6 +870,72 @@ public class UIContainer extends UIElement {
             if (orientation == VERTICAL) {
                 scrollArea.setRelativeScrollY(y);
             }
+        }
+    }
+
+    private class ChildList implements Iterable<UIElement> {
+
+        private ArrayList<UIElement> children;
+
+        private boolean locked = false;
+
+        ChildList() {
+            children = new ArrayList<>();
+        }
+
+        void add(UIElement child) {
+            checkNotLocked();
+            children.add(child);
+        }
+
+        void addFirst(UIElement child) {
+            checkNotLocked();
+            children.addFirst(child);
+        }
+
+        int size() {
+            return children.size();
+        }
+
+        void checkNotLocked() {
+            if (locked) {
+                throw new IllegalStateException("Cannot add children to UIContaienr after it has been locked.");
+            }
+        }
+
+        void lock() {
+            locked = true;
+        }
+
+        @Override
+        public Iterator<UIElement> iterator() {
+            return new Iterator<UIElement>() {
+
+                private final Iterator<UIElement> inner = children.iterator();
+                private UIElement nextVisible = null;
+
+                @Override
+                public boolean hasNext() {
+                    while (inner.hasNext()) {
+                        UIElement next = inner.next();
+                        if (next.isVisible()) {
+                            nextVisible = next;
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+
+                @Override
+                public UIElement next() {
+                    if (nextVisible != null || hasNext()) {
+                        UIElement result = nextVisible;
+                        nextVisible = null;
+                        return result;
+                    }
+                    throw new NoSuchElementException();
+                }
+            };
         }
     }
 }

@@ -40,9 +40,9 @@ public class MainUI extends AppUI<MainApp> {
         settings.add(new UIButton("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG)));
 
         UIContainer fileOptions = addTopRowSection(topRow, "File");
-        fileOptions.add(new UIButton("New", () -> app.newImage()));
-        fileOptions.add(new UIButton("Open", () -> app.openImage()));
-        fileOptions.add(new UIButton("Save", () -> app.saveImage()));
+        fileOptions.add(new UIButton("New", app::newImage));
+        fileOptions.add(new UIButton("Open", app::openImage));
+        fileOptions.add(new UIButton("Save", app::saveImage));
 
         UIContainer imageOptions = addTopRowSection(topRow, "Image");
         imageOptions.add(new UIButton("Change Size", () -> app.showDialog(MainApp.CHANGE_SIZE_DIALOG)));
@@ -62,7 +62,7 @@ public class MainUI extends AppUI<MainApp> {
             setButtonStyle2(colorContainer, () -> app.getColorSelection() == index);
             colorContainer.setSelectable(true);
 
-            Supplier<Integer> cg = i == 0 ? () -> app.getPrimaryColor() : () -> app.getSecondaryColor();
+            Supplier<Integer> cg = i == 0 ? app::getPrimaryColor : app::getSecondaryColor;
             colorContainer.add(new UIColorElement(cg, Sizes.BIG_COLOR_BUTTON.size, true));
             UILabel label = new UILabel("%s\nColor".formatted(i == 0 ? "Primary" : "Secondary"));
             label.setAlignment(UIContainer.CENTER);
@@ -122,8 +122,7 @@ public class MainUI extends AppUI<MainApp> {
         fill.setHFillSize();
         transparentSelection.add(new UIText("Transparent selection"));
         transparentSelection.add(fill);
-        UIToggle toggle = new UIToggle(() -> app.isTransparentSelection(),
-                _ -> app.toggleTransparentSelection());
+        UIToggle toggle = new UIToggle(app::isTransparentSelection, app::setTransparentSelection);
         transparentSelection.add(toggle);
         sidePanel.add(transparentSelection);
 

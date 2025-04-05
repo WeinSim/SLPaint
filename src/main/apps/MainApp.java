@@ -32,11 +32,6 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * UI scroll and float:
- *   Design choices:
- *     Text inputs and other selectables inside of float elements:
- *       Should they be made selectable?
- *   Performance: try to re-write certain lambdas using the this::methodName
- *     syntax (should be slightly faster according to ChatGPT).
  *   Re-read and check all of the new UI code before merging into main
  * App:
  *   Dialogs
@@ -597,8 +592,8 @@ public final class MainApp extends App {
         return transparentSelection;
     }
 
-    public void toggleTransparentSelection() {
-        transparentSelection = !transparentSelection;
+    public void setTransparentSelection(boolean transparentSelection) {
+        this.transparentSelection = transparentSelection;
     }
 
     public int[] getMouseImagePosition() {

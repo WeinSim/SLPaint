@@ -12,6 +12,7 @@ import sutil.ui.UIFloatMenu;
 import sutil.ui.UILabel;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
+import sutil.ui.UITextInput;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.UIColorElement;
@@ -21,6 +22,8 @@ public class SettingsUI extends AppUI<SettingsApp> {
     public static final int NUM_UI_BASE_COLOR_BUTTONS = 10;
 
     private boolean colorSelectionExpanded;
+
+    private String floatingString = "";
 
     public SettingsUI(SettingsApp app) {
         super(app);
@@ -43,18 +46,22 @@ public class SettingsUI extends AppUI<SettingsApp> {
         mainContainer.add(createHueSatDropdown());
         mainContainer.add(createTestDropdown());
 
-        UIContextMenu contextMenu = new UIContextMenu(this, false);
+        UIContextMenu contextMenu = new UIContextMenu(false);
         contextMenu.addLabel("Label 1", () -> System.out.println("Label 1"));
         contextMenu.addSeparator();
 
-        UIFloatMenu nestedMenu = new UIFloatMenu(this, null, false);
+        UIFloatMenu nestedMenu = new UIFloatMenu(null, false);
         for (int i = 0; i < 10; i++) {
             nestedMenu.addLabel(String.format("Nested %d", i), null);
         }
+        UITextInput floatingInput = new UITextInput(() -> floatingString, s -> floatingString = s);
+        nestedMenu.add(floatingInput);
         contextMenu.addNestedContextMenu("Nested Menu", nestedMenu);
         contextMenu.attachToContainer(mainContainer);
 
         root.add(mainContainer.addScrollbars());
+
+        root.add(new UILabel(() -> floatingString));
 
         root.add(new UIButton("Done", () -> app.getWindow().requestClose()));
     }
@@ -142,7 +149,6 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         container.add(new UIText("Theme:"));
         container.add(new UIDropdown(
-                this,
                 new String[] { "Dark", "Light" },
                 () -> Colors.isDarkMode() ? 0 : 1,
                 i -> app.setDarkMode(i == 0)));
@@ -154,7 +160,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         container.zeroMargin().noOutline();
 
         container.add(new UIText("Shape of Hue-Saturation Field:"));
-        container.add(new UIDropdown(this,
+        container.add(new UIDropdown(
                 new String[] { "Circle", "Square" },
                 () -> App.isCircularHueSatField() ? 0 : 1,
                 i -> App.setCircularHueSatField(i == 0)));
@@ -167,7 +173,6 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         container.add(new UIText("Dropdown menu with scroll area:"));
         container.add(new UIDropdown(
-                this,
                 new String[] { "There", "are", "a", "lot", "of", "options" },
                 () -> 0,
                 _ -> {

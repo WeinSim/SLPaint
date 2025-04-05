@@ -117,7 +117,7 @@ public class ColorPickContainer extends UIContainer {
         UIContainer colorPreview = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         colorPreview.zeroMargin().noOutline();
         UIContainer colorBox = new UIContainer(UIContainer.HORIZONTAL, 0);
-        colorBox.setStyle(new UIStyle(() -> null, () -> Colors.getTextColor(), () -> 2.0));
+        colorBox.setStyle(new UIStyle(() -> null, Colors::getTextColor, () -> 2.0));
         colorBox.zeroMargin().zeroPadding().noOutline();
         double previewWidth = Sizes.COLOR_PICKER_PREVIEW.width,
                 previewHeight = Sizes.COLOR_PICKER_PREVIEW.height;
@@ -127,8 +127,8 @@ public class ColorPickContainer extends UIContainer {
         // double width = addPreview ? previewWidth / 2 : previewWidth;
         for (int i = addPreview ? 0 : 1; i < 2; i++) {
             Supplier<Integer> bgColorSupplier = i == 0
-                    ? () -> colorPicker.getInitialColor()
-                    : () -> colorPicker.getRGB();
+                    ? colorPicker::getInitialColor
+                    : colorPicker::getRGB;
             colorBox.add(new UIColorElement(bgColorSupplier, new SVector(previewWidth, previewHeight), false));
         }
         colorPreview.add(colorBox);

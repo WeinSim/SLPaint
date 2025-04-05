@@ -21,8 +21,8 @@ public class UIRoot extends UIContainer {
     }
 
     @Override
-    public void determineChildVisibility() {
-        super.determineChildVisibility();
+    public void updateVisibility() {
+        super.updateVisibility();
 
         floatContainers.clear();
         addFloatContainers(this);

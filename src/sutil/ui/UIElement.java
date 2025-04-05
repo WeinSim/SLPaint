@@ -27,7 +27,8 @@ public abstract class UIElement {
     protected boolean selectOnClick = false;
     protected boolean selectable = false;
 
-    private Supplier<Boolean> visibilitySupplier = UIElement::getTrue;
+    private Supplier<Boolean> visibilitySupplier = this::isVisible;
+    private boolean visible = true;
 
     public UIElement() {
         position = new SVector();
@@ -36,6 +37,14 @@ public abstract class UIElement {
         mousePosition = new SVector();
 
         setDefaultStyle();
+    }
+
+    public void updateVisibility() {
+        visible = visibilitySupplier.get();
+
+        if (this == panel.getSelectedElement()) {
+            panel.confirmSelectedElement();
+        }
     }
 
     public void updateMousePosition(SVector mouse, boolean valid) {
@@ -97,11 +106,7 @@ public abstract class UIElement {
     public abstract void setPreferredSize();
 
     public final boolean isVisible() {
-        return visibilitySupplier.get();
-    }
-
-    private static boolean getTrue() {
-        return true;
+        return visible;
     }
 
     public UIElement setVisibilitySupplier(Supplier<Boolean> visibilitySupplier) {
@@ -235,7 +240,6 @@ public abstract class UIElement {
             return outlineColor;
         };
         Supplier<Double> strokeWeightSupplier = () -> panel.getStrokeWeight();
-        // Supplier<Double> strokeWeightSupplier = panel::getStrokeWeight;
 
         style = new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier);
     }

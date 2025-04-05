@@ -14,7 +14,7 @@ import ui.Sizes;
 public class UIScale extends UIDragContainer<UIScale.Slider> {
 
     private static final UIStyle SLIDER_STYLE = new UIStyle(
-            () -> Colors.getTextColor(),
+            Colors::getTextColor,
             () -> null,
             () -> Sizes.STROKE_WEIGHT.size);
 

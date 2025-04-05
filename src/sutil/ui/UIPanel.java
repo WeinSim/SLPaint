@@ -30,7 +30,11 @@ public abstract class UIPanel {
 
     protected UIRoot root;
     private UIElement selectedElement;
-    // protected ArrayList<UIFloatContainer> floatElements;
+    /**
+     * Used to set selectedElement to null if the selected element is not currently
+     * visible.
+     */
+    private boolean selectedElementVisible;
 
     /**
      * Indicates wether the left mouse button is currently being pressed.
@@ -43,12 +47,17 @@ public abstract class UIPanel {
         selectedElement = null;
         mousePressed = false;
 
-        // floatElements = new ArrayList<>();
         eventQueue = new LinkedList<>();
     }
 
     public void update(SVector mousePos, boolean valid) {
-        root.determineChildVisibility();
+        root.lock();
+
+        selectedElementVisible = false;
+        root.updateVisibility();
+        if (!selectedElementVisible) {
+            selectedElement = null;
+        }
 
         root.updateMousePosition(mousePos, valid);
 
@@ -59,6 +68,14 @@ public abstract class UIPanel {
         root.update();
 
         root.updateSize();
+    }
+
+    /**
+     * During the determineChildVisibility() step of update(), the currently
+     * selected element has to report to the UIPanel that it is still visible.
+     */
+    void confirmSelectedElement() {
+        selectedElementVisible = true;
     }
 
     public void mousePressed(int mouseButton) {

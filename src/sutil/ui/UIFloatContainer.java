@@ -12,9 +12,8 @@ public class UIFloatContainer extends UIContainer {
 
     protected boolean clipToRoot;
 
-    public UIFloatContainer(UIPanel panel, int orientation, int alignment) {
+    public UIFloatContainer(int orientation, int alignment) {
         super(orientation, alignment);
-        this.panel = panel;
 
         withBackground();
 

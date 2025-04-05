@@ -1,14 +1,12 @@
 package ui.components;
 
-import java.util.ArrayList;
-
 import main.ColorPicker;
 import main.apps.App;
 import sutil.math.SVector;
 import sutil.ui.Draggable;
 import sutil.ui.UIContainer;
 import sutil.ui.UIDragContainer;
-import sutil.ui.UIElement;
+import sutil.ui.UIFloatContainer;
 import sutil.ui.UIStyle;
 import ui.Colors;
 import ui.Sizes;
@@ -60,26 +58,25 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
             this.colorPicker = colorPicker;
             noOutline();
 
+            final double a = CURSOR_LINE_WIDTH / 2;
+            final double b = CURSOR_LINE_LENGTH + CURSOR_CENTER_GAP / 2;
+            final double c = CURSOR_CENTER_GAP / 2;
             for (int i = 0; i < 4; i++) {
-                add(new CursorLine(i % 2 == 0));
+                CursorLine line = new CursorLine(i % 2 == 0);
+                line.addAttachPoint(UIFloatContainer.TOP_LEFT, switch (i) {
+                    case 0 -> new SVector(-a, -b);
+                    case 1 -> new SVector(c, -a);
+                    case 2 -> new SVector(-a, c);
+                    case 3 -> new SVector(-b, -a);
+                    default -> null;
+                });
+
+                add(line);
             }
 
             setFixedSize(new SVector(0, 0));
 
             nextX = 0;
-        }
-
-        @Override
-        public void positionChildren() {
-            final double a = CURSOR_LINE_WIDTH / 2;
-            final double b = CURSOR_LINE_LENGTH + CURSOR_CENTER_GAP / 2;
-            final double c = CURSOR_CENTER_GAP / 2;
-
-            ArrayList<UIElement> children = getChildren();
-            children.get(0).getPosition().set(-a, -b);
-            children.get(1).getPosition().set(c, -a);
-            children.get(2).getPosition().set(-a, c);
-            children.get(3).getPosition().set(-b, -a);
         }
 
         @Override
@@ -130,22 +127,17 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
         }
     }
 
-    private static class CursorLine extends UIElement {
-
-        private boolean vertical;
+    private static class CursorLine extends UIFloatContainer {
 
         public CursorLine(boolean vertical) {
-            this.vertical = vertical;
+            super(0, 0);
 
-            setStyle(new UIStyle(() -> Colors.getTextColor(), () -> null, () -> Sizes.STROKE_WEIGHT.size));
-        }
+            setStyle(new UIStyle(Colors::getTextColor, () -> null, () -> Sizes.STROKE_WEIGHT.size));
 
-        @Override
-        public void setPreferredSize() {
             if (vertical) {
-                size.set(CURSOR_LINE_WIDTH, CURSOR_LINE_LENGTH);
+                setFixedSize(new SVector(CURSOR_LINE_WIDTH, CURSOR_LINE_LENGTH));
             } else {
-                size.set(CURSOR_LINE_LENGTH, CURSOR_LINE_WIDTH);
+                setFixedSize(new SVector(CURSOR_LINE_LENGTH, CURSOR_LINE_WIDTH));
             }
         }
     }

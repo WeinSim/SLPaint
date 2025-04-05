@@ -13,11 +13,11 @@ public class UIDropdown extends UIContainer {
 
     private final UIFloatMenu dropdown;
 
-    public UIDropdown(UIPanel panel, String[] options, Supplier<Integer> valueSupplier, Consumer<Integer> valueSetter) {
-        this(panel, options, valueSupplier, valueSetter, false);
+    public UIDropdown(String[] options, Supplier<Integer> valueSupplier, Consumer<Integer> valueSetter) {
+        this(options, valueSupplier, valueSetter, false);
     }
 
-    public UIDropdown(UIPanel panel, String[] options, Supplier<Integer> valueSupplier, Consumer<Integer> valueSetter,
+    public UIDropdown(String[] options, Supplier<Integer> valueSupplier, Consumer<Integer> valueSetter,
             boolean scroll) {
 
         super(0, 0);
@@ -36,7 +36,7 @@ public class UIDropdown extends UIContainer {
             expanded = !expanded;
         });
 
-        dropdown = new UIFloatMenu(panel, this::isExpanded, scroll);
+        dropdown = new UIFloatMenu(this::isExpanded, scroll);
         dropdown.addAttachPoint(UIFloatContainer.TOP_LEFT, this, UIFloatContainer.BOTTOM_LEFT);
         dropdown.addAttachPoint(UIFloatContainer.BOTTOM_LEFT, this, UIFloatContainer.TOP_LEFT);
         UIAction[] clickActions = new UIAction[options.length];

@@ -23,7 +23,7 @@ public class UITextInput extends UIContainer {
         vMarginScale = 0.5;
         paddingScale = 0.33;
 
-        uiText = new UIText(() -> textUpdater.get());
+        uiText = new UIText(textUpdater::get);
         add(uiText);
 
         outlineNormal = true;
@@ -33,9 +33,7 @@ public class UITextInput extends UIContainer {
         selectable = true;
         selectOnClick = true;
 
-        setLeftClickAction(() -> {
-            cursor.resetTimer();
-        });
+        setLeftClickAction(cursor::resetTimer);
     }
 
     @Override
