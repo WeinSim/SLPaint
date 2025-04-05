@@ -1,5 +1,7 @@
 package sutil.ui;
 
+import java.util.function.Supplier;
+
 import sutil.math.SVector;
 
 public class UIButton extends UILabel {
@@ -7,14 +9,24 @@ public class UIButton extends UILabel {
     public UIButton(String text, UIAction clickAction) {
         super(text);
 
-        UIGetter<SVector> bg = () -> mouseAbove
+        init(clickAction);
+    }
+
+    public UIButton(Supplier<String> textSupplier, UIAction clickAction) {
+        super(textSupplier);
+
+        init(clickAction);
+    }
+
+    private void init(UIAction clickAction) {
+        Supplier<SVector> bg = () -> mouseAbove
                 ? panel.getBackgroundHighlightColor()
                 : panel.getBackgroundNormalColor();
-        UIGetter<SVector> ol = () -> panel.getOutlineNormalColor();
-        UIGetter<Double> sw = () -> panel.getStrokeWeight();
+        Supplier<SVector> ol = () -> panel.getOutlineNormalColor();
+        Supplier<Double> sw = () -> panel.getStrokeWeight();
         setStyle(new UIStyle(bg, ol, sw));
 
-        setClickAction(clickAction);
+        setLeftClickAction(clickAction);
         selectable = true;
     }
 }

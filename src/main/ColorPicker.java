@@ -1,24 +1,17 @@
 package main;
 
+import java.util.function.Consumer;
+
 import main.apps.App;
 import renderEngine.Window;
 import sutil.SUtil;
 import sutil.math.SVector;
-import sutil.ui.UISetter;
-import ui.components.DragTarget;
-import ui.components.HueSatField;
-import ui.components.UIScale;
 
 public class ColorPicker {
 
     private App app;
 
-    private UISetter<Integer> closeAction;
-
-    private HueSatField hueSatField;
-    private UIScale lightnessScale;
-    private UIScale alphaScale;
-    private DragTarget dragTarget;
+    private Consumer<Integer> closeAction;
 
     private int initialColor;
     private int rgb;
@@ -31,30 +24,12 @@ public class ColorPicker {
 
     private int alpha;
 
-    public ColorPicker(App app, int initialColor, UISetter<Integer> closeAction) {
+    public ColorPicker(App app, int initialColor, Consumer<Integer> closeAction) {
         this.app = app;
         this.initialColor = initialColor;
         this.closeAction = closeAction;
 
         setRGB(initialColor);
-
-        dragTarget = null;
-    }
-
-    public void update() {
-        boolean[] mouseButtons = app.getWindow().getMouseButtons();
-        if (!mouseButtons[0]) {
-            dragTarget = null;
-        }
-        if (dragTarget != null) {
-            dragTarget.drag();
-        }
-
-        updateCursorPositions();
-    }
-
-    public void setDragTarget(DragTarget dragTarget) {
-        this.dragTarget = dragTarget;
     }
     // public void setRed(int red) {
     // setComponent(16, red);
@@ -118,6 +93,10 @@ public class ColorPicker {
         this.alpha = alpha;
     }
 
+    public int getAlpha() {
+        return alpha;
+    }
+
     private void setComponent(int shiftAmount, int component) {
         int mask = 0xFF << shiftAmount;
         rgb &= ~mask;
@@ -164,8 +143,6 @@ public class ColorPicker {
         hslSaturation = hsl.y;
         lightness = hsl.z;
         alpha = SUtil.alpha(rgb);
-
-        // updateCursorPositions();
     }
 
     private void updateHSLFromHSV() {
@@ -190,26 +167,6 @@ public class ColorPicker {
         value = hsv.z;
     }
 
-    private void updateCursorPositions() {
-        hueSatField.updateCursorPosition();
-        lightnessScale.updateCursorPosition();
-        if (alphaScale != null) {
-            alphaScale.updateCursorPosition();
-        }
-    }
-
-    public void setLightnessScale(UIScale lightnessScale) {
-        this.lightnessScale = lightnessScale;
-    }
-
-    public void setAlphaScale(UIScale alphaScale) {
-        this.alphaScale = alphaScale;
-    }
-
-    public void setHueSatField(HueSatField hueSatField) {
-        this.hueSatField = hueSatField;
-    }
-
     public int getInitialColor() {
         return initialColor;
     }
@@ -218,7 +175,7 @@ public class ColorPicker {
         return app.getWindow();
     }
 
-    public UISetter<Integer> getCloseAction() {
+    public Consumer<Integer> getCloseAction() {
         return closeAction;
     }
 }

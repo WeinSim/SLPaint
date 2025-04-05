@@ -17,6 +17,6 @@ public class UIEmpty extends UIElement {
     }
 
     @Override
-    public void setMinSize() {
+    public void setPreferredSize() {
     }
 }

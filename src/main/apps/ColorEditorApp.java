@@ -23,7 +23,7 @@ public final class ColorEditorApp extends App {
     public void update(double deltaT) {
         super.update(deltaT);
 
-        colorPicker.update();
+        // colorPicker.update();
     }
 
     public ColorPicker getColorPicker() {

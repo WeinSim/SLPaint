@@ -6,80 +6,98 @@ import main.apps.MainApp;
 import main.apps.SettingsApp;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
+import sutil.ui.UIContextMenu;
+import sutil.ui.UIDropdown;
+import sutil.ui.UIFloatMenu;
+import sutil.ui.UILabel;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
-import sutil.ui.UIToggle;
+import sutil.ui.UITextInput;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
-import ui.components.SeparatorContainer;
 import ui.components.UIColorElement;
 
 public class SettingsUI extends AppUI<SettingsApp> {
 
+    public static final int NUM_UI_BASE_COLOR_BUTTONS = 10;
+
+    private boolean colorSelectionExpanded;
+
+    private String floatingString = "";
+
     public SettingsUI(SettingsApp app) {
         super(app);
+
+        colorSelectionExpanded = false;
     }
 
     @Override
     protected void init() {
-        root.setZeroMargin(false);
-        root.setZeroPadding(false);
+        root.setMarginScale(1);
+        root.setPaddingScale(1);
 
-        UIContainer mainContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
-        mainContainer.setMaximalSize();
+        UIContainer mainContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
+                UIContainer.BOTH);
+        mainContainer.setFillSize();
 
         mainContainer.add(createBaseColor());
-        mainContainer.add(createDarkModeToggle());
-        mainContainer.add(createHueSatFieldToggle());
-        mainContainer.add(createHSLHSVToggle());
+        mainContainer.add(createDarkModeDropdown());
+        mainContainer.add(createHueSatDropdown());
+        mainContainer.add(createHSLHSVDropdown());
 
-        root.add(mainContainer);
+        UIContextMenu contextMenu = new UIContextMenu(false);
+        contextMenu.addLabel("Label 1", () -> System.out.println("Label 1"));
+        contextMenu.add(new UISeparator());
+
+        UIFloatMenu nestedMenu = new UIFloatMenu(null, false);
+        for (int i = 0; i < 10; i++) {
+            nestedMenu.addLabel(String.format("Nested %d", i), null);
+        }
+        UITextInput floatingInput = new UITextInput(() -> floatingString, s -> floatingString = s);
+        nestedMenu.add(floatingInput);
+        contextMenu.addNestedContextMenu("Nested Menu", nestedMenu);
+        contextMenu.attachToContainer(mainContainer);
+
+        root.add(mainContainer.addScrollbars());
+
+        root.add(new UILabel(() -> floatingString));
 
         root.add(new UIButton("Done", () -> app.getWindow().requestClose()));
     }
 
     private UIContainer createBaseColor() {
         UIContainer baseColor = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
-        baseColor.setFillSize();
+        baseColor.withSeparators();
 
-        UIContainer baseColorHeading = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIContainer baseColorHeading = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
         baseColorHeading.zeroMargin().noOutline();
-        baseColorHeading.setFillSize();
-        baseColorHeading.add(new UIText("UI Base Color"));
+        baseColorHeading.setBackgroundHighlight(true);
+        baseColorHeading.setHFillSize();
+        baseColorHeading.add(new UIText("UI Base Color:"));
         UIContainer gap = new UIContainer(0, 0).zeroMargin().zeroPadding();
         gap.noOutline();
-        // gap.setMaximalSize();
         baseColorHeading.add(gap);
-        UIColorElement baseColorButton = new UIColorElement(() -> MainApp.toInt(Colors.getBaseColor()),
+        UIColorElement baseColorButton = new UIColorElement(
+                () -> MainApp.toInt(Colors.getBaseColor()),
                 Sizes.COLOR_BUTTON.size, true);
         baseColorHeading.add(baseColorButton);
-        ColorPicker colorPicker = app.getColorPicker();
-        // baseColorRow1.add(new UIButton("Reset", () ->
-        // colorPicker.setRGB(MainApp.toInt(App.DEFAULT_BASE_COLOR))));
+        baseColorHeading.setLeftClickAction(() -> colorSelectionExpanded = !colorSelectionExpanded);
         baseColor.add(baseColorHeading);
 
-        SeparatorContainer baseColorExpand = new SeparatorContainer(UIContainer.VERTICAL, UIContainer.LEFT);
-
-        UIContainer allColorsContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIContainer allColorsContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
         allColorsContainer.zeroMargin().noOutline();
+        allColorsContainer.setVisibilitySupplier(() -> colorSelectionExpanded);
 
         UIContainer defaultColors = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
         defaultColors.zeroMargin().noOutline();
         UIContainer defaultColorContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         defaultColorContainer.zeroMargin().noOutline();
-        // for (SVector color : Colors.DEFAULT_UI_COLORS_DARK) {
-        // int colorInt = MainApp.toInt(color);
-        // ColorButton button = new ColorButton(() -> colorInt,
-        // MainUI.COLOR_BUTTON_SIZE);
-        // button.setClickAction(() -> app.setUIColor(colorInt));
-        // defaultColorContainer.add(button);
-        // }
         int numDefaultColors = Colors.getNumDefaultColors();
         for (int i = 0; i < numDefaultColors; i++) {
             final int j = i;
             UIColorElement button = new UIColorElement(() -> MainApp.toInt(Colors.getDefaultColors()[j]),
                     Sizes.COLOR_BUTTON.size, true);
-            button.setClickAction(() -> app.setUIColor(MainApp.toInt(Colors.getDefaultColors()[j])));
+            button.setLeftClickAction(() -> app.setUIColor(MainApp.toInt(Colors.getDefaultColors()[j])));
             defaultColorContainer.add(button);
         }
         defaultColors.add(defaultColorContainer);
@@ -91,7 +109,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         UIContainer customColors = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
         customColors.zeroMargin().noOutline();
         CustomColorContainer ccc = new CustomColorContainer(MainApp.getCustomUIBaseColors(),
-                (Integer color) -> {
+                color -> {
                     if (color == null) {
                         return;
                     }
@@ -104,66 +122,63 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         allColorsContainer.add(new UIButton("Clear", () -> MainApp.getCustomUIBaseColors().clear()));
 
-        baseColorExpand.add(allColorsContainer);
+        baseColor.add(allColorsContainer);
 
-        baseColorExpand.add(new ColorPickContainer(colorPicker, Sizes.COLOR_PICKER_SIDE_PANEL.size,
-                UIContainer.HORIZONTAL, false, true));
+        ColorPicker colorPicker = app.getColorPicker();
+        ColorPickContainer colorPickContainer = new ColorPickContainer(
+                colorPicker,
+                Sizes.COLOR_PICKER_SIDE_PANEL.size,
+                UIContainer.HORIZONTAL, false, true);
+        colorPickContainer.setVisibilitySupplier(() -> colorSelectionExpanded);
+        baseColor.add(colorPickContainer);
 
-        baseColorButton.setClickAction(() -> app.queueEvent(() -> {
-            if (baseColor.getChildren().contains(baseColorExpand)) {
-                baseColor.remove(baseColorExpand);
-            } else {
-                baseColor.add(baseColorExpand);
-            }
-        }));
+        UIContainer innerScrollArea = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
+                UIContainer.VERTICAL);
+        innerScrollArea.setVFixedSize(200);
+        for (int i = 0; i < 10; i++) {
+            innerScrollArea.add(new UILabel(String.format("Label %d", i)));
+        }
+        baseColor.add(innerScrollArea.addScrollbars());
 
         return baseColor;
     }
 
-    private UIContainer createDarkModeToggle() {
-        // UIButton button = new UIButton("", () -> app.toggleDarkMode());
-        // button.setText(() -> String.format("Mode: %s", Colors.isDarkMode() ? "Dark" :
-        // "Light"));
-        // return button;
-
+    private UIContainer createDarkModeDropdown() {
         UIContainer container = new UIContainer(UIContainer.HORIZONTAL,
                 UIContainer.CENTER);
-        UIText label = new UIText(() -> String.format("Mode: %s",
-                Colors.isDarkMode()
-                        ? "Dark"
-                        : "Light"));
-        container.add(label);
-        UIToggle toggle = new UIToggle(() -> Colors.isDarkMode(), (Boolean _) -> app.toggleDarkMode());
-        container.add(toggle);
+        container.zeroMargin().noOutline();
+
+        container.add(new UIText("Theme:"));
+        container.add(new UIDropdown(
+                new String[] { "Dark", "Light" },
+                () -> Colors.isDarkMode() ? 0 : 1,
+                i -> app.setDarkMode(i == 0)));
         return container;
     }
 
-    private UIContainer createHueSatFieldToggle() {
-        // UIButton button = new UIButton("", () -> App.toggleCircularHueSatField());
-        // button.setText(() -> String.format("HueSatField: %s",
-        // App.isCircularHueSatField() ? "Circle" : "Square"));
-        // return button;
-
+    private UIContainer createHueSatDropdown() {
         UIContainer container = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
-        UIText label = new UIText(() -> String.format("HueSatField: %s",
-                App.isCircularHueSatField()
-                        ? "Circle"
-                        : "Square"));
-        container.add(label);
-        UIToggle toggle = new UIToggle(() -> App.isCircularHueSatField(),
-                (Boolean _) -> App.toggleCircularHueSatField());
-        container.add(toggle);
+        container.zeroMargin().noOutline();
+
+        container.add(new UIText("Shape of Hue-Saturation Field:"));
+        container.add(new UIDropdown(
+                new String[] { "Circle", "Square" },
+                () -> App.isCircularHueSatField() ? 0 : 1,
+                i -> App.setCircularHueSatField(i == 0)));
         return container;
     }
 
-    private UIContainer createHSLHSVToggle() {
+    private UIContainer createHSLHSVDropdown() {
         UIContainer container = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         UIText label = new UIText(() -> String.format("Color space: %s",
                 App.isHSLColorSpace() ? "HSL" : "HSV"));
         container.add(label);
-        UIToggle toggle = new UIToggle(() -> App.isHSLColorSpace(),
-                b -> App.setHSLColorSpace(b));
-        container.add(toggle);
+        UIDropdown dropdown = new UIDropdown(
+                new String[] {"HSV", "HSL"},
+                () -> App.isHSLColorSpace() ? 1 : 0,
+                i -> App.setHSLColorSpace(i == 1)
+        );
+        container.add(dropdown);
         return container;
     }
 }

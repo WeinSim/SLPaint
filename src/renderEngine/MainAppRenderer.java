@@ -16,7 +16,6 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
 
     @Override
     public void render() {
-        // setDefaultBGColor();
         setBGColor(Colors.getCanvasColor());
 
         uiMaster.start();
@@ -41,9 +40,7 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
             SVector position = new SVector(selectionManager.getX(), selectionManager.getY());
             SVector size = new SVector(selectionManager.getWidth(),
                     selectionManager.getHeight());
-            uiMaster.clipArea(translation.copy(), new SVector(image.getWidth(), image.getHeight()).scale(zoom));
             uiMaster.image(selection.getTextureID(), position, size);
-            uiMaster.noClip();
         }
 
         uiMaster.resetMatrix();

@@ -24,7 +24,6 @@ public final class SettingsApp extends App {
     public void update(double deltaT) {
         super.update(deltaT);
 
-        colorPicker.update();
         Colors.setBaseColor(MainApp.toSVector(colorPicker.getRGB()));
     }
 
@@ -32,9 +31,12 @@ public final class SettingsApp extends App {
         colorPicker.setRGB(color);
     }
 
-    public void toggleDarkMode() {
+    public void setDarkMode(boolean darkMode) {
+        if (Colors.isDarkMode() == darkMode) {
+            return;
+        }
         SVector[] oldColors = Colors.getDefaultColors();
-        Colors.setDarkMode(!Colors.isDarkMode());
+        Colors.setDarkMode(darkMode);
         SVector[] newColors = Colors.getDefaultColors();
 
         int baseRGB = MainApp.toInt(Colors.getBaseColor());

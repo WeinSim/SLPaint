@@ -1,5 +1,7 @@
 package sutil.ui;
 
+import java.util.function.Supplier;
+
 import sutil.SUtil;
 import sutil.math.SVector;
 
@@ -15,38 +17,82 @@ public abstract class UIElement {
     protected boolean outlineHighlight = false;
     protected boolean backgroundNormal = false;
     protected boolean backgroundHighlight = false;
+    protected UIStyle style;
 
-    protected boolean mouseAbove;
-    protected UIAction clickAction = null;
+    protected SVector mousePosition;
+    protected boolean mouseAbove = false;
+
+    protected UIAction leftClickAction = null,
+            rightClickAction = null;
     protected boolean selectOnClick = false;
     protected boolean selectable = false;
 
-    protected UIStyle style;
+    protected Supplier<Boolean> visibilitySupplier = this::isVisible;
+    private boolean visible = true;
 
     public UIElement() {
         position = new SVector();
         size = new SVector();
 
+        mousePosition = new SVector();
+
         setDefaultStyle();
     }
 
-    public void update(SVector mouse) {
-        mouseAbove = SUtil.pointInsideRect(mouse, position, size);
+    public void updateVisibility() {
+        visible = visibilitySupplier.get();
+
+        if (this == panel.getSelectedElement()) {
+            panel.confirmSelectedElement();
+        }
     }
 
-    public void mousePressed(SVector mouse) {
-        if (mouseAbove) {
-            if (clickAction != null) {
-                clickAction.run();
+    public void updateMousePosition(SVector mouse, boolean valid) {
+        updateMouseAboveReference(mouse, valid);
+        mousePosition.set(mouse);
+    }
+
+    protected void updateMouseAboveReference(SVector mouse, boolean valid) {
+        mouseAbove = valid ? SUtil.pointInsideRect(mouse, position, size) : false;
+    }
+
+    public void update() {
+    }
+
+    public void mousePressed(int mouseButton) {
+        if (!mouseAbove) {
+            return;
+        }
+
+        switch (mouseButton) {
+            case UIPanel.LEFT -> {
+                if (leftClickAction != null) {
+                    leftClickAction.run();
+                }
+
+                if (selectOnClick) {
+                    panel.setSelectedElement(this);
+                }
             }
-            if (selectOnClick) {
-                panel.setSelectedElement(this);
+            case UIPanel.RIGHT -> {
+                if (rightClickAction != null) {
+                    rightClickAction.run();
+                }
             }
         }
     }
 
-    public void keyPressed(char key) {
+    /**
+     * @param scroll
+     * @param mousePos
+     * @return Wether the mouse scroll action has been "used up" by this
+     *         {@code UIElement}.
+     */
+    public boolean mouseWheel(SVector scroll, SVector mousePos) {
+        return false;
+    }
 
+    public void keyPressed(char key) {
     }
 
     public boolean isSelectable() {
@@ -57,10 +103,16 @@ public abstract class UIElement {
         this.selectable = selectable;
     }
 
-    /**
-     * basically the old updateSize() (before different SizeTypes existed)
-     */
-    public abstract void setMinSize();
+    public abstract void setPreferredSize();
+
+    public final boolean isVisible() {
+        return visible;
+    }
+
+    public UIElement setVisibilitySupplier(Supplier<Boolean> visibilitySupplier) {
+        this.visibilitySupplier = visibilitySupplier;
+        return this;
+    }
 
     public SVector getSize() {
         return size;
@@ -78,12 +130,20 @@ public abstract class UIElement {
         return mouseAbove;
     }
 
-    public void setClickAction(UIAction clickAction) {
-        this.clickAction = clickAction;
+    public void setLeftClickAction(UIAction leftClickAction) {
+        this.leftClickAction = leftClickAction;
     }
 
-    public UIAction getClickAction() {
-        return clickAction;
+    public UIAction getLeftClickAction() {
+        return leftClickAction;
+    }
+
+    public void setRightClickAction(UIAction rightClickAction) {
+        this.rightClickAction = rightClickAction;
+    }
+
+    public UIAction getRightClickAction() {
+        return rightClickAction;
     }
 
     public SVector getAbsolutePosition() {
@@ -159,7 +219,7 @@ public abstract class UIElement {
     }
 
     public void setDefaultStyle() {
-        UIGetter<SVector> backgroundColorGetter = () -> {
+        Supplier<SVector> backgroundColorSupplier = () -> {
             SVector bgColor = null;
             if (backgroundNormal) {
                 bgColor = panel.getBackgroundNormalColor();
@@ -169,7 +229,7 @@ public abstract class UIElement {
             }
             return bgColor;
         };
-        UIGetter<SVector> outlineColorGetter = () -> {
+        Supplier<SVector> outlineColorSupplier = () -> {
             SVector outlineColor = null;
             if (outlineNormal) {
                 outlineColor = panel.getOutlineNormalColor();
@@ -179,8 +239,8 @@ public abstract class UIElement {
             }
             return outlineColor;
         };
-        UIGetter<Double> strokeWeightGetter = () -> panel.getStrokeWeight();
+        Supplier<Double> strokeWeightSupplier = () -> panel.getStrokeWeight();
 
-        style = new UIStyle(backgroundColorGetter, outlineColorGetter, strokeWeightGetter);
+        style = new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier);
     }
 }

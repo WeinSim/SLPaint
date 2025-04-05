@@ -1,34 +1,50 @@
 package sutil.ui;
 
-import org.lwjgl.glfw.GLFW;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-import sutil.math.SVector;
+import org.lwjgl.glfw.GLFW;
 
 public class UITextInput extends UIContainer {
 
     private boolean numberInput;
 
-    private UISetter<String> valueUpdater;
+    private UIText uiText;
 
-    public UITextInput(UIGetter<String> textUpdater, UISetter<String> valueUpdater) {
-        super(HORIZONTAL, CENTER);
+    private Cursor cursor;
+
+    private Consumer<String> valueUpdater;
+
+    public UITextInput(Supplier<String> textUpdater, Consumer<String> valueUpdater) {
+        super(HORIZONTAL, LEFT, CENTER);
         this.valueUpdater = valueUpdater;
 
-        add(new UIText(() -> textUpdater.get()));
+        hMarginScale = 0.5;
+        vMarginScale = 0.5;
+        paddingScale = 0.33;
+
+        uiText = new UIText(textUpdater::get);
+        add(uiText);
 
         outlineNormal = true;
-        add(new Cursor());
+        cursor = new Cursor();
+        add(cursor);
 
-        setClickAction(() -> {
-            panel.setSelectedElement(this);
-            showCursor();
-        });
+        selectable = true;
+        selectOnClick = true;
+
+        setLeftClickAction(cursor::resetTimer);
+    }
+
+    @Override
+    public void update() {
+        super.update();
+        setHFixedSize(panel.getTextSize() * 3.3333);
     }
 
     @Override
     public void keyPressed(char key) {
         if (active()) {
-            UIText uiText = (UIText) children.get(0);
             String text = uiText.getText();
             String newText = text;
             if (key == GLFW.GLFW_KEY_BACKSPACE) {
@@ -52,10 +68,9 @@ public class UITextInput extends UIContainer {
                     return;
                 newText = text + key;
             }
-            // uiText.setText(newText);
-            valueUpdater.set(newText);
+            valueUpdater.accept(newText);
 
-            showCursor();
+            cursor.resetTimer();
         }
     }
 
@@ -63,34 +78,8 @@ public class UITextInput extends UIContainer {
         return panel.getSelectedElement() == this;
     }
 
-    private void showCursor() {
-        ((Cursor) children.get(1)).resetTimer();
-    }
-
-    @Override
-    public void setMinSize() {
-        super.setMinSize();
-        // size.x = 60;
-        size.x = panel.getTextSize() * 3.3333;
-    }
-
-    @Override
-    public boolean isSelectable() {
-        return true;
-    }
-
-    @Override
-    public double getMargin() {
-        return super.getMargin() / 2;
-    }
-
-    @Override
-    public double getPadding() {
-        return super.getPadding() / 3;
-    }
-
     public String getText() {
-        return ((UIText) children.get(0)).getText();
+        return uiText.getText();
     }
 
     public void setNumberInput(boolean numberInput) {
@@ -107,21 +96,16 @@ public class UITextInput extends UIContainer {
             super(VERTICAL, 0);
 
             zeroMargin();
-            setFillSize();
-
-            hide();
+            setVFillSize();
         }
 
         public void resetTimer() {
             blinkStart = System.nanoTime() * 1e-9;
         }
 
-        public void hide() {
-        }
-
         @Override
-        public void update(SVector mouse) {
-            super.update(mouse);
+        public void update() {
+            super.update();
 
             outlineNormal = active() && ((System.nanoTime() * 1e-9 - blinkStart) / BLINK_INTERVAL) % 2 < 1;
         }

@@ -1,24 +1,25 @@
 package sutil.ui;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 public class UIToggle extends UIElement {
 
-    private UIGetter<Boolean> stateGetter;
-    // private UISetter<Boolean> stateSetter;
+    private Supplier<Boolean> stateSupplier;
 
-    public UIToggle(UIGetter<Boolean> stateGetter, UISetter<Boolean> stateSetter) {
-        this.stateGetter = stateGetter;
-        // this.stateSetter = stateSetter;
+    public UIToggle(Supplier<Boolean> stateSupplier, Consumer<Boolean> stateSetter) {
+        this.stateSupplier = stateSupplier;
 
-        setClickAction(() -> stateSetter.set(!stateGetter.get()));
+        setLeftClickAction(() -> stateSetter.accept(!stateSupplier.get()));
     }
 
     @Override
-    public void setMinSize() {
+    public void setPreferredSize() {
         double textSize = panel.getTextSize();
         size.set(3 * textSize , 1.5 * textSize);
     }
 
     public boolean getState() {
-        return stateGetter.get();
+        return stateSupplier.get();
     }
 }

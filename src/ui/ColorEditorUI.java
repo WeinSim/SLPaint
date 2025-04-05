@@ -12,7 +12,7 @@ public class ColorEditorUI extends AppUI<ColorEditorApp> {
     @Override
     protected void init() {
         root.setMinimalSize();
-        root.setZeroMargin(false);
+        root.setMarginScale(1);
 
         root.add(new ColorPickContainer(app.getColorPicker()));
     }

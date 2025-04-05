@@ -1,41 +1,42 @@
 package ui.components;
 
+import java.util.function.Supplier;
+
 import main.apps.MainApp;
 import sutil.math.SVector;
 import sutil.ui.UIElement;
-import sutil.ui.UIGetter;
 import sutil.ui.UIStyle;
 import ui.Colors;
 import ui.Sizes;
 
 public class UIColorElement extends UIElement {
 
-    private UIGetter<Integer> colorGetter;
+    private Supplier<Integer> colorSupplier;
 
-    public UIColorElement(UIGetter<Integer> colorGetter, double wh, boolean outline) {
-        this(colorGetter, new SVector(wh, wh), outline);
+    public UIColorElement(Supplier<Integer> colorSupplier, double wh, boolean outline) {
+        this(colorSupplier, new SVector(wh, wh), outline);
     }
 
-    public UIColorElement(UIGetter<Integer> colorGetter, SVector size, boolean outline) {
-        this.colorGetter = colorGetter;
+    public UIColorElement(Supplier<Integer> colorSupplier, SVector size, boolean outline) {
+        this.colorSupplier = colorSupplier;
         this.size = size;
 
-        UIGetter<SVector> backgroundColorGetter = () -> MainApp.toSVector(getColor());
-        UIGetter<SVector> outlineColorGetter = outline
+        Supplier<SVector> backgroundColorSupplier = () -> MainApp.toSVector(getColor());
+        Supplier<SVector> outlineColorSupplier = outline
                 ? () -> getColor() == null
                         ? new SVector(0.5, 0.5, 0.5)
                         : Colors.getTextColor()
                 // : Colors.getOutlineNormalColor()
                 : () -> null;
-        UIGetter<Double> strokeWeightGetter = () -> Sizes.STROKE_WEIGHT.size;
-        setStyle(new UIStyle(backgroundColorGetter, outlineColorGetter, strokeWeightGetter));
+        Supplier<Double> strokeWeightSupplier = () -> Sizes.STROKE_WEIGHT.size;
+        setStyle(new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier));
     }
 
     @Override
-    public void setMinSize() {
+    public void setPreferredSize() {
     }
 
     public Integer getColor() {
-        return colorGetter.get();
+        return colorSupplier.get();
     }
 }

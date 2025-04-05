@@ -1,5 +1,9 @@
 package main;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import org.lwjgl.glfw.GLFW;
@@ -16,6 +20,8 @@ public class MainLoop {
 
     public static void main(String[] args) {
         SUtil.printNumLines();
+
+        testImports();
 
         initGLFW();
 
@@ -79,6 +85,50 @@ public class MainLoop {
         // Terminate GLFW and free the error callback
         GLFW.glfwTerminate();
         GLFW.glfwSetErrorCallback(null).free();
+    }
+
+    /**
+     * checks that all sutil imports are self contained
+     */
+    private static void testImports() {
+        testImports(new File("src/sutil"), new String[] { "sutil", "java", "org" });
+    }
+
+    private static void testImports(File file, String[] allowedImports) {
+        if (file.isDirectory()) {
+            for (File child : file.listFiles()) {
+                testImports(child, allowedImports);
+            }
+        } else {
+            if (!file.getName().endsWith(".java")) {
+                return;
+            }
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line = reader.readLine();
+                for (int lineNumber = 1; line != null; line = reader.readLine(), lineNumber++) {
+                    if (!line.startsWith("import ")) {
+                        continue;
+                    }
+                    final int startIndex = "import ".length();
+                    int endIndex = line.indexOf('.');
+                    String importName = line.substring(startIndex, endIndex);
+                    boolean allowed = false;
+                    for (String allowedImport : allowedImports) {
+                        if (allowedImport.equals(importName)) {
+                            allowed = true;
+                            break;
+                        }
+                    }
+                    if (allowed) {
+                        continue;
+                    }
+                    System.out.format("Illegal import in %s:%d:  %s\n", file.getPath(), lineNumber, line);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     // private static void textFilesizes() {

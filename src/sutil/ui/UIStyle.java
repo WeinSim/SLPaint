@@ -1,41 +1,43 @@
 package sutil.ui;
 
+import java.util.function.Supplier;
+
 import sutil.math.SVector;
 
 public class UIStyle {
 
-    protected UIGetter<SVector> backgroundColorGetter;
-    protected UIGetter<SVector> outlineColorGetter;
-    protected UIGetter<Double> strokeWeightGetter;
+    protected Supplier<SVector> backgroundColorSupplier;
+    protected Supplier<SVector> outlineColorSupplier;
+    protected Supplier<Double> strokeWeightSupplier;
 
-    public UIStyle(UIGetter<SVector> backgroundColorGetter, UIGetter<SVector> outlineColorGetter,
-            UIGetter<Double> strokeWeightGetter) {
-        this.backgroundColorGetter = backgroundColorGetter;
-        this.outlineColorGetter = outlineColorGetter;
-        this.strokeWeightGetter = strokeWeightGetter;
+    public UIStyle(Supplier<SVector> backgroundColorSupplier, Supplier<SVector> outlineColorSupplier,
+            Supplier<Double> strokeWeightSupplier) {
+        this.backgroundColorSupplier = backgroundColorSupplier;
+        this.outlineColorSupplier = outlineColorSupplier;
+        this.strokeWeightSupplier = strokeWeightSupplier;
     }
 
     public SVector getBackgroundColor() {
-        return backgroundColorGetter.get();
+        return backgroundColorSupplier.get();
     }
 
     public SVector getOutlineColor() {
-        return outlineColorGetter.get();
+        return outlineColorSupplier.get();
     }
 
     public double getStrokeWeight() {
-        return strokeWeightGetter.get();
+        return strokeWeightSupplier.get();
     }
 
-    public void setBackgroundColorGetter(UIGetter<SVector> backgroundColorGetter) {
-        this.backgroundColorGetter = backgroundColorGetter;
+    public void setBackgroundColorSupplier(Supplier<SVector> backgroundColorSupplier) {
+        this.backgroundColorSupplier = backgroundColorSupplier;
     }
 
-    public void setOutlineColorGetter(UIGetter<SVector> outlineColorGetter) {
-        this.outlineColorGetter = outlineColorGetter;
+    public void setOutlineColorSupplier(Supplier<SVector> outlineColorSupplier) {
+        this.outlineColorSupplier = outlineColorSupplier;
     }
 
-    public void setStrokeWeightGetter(UIGetter<Double> strokeWeightGetter) {
-        this.strokeWeightGetter = strokeWeightGetter;
+    public void setStrokeWeightSupplier(Supplier<Double> strokeWeightSupplier) {
+        this.strokeWeightSupplier = strokeWeightSupplier;
     }
 }

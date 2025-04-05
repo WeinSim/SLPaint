@@ -97,6 +97,8 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         SVector mousePos = window.getMousePosition();
         boolean[] mouseButtons = window.getMouseButtons();
         boolean[] prevMouseButtons = window.getPrevMouseButtons();
+        SVector mouseScroll = window.getMouseScroll();
+        SVector prevMouseScroll = window.getPrevMouseScroll();
 
         // toggle debug outline
         if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_COMMA)) {
@@ -108,28 +110,40 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
             renderer.reloadShaders();
         }
 
+        // reload UI
         if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_R) && keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
             createUI();
         }
 
-        // UI update
         int[] displaySize = window.getDisplaySize();
-        // adding 1 to the width ensures that the "topRow"'s right edge isn't visible on
-        // screen
-        ui.setRootSize(displaySize[0] + 1, displaySize[1]);
-        boolean focus = window.isFocused();
-        // mouse should not be above anything when the window isn't focused
-        if (!focus) {
-            mousePos.set(-10000, -10000);
-        }
-        ui.update(mousePos);
+        ui.setRootSize(displaySize[0], displaySize[1]);
 
+        boolean focus = window.isFocused();
+        // UI mouse and keyboard inputs
         if (focus) {
             // UI mouse pressed
-            if (mouseButtons[0] && !prevMouseButtons[0]) {
-                ui.mousePressed(mousePos);
+            for (int i = 0; i < mouseButtons.length; i++) {
+                if (mouseButtons[i] && !prevMouseButtons[i]) {
+                    ui.mousePressed(i);
+                }
+                if (!mouseButtons[i] && prevMouseButtons[i]) {
+                    ui.mouseReleased(i);
+                }
             }
 
+            // UI mouse scroll
+            SVector scrollAmount = mouseScroll.copy().sub(prevMouseScroll);
+            boolean shiftPressed = keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT];
+            if (shiftPressed) {
+                double temp = scrollAmount.x;
+                scrollAmount.x = scrollAmount.y;
+                scrollAmount.y = temp;
+            }
+            if (scrollAmount.magSq() > 0) {
+                ui.mouseWheel(scrollAmount, mousePos);
+            }
+
+            // UI key presses
             boolean shift = keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT];
             for (char c : window.getCharBuffer().toCharArray()) {
                 ui.keyPressed(c, shift);
@@ -148,6 +162,8 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
                 }
             }
         }
+
+        ui.update(mousePos, focus);
 
         window.setArrowCursor();
         if (ui.mouseAboveTextInput()) {
@@ -220,16 +236,16 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         return circularHueSatField.get();
     }
 
-    public static void toggleCircularHueSatField() {
-        circularHueSatField.set(!isCircularHueSatField());
-    }
-
     public static boolean isHSLColorSpace() {
         return hslColorSpace.get();
     }
 
     public static void setHSLColorSpace(boolean hslColorSpace) {
         App.hslColorSpace.set(hslColorSpace);
+    }
+        
+    public static void setCircularHueSatField(boolean circularHueSatField) {
+        App.circularHueSatField.set(circularHueSatField);
     }
 
     public double getFrameRate() {

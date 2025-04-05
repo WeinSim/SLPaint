@@ -1,18 +1,16 @@
 package sutil.ui;
 
-import java.util.ArrayList;
-
-import sutil.math.SVector;
+import java.util.function.Supplier;
 
 public class UILabel extends UIContainer {
 
     /**
-     * As it is currently implemented, there is a bug with the textUpdater:
-     * When a UILabel is initialized with a textUpdater, then calling
-     * setText(String) will not work because the textUpdater is still in action.
-     * You would have to call {@code setText((UIGetter<String>) null)} separately.
+     * TODO: when the textUpdater returns text containig newline characters, the
+     * text is not properly split across multiple lines.
      */
-    private UIGetter<String> textUpdater;
+    private Supplier<String> textUpdater;
+
+    private UIText firstChild;
 
     private UILabel() {
         super(VERTICAL, LEFT);
@@ -23,52 +21,37 @@ public class UILabel extends UIContainer {
         textUpdater = null;
     }
 
-    public UILabel(String text) {
-        this();
-        setText(text);
-    }
-
     public UILabel(String[] text) {
         this();
-        setText(text);
+        if (text.length == 0) {
+            firstChild = new UIText("");
+            add(firstChild);
+        } else {
+            for (String line : text) {
+                UIText child = new UIText(line);
+                if (firstChild == null) {
+                    firstChild = child;
+                }
+                add(child);
+            }
+        }
     }
 
-    public UILabel(ArrayList<String> text) {
-        this();
-        setText(text);
+    public UILabel(String text) {
+        this(text.split("\n"));
     }
 
-    public UILabel(UIGetter<String> textUpdater) {
-        this();
+    public UILabel(Supplier<String> textUpdater) {
+        this("");
         this.textUpdater = textUpdater;
     }
 
     @Override
-    public void update(SVector mouse) {
+    public void update() {
+        super.update();
+
         if (textUpdater != null) {
-            setText(textUpdater.get().split("\n"));
+            firstChild.setText(textUpdater.get());
         }
-        super.update(mouse);
-    }
-
-    public void setText(String text) {
-        setText(text.split("\n"));
-    }
-
-    public void setText(String[] text) {
-        children.clear();
-        for (String line : text) {
-            add(new UIText(line));
-        }
-    }
-
-    public void setText(ArrayList<String> text) {
-        for (String line : text) {
-            add(new UIText(line));
-        }
-    }
-
-    public void setText(UIGetter<String> textUpdater) {
-        this.textUpdater = textUpdater;
     }
 }

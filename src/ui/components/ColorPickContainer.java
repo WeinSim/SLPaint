@@ -1,12 +1,13 @@
 package ui.components;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import main.ColorPicker;
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
-import sutil.ui.UIGetter;
-import sutil.ui.UISetter;
 import sutil.ui.UIStyle;
 import sutil.ui.UIText;
 import sutil.ui.UITextInput;
@@ -34,9 +35,9 @@ public class ColorPickContainer extends UIContainer {
         this.colorPicker = colorPicker;
         this.size = size;
 
-        setMinimalSize();
-        zeroMargin();
-        noOutline();
+        zeroMargin().noOutline();
+
+        paddingScale = 2;
 
         UIContainer row1 = createRow1();
         UIContainer row2 = addAlpha ? createRow2() : null;
@@ -68,10 +69,12 @@ public class ColorPickContainer extends UIContainer {
 
     private UIContainer createRow1() {
         UIContainer row1 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
+        row1.setPaddingScale(2);
         row1.zeroMargin().noOutline();
         HueSatField hueSatField = new HueSatField(colorPicker, size);
         row1.add(hueSatField);
-        UIScaleContainer lightnessScale = new UIScaleContainer(new LightnessScale(UIContainer.VERTICAL, colorPicker));
+        UIScale lightnessScale = new LightnessScale(UIContainer.VERTICAL, colorPicker);
+        lightnessScale.setVFillSize();
         row1.add(lightnessScale);
         return row1;
     }
@@ -79,12 +82,12 @@ public class ColorPickContainer extends UIContainer {
     private UIContainer createRow2() {
         UIContainer row2 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         row2.zeroMargin().noOutline();
-        row2.setFillSize();
+        row2.setHFillSize();
 
         row2.add(new UIText("Alpha:"));
 
-        UIGetter<String> textUpdater = () -> Integer.toString(SUtil.alpha(colorPicker.getRGB()));
-        UISetter<String> valueUpdater = (String s) -> {
+        Supplier<String> textUpdater = () -> Integer.toString(SUtil.alpha(colorPicker.getRGB()));
+        Consumer<String> valueUpdater = (String s) -> {
             int alpha = 0;
             if (s.length() > 0) {
                 try {
@@ -99,27 +102,23 @@ public class ColorPickContainer extends UIContainer {
         UITextInput alphaInput = new UITextInput(textUpdater, valueUpdater);
         row2.add(alphaInput);
 
-        UIScaleContainer alphaScale = new UIScaleContainer(new AlphaScale(UIContainer.HORIZONTAL, colorPicker));
-        alphaScale.setMaximalSize();
+        UIScale alphaScale = new AlphaScale(UIContainer.HORIZONTAL, colorPicker);
+        alphaScale.setHFillSize();
         row2.add(alphaScale);
         return row2;
     }
 
     private UIContainer createRow3(boolean addPreview) {
-        UIContainer row3 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP) {
-            @Override
-            public double getPadding() {
-                return 2 * super.getPadding();
-            }
-        };
+        UIContainer row3 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
+        row3.setPaddingScale(2);
         row3.zeroMargin().noOutline();
-        row3.setFillSize();
+        row3.setHFillSize();
 
         // if (addPreview) {
         UIContainer colorPreview = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         colorPreview.zeroMargin().noOutline();
         UIContainer colorBox = new UIContainer(UIContainer.HORIZONTAL, 0);
-        colorBox.setStyle(new UIStyle(() -> null, () -> Colors.getTextColor(), () -> 2.0));
+        colorBox.setStyle(new UIStyle(() -> null, Colors::getTextColor, () -> 2.0));
         colorBox.zeroMargin().zeroPadding().noOutline();
         double previewWidth = Sizes.COLOR_PICKER_PREVIEW.width,
                 previewHeight = Sizes.COLOR_PICKER_PREVIEW.height;
@@ -128,10 +127,10 @@ public class ColorPickContainer extends UIContainer {
         }
         // double width = addPreview ? previewWidth / 2 : previewWidth;
         for (int i = addPreview ? 0 : 1; i < 2; i++) {
-            UIGetter<Integer> bgColorGetter = i == 0
-                    ? () -> colorPicker.getInitialColor()
-                    : () -> colorPicker.getRGB();
-            colorBox.add(new UIColorElement(bgColorGetter, new SVector(previewWidth, previewHeight), false));
+            Supplier<Integer> bgColorSupplier = i == 0
+                    ? colorPicker::getInitialColor
+                    : colorPicker::getRGB;
+            colorBox.add(new UIColorElement(bgColorSupplier, new SVector(previewWidth, previewHeight), false));
         }
         colorPreview.add(colorBox);
         colorPreview.add(new UIText("Preview"));
@@ -139,7 +138,7 @@ public class ColorPickContainer extends UIContainer {
 
         UIContainer gap = new UIContainer(0, 0);
         gap.zeroMargin().noOutline();
-        gap.setMaximalSize();
+        gap.setHFillSize();
         row3.add(gap);
         // }
 
@@ -149,14 +148,14 @@ public class ColorPickContainer extends UIContainer {
             UIContainer colorRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
             colorRow.zeroMargin().noOutline();
             colorRow.add(new UIText(HSL_NAMES[i] + ":"));
-            UIGetter<String> textUpdater = switch (i) {
+            Supplier<String> textUpdater = switch (i) {
                 case 0 -> () -> Integer.toString((int) colorPicker.getHue());
                 case 1 -> () -> Integer.toString((int) (colorPicker.getHSLSaturation() * 100));
                 case 2 -> () -> Integer.toString((int) (colorPicker.getLightness() * 100));
                 default -> null;
             };
             final int j = i;
-            UISetter<String> valueUpdater = (String s) -> {
+            Consumer<String> valueUpdater = (String s) -> {
                 int component = 0;
                 if (s.length() > 0) {
                     try {
@@ -185,14 +184,14 @@ public class ColorPickContainer extends UIContainer {
             UIContainer colorRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
             colorRow.zeroMargin().noOutline();
             colorRow.add(new UIText(HSV_NAMES[i] + ":"));
-            UIGetter<String> textUpdater = switch (i) {
+            Supplier<String> textUpdater = switch (i) {
                 case 0 -> () -> Integer.toString((int) colorPicker.getHue());
                 case 1 -> () -> Integer.toString((int) (colorPicker.getHSVSaturation() * 100));
                 case 2 -> () -> Integer.toString((int) (colorPicker.getValue() * 100));
                 default -> null;
             };
             final int j = i;
-            UISetter<String> valueUpdater = (String s) -> {
+            Consumer<String> valueUpdater = s -> {
                 int component = 0;
                 if (s.length() > 0) {
                     try {
@@ -221,14 +220,14 @@ public class ColorPickContainer extends UIContainer {
             UIContainer colorRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
             colorRow.zeroMargin().noOutline();
             colorRow.add(new UIText(RGB_NAMES[i] + ":"));
-            UIGetter<String> textUpdater = switch (i) {
+            Supplier<String> textUpdater = switch (i) {
                 case 0 -> () -> Integer.toString(SUtil.red(colorPicker.getRGB()));
                 case 1 -> () -> Integer.toString(SUtil.green(colorPicker.getRGB()));
                 case 2 -> () -> Integer.toString(SUtil.blue(colorPicker.getRGB()));
                 default -> null;
             };
             final int j = i;
-            UISetter<String> valueUpdater = (String s) -> {
+            Consumer<String> valueUpdater = (String s) -> {
                 int component = 0;
                 if (s.length() > 0) {
                     try {
@@ -256,14 +255,9 @@ public class ColorPickContainer extends UIContainer {
 
     private UIContainer createRow4() {
         UIButton customColor = new UIButton("Add to Custom Colors",
-                () -> colorPicker.getCloseAction().set(colorPicker.getRGB()));
+                () -> colorPicker.getCloseAction().accept(colorPicker.getRGB()));
         customColor.setAlignment(UIContainer.CENTER);
-        customColor.setFillSize();
+        customColor.setHFillSize();
         return customColor;
-    }
-
-    @Override
-    public double getPadding() {
-        return 2 * super.getPadding();
     }
 }

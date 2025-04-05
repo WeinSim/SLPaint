@@ -2,145 +2,156 @@ package ui.components;
 
 import main.ColorPicker;
 import main.apps.App;
-import renderEngine.Window;
 import sutil.math.SVector;
+import sutil.ui.Draggable;
 import sutil.ui.UIContainer;
-import sutil.ui.UIElement;
+import sutil.ui.UIDragContainer;
+import sutil.ui.UIFloatContainer;
 import sutil.ui.UIStyle;
 import ui.Colors;
 import ui.Sizes;
 
-public class HueSatField extends UIContainer implements DragTarget {
+public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
 
     private static final double CURSOR_LINE_LENGTH = 10;
     private static final double CURSOR_LINE_WIDTH = 4;
     private static final double CURSOR_CENTER_GAP = 10;
 
-    private ColorPicker colorPicker;
-
     public HueSatField(ColorPicker colorPicker, double size) {
-        super(0, 0);
-        this.colorPicker = colorPicker;
+        super(new Cursor(colorPicker));
 
         noOutline();
         setFixedSize(new SVector(size, size));
-
-        add(new Cursor());
-
-        setClickAction(() -> colorPicker.setDragTarget(this));
-
-        colorPicker.setHueSatField(this);
-    }
-
-    @Override
-    public void drag() {
-        Window window = colorPicker.getWindow();
-        SVector mousePos = window.getMousePosition();
-        SVector absolutePos = getAbsolutePosition();
-        mousePos = new SVector(mousePos).sub(absolutePos);
-
-        if (App.isCircularHueSatField()) {
-            SVector mousePosRelative = new SVector(mousePos.x / size.x - 0.5, mousePos.y / size.y - 0.5).scale(2);
-
-            double mag = mousePosRelative.mag();
-            if (mag > 1) {
-                mousePosRelative.normalize();
-                mag = 1;
-            }
-
-            double angle = Math.atan2(mousePosRelative.y, mousePosRelative.x);
-            if (angle < 0) {
-                angle += 2 * Math.PI;
-            }
-
-            if (App.isHSLColorSpace()) {
-                colorPicker.setHSLHue(angle / Math.PI * 180);
-                colorPicker.setHSLSaturation(mag);
-            } else {
-                colorPicker.setHSVHue(angle / Math.PI * 180);
-                colorPicker.setHSVSaturation(mag);
-            }
-        } else {
-            mousePos.x = Math.min(Math.max(0, mousePos.x), size.x);
-            mousePos.y = Math.min(Math.max(0, mousePos.y), size.y);
-
-            if (App.isHSLColorSpace()) {
-                colorPicker.setHSLHue(mousePos.x / size.x * 360);
-                colorPicker.setHSLSaturation(1 - mousePos.y / size.y);
-            } else {
-                colorPicker.setHSVHue(mousePos.x / size.x * 360);
-                colorPicker.setHSVSaturation(1 - mousePos.y / size.y);
-            }
-        }
-
-    }
-
-    @Override
-    public void updateCursorPosition() {
-        double hue = colorPicker.getHue(),
-                saturation = App.isHSLColorSpace()
-                        ? colorPicker.getHSLSaturation()
-                        : colorPicker.getHSVSaturation();
-        SVector pos;
-        if (App.isCircularHueSatField()) {
-            hue *= Math.PI / 180;
-            pos = new SVector(Math.cos(hue) * saturation + 1, Math.sin(hue) * saturation + 1);
-            pos.mult(size).div(2);
-        } else {
-            pos = new SVector(hue / 360 * size.x, (1 - saturation) * size.y);
-        }
-        children.get(0).getPosition().set(pos);
     }
 
     @Override
     public void positionChildren() {
+        super.positionChildren();
 
-        ((UIContainer) children.get(0)).positionChildren();
+        draggable.positionChildren();
     }
 
-    private class Cursor extends UIContainer {
+    @Override
+    protected void updateMouseAboveReference(SVector mouse, boolean valid) {
+        if (App.isCircularHueSatField()) {
+            if (!valid) {
+                mouseAbove = false;
+                return;
+            }
+            double x = (mouse.x - position.x) / size.x - 0.5,
+                    y = (mouse.y - position.y) / size.y - 0.5;
+            mouseAbove = x * x + y * y < 0.25;
+        } else {
+            super.updateMouseAboveReference(mouse, valid);
+        }
+    }
 
-        public Cursor() {
+    protected static class Cursor extends UIContainer implements Draggable {
+
+        private ColorPicker colorPicker;
+
+        private double nextX;
+
+        public Cursor(ColorPicker colorPicker) {
             super(0, 0);
+
+            this.colorPicker = colorPicker;
             noOutline();
 
-            for (int i = 0; i < 4; i++) {
-                add(new CursorLine(i % 2 == 0));
-            }
-
-            // size.set(1, 1);
-            // size.scale(2 * CURSOR_LINE_LENGTH + CURSOR_CENTER_GAP);
-            // setFixedSize(size);
-        }
-
-        @Override
-        public void positionChildren() {
             final double a = CURSOR_LINE_WIDTH / 2;
             final double b = CURSOR_LINE_LENGTH + CURSOR_CENTER_GAP / 2;
             final double c = CURSOR_CENTER_GAP / 2;
-            children.get(0).getPosition().set(-a, -b);
-            children.get(1).getPosition().set(c, -a);
-            children.get(2).getPosition().set(-a, c);
-            children.get(3).getPosition().set(-b, -a);
-        }
-    }
+            for (int i = 0; i < 4; i++) {
+                CursorLine line = new CursorLine(i % 2 == 0);
+                line.addAttachPoint(UIFloatContainer.TOP_LEFT, switch (i) {
+                    case 0 -> new SVector(-a, -b);
+                    case 1 -> new SVector(c, -a);
+                    case 2 -> new SVector(-a, c);
+                    case 3 -> new SVector(-b, -a);
+                    default -> null;
+                });
 
-    private class CursorLine extends UIElement {
+                add(line);
+            }
 
-        private boolean vertical;
+            setFixedSize(new SVector(0, 0));
 
-        public CursorLine(boolean vertical) {
-            this.vertical = vertical;
-
-            setStyle(new UIStyle(() -> Colors.getTextColor(), () -> null, () -> Sizes.STROKE_WEIGHT.size));
+            nextX = 0;
         }
 
         @Override
-        public void setMinSize() {
-            if (vertical) {
-                size.set(CURSOR_LINE_WIDTH, CURSOR_LINE_LENGTH);
+        public double getRelativeX() {
+            if (App.isCircularHueSatField()) {
+                double radius = App.isHSLColorSpace() ? colorPicker.getHSLSaturation() : colorPicker.getHSVSaturation();
+                double angle = colorPicker.getHue() / 180 * Math.PI;
+                return Math.cos(angle) * radius / 2 + 0.5;
             } else {
-                size.set(CURSOR_LINE_LENGTH, CURSOR_LINE_WIDTH);
+                return colorPicker.getHue() / 360.0;
+            }
+        }
+
+        @Override
+        public double getRelativeY() {
+            double saturation = App.isHSLColorSpace() ? colorPicker.getHSLSaturation() : colorPicker.getHSVSaturation();
+            if (App.isCircularHueSatField()) {
+                double radius = saturation;
+                double angle = colorPicker.getHue() / 180 * Math.PI;
+                return Math.sin(angle) * radius / 2 + 0.5;
+            } else {
+                return 1 - saturation;
+            }
+        }
+
+        @Override
+        public void setRelativeX(double x) {
+            if (App.isCircularHueSatField()) {
+                nextX = x;
+            } else {
+                x = Math.min(Math.max(0, x), 1);
+                if (App.isHSLColorSpace()) {
+                    colorPicker.setHSLHue(x * 360.0);
+                } else {
+                    colorPicker.setHSVHue(x * 360.0);
+                }
+            }
+        }
+
+        @Override
+        public void setRelativeY(double y) {
+            if (App.isCircularHueSatField()) {
+                y -= 0.5;
+                double x = nextX - 0.5;
+                double angle = Math.atan2(y, x) / Math.PI * 180;
+                angle = (angle + 360) % 360;
+                if (App.isHSLColorSpace()) {
+                    colorPicker.setHSLHue(angle);
+                    colorPicker.setHSLSaturation(Math.min(1, 2 * Math.sqrt(x * x + y * y)));
+                } else {
+                    colorPicker.setHSVHue(angle);
+                    colorPicker.setHSVSaturation(Math.min(1, 2 * Math.sqrt(x * x + y * y)));
+                }
+            } else {
+                y = Math.min(Math.max(0, y), 1);
+                if (App.isHSLColorSpace()) {
+                    colorPicker.setHSLSaturation(1 - y);
+                } else {
+                    colorPicker.setHSVSaturation(1 - y);
+                }
+            }
+        }
+    }
+
+    private static class CursorLine extends UIFloatContainer {
+
+        public CursorLine(boolean vertical) {
+            super(0, 0);
+
+            setStyle(new UIStyle(Colors::getTextColor, () -> null, () -> Sizes.STROKE_WEIGHT.size));
+
+            if (vertical) {
+                setFixedSize(new SVector(CURSOR_LINE_WIDTH, CURSOR_LINE_LENGTH));
+            } else {
+                setFixedSize(new SVector(CURSOR_LINE_LENGTH, CURSOR_LINE_WIDTH));
             }
         }
     }

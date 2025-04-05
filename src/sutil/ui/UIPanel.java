@@ -1,6 +1,7 @@
 package sutil.ui;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import org.lwjgl.glfw.GLFW;
 
@@ -8,9 +9,10 @@ import sutil.math.SVector;
 
 public abstract class UIPanel {
 
-    protected UIRoot root;
-
-    protected double textSize = 32;
+    /**
+     * Mouse buttons
+     */
+    public static final int LEFT = 0, RIGHT = 1;
 
     /**
      * Space around the outside
@@ -22,42 +24,98 @@ public abstract class UIPanel {
      */
     protected double padding = 10;
 
+    protected double textSize = 32;
+
+    protected double mouseWheelSensitivity = 100;
+
+    protected UIRoot root;
     private UIElement selectedElement;
+    /**
+     * Used to set selectedElement to null if the selected element is not currently
+     * visible.
+     */
+    private boolean selectedElementVisible;
+
+    /**
+     * Indicates wether the left mouse button is currently being pressed.
+     */
+    private boolean mousePressed;
+
+    private LinkedList<UIAction> eventQueue;
 
     public UIPanel() {
         selectedElement = null;
+        mousePressed = false;
+
+        eventQueue = new LinkedList<>();
     }
 
-    public void update(SVector mousePos) {
-        root.update(mousePos);
+    public void update(SVector mousePos, boolean valid) {
+        root.lock();
 
-        updateSize();
+        selectedElementVisible = false;
+        root.updateVisibility();
+        if (!selectedElementVisible) {
+            selectedElement = null;
+        }
+
+        root.updateMousePosition(mousePos, valid);
+
+        while (!eventQueue.isEmpty()) {
+            eventQueue.removeFirst().run();
+        }
+
+        root.update();
+
+        root.updateSize();
     }
 
-    protected void updateSize() {
-        root.updateSizeReferences();
-        root.setMinSize();
-        root.expandAsNeccessary(null);
-        root.positionChildren();
+    /**
+     * During the updateVisibility() step of update(), the currently
+     * selected element has to report to the UIPanel that it is still visible.
+     */
+    void confirmSelectedElement() {
+        selectedElementVisible = true;
     }
 
-    public void mousePressed(SVector mousePos) {
-        selectedElement = null;
-        root.mousePressed(mousePos);
+    public void mousePressed(int mouseButton) {
+        queueEvent(() -> {
+            if (mouseButton == LEFT) {
+                mousePressed = true;
+            }
+            selectedElement = null;
+            root.mousePressed(mouseButton);
+        });
+    }
+
+    public void mouseReleased(int mouseButton) {
+        if (mouseButton == LEFT) {
+            queueEvent(() -> mousePressed = false);
+        }
     }
 
     public void keyPressed(char key, boolean shift) {
-        if (key == GLFW.GLFW_KEY_TAB) {
-            cycleSelectedElement(shift);
-        } else if (key == GLFW.GLFW_KEY_ENTER) {
-            if (selectedElement != null) {
-                UIAction clickAction = selectedElement.getClickAction();
-                if (clickAction != null) {
-                    clickAction.run();
+        queueEvent(() -> {
+            if (key == GLFW.GLFW_KEY_TAB) {
+                cycleSelectedElement(shift);
+            } else if (key == GLFW.GLFW_KEY_ENTER) {
+                if (selectedElement != null) {
+                    UIAction clickAction = selectedElement.getLeftClickAction();
+                    if (clickAction != null) {
+                        clickAction.run();
+                    }
                 }
             }
-        }
-        root.keyPressed(key);
+            root.keyPressed(key);
+        });
+    }
+
+    public void mouseWheel(SVector scroll, SVector mousePos) {
+        queueEvent(() -> root.mouseWheel(scroll.copy().scale(mouseWheelSensitivity), mousePos));
+    }
+
+    public void queueEvent(UIAction action) {
+        eventQueue.add(action);
     }
 
     private void cycleSelectedElement(boolean backwards) {
@@ -75,17 +133,16 @@ public abstract class UIPanel {
     }
 
     private ArrayList<UIElement> getSelectableElements() {
-        return getSelectableElements(root);
+        return getSelectableElements(root, new ArrayList<UIElement>());
     }
 
-    private ArrayList<UIElement> getSelectableElements(UIContainer parent) {
-        ArrayList<UIElement> elements = new ArrayList<>();
+    private ArrayList<UIElement> getSelectableElements(UIContainer parent, ArrayList<UIElement> elements) {
         for (UIElement child : parent.getChildren()) {
             if (child.isSelectable()) {
                 elements.add(child);
             }
             if (child instanceof UIContainer container) {
-                elements.addAll(getSelectableElements(container));
+                getSelectableElements(container, elements);
             }
         }
         return elements;
@@ -109,10 +166,6 @@ public abstract class UIPanel {
         return padding;
     }
 
-    public void setRoot(UIRoot root) {
-        this.root = root;
-    }
-
     public SVector getBackgroundNormalColor() {
         return new SVector(1, 1, 1).scale(0.1);
     }
@@ -126,7 +179,11 @@ public abstract class UIPanel {
     }
 
     public SVector getOutlineHighlightColor() {
-        return new SVector(1, 1, 1).scale(0.6);
+        return new SVector(1, 1, 1).scale(0.75);
+    }
+
+    public SVector getSeparatorColor() {
+        return new SVector(1, 1, 1).scale(0.15);
     }
 
     public double getStrokeWeight() {
@@ -139,5 +196,13 @@ public abstract class UIPanel {
 
     public UIElement getSelectedElement() {
         return selectedElement;
+    }
+
+    public boolean isMousePressed() {
+        return mousePressed;
+    }
+
+    public void setRoot(UIRoot root) {
+        this.root = root;
     }
 }

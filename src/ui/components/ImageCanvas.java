@@ -7,10 +7,14 @@ import sutil.ui.UIElement;
 public class ImageCanvas extends UIContainer {
 
     public ImageCanvas(int orientation, int alignment, MainApp app) {
-        super(orientation, alignment);
+        this(orientation, alignment, alignment, app);
+    }
+
+    public ImageCanvas(int orientation, int hAlignment, int vAlignment, MainApp app) {
+        super(orientation, hAlignment, vAlignment);
 
         app.setCanvas(this);
-        setMaximalSize();
+        setFillSize();
     }
 
     public boolean mouseTrulyAbove() {
@@ -18,7 +22,7 @@ public class ImageCanvas extends UIContainer {
             return false;
         }
 
-        for (UIElement child : children) {
+        for (UIElement child : getChildren()) {
             if (child.mouseAbove()) {
                 return false;
             }

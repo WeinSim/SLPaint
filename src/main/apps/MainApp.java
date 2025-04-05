@@ -33,69 +33,61 @@ import ui.Sizes;
 import ui.components.ImageCanvas;
 
 /**
- * TODO:
- * Move todo's scattered across different files into this central todo list
+ * <pre>
  * App:
- * * Dialogs
- * * * Save dialog
- * * * * Keep track of unsaved changes, ask user to save before quitting if
- * * * * * there are unsaved changes
- * * * Only one at a time
- * * * Keep track of all file locks in one centralized place to avoid leaking
- * * Resizing
- * * * Selection resizing
- * * * Selection Ctrl+Shift+X
- * * Save user settings (ui base color, light / dark mode, transparent
- * * * selection)
- * * Undo / redo
- * * Pencil
- * * * Add different sizes
- * * * Fix bug: pencil draws when mouse is clicked outside of canvas and dragged
- * * * * onto canvas
- * * Text tool
- * * Line tool
- * * Transparency
- * * * Grey-white squares should always appear the same size
- * * * Simply selecting a transparent area and unselecting it causes the
- * * * * transparency to go away. Reason: selecting the area replaces that part
- * * * * of the image with the secondary color. Placing the transparent
- * * * * selection back onto the opaque background leaves the background
- * * * * unaffected. What is the expected behavior here?
- * * Recognize remapping from CAPS_LOCK to ESCAPE
- * * When parent app closes, shouldren should also close
+ *   Dialogs
+ *     Save dialog
+ *       Keep track of unsaved changes, ask user to save before quitting if
+ *       there are unsaved changes
+ *     Only one at a time
+ *     Keep track of all file locks in one centralized place to avoid leaking
+ *   Resizing
+ *     Selection resizing
+ *     Selection Ctrl+Shift+X
+ *   Undo / redo
+ *   Pencil
+ *     Add different sizes
+ *     Fix bug: pencil draws when mouse is clicked outside of canvas and dragged
+ *       onto canvas
+ *   Text tool
+ *   Line tool
+ *   Transparency
+ *     Grey-white squares should always appear the same size
+ *     Simply selecting a transparent area and unselecting it causes the
+ *       transparency to go away. Reason: selecting the area replaces that part
+ *       of the image with the secondary color. Placing the transparent
+ *       selection back onto the opaque background leaves the background
+ *       unaffected. What is the expected behavior here?
+ *   Recognize remapping from CAPS_LOCK to ESCAPE
+ *   When parent app closes, shouldren should also close
+ *   Add HSV color selection mode (in addition to HSL)?
  * UI:
- * * Scrolling
- * * Tool icons & cursors
- * * UIFloat element (e.g. dropdown menues): doesn't affect parent's size
- * * (Add hMargin and vMargin in UIContainer)
- * * * Not neccessary for now. UISeparators now extend fully even without
- * * * hMargin and vMargin
- * * HueSatField's hitbox should adjust (rect / circle) depending on the setting
- * * Fix small bug in UILabel (see {@link sutil.ui.UILabel#textUpdater})
- * * In ColorPickContainer hide either HSL or HSV input (depending on the user
- * * * setting. (do after pulling ui_layers because of UIElement.visible
- * * * stautus)
+ *   Tool icons & cursors
+ *   Make side panel collapsable
  * Rendering:
- * * Weird rendering bugs:
- * * * Anti aliasing doesn't work despite being enabled
- * * * * (glfwWindowHint(GLFW_SAMPLES, 4) and glEnable(GL_MULTISAMPLE))
- * * * Selection border sometimes has artifacts on bottom and right inner edges
- * * * AlphaScale has artifacts on bottom edge (whose size depends on wether a
- * * * * text cursor is currently visible?!?)
- * * Fix stuttering artifact when resizing windows on Linux
- * * * (see https://www.glfw.org/docs/latest/window.html#window_refresh)
- * * Clean up UIRenderMaster API and UI shaders (especially with regards to
- * * * transparency!)
- * * Premultiply view matrix and transformation matrix (for rect and text
- * * * shader)
- * * Rename transformationMatrix to uiMatrix
- * * Remove magic numbers in {@link renderEngine.MainAppRenderer#render()}
- * * "Activate alpha blending" in
- * * * {@link renderEngine.UIRenderMaster#image(int, SVector, SVector)}
- * * * (whatever that means??)
+ *   Weird rendering bugs:
+ *     Anti aliasing doesn't work despite being enabled
+ *       (glfwWindowHint(GLFW_SAMPLES, 4) and glEnable(GL_MULTISAMPLE))
+ *     Selection border sometimes has artifacts on bottom and right inner edges
+ *     AlphaScale has artifacts on bottom edge (whose size depends on wether a
+ *       text cursor is currently visible?!?)
+ *   Fix stuttering artifact when resizing windows on Linux
+ *     (see https://www.glfw.org/docs/latest/window.html#window_refresh)
+ *   Clean up UIRenderMaster API and UI shaders (especially with regards to
+ *     transparency!)
+ *   Premultiply view matrix and transformation matrix (for rect and text
+ *     shader)
+ *   Rename transformationMatrix to uiMatrix
+ *   Remove magic numbers in {@link renderEngine.MainAppRenderer#render()}
+ *   "Activate alpha blending" in
+ *     {@link renderEngine.UIRenderMaster#image(int, SVector, SVector)}
+ *     (whatever that means??)
  * Maximized windows don't show up correctly on Windows 11
  * Error handling
- * 3D UI view?
+ * UI extras: (optional)
+ *   3D view
+ *   Debug view
+ * </pre>
  */
 public final class MainApp extends App {
 
@@ -134,7 +126,7 @@ public final class MainApp extends App {
     private static final int MAX_ZOOM_LEVEL = 8;
     private static final double ZOOM_BASE = 1.6;
 
-    private static final double MOUSE_WHEEL_SENSITIVITY = 120;
+    private static final double MOUSE_WHEEL_SENSITIVITY = 100;
 
     private static BooleanSetting transparentSelection = new BooleanSetting("transparentSelection");
 
@@ -224,8 +216,8 @@ public final class MainApp extends App {
         // canvas actions
         if (canvas.mouseTrulyAbove()) {
             SVector scrollAmount = new SVector(mouseScroll).sub(prevMouseScroll).scale(MOUSE_WHEEL_SENSITIVITY);
-            boolean shiftPressed = keys[GLFW.GLFW_KEY_LEFT_CONTROL];
-            if (shiftPressed) {
+            boolean ctrlPressed = keys[GLFW.GLFW_KEY_LEFT_CONTROL];
+            if (ctrlPressed) {
                 // zoom
                 double prevZoom = getImageZoom();
                 imageZoomLevel += (int) Math.signum(scrollAmount.y);
@@ -236,6 +228,12 @@ public final class MainApp extends App {
                 window.setHandCursor();
             } else {
                 // scroll
+                boolean shiftPressed = keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT];
+                if (shiftPressed) {
+                    double temp = scrollAmount.x;
+                    scrollAmount.x = scrollAmount.y;
+                    scrollAmount.y = temp;
+                }
                 imageTranslation.add(scrollAmount);
             }
 
@@ -379,8 +377,6 @@ public final class MainApp extends App {
                 }
             }
         }
-
-        selectedColorPicker.update();
 
         if (colorSelection == PRIMARY_COLOR) {
             primaryColor = selectedColorPicker.getRGB();
@@ -526,7 +522,7 @@ public final class MainApp extends App {
 
     public void resetImageTransform() {
         imageZoomLevel = 0;
-        imageTranslation = canvas.getAbsolutePosition().add(new SVector(1, 1).scale(canvas.getMargin()));
+        imageTranslation = canvas.getAbsolutePosition().add(new SVector(canvas.getHMargin(), canvas.getVMargin()));
     }
 
     public SelectionManager getSelectionManager() {
@@ -608,8 +604,8 @@ public final class MainApp extends App {
         return transparentSelection.get();
     }
 
-    public static void toggleTransparentSelection() {
-        transparentSelection.set(!transparentSelection.get());
+    public static void setTransparentSelection(boolean transparentSelection) {
+        MainApp.transparentSelection.set(transparentSelection);
     }
 
     public int[] getMouseImagePosition() {

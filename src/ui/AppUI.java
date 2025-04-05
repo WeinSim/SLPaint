@@ -1,11 +1,12 @@
 package ui;
 
+import java.util.function.Supplier;
+
 import main.apps.App;
 import renderEngine.fonts.TextFont;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
-import sutil.ui.UIGetter;
 import sutil.ui.UIPanel;
 import sutil.ui.UIRoot;
 import sutil.ui.UIStyle;
@@ -32,8 +33,6 @@ public abstract class AppUI<T extends App> extends UIPanel{
         root.setFixedSize(new SVector(displaySize[0], displaySize[1]));
 
         init();
-
-        updateSize();
     }
 
     protected abstract void init();
@@ -49,12 +48,12 @@ public abstract class AppUI<T extends App> extends UIPanel{
         return element;
     }
 
-    public static <T extends UIElement> T setButtonStyle2(T element, UIGetter<Boolean> selectedGetter) {
-        UIGetter<SVector> backgroundColorGetter = () -> selectedGetter.get() ? Colors.getBackgroundHighlightColor2()
+    public static <T extends UIElement> T setButtonStyle2(T element, Supplier<Boolean> selectedSupplier) {
+        Supplier<SVector> backgroundColorSupplier = () -> selectedSupplier.get() ? Colors.getBackgroundHighlightColor2()
                 : null;
-        UIGetter<SVector> outlineColorGetter = () -> element.mouseAbove() ? Colors.getOutlineHighlightColor() : null;
-        UIGetter<Double> strokeWeightGetter = () -> Sizes.STROKE_WEIGHT.size;
-        element.setStyle(new UIStyle(backgroundColorGetter, outlineColorGetter, strokeWeightGetter));
+        Supplier<SVector> outlineColorSupplier = () -> element.mouseAbove() ? Colors.getOutlineNormalColor() : null;
+        Supplier<Double> strokeWeightSupplier = () -> Sizes.STROKE_WEIGHT.size;
+        element.setStyle(new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier));
         return element;
     }
 
@@ -103,6 +102,11 @@ public abstract class AppUI<T extends App> extends UIPanel{
     @Override
     public SVector getOutlineHighlightColor() {
         return Colors.getOutlineHighlightColor();
+    }
+
+    @Override
+    public SVector getSeparatorColor() {
+        return Colors.getSeparatorColor();
     }
 
     @Override

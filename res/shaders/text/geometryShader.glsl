@@ -13,6 +13,7 @@ out vec2 textureCoords;
 // to OpenGL coordinates (-1, 1) to (1, -1)
 uniform mat3 viewMatrix;
 uniform mat3 transformationMatrix;
+uniform float depth;
 
 const vec2 offsets[4] = vec2[4](
     vec2(0, 0),
@@ -25,7 +26,7 @@ void main(void) {
     for (int i = 0; i < 4; i++) {
         vec3 screenPos = vec3(pass_position[0] + offsets[i] * pass_size[0], 1.0);
         screenPos = viewMatrix * transformationMatrix * screenPos;
-        gl_Position = vec4(screenPos.xy, 0, 1);
+        gl_Position = vec4(screenPos.xy, depth, 1.0);
         textureCoords = (pass_textureCoords[0] + pass_size[0] * offsets[i]) / vec2(256, 512);
         EmitVertex();
     }
