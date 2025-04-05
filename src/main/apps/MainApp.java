@@ -31,8 +31,6 @@ import ui.components.ImageCanvas;
 
 /**
  * <pre>
- * UI scroll and float:
- *   Re-read and check all of the new UI code before merging into main
  * App:
  *   Dialogs
  *     Save dialog

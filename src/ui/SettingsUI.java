@@ -48,7 +48,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         UIContextMenu contextMenu = new UIContextMenu(false);
         contextMenu.addLabel("Label 1", () -> System.out.println("Label 1"));
-        contextMenu.addSeparator();
+        contextMenu.add(new UISeparator());
 
         UIFloatMenu nestedMenu = new UIFloatMenu(null, false);
         for (int i = 0; i < 10; i++) {

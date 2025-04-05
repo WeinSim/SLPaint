@@ -9,7 +9,6 @@ public class UIToggle extends UIElement {
 
     public UIToggle(Supplier<Boolean> stateSupplier, Consumer<Boolean> stateSetter) {
         this.stateSupplier = stateSupplier;
-        // this.stateSetter = stateSetter;
 
         setLeftClickAction(() -> stateSetter.accept(!stateSupplier.get()));
     }

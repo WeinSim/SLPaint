@@ -71,7 +71,7 @@ public abstract class UIPanel {
     }
 
     /**
-     * During the determineChildVisibility() step of update(), the currently
+     * During the updateVisibility() step of update(), the currently
      * selected element has to report to the UIPanel that it is still visible.
      */
     void confirmSelectedElement() {

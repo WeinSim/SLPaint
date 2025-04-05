@@ -99,11 +99,16 @@ public class UIContainer extends UIElement {
 
     public void add(UIElement child) {
         if (addSeparators && !(child instanceof UIFloatContainer)) {
-            // TODO: this doesn't produce the exepcted behavior if at this point, this
-            // container already contains one or more float children
-            if (children.size() > 0) {
+            boolean containsNonFloatChildren = false;
+            for (UIElement currentChild : children.children) {
+                if (!(currentChild instanceof UIFloatContainer)) {
+                    containsNonFloatChildren = true;
+                    break;
+                }
+            }
+            if (containsNonFloatChildren) {
                 UISeparator separator = new UISeparator();
-                separator.setVisibilitySupplier(child::isVisible);
+                separator.setVisibilitySupplier(child.visibilitySupplier::get);
                 addActual(separator);
             }
         }
@@ -891,10 +896,6 @@ public class UIContainer extends UIElement {
         void addFirst(UIElement child) {
             checkNotLocked();
             children.addFirst(child);
-        }
-
-        int size() {
-            return children.size();
         }
 
         void checkNotLocked() {

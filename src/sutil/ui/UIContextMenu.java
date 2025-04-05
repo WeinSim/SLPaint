@@ -13,7 +13,6 @@ public class UIContextMenu extends UIFloatMenu {
         // constructor because of the following error message:
         // Cannot refer to an instance field visible while invoking a constructor
         setVisibilitySupplier(this::getVisible);
-        // setPositionSupplier(this::getPosition);
     }
 
     public void attachToContainer(UIContainer container) {

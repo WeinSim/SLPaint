@@ -19,16 +19,7 @@ public abstract class UIDragContainer<D extends UIElement & Draggable> extends U
         dragStartMouse = new SVector();
         dragStartD = new SVector();
 
-        setLeftClickAction(() -> {
-            dragging = true;
-            dragStartD.set(draggable.position);
-            if (!draggable.mouseAbove) {
-                dragStartD.set(draggable.size).scale(-0.5);
-                dragStartD.add(mousePosition).sub(position);
-                clampDraggablePosition(dragStartD);
-            }
-            dragStartMouse.set(mousePosition).sub(position);
-        });
+        setLeftClickAction(this::startDragging);
     }
 
     @Override
@@ -43,12 +34,21 @@ public abstract class UIDragContainer<D extends UIElement & Draggable> extends U
         }
     }
 
+    private void startDragging() {
+        dragging = true;
+        dragStartD.set(draggable.position);
+        if (!draggable.mouseAbove) {
+            dragStartD.set(draggable.size).scale(-0.5);
+            dragStartD.add(mousePosition).sub(position);
+        }
+        dragStartMouse.set(mousePosition).sub(position);
+    }
+
     protected void drag(SVector mouse) {
         if (mouse == null) {
             return;
         }
         SVector newDragPos = new SVector(mouse).sub(position).sub(dragStartMouse).add(dragStartD);
-        // clampDraggablePosition(newDragPos);
 
         double relativeX = newDragPos.x / (size.x - draggable.size.x);
         if (!Double.isFinite(relativeX)) {
@@ -61,11 +61,6 @@ public abstract class UIDragContainer<D extends UIElement & Draggable> extends U
             relativeY = 0;
         }
         draggable.setRelativeY(relativeY);
-    }
-
-    private void clampDraggablePosition(SVector newDragPos) {
-        newDragPos.x = Math.min(Math.max(0, newDragPos.x), size.x - draggable.size.x);
-        newDragPos.y = Math.min(Math.max(0, newDragPos.y), size.y - draggable.size.y);
     }
 
     @Override

@@ -10,8 +10,7 @@ public class UIFloatMenu extends UIFloatContainer {
 
     protected CMLabel expandedLabel;
 
-    public UIFloatMenu(Supplier<Boolean> visibilitySupplier,
-            boolean scroll) {
+    public UIFloatMenu(Supplier<Boolean> visibilitySupplier, boolean scroll) {
         super(VERTICAL, LEFT);
 
         setVisibilitySupplier(visibilitySupplier);
@@ -23,10 +22,23 @@ public class UIFloatMenu extends UIFloatContainer {
             UIContainer scrollArea = new UIContainer(VERTICAL, LEFT, TOP, UIContainer.VERTICAL);
             scrollArea.setVFixedSize(200).zeroMargin().zeroPadding();
             contents = scrollArea;
-            add(scrollArea.addScrollbars());
+            add(scrollArea.addScrollbars(), true);
         } else {
             contents = this;
         }
+    }
+
+    private void add(UIElement child, boolean normalAdd) {
+        if (normalAdd) {
+            super.add(child);
+        } else {
+            contents.add(child);
+        }
+    }
+
+    @Override
+    public void add(UIElement child) {
+        add(child, contents == this || contents == null);
     }
 
     public UILabel addLabel(String text, UIAction clickAction) {
@@ -34,19 +46,15 @@ public class UIFloatMenu extends UIFloatContainer {
         label.backgroundHighlight = true;
         label.setLeftClickAction(clickAction);
         label.setHFillSize();
-        contents.add(label);
+        add(label);
         return label;
-    }
-
-    public void addSeparator() {
-        contents.add(new UISeparator());
     }
 
     public void addNestedContextMenu(String text, UIFloatMenu contextMenu) {
         CMLabel label = new CMLabel(text, this);
         label.backgroundHighlight = true;
         label.setHFillSize();
-        contents.add(label);
+        add(label);
 
         contextMenu.addAttachPoint(TOP_LEFT, label, TOP_RIGHT);
         contextMenu.addAttachPoint(TOP_RIGHT, label, TOP_LEFT);

@@ -27,7 +27,7 @@ public abstract class UIElement {
     protected boolean selectOnClick = false;
     protected boolean selectable = false;
 
-    private Supplier<Boolean> visibilitySupplier = this::isVisible;
+    protected Supplier<Boolean> visibilitySupplier = this::isVisible;
     private boolean visible = true;
 
     public UIElement() {
