@@ -34,8 +34,6 @@ import ui.components.ImageCanvas;
 
 /**
  * <pre>
- * continue:
- * * See todo note in UIPanel
  * App:
  *   Text tool
  *   Pencil
@@ -63,8 +61,6 @@ import ui.components.ImageCanvas;
  *     Keep track of all file locks in one centralized place to avoid leaking
  *   When parent app closes, shouldren should also close
  * UI:
- *   While something is being dragged, the mouse should not be above anything
- *     (see comment in UIPanel)
  *   Fix bug in UIPanel: when the textUpdater returns text containig newline
  *     characters, the text is not properly split across multiple lines
  *   Tool icons & cursors

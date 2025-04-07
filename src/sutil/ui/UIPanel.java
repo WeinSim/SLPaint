@@ -35,6 +35,7 @@ public abstract class UIPanel {
      * visible.
      */
     private boolean selectedElementVisible;
+    private boolean dragging;
 
     /**
      * Indicates wether the left mouse button is currently being pressed.
@@ -45,6 +46,7 @@ public abstract class UIPanel {
 
     public UIPanel() {
         selectedElement = null;
+        dragging = false;
         mousePressed = false;
 
         eventQueue = new LinkedList<>();
@@ -53,20 +55,21 @@ public abstract class UIPanel {
     public void update(SVector mousePos, boolean valid) {
         root.lock();
 
+        while (!eventQueue.isEmpty()) {
+            eventQueue.removeFirst().run();
+        }
+
         selectedElementVisible = false;
         root.updateVisibility();
         if (!selectedElementVisible) {
             selectedElement = null;
         }
 
-        // TODO continue: valid should be set to false if something is currently being
-        // dragged
-        root.updateMousePosition(mousePos, valid);
+        root.updateMousePosition(mousePos, valid && !dragging);
 
-        while (!eventQueue.isEmpty()) {
-            eventQueue.removeFirst().run();
-        }
-
+        // The dragging variable lags one frame behind (because it is being used before
+        // it is being set)
+        dragging = false;
         root.update();
 
         root.updateSize();
@@ -78,6 +81,10 @@ public abstract class UIPanel {
      */
     void confirmSelectedElement() {
         selectedElementVisible = true;
+    }
+
+    void setDragging() {
+        dragging = true;
     }
 
     public void mousePressed(int mouseButton) {

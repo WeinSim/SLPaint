@@ -31,6 +31,7 @@ public abstract class UIDragContainer<D extends UIElement & Draggable> extends U
         }
         if (dragging) {
             drag(mousePosition);
+            panel.setDragging();
         }
     }
 

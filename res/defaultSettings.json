@@ -1,14 +1,14 @@
 {
     "baseColor": [
-        76,
-        76,
-        76
+        255,
+        255,
+        255
     ],
     "customUIColors": {
         "capacity": 10,
         "values": []
     },
-    "darkMode": true,
+    "darkMode": false,
     "hueSatCircle" : true,
     "hslColorSpace": true,
     "transparentSelection": false
