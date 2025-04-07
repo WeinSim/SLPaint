@@ -1,5 +1,7 @@
 package ui;
 
+import main.ColorPicker;
+import main.apps.MainApp;
 import main.settings.BooleanSetting;
 import main.settings.ColorSetting;
 import sutil.math.SVector;
@@ -43,7 +45,6 @@ public class Colors {
     }
 
     private static BooleanSetting darkMode = new BooleanSetting("darkMode");
-    // private static SVector baseColor = new SVector(isDarkMode() ? DEFAULT_UI_COLORS_DARK[0] : DEFAULT_UI_COLORS_LIGHT[0]);
     private static ColorSetting baseColor = new ColorSetting("baseColor");
 
     private Colors() {
@@ -65,11 +66,11 @@ public class Colors {
         Colors.darkMode.set(darkMode);
     }
 
-    public static void setBaseColor(SVector baseColor) {
-        Colors.baseColor.set(baseColor);
+    public static int getBaseColor() {
+        return baseColor.get().getRGB();
     }
 
-    public static SVector getBaseColor() {
+    public static ColorPicker getBaseColorPicker() {
         return baseColor.get();
     }
 
@@ -117,7 +118,7 @@ public class Colors {
         // This method is being called ~5520 times per second (which is too much!)
         // Maybe cache the results?
 
-        return getBaseColor().copy().scale(brightness);
+        return MainApp.toSVector(getBaseColor()).copy().scale(brightness);
     }
 
     public static SVector getTextColor() {

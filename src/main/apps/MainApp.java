@@ -34,23 +34,19 @@ import ui.components.ImageCanvas;
 
 /**
  * <pre>
+ * continue:
+ * * See todo note in UIPanel
  * App:
- *   Dialogs
- *     Save dialog
- *       Keep track of unsaved changes, ask user to save before quitting if
- *       there are unsaved changes
- *     Only one at a time
- *     Keep track of all file locks in one centralized place to avoid leaking
- *   Resizing
- *     Selection resizing
- *     Selection Ctrl+Shift+X
- *   Undo / redo
+ *   Text tool
  *   Pencil
  *     Add different sizes
  *     Fix bug: pencil draws when mouse is clicked outside of canvas and dragged
  *       onto canvas
- *   Text tool
  *   Line tool
+ *   Resizing
+ *     Selection resizing
+ *     Selection Ctrl+Shift+X
+ *   Undo / redo
  *   Transparency
  *     Grey-white squares should always appear the same size
  *     Simply selecting a transparent area and unselecting it causes the
@@ -59,9 +55,18 @@ import ui.components.ImageCanvas;
  *       selection back onto the opaque background leaves the background
  *       unaffected. What is the expected behavior here?
  *   Recognize remapping from CAPS_LOCK to ESCAPE
+ *   Dialogs
+ *     Save dialog
+ *       Keep track of unsaved changes, ask user to save before quitting if
+ *       there are unsaved changes
+ *     Only one at a time
+ *     Keep track of all file locks in one centralized place to avoid leaking
  *   When parent app closes, shouldren should also close
- *   Add HSV color selection mode (in addition to HSL)?
  * UI:
+ *   While something is being dragged, the mouse should not be above anything
+ *     (see comment in UIPanel)
+ *   Fix bug in UIPanel: when the textUpdater returns text containig newline
+ *     characters, the text is not properly split across multiple lines
  *   Tool icons & cursors
  *   Make side panel collapsable
  * Rendering:
@@ -163,33 +168,26 @@ public final class MainApp extends App {
 
     private ImageCanvas canvas;
 
-    // private ColorEditorApp colorEditorApp;
-    // private SettingsApp settingsApp;
-
     public MainApp() {
         super((int) Sizes.MAIN_APP.width, (int) Sizes.MAIN_APP.height, Window.MAXIMIZED, "SLPaint");
 
         window.setCloseOnEscape(false);
 
-        Settings.loadSettings();
-
-        // customColors = new ArrayList<>();
         customColorButtonArray = new ColorArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
         selectionManager = new SelectionManager(this);
 
-        // imageFileManager = new ImageFileManager(this);
         imageFileManager = new ImageFileManager(this, "test.png");
 
         primaryColor = SUtil.toARGB(0);
         secondaryColor = SUtil.toARGB(255);
         colorSelection = PRIMARY_COLOR;
-        selectedColorPicker = new ColorPicker(this, getSelectedColor(), color -> addCustomColor(color));
+        selectedColorPicker = new ColorPicker(getSelectedColor());
 
         createUI();
 
         renderer = new MainAppRenderer(this);
 
-        resetImageTransform();
+        imageTranslation = new SVector();
 
         activeTool = ImageTool.PENCIL;
         prevTool = ImageTool.PENCIL;
@@ -198,6 +196,12 @@ public final class MainApp extends App {
     @Override
     public void update(double deltaT) {
         super.update(deltaT);
+
+        if (frameCount == 1) {
+            // Calling this in setup() does not work because the UI has not been updated
+            // yet, so the absolute position of the image canvas it still (0, 0).
+            resetImageTransform();
+        }
 
         boolean[] keys = window.getKeys();
         boolean[] prevKeys = window.getPrevKeys();

@@ -1,10 +1,10 @@
 package main.settings;
 
-import sutil.SUtil;
 import sutil.json.values.JSONArray;
 import sutil.json.values.JSONValue;
+import sutil.math.SVector;
 
-public final class ColorSetting extends Setting<Integer> {
+public final class ColorSetting extends Setting<SVector> {
 
     public ColorSetting(String identifier) {
         super(identifier);
@@ -15,28 +15,42 @@ public final class ColorSetting extends Setting<Integer> {
         return getJSONValueFromColor(value);
     }
 
+    /*
+     * TODO continue:
+     * problem: currently, there are two sources of truth for the UI base color. The
+     * contents of the corresponding ColorSetting (Colors.baseColor) and the
+     * ColorPicker of the SettingsApp (SettingsApp.colorPicker). The communication
+     * only happens from the color picker to the setting.
+     * 
+     * Idea: change the type parameter of ColorSetting from SVector to ColorPickContainer
+     * => only one source of truth
+     */
     @Override
     public void setJSONValue(JSONValue value) {
-        this.value = getColorFromJSONValue(value);
+        if (this.value == null) {
+            this.value = getColorFromJSONValue(value);
+        } else {
+            this.value.set(getColorFromJSONValue(value));
+        }
     }
 
-    public static JSONValue getJSONValueFromColor(int color) {
+    public static JSONValue getJSONValueFromColor(SVector color) {
         JSONArray array = new JSONArray();
-        array.add(SUtil.red(color));
-        array.add(SUtil.green(color));
-        array.add(SUtil.blue(color));
+        array.add((int) Math.round(color.x * 255));
+        array.add((int) Math.round(color.y * 255));
+        array.add((int) Math.round(color.z * 255));
         return array;
     }
 
-    public static int getColorFromJSONValue(JSONValue value) {
+    public static SVector getColorFromJSONValue(JSONValue value) {
         if (value instanceof JSONArray array) {
             int r = array.getInteger(0, 0);
             int g = array.getInteger(1, 0);
             int b = array.getInteger(2, 0);
-            return SUtil.toARGB(r, g, b);
+            return new SVector(r, g, b).div(255);
         } else {
             handleIncorrectJSONType("JSONArray", value.getClass().getName());
-            return 0;
+            return null;
         }
     }
 }

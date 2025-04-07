@@ -4,10 +4,6 @@ import java.util.function.Supplier;
 
 public class UILabel extends UIContainer {
 
-    /**
-     * TODO: when the textUpdater returns text containig newline characters, the
-     * text is not properly split across multiple lines.
-     */
     private Supplier<String> textUpdater;
 
     private UIText firstChild;

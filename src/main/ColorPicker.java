@@ -1,17 +1,9 @@
 package main;
 
-import java.util.function.Consumer;
-
-import main.apps.App;
-import renderEngine.Window;
 import sutil.SUtil;
 import sutil.math.SVector;
 
 public class ColorPicker {
-
-    private App app;
-
-    private Consumer<Integer> closeAction;
 
     private int initialColor;
     private int rgb;
@@ -24,24 +16,11 @@ public class ColorPicker {
 
     private int alpha;
 
-    public ColorPicker(App app, int initialColor, Consumer<Integer> closeAction) {
-        this.app = app;
+    public ColorPicker(int initialColor) {
         this.initialColor = initialColor;
-        this.closeAction = closeAction;
 
         setRGB(initialColor);
     }
-    // public void setRed(int red) {
-    // setComponent(16, red);
-    // }
-
-    // public void setGreen(int green) {
-    // setComponent(8, green);
-    // }
-
-    // public void setBlue(int blue) {
-    // setComponent(0, blue);
-    // }
 
     public void setRGB(int rgb) {
         this.rgb = rgb;
@@ -53,7 +32,6 @@ public class ColorPicker {
         this.hue = hue;
         updateRGBFromHSL();
         updateHSVFromHSL();
-        // updateCursorPositions();
     }
 
     public void setHSVHue(double hue) {
@@ -66,7 +44,6 @@ public class ColorPicker {
         this.hslSaturation = hslSaturation;
         updateRGBFromHSL();
         updateHSVFromHSL();
-        // updateCursorPositions();
     }
 
     public void setHSVSaturation(double hsvSaturation) {
@@ -79,7 +56,6 @@ public class ColorPicker {
         this.lightness = lightness;
         updateRGBFromHSL();
         updateHSVFromHSL();
-        // updateCursorPositions();
     }
 
     public void setValue(double value) {
@@ -169,13 +145,5 @@ public class ColorPicker {
 
     public int getInitialColor() {
         return initialColor;
-    }
-
-    public Window getWindow() {
-        return app.getWindow();
-    }
-
-    public Consumer<Integer> getCloseAction() {
-        return closeAction;
     }
 }

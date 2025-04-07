@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 
 import sutil.json.JSONParser;
 import sutil.json.JSONSerializer;
@@ -31,20 +32,43 @@ public class Settings {
     private static JSONObject defaultSettings;
     private static JSONObject currentSettings;
 
-    private static HashMap<String, Setting<?>> allSettings = new HashMap<>();
+    private static HashMap<String, Setting<?>> allSettings;
 
-    private static SettingsSaveThread saveThread = null;
+    private static SettingsSaveThread saveThread;
+
+    static {
+        defaultSettings = loadSettingsFromFile(DEFAULT_SETTINGS_FILE);
+        if (defaultSettings == null) {
+            System.err.format("Unable to load default settings file (%s)!\n", DEFAULT_SETTINGS_FILE);
+            System.exit(1);
+        }
+
+        currentSettings = loadSettingsFromFile(SETTINGS_FILE);
+        if (currentSettings == null) {
+            currentSettings = new JSONObject(defaultSettings);
+        }
+
+        allSettings = new HashMap<>();
+
+        if (saveThread == null) {
+            saveThread = new SettingsSaveThread();
+            saveThread.start();
+        }
+    }
 
     private Settings() {
     }
 
     public static void addSetting(String identifier, Setting<?> setting) {
+        if (allSettings.get(identifier) != null) {
+            throw new RuntimeException(String.format("Duplicate setting %s!", identifier));
+        }
         allSettings.put(identifier, setting);
 
-        if (currentSettings == null) {
-            loadSettings();
-        }
+        updateSetting(identifier, setting);
+    }
 
+    private static void updateSetting(String identifier, Setting<?> setting) {
         JSONValue jsonValue = currentSettings.get(identifier);
         if (jsonValue == null) {
             jsonValue = defaultSettings.get(identifier);
@@ -55,25 +79,12 @@ public class Settings {
         setting.setJSONValue(jsonValue);
     }
 
-    public static void loadSettings() {
-        loadDefaultSettings();
-
-        currentSettings = loadSettingsFromFile(SETTINGS_FILE);
-        if (currentSettings == null) {
-            currentSettings = new JSONObject(defaultSettings);
-        }
-
-        if (saveThread == null) {
-            saveThread = new SettingsSaveThread();
-            saveThread.start();
-        }
-    }
-
-    private static void loadDefaultSettings() {
+    public static void loadDefaultSettings() {
         defaultSettings = loadSettingsFromFile(DEFAULT_SETTINGS_FILE);
-        if (defaultSettings == null) {
-            System.err.format("Unable to load default settings file (%s)!\n", DEFAULT_SETTINGS_FILE);
-            System.exit(1);
+        currentSettings = new JSONObject(defaultSettings);
+
+        for (Entry<String, Setting<?>> entry : allSettings.entrySet()) {
+            updateSetting(entry.getKey(), entry.getValue());
         }
     }
 

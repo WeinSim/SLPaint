@@ -4,6 +4,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import main.ColorPicker;
+import main.apps.App;
+import main.apps.MainApp;
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIButton;
@@ -25,12 +27,12 @@ public class ColorPickContainer extends UIContainer {
     private ColorPicker colorPicker;
     private double size;
 
-    public ColorPickContainer(ColorPicker colorPicker) {
-        this(colorPicker, Sizes.COLOR_PICKER_EXTRA_WINDOW.size, VERTICAL, true, true);
+    public ColorPickContainer(ColorPicker colorPicker, Consumer<Integer> buttonAction) {
+        this(colorPicker, buttonAction, Sizes.COLOR_PICKER_EXTRA_WINDOW.size, VERTICAL, true, true);
     }
 
-    public ColorPickContainer(ColorPicker colorPicker, double size, int orientation, boolean addAlpha,
-            boolean addPreview) {
+    public ColorPickContainer(ColorPicker colorPicker, Consumer<Integer> buttonAction, double size, int orientation,
+            boolean addAlpha, boolean addPreview) {
         super(orientation, orientation == VERTICAL ? CENTER : TOP);
         this.colorPicker = colorPicker;
         this.size = size;
@@ -42,11 +44,7 @@ public class ColorPickContainer extends UIContainer {
         UIContainer row1 = createRow1();
         UIContainer row2 = addAlpha ? createRow2() : null;
         UIContainer row3 = createRow3(addPreview);
-        UIContainer row4 = createRow4();
-
-        // row1.setOutlineNormal(true);
-        // row2.setOutlineNormal(true);
-        // row3.setOutlineNormal(true);
+        UIContainer row4 = createRow4(buttonAction);
 
         add(row1);
         if (orientation == VERTICAL) {
@@ -114,7 +112,6 @@ public class ColorPickContainer extends UIContainer {
         row3.zeroMargin().noOutline();
         row3.setHFillSize();
 
-        // if (addPreview) {
         UIContainer colorPreview = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         colorPreview.zeroMargin().noOutline();
         UIContainer colorBox = new UIContainer(UIContainer.HORIZONTAL, 0);
@@ -125,7 +122,6 @@ public class ColorPickContainer extends UIContainer {
         if (addPreview) {
             previewWidth /= 2;
         }
-        // double width = addPreview ? previewWidth / 2 : previewWidth;
         for (int i = addPreview ? 0 : 1; i < 2; i++) {
             Supplier<Integer> bgColorSupplier = i == 0
                     ? colorPicker::getInitialColor
@@ -140,10 +136,10 @@ public class ColorPickContainer extends UIContainer {
         gap.zeroMargin().noOutline();
         gap.setHFillSize();
         row3.add(gap);
-        // }
 
         UIContainer hslInput = new UIContainer(UIContainer.VERTICAL, UIContainer.RIGHT);
         hslInput.zeroMargin().noOutline();
+        hslInput.setVisibilitySupplier(() -> App.isHSLColorSpace());
         for (int i = 0; i < HSL_NAMES.length; i++) {
             UIContainer colorRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
             colorRow.zeroMargin().noOutline();
@@ -180,6 +176,7 @@ public class ColorPickContainer extends UIContainer {
 
         UIContainer hsvInput = new UIContainer(UIContainer.VERTICAL, UIContainer.RIGHT);
         hsvInput.zeroMargin().noOutline();
+        hsvInput.setVisibilitySupplier(() -> !MainApp.isHSLColorSpace());
         for (int i = 0; i < HSV_NAMES.length; i++) {
             UIContainer colorRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
             colorRow.zeroMargin().noOutline();
@@ -253,9 +250,8 @@ public class ColorPickContainer extends UIContainer {
         return row3;
     }
 
-    private UIContainer createRow4() {
-        UIButton customColor = new UIButton("Add to Custom Colors",
-                () -> colorPicker.getCloseAction().accept(colorPicker.getRGB()));
+    private UIContainer createRow4(Consumer<Integer> buttonAction) {
+        UIButton customColor = new UIButton("Add to Custom Colors", () -> buttonAction.accept(colorPicker.getRGB()));
         customColor.setAlignment(UIContainer.CENTER);
         customColor.setHFillSize();
         return customColor;

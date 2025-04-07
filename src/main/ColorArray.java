@@ -3,15 +3,17 @@ package main;
 public class ColorArray {
 
     private Integer[] colors;
-    private int length;
 
-    public ColorArray(int length) {
-        this.length = length;
-        clear();
+    public ColorArray(int capacity) {
+        reset(capacity);
+    }
+
+    public void reset(int capacity) {
+        colors = new Integer[capacity];
     }
 
     public void clear() {
-        colors = new Integer[length];
+        reset(colors.length);
     }
 
     public void addColor(int color) {
@@ -25,7 +27,7 @@ public class ColorArray {
         return colors[index];
     }
 
-    public int getLength() {
+    public int getCapacity() {
         return colors.length;
     }
 }

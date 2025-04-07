@@ -1,10 +1,11 @@
 package main.settings;
 
+import main.ColorPicker;
+import sutil.SUtil;
 import sutil.json.values.JSONArray;
 import sutil.json.values.JSONValue;
-import sutil.math.SVector;
 
-public final class ColorSetting extends Setting<SVector> {
+public final class ColorSetting extends Setting<ColorPicker> {
 
     public ColorSetting(String identifier) {
         super(identifier);
@@ -12,31 +13,35 @@ public final class ColorSetting extends Setting<SVector> {
 
     @Override
     public JSONValue getJSONValue() {
-        return getJSONValueFromColor(value);
+        return getJSONValueFromColor(value.getRGB());
     }
 
     @Override
-    public void setJSONValue(JSONValue value) {
-        this.value = getColorFromJSONValue(value);
+    public void setJSONValue(JSONValue json) {
+        if (value == null) {
+            value = new ColorPicker(getColorFromJSONValue(json));
+        } else {
+            value.setRGB(getColorFromJSONValue(json));
+        }
     }
 
-    public static JSONValue getJSONValueFromColor(SVector color) {
+    public static JSONArray getJSONValueFromColor(int color) {
         JSONArray array = new JSONArray();
-        array.add((int) Math.round(color.x * 255));
-        array.add((int) Math.round(color.y * 255));
-        array.add((int) Math.round(color.z * 255));
+        array.add(SUtil.red(color));
+        array.add(SUtil.green(color));
+        array.add(SUtil.blue(color));
         return array;
     }
 
-    public static SVector getColorFromJSONValue(JSONValue value) {
-        if (value instanceof JSONArray array) {
+    public static int getColorFromJSONValue(JSONValue json) {
+        if (json instanceof JSONArray array) {
             int r = array.getInteger(0, 0);
             int g = array.getInteger(1, 0);
             int b = array.getInteger(2, 0);
-            return new SVector(r, g, b).div(255);
+            return SUtil.toARGB(r, g, b);
         } else {
-            handleIncorrectJSONType("JSONArray", value.getClass().getName());
-            return null;
+            handleIncorrectJSONType("JSONArray", json.getClass().getName());
+            return 0;
         }
     }
 }

@@ -7,7 +7,7 @@ public class UIContextMenu extends UIFloatMenu {
     private boolean visible;
 
     public UIContextMenu(boolean scroll) {
-        super(null, scroll);
+        super(scroll);
 
         // The position and visibility suppliers cannot be put directly into the
         // constructor because of the following error message:

@@ -10,6 +10,10 @@ public class UIFloatMenu extends UIFloatContainer {
 
     protected CMLabel expandedLabel;
 
+    public UIFloatMenu(boolean scroll) {
+        this(null, scroll);
+    }
+
     public UIFloatMenu(Supplier<Boolean> visibilitySupplier, boolean scroll) {
         super(VERTICAL, LEFT);
 

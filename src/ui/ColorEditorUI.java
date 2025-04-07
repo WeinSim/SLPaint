@@ -14,6 +14,9 @@ public class ColorEditorUI extends AppUI<ColorEditorApp> {
         root.setMinimalSize();
         root.setMarginScale(1);
 
-        root.add(new ColorPickContainer(app.getColorPicker()));
+        root.add(new ColorPickContainer(app.getColorPicker(), color -> {
+            app.getMainApp().addCustomColor(color);
+            app.getWindow().requestClose();
+        }));
     }
 }

@@ -59,6 +59,8 @@ public abstract class UIPanel {
             selectedElement = null;
         }
 
+        // TODO continue: valid should be set to false if something is currently being
+        // dragged
         root.updateMousePosition(mousePos, valid);
 
         while (!eventQueue.isEmpty()) {
@@ -71,8 +73,8 @@ public abstract class UIPanel {
     }
 
     /**
-     * During the updateVisibility() step of update(), the currently
-     * selected element has to report to the UIPanel that it is still visible.
+     * During the updateVisibility() step of update(), the currently selected
+     * element has to report to the UIPanel that it is still visible.
      */
     void confirmSelectedElement() {
         selectedElementVisible = true;

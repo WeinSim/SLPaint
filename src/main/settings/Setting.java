@@ -22,7 +22,7 @@ public abstract sealed class Setting<T> permits BooleanSetting, ColorSetting, Co
 
     public abstract JSONValue getJSONValue();
 
-    public abstract void setJSONValue(JSONValue value);
+    public abstract void setJSONValue(JSONValue json);
 
     protected static void handleIncorrectJSONType(String expected, String actual) {
         String message = String.format(

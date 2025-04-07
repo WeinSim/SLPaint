@@ -14,17 +14,9 @@ public final class SettingsApp extends App {
         super((int) Sizes.SETTINGS_APP.width, (int) Sizes.SETTINGS_APP.height, Window.NORMAL, true, "Settings",
                 mainApp);
 
-        colorPicker = new ColorPicker(this, MainApp.toInt(Colors.getBaseColor()),
-                (Integer color) -> MainApp.addCustomUIBaseColor(color));
+        colorPicker = Colors.getBaseColorPicker();
 
         createUI();
-    }
-
-    @Override
-    public void update(double deltaT) {
-        super.update(deltaT);
-
-        Colors.setBaseColor(MainApp.toSVector(colorPicker.getRGB()));
     }
 
     public void setUIColor(int color) {
@@ -39,7 +31,7 @@ public final class SettingsApp extends App {
         Colors.setDarkMode(darkMode);
         SVector[] newColors = Colors.getDefaultColors();
 
-        int baseRGB = MainApp.toInt(Colors.getBaseColor());
+        int baseRGB = Colors.getBaseColor();
 
         // this is a bit of a hack
         for (int i = 0; i < oldColors.length; i++) {

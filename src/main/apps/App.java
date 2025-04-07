@@ -29,6 +29,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
     protected Window window;
 
     protected double avgFrameTime = -1;
+    protected int frameCount = 0;
 
     private LinkedList<UIAction> eventQueue;
 
@@ -86,6 +87,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         } else {
             avgFrameTime = (1 - FRAME_TIME_GAMMA) * avgFrameTime + FRAME_TIME_GAMMA * deltaT;
         }
+        frameCount++;
 
         // empty event queue
         while (!eventQueue.isEmpty()) {

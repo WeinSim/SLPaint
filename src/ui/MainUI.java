@@ -33,7 +33,8 @@ public class MainUI extends AppUI<MainApp> {
         root.setHAlignment(UIContainer.LEFT);
         root.zeroMargin().zeroPadding().noOutline();
 
-        UIContainer topRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER, UIContainer.HORIZONTAL);
+        UIContainer topRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER,
+                UIContainer.HORIZONTAL);
         topRow.withSeparators().setHFillSize().setHAlignment(UIContainer.LEFT).withBackground().noOutline();
 
         UIContainer settings = addTopRowSection(topRow, "Settings");
@@ -93,13 +94,7 @@ public class MainUI extends AppUI<MainApp> {
                 currentRow = null;
             }
         }
-        CustomColorContainer ccc = new CustomColorContainer(app.getCustomColorButtonArray(),
-                (Integer color) -> {
-                    if (color == null) {
-                        return;
-                    }
-                    app.selectColor(color);
-                });
+        CustomColorContainer ccc = new CustomColorContainer(app.getCustomColorButtonArray(), app::selectColor);
         ccc.zeroMargin().noOutline();
         allColors.add(ccc);
         topRow.add(allColors);
@@ -110,7 +105,8 @@ public class MainUI extends AppUI<MainApp> {
         ImageCanvas canvas = new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, UIContainer.TOP, app);
         canvas.noOutline();
 
-        UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER, UIContainer.TOP, UIContainer.VERTICAL);
+        UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER, UIContainer.TOP,
+                UIContainer.VERTICAL);
         sidePanel.withSeparators().withBackground().noOutline();
         // sidePanel.setVFillSize();
         sidePanel.setVMinimalSize();
@@ -128,6 +124,7 @@ public class MainUI extends AppUI<MainApp> {
 
         sidePanel.add(new ColorPickContainer(
                 app.getSelectedColorPicker(),
+                app::addCustomColor,
                 Sizes.COLOR_PICKER_SIDE_PANEL.size,
                 UIContainer.VERTICAL,
                 true,
