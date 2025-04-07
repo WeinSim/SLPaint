@@ -4,15 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import renderEngine.Loader;
-import renderEngine.ModelTexture;
 import renderEngine.RawModel;
 import sutil.math.SVector;
 
 public class TextFont {
 
     private static final char UNKNOWN_CHAR_ID = 9633;
-
-    // private App app;
 
     private HashMap<Character, FontChar> characters;
 
@@ -21,15 +18,14 @@ public class TextFont {
     private int lineHeight;
     private int base;
 
-    private ModelTexture texture;
+    private int textureID;
 
-    public TextFont(String name, int size, int lineHeight, int base, ModelTexture texture) {
-        // this.app = app;
+    public TextFont(String name, int size, int lineHeight, int base, int textureID) {
         this.name = name;
         this.size = size;
         this.lineHeight = lineHeight;
         this.base = base;
-        this.texture = texture;
+        this.textureID = textureID;
     }
 
     public void loadChars(ArrayList<FontChar> chars) {
@@ -85,7 +81,8 @@ public class TextFont {
             sizesArray[2 * i + 1] = size.y;
         }
 
-        // return app.getLoader().loadToTextVAO(verticesArray, textureCoordsArray, sizesArray);
+        // return app.getLoader().loadToTextVAO(verticesArray, textureCoordsArray,
+        // sizesArray);
         return loader.loadToTextVAO(verticesArray, textureCoordsArray, sizesArray);
     }
 
@@ -98,17 +95,13 @@ public class TextFont {
         return sum;
     }
 
-    public ModelTexture getTexture() {
-        return texture;
+    public int getTextureID() {
+        return textureID;
     }
 
     public static char getUnknownCharId() {
         return UNKNOWN_CHAR_ID;
     }
-
-    // public Game getGame() {
-    //     return game;
-    // }
 
     public HashMap<Character, FontChar> getCharacters() {
         return characters;

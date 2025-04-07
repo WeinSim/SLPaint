@@ -161,7 +161,7 @@ public class UIRenderMaster {
         GL30.glBindVertexArray(textVAO.getVaoID());
 
         GL13.glActiveTexture(GL13.GL_TEXTURE0);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textFont.getTexture().getTextureID());
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textFont.getTextureID());
         // GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER,
         // GL30.GL_NEAREST_MIPMAP_NEAREST);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR_MIPMAP_NEAREST);

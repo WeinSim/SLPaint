@@ -1,7 +1,8 @@
-package main;
+package main.tools;
 
 import java.util.LinkedList;
 
+import main.Image;
 import main.apps.MainApp;
 
 public enum ImageTool {

@@ -25,6 +25,7 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
         uiMaster.translate(translation);
         uiMaster.scale(zoom);
 
+        // render image
         Image image = app.getImage();
         int width = image.getWidth(), height = image.getHeight();
         uiMaster.strokeWeight(0);
@@ -34,6 +35,7 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
         uiMaster.rect(new SVector(), imageSize);
         uiMaster.image(image.getTextureID(), new SVector(), imageSize);
 
+        // render selection
         SelectionManager selectionManager = app.getSelectionManager();
         Image selection = selectionManager.getSelection();
         if (selection != null) {
@@ -69,6 +71,7 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
             uiMaster.rect(new SVector(x, y).scale(zoom), new SVector(w, h).scale(app.getImageZoom()));
         }
 
+        // render ui
         renderUI();
 
         uiMaster.stop();

@@ -4,9 +4,9 @@ import java.util.function.Supplier;
 
 import main.Image;
 import main.ImageFormat;
-import main.ImageTool;
 import main.SelectionManager;
 import main.apps.MainApp;
+import main.tools.ImageTool;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UILabel;

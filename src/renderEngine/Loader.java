@@ -33,6 +33,8 @@ public class Loader {
     private ArrayList<Integer> textVAOs;
     private ArrayList<Integer> textVBOs;
 
+    private HashMap<String, TextFont> loadedFonts;
+
     public Loader() {
         // this.app = app;
 
@@ -42,6 +44,8 @@ public class Loader {
 
         textVAOs = new ArrayList<>();
         textVBOs = new ArrayList<>();
+
+        loadedFonts = new HashMap<>();
 
         textMode = false;
     }
@@ -64,7 +68,7 @@ public class Loader {
         return new RawModel(vaoID, positions.length);
     }
 
-    public ModelTexture loadTexture(String path) {
+    public int loadTexture(String path) {
         Texture texture = null;
         try {
             texture = TextureLoader.getTexture("PNG", new FileInputStream(path));
@@ -76,10 +80,17 @@ public class Loader {
         }
         int textureID = texture.getTextureID();
         textures.add(textureID);
-        return new ModelTexture(textureID);
+        return textureID;
     }
 
     public TextFont loadFont(String name, int textSize, boolean generate) {
+        // try returning already loaded font
+        TextFont loadedFont = loadedFonts.get(name);
+        if (loadedFont != null) {
+            return loadedFont;
+        }
+
+        // actually load font
         String directoryName = String.format("res/fonts/%s/", name);
         if (generate) {
             MainApp.runCommand(directoryName,
@@ -145,11 +156,13 @@ public class Loader {
             System.exit(1);
         }
 
-        ModelTexture texture = loadTexture(directoryName + "output_0.png");
+        int textureID = loadTexture(directoryName + "output_0.png");
 
         // TextFont font = new TextFont(app, name, size, lineHeight, base, texture);
-        TextFont font = new TextFont(name, size, lineHeight, base, texture);
+        TextFont font = new TextFont(name, size, lineHeight, base, textureID);
         font.loadChars(chars);
+        loadedFonts.put(name, font);
+
         return font;
     }
 
