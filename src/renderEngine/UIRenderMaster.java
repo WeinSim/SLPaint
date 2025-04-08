@@ -30,6 +30,10 @@ public class UIRenderMaster {
     private ShaderProgram ellipseShader;
     private ShaderProgram activeShader;
 
+    private RawModel dummyVAO;
+
+    private FrameBufferObject textFBO;
+
     private Matrix3f uiMatrix;
     private LinkedList<Matrix3f> uiMatrixStack;
 
@@ -42,17 +46,15 @@ public class UIRenderMaster {
     private double fillAlpha;
     private int fillMode;
 
+    private double checkerboardSize;
+    private SVector[] checkerboardColors;
+
     private SVector stroke;
     private int strokeMode;
     private double strokeWeight;
 
-    private double checkerboardSize;
-    private SVector[] checkerboardColors;
-
     private TextFont textFont;
     private double textSize;
-
-    private RawModel dummyVAO;
 
     public UIRenderMaster(App app) {
         this.app = app;
@@ -63,19 +65,15 @@ public class UIRenderMaster {
         imageShader = new ShaderProgram("image", null, true);
         hslShader = new ShaderProgram("hsl", null, true);
 
-        dummyVAO = app.getLoader().loadToVAO(new double[] { 0, 0 });
+        Loader loader = app.getLoader();
+        dummyVAO = loader.loadToVAO(new double[] { 0, 0 });
+        textFBO = loader.createFBO(400, 400);
 
         uiMatrixStack = new LinkedList<>();
         scissorStack = new LinkedList<>();
 
-        textFont = null;
-
         fill = new SVector();
-        fillMode = NONE;
         stroke = new SVector();
-        strokeMode = NONE;
-
-        depth = 0;
 
         checkerboardColors = new SVector[] { new SVector(), new SVector() };
     }
@@ -91,17 +89,43 @@ public class UIRenderMaster {
         GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDepthFunc(GL11.GL_LEQUAL);
 
+        defaultFramebuffer();
+
         uiMatrixStack.clear();
         uiMatrix = new Matrix3f();
 
         scissorStack.clear();
         scissorInfo = new ScissorInfo();
 
+        depth = 0;
+
+        checkerboardFill(new SVector[] { new SVector(), new SVector() }, 1);
         fill(new SVector(0.5, 0.5, 0.5));
+        fillAlpha(1.0);
+
         stroke(new SVector());
         strokeWeight(1);
 
+        textFont = null;
+        textSize = 1;
+
         activeShader = null;
+    }
+
+    public void stop() {
+        app.getLoader().tempCleanUp();
+
+        if (activeShader != null) {
+            activeShader.stop();
+        }
+    }
+
+    public void defaultFramebuffer() {
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+    }
+
+    public void textFramebuffer() {
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, textFBO.fboID());
     }
 
     public void rect(SVector position, SVector size) {
@@ -328,12 +352,6 @@ public class UIRenderMaster {
             }
         }
 
-        // int dx = 100, dy = 100;
-        // x -= dx;
-        // w += 2 * dx;
-        // y -= dy;
-        // h += 2 * dy;
-
         scissorInfo.set(x, y, w, h);
 
         scissor(x, y, w, h);
@@ -481,14 +499,6 @@ public class UIRenderMaster {
 
     public void textSize(double textSize) {
         this.textSize = textSize;
-    }
-
-    public void stop() {
-        app.getLoader().textCleanUp();
-
-        if (activeShader != null) {
-            activeShader.stop();
-        }
     }
 
     private Matrix3f createViewMatrix() {

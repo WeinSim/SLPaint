@@ -4,9 +4,9 @@ import java.util.function.Supplier;
 
 import main.Image;
 import main.ImageFormat;
-import main.SelectionManager;
 import main.apps.MainApp;
 import main.tools.ImageTool;
+import main.tools.SelectionTool;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UILabel;
@@ -51,7 +51,7 @@ public class MainUI extends AppUI<MainApp> {
         imageOptions.add(new UIButton("Flip", () -> app.showDialog(MainApp.FLIP_DIALOG)));
 
         UIContainer toolbox = addTopRowSection(topRow, "Tools");
-        for (ImageTool tool : ImageTool.values()) {
+        for (ImageTool tool : ImageTool.INSTANCES) {
             toolbox.add(new ToolButton(app, tool));
         }
 
@@ -131,6 +131,18 @@ public class MainUI extends AppUI<MainApp> {
                 false));
         canvas.add(sidePanel.addScrollbars());
 
+        UIContainer debugPanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
+        debugPanel.withBackground().noOutline();
+        debugPanel.setVFillSize();
+        // debugPanel.add(new UIText("Tools"));
+        // for (ImageTool tool : ImageTool.INSTANCES) {
+        //     debugPanel.add(new UIText(() -> String.format("  %s: state = %d", tool.getName(), tool.getState())));
+        // }
+        debugPanel.add(new UIText(() -> String.format("Active tool: %s", app.getActiveTool().getName())));
+        debugPanel.add(new UIText(() -> String.format("  State: %d", app.getActiveTool().getState())));
+        debugPanel.add(new UIText("                           "));
+        canvas.add(debugPanel);
+
         root.add(canvas);
 
         UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
@@ -173,10 +185,10 @@ public class MainUI extends AppUI<MainApp> {
         statusBar.add(new UISeparator());
         statusBar.add(new UILabel(() -> {
             String ret = "Selection size:";
-            SelectionManager selectionManager = app.getSelectionManager();
-            if (selectionManager.getPhase() != SelectionManager.NONE) {
-                ret += " %d x %d px".formatted(selectionManager.getWidth(),
-                        selectionManager.getHeight());
+            SelectionTool selectionManager = ImageTool.SELECTION;
+            if (app.getActiveTool() == selectionManager
+                    && selectionManager.getState() != ImageTool.NONE) {
+                ret += " %d x %d px".formatted(selectionManager.getWidth(), selectionManager.getHeight());
             }
             return ret;
         }));

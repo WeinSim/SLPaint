@@ -15,11 +15,16 @@ const vec2[4] cornerOffsets = vec2[4](
     vec2(1, 1)
 );
 
+vec3 vecToInt(vec3 v) {
+    return vec3(floor(v.x), floor(v.y), floor(v.z));
+}
+
 void main(void) {
     for (int i = 0; i < 4; i++) {
         vec3 screenPos = transformationMatrix * vec3(cornerOffsets[i], 1.0);
         passUVCoords = cornerOffsets[i];
-        screenPos = viewMatrix * vec3(screenPos.xy, 1.0);
+        // screenPos = viewMatrix * vec3(screenPos.xy, 1.0);
+        screenPos = viewMatrix * vecToInt(vec3(screenPos.xy, 1.0));
         gl_Position = vec4(screenPos.xy, 0, 1);
         EmitVertex();
     }

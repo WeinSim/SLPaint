@@ -1,76 +1,153 @@
 package main.tools;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 
-import main.Image;
 import main.apps.MainApp;
+import sutil.ui.UIAction;
 
-public enum ImageTool {
+public abstract sealed class ImageTool permits ClickTool, PencilTool, SelectionTool { // , TextTool {
 
-    PENCIL, COLOR_PICKER, FILL_BUCKET, SELECTION;
+    public static final PencilTool PENCIL = PencilTool.INSTANCE;
+    public static final FillBucketTool FILL_BUCKET = FillBucketTool.INSTANCE;
+    public static final PipetteTool PIPETTE = PipetteTool.INSTANCE;
+    public static final SelectionTool SELECTION = SelectionTool.INSTANCE;
 
-    private static final int[] FILL_XOFF = { 0, -1, 0, 1 };
-    private static final int[] FILL_YOFF = { 1, 0, -1, 0 };
+    public static final ImageTool[] INSTANCES = {
+            PENCIL,
+            FILL_BUCKET,
+            PIPETTE,
+            SELECTION
+    };
 
-    public void click(MainApp app, int x, int y, int mouseButton) {
-        switch (this) {
-            case COLOR_PICKER -> {
-                switch (mouseButton) {
-                    case 0 -> app.setPrimaryColor(app.getImage().getPixel(x, y));
-                    case 1 -> app.setSecondaryColor(app.getImage().getPixel(x, y));
-                }
-            }
-            case FILL_BUCKET -> {
-                Image image = app.getImage();
-                int baseColor = image.getPixel(x, y);
-                int replaceColor = mouseButton == 0 ? app.getPrimaryColor() : app.getSecondaryColor();
-                // int bitmask = MainApp.RGB_BITMASK;
-                // if ((baseColor & bitmask) == (replaceColor & bitmask))
-                // // break;
-                // return;
-                LinkedList<Long> boundary = new LinkedList<>();
-                boundary.add((x & 0xFFFFFFFFL) << 32 | (y & 0xFFFFFFFFL));
-                // no noticeable performance increase with cached bitmap for discovered pixels
-                // boolean[][] discovered = new boolean[image.getWidth()][image.getHeight()];
-                while (!boundary.isEmpty()) {
-                    long point = boundary.removeLast();
-                    int pointX = (int) ((point >> 32) & 0xFFFFFFFFL);
-                    int pointY = (int) (point & 0xFFFFFFFFL);
-                    // discovered[pointX][pointY] = true;
-                    image.setPixel(pointX, pointY, replaceColor);
-                    for (int i = 0; i < FILL_XOFF.length; i++) {
-                        int newX = pointX + FILL_XOFF[i];
-                        int newY = pointY + FILL_YOFF[i];
-                        if (image.isInside(newX, newY)) {
-                            // if (discovered[newX][newY]) {
-                            // continue;
-                            // }
-                            if (image.getPixel(newX, newY)  == baseColor) {
-                                boundary.add((newX & 0xFFFFFFFFL) << 32 | (newY & 0xFFFFFFFFL));
-                            }
-                        }
-                    }
-                }
-            }
-            default -> {
+    public static final int NONE = 0x01, INITIAL_DRAG = 0x02, IDLE = 0x04, IDLE_DRAG = 0x08;
+
+    private ArrayList<KeyboardShortcut> keyboardShortcuts;
+
+    protected MainApp app;
+
+    private int state;
+
+    private int mouseDragButton;
+
+    protected ImageTool() {
+        keyboardShortcuts = new ArrayList<>();
+
+        start();
+    }
+
+    public static void init(MainApp app) {
+        PENCIL.app = app;
+        FILL_BUCKET.app = app;
+        PIPETTE.app = app;
+        SELECTION.app = app;
+    }
+
+    public void start() {
+        state = NONE;
+    }
+
+    public void mousePressed(int x, int y, int mouseButton) {
+        if (state == NONE || state == IDLE) {
+            boolean startDrag = state == NONE
+                    ? startInitialDrag(x, y, mouseButton)
+                    : startIdleDrag(x, y, mouseButton);
+            if (startDrag) {
+                state = state == NONE ? INITIAL_DRAG : IDLE_DRAG;
+                mouseDragButton = mouseButton;
+            } else {
+                state = NONE;
             }
         }
     }
 
-    public void update(MainApp app, int x, int y, int mouseButton) {
-        switch (this) {
-            case PENCIL -> {
-                app.drawLine(x, y, mouseButton == 0 ? app.getPrimaryColor() : app.getSecondaryColor());
+    public void mouseDragged(int x, int y, int px, int py, int mouseButton) {
+        if (mouseButton != mouseDragButton) {
+            return;
+        }
+        switch (state) {
+            case INITIAL_DRAG -> {
+                handleInitialDrag(x, y, px, py);
             }
-            default -> {
+            case IDLE_DRAG -> {
+                handleIdleDrag(x, y, px, py);
             }
         }
     }
 
-    public void release(MainApp app, int x, int y, int mouseButton) {
-        switch (this) {
-            default -> {
+    public void mouseReleased(int mouseButton) {
+        if (mouseButton != mouseDragButton) {
+            return;
+        }
+        switch (state) {
+            case INITIAL_DRAG -> {
+                if (finishInitialDrag()) {
+                    state = IDLE;
+                } else {
+                    state = NONE;
+                }
+            }
+            case IDLE_DRAG -> {
+                finishIdleDrag();
+                state = IDLE;
             }
         }
+    }
+
+    public void keyPressed(int key, int modifiers) {
+        for (KeyboardShortcut shortcut : keyboardShortcuts) {
+            if (shortcut.key() == key
+                    && (shortcut.initialState() & state) != 0
+                    && shortcut.modifiers() == modifiers) {
+                // final String baseString = "%s: executing shortcut. key = %d, modifiers = %d,
+                // initialState = %d, finalState = %d\n";
+                // System.out.format(baseString, getName(), shortcut.key(),
+                // shortcut.modifiers(), shortcut.initialState(),
+                // shortcut.finalState());
+                app.setActiveTool(this);
+                shortcut.action().run();
+                state = shortcut.finalState;
+                break;
+            }
+        }
+    }
+
+    public abstract void forceQuit();
+
+    protected int getMouseDragButton() {
+        return mouseDragButton;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    /**
+     * @return Wether the INITIAL_DRAG phase should be entered
+     */
+    protected abstract boolean startInitialDrag(int x, int y, int mouseButton);
+
+    protected abstract void handleInitialDrag(int x, int y, int px, int py);
+
+    /**
+     * @return Wether the IDLE phase should be entered
+     */
+    protected abstract boolean finishInitialDrag();
+
+    /**
+     * @return Wether the IDLE_DRAG phase should be entered
+     */
+    protected abstract boolean startIdleDrag(int x, int y, int mouseButton);
+
+    protected abstract void handleIdleDrag(int x, int y, int px, int py);
+
+    protected abstract void finishIdleDrag();
+
+    public abstract String getName();
+
+    protected void addKeyboardShortcut(KeyboardShortcut shortcut) {
+        keyboardShortcuts.add(shortcut);
+    }
+
+    protected record KeyboardShortcut(int key, int modifiers, int initialState, int finalState, UIAction action) {
     }
 }

@@ -28,10 +28,11 @@ public class Loader {
     private ArrayList<Integer> vaos;
     private ArrayList<Integer> vbos;
     private ArrayList<Integer> textures;
+    private ArrayList<Integer> fbos;
 
     private boolean textMode;
-    private ArrayList<Integer> textVAOs;
-    private ArrayList<Integer> textVBOs;
+    private ArrayList<Integer> tempVAOs;
+    private ArrayList<Integer> tempVBOs;
 
     private HashMap<String, TextFont> loadedFonts;
 
@@ -41,9 +42,10 @@ public class Loader {
         vaos = new ArrayList<>();
         vbos = new ArrayList<>();
         textures = new ArrayList<>();
+        fbos = new ArrayList<>();
 
-        textVAOs = new ArrayList<>();
-        textVBOs = new ArrayList<>();
+        tempVAOs = new ArrayList<>();
+        tempVBOs = new ArrayList<>();
 
         loadedFonts = new HashMap<>();
 
@@ -66,6 +68,30 @@ public class Loader {
         storeDataInAttributeList(2, 2, sizes);
         unbindVAO();
         return new RawModel(vaoID, positions.length);
+    }
+
+    // https://learnopengl.com/Advanced-OpenGL/Framebuffers
+    public FrameBufferObject createFBO(int width, int height) {
+        // create framebuffer
+        int fbo = GL30.glGenFramebuffers();
+        fbos.add(fbo);
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, fbo);
+
+        // create texture
+        int texture = GL11.glGenTextures();
+        textures.add(texture);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture);
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE,
+                (int[]) null);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR_MIPMAP_NEAREST);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        // unbind texture
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+
+        // attach texture to framebuffer
+        GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, texture, 0);
+
+        return new FrameBufferObject(fbo, texture);
     }
 
     public int loadTexture(String path) {
@@ -214,15 +240,19 @@ public class Loader {
 
     public void cleanUp() {
         cleanUp(vaos, vbos);
-        cleanUp(textVAOs, textVBOs);
+        cleanUp(tempVAOs, tempVBOs);
 
         for (int textureID : textures) {
             GL11.glDeleteTextures(textureID);
         }
+
+        for (int fbo : fbos) {
+            GL30.glDeleteFramebuffers(fbo);
+        }
     }
 
-    public void textCleanUp() {
-        cleanUp(textVAOs, textVBOs);
+    public void tempCleanUp() {
+        cleanUp(tempVAOs, tempVBOs);
     }
 
     private void cleanUp(ArrayList<Integer> vaos, ArrayList<Integer> vbos) {
@@ -238,14 +268,14 @@ public class Loader {
 
     private int createVAO() {
         int vaoID = GL30.glGenVertexArrays();
-        (textMode ? textVAOs : vaos).add(vaoID);
+        (textMode ? tempVAOs : vaos).add(vaoID);
         GL30.glBindVertexArray(vaoID);
         return vaoID;
     }
 
     private void storeDataInAttributeList(int attributeNumber, int coordinateSize, double[] data) {
         int vboID = GL15.glGenBuffers();
-        (textMode ? textVBOs : vbos).add(vboID);
+        (textMode ? tempVBOs : vbos).add(vboID);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
         FloatBuffer buffer = storeDataInFloatBuffer(data);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);

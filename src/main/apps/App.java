@@ -174,6 +174,8 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
     }
 
     public void finish() {
+        loader.cleanUp();
+
         if (parent != null) {
             parent.clearChildApp(dialogType);
         }

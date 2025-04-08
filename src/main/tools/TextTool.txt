@@ -5,10 +5,9 @@ import org.lwjgl.glfw.GLFW;
 import main.apps.MainApp;
 import renderEngine.fonts.TextFont;
 
-public class TextTool {
+public final class TextTool extends ImageTool {
 
-    private static final int DEFAULT_WIDTH = 300,
-            DEFAULT_HEIGHT = 50;
+    private static final int DEFAULT_WIDTH = 300, DEFAULT_HEIGHT = 50;
 
     private static final String DEFAULT_FONT_NAME = "Courier New Bold";
 
@@ -60,7 +59,7 @@ public class TextTool {
     }
 
     public void apply() {
-        // Graphics2D graphics = app.getImage().getBufferedImage().createGraphics();
+
     }
 
     public int getX() {

@@ -1,6 +1,5 @@
 package main.apps;
 
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -9,14 +8,12 @@ import java.util.ArrayList;
 
 import org.lwjgl.glfw.GLFW;
 
-import main.ClipboardManager;
 import main.ColorArray;
 import main.ColorPicker;
 import main.Image;
 import main.ImageFile;
 import main.ImageFileManager;
 import main.ImageFormat;
-import main.SelectionManager;
 import main.dialogs.SaveDialog;
 import main.dialogs.UnableToSaveImageDialog;
 import main.dialogs.UnimplementedDialog;
@@ -34,12 +31,17 @@ import ui.components.ImageCanvas;
 
 /**
  * <pre>
+ * Continue:
+ *   Text tool: text tool should probably use a UITextInput (inside of a
+ *     UIFloatContainer for the actual text input).
+ *     Text rendering: done on the GPU using the TextFramebuffer, data is
+ *       transferred to the BufferedImage using glReadPixels.
+ *       This framebuffer can be used both to show the text preview and to
+ *       render the text onto the BufferedImage.
+ * Properly implement modifier keys
  * App:
- *   Text tool
  *   Pencil
  *     Add different sizes
- *     Fix bug: pencil draws when mouse is clicked outside of canvas and dragged
- *       onto canvas
  *   Line tool
  *   Resizing
  *     Selection resizing
@@ -135,11 +137,6 @@ public final class MainApp extends App {
 
     private ImageFileManager imageFileManager;
 
-    // private Image image;
-    // private ImageFile imageFile;
-
-    private SelectionManager selectionManager;
-
     /**
      * used for restoring the tool that was selected before the color picker
      */
@@ -170,7 +167,6 @@ public final class MainApp extends App {
         window.setCloseOnEscape(false);
 
         customColorButtonArray = new ColorArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
-        selectionManager = new SelectionManager(this);
 
         imageFileManager = new ImageFileManager(this, "test.png");
 
@@ -184,6 +180,8 @@ public final class MainApp extends App {
         renderer = new MainAppRenderer(this);
 
         imageTranslation = new SVector();
+
+        ImageTool.init(this);
 
         activeTool = ImageTool.PENCIL;
         prevTool = ImageTool.PENCIL;
@@ -237,22 +235,6 @@ public final class MainApp extends App {
                 imageTranslation.add(scrollAmount);
             }
 
-            // selection - left click
-            if (mouseButtons[0] && !prevMouseButtons[0]) {
-                if (selectionManager.getPhase() == SelectionManager.IDLE) {
-                    if (selectionManager.mouseAboveSelection(mouseX, mouseY)) {
-                        // start dragging selection
-                        selectionManager.startDragging();
-                    } else {
-                        // finish selection
-                        selectionManager.finish();
-                    }
-                } else if (activeTool == ImageTool.SELECTION) {
-                    // start creating selection
-                    selectionManager.startCreating();
-                }
-            }
-
             // right click
             if (mouseButtons[1] && !prevMouseButtons[1]) {
                 if (keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
@@ -263,18 +245,9 @@ public final class MainApp extends App {
 
             // tool click
             if (!keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
-                if (image.isInside(mouseX, mouseY)) {
-                    boolean anyClickHappened = false;
-                    for (int i = 0; i < mouseButtons.length; i++) {
-                        if (mouseButtons[i] && !prevMouseButtons[i]) {
-                            activeTool.click(this, mouseX, mouseY, i);
-                            anyClickHappened = true;
-                        }
-                    }
-                    if (activeTool == ImageTool.COLOR_PICKER && anyClickHappened) {
-                        // queue the resetting to the previous tool to avoid using the previous tool for
-                        // one frame
-                        queueEvent(() -> setActiveTool(prevTool));
+                for (int i = 0; i < mouseButtons.length; i++) {
+                    if (mouseButtons[i] && !prevMouseButtons[i]) {
+                        activeTool.mousePressed(mouseX, mouseY, i);
                     }
                 }
             }
@@ -285,13 +258,12 @@ public final class MainApp extends App {
             if (mouseButtons[i]) {
                 if (!keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
                     // tool update
-                    if (canvas.mouseTrulyAbove()) {
-                        activeTool.update(this, mouseX, mouseY, i);
-                    }
+                    int[] pMouse = getMouseImagePosition(prevMousePos);
+                    activeTool.mouseDragged(mouseX, mouseY, pMouse[0], pMouse[1], i);
                 }
             } else if (prevMouseButtons[i]) {
                 // tool release
-                activeTool.release(this, mouseX, mouseY, i);
+                activeTool.mouseReleased(i);
             }
         }
 
@@ -305,28 +277,18 @@ public final class MainApp extends App {
             imageTranslation.add(mouseMovement);
         }
 
-        // selection actions
-        switch (selectionManager.getPhase()) {
-            case SelectionManager.CREATING -> {
-                // finish creating selection
-                if (!mouseButtons[0]) {
-                    selectionManager.finishCreating();
-                }
-            }
-            case SelectionManager.IDLE -> {
-                // esc -> finish selection
-                if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_CAPS_LOCK)) {
-                    selectionManager.finish();
-                }
-                // del -> cancel selection
-                if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_DELETE)) {
-                    selectionManager.cancel();
-                }
-            }
-            case SelectionManager.DRAGGING -> {
-                // finish dragging image
-                if (!mouseButtons[0]) {
-                    selectionManager.finishDragging();
+        // this is quite an ugly way to handle modifier keys
+        int modifiers = 0;
+        if (keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT]) {
+            modifiers |= GLFW.GLFW_MOD_SHIFT;
+        }
+        if (keys[GLFW.GLFW_KEY_LEFT_CONTROL] || keys[GLFW.GLFW_KEY_RIGHT_CONTROL]) {
+            modifiers |= GLFW.GLFW_MOD_CONTROL;
+        }
+        for (int i = 0; i < keys.length; i++) {
+            if (keyPressed(keys, prevKeys, i)) {
+                for (ImageTool tool : ImageTool.INSTANCES) {
+                    tool.keyPressed(i, modifiers);
                 }
             }
         }
@@ -338,36 +300,6 @@ public final class MainApp extends App {
         }
 
         if (keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
-            // Ctrl + A -> select everything
-            if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_A)) {
-                setActiveTool(ImageTool.SELECTION);
-                selectionManager.selectEverything();
-            }
-
-            // Ctrl + V -> paste clipboard
-            if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_V)) {
-                BufferedImage paste = ClipboardManager.getImage();
-                if (paste != null) {
-                    setActiveTool(ImageTool.SELECTION);
-                    selectionManager.selectClipboard(paste);
-                }
-            }
-
-            // Ctrl + C -> copy to clipboard
-            if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_C)) {
-                if (selectionManager.getPhase() == SelectionManager.IDLE) {
-                    ClipboardManager.setImage(selectionManager.getSelection().getBufferedImage());
-                }
-            }
-
-            // Ctrl + X -> cut to clipboard
-            if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_X)) {
-                if (selectionManager.getPhase() == SelectionManager.IDLE) {
-                    ClipboardManager.setImage(selectionManager.getSelection().getBufferedImage());
-                    selectionManager.cancel();
-                }
-            }
-
             // Ctr (+ Shift) + S -> save (as)
             if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_S)) {
                 if (keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
@@ -383,8 +315,6 @@ public final class MainApp extends App {
         } else {
             secondaryColor = selectedColorPicker.getRGB();
         }
-
-        selectionManager.update();
 
         // update image texture
         image.updateOpenGLTexture();
@@ -418,12 +348,8 @@ public final class MainApp extends App {
         customColorButtonArray.addColor(color);
     }
 
-    public void drawLine(int x, int y, int color) {
+    public void drawLine(int x, int y, int x0, int y0, int color) {
         Image image = imageFileManager.getImage();
-
-        int[] prevMousePos = getMouseImagePosition(window.getPrevMousePosition());
-        int x0 = prevMousePos[0];
-        int y0 = prevMousePos[1];
 
         int dx = Math.abs(x - x0);
         int dy = Math.abs(y - y0);
@@ -525,9 +451,9 @@ public final class MainApp extends App {
         imageTranslation = canvas.getAbsolutePosition().add(new SVector(canvas.getHMargin(), canvas.getVMargin()));
     }
 
-    public SelectionManager getSelectionManager() {
-        return selectionManager;
-    }
+    // public SelectionManager getSelectionManager() {
+    // return selectionManager;
+    // }
 
     public Image getImage() {
         return imageFileManager.getImage();
@@ -550,8 +476,11 @@ public final class MainApp extends App {
     }
 
     public void setPrimaryColor(int primaryColor) {
-        this.primaryColor = primaryColor;
-        selectedColorPicker.setRGB(primaryColor);
+        if (colorSelection == 0) {
+            selectedColorPicker.setRGB(primaryColor);
+        } else {
+            this.primaryColor = primaryColor;
+        }
     }
 
     public int getPrimaryColor() {
@@ -559,8 +488,11 @@ public final class MainApp extends App {
     }
 
     public void setSecondaryColor(int secondaryColor) {
-        this.secondaryColor = secondaryColor;
-        selectedColorPicker.setRGB(secondaryColor);
+        if (colorSelection == 1) {
+            selectedColorPicker.setRGB(secondaryColor);
+        } else {
+            this.secondaryColor = secondaryColor;
+        }
     }
 
     public int getSecondaryColor() {
@@ -589,15 +521,17 @@ public final class MainApp extends App {
         if (activeTool == tool) {
             return;
         }
-        if (activeTool == ImageTool.SELECTION) {
-            if (selectionManager.getPhase() == SelectionManager.IDLE) {
-                selectionManager.finish();
-            }
-        }
-        if (tool == ImageTool.COLOR_PICKER) {
+
+        activeTool.forceQuit();
+        if (tool == ImageTool.PIPETTE) {
             prevTool = activeTool;
         }
         activeTool = tool;
+        activeTool.start();
+    }
+
+    public void switchBackToPreviousTool() {
+        queueEvent(() -> setActiveTool(prevTool));
     }
 
     public static boolean isTransparentSelection() {
