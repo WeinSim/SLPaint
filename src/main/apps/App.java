@@ -28,6 +28,12 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
 
     protected Window window;
 
+    protected boolean[] keys;
+    protected boolean[] mouseButtons;
+    protected SVector mousePos, prevMousePos;
+
+    protected boolean closeOnEscape = true;
+
     protected double avgFrameTime = -1;
     protected int frameCount = 0;
 
@@ -63,6 +69,11 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         childApps = new HashMap<>();
         loader = new Loader();
         eventQueue = new LinkedList<>();
+
+        keys = new boolean[512];
+        mouseButtons = new boolean[2];
+        mousePos = new SVector();
+        prevMousePos = null;
     }
 
     protected void createUI() {
@@ -89,88 +100,146 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         }
         frameCount++;
 
+        if (prevMousePos == null) {
+            mousePos = window.getMousePosition();
+            prevMousePos = new SVector(mousePos);
+        } else {
+            prevMousePos.set(mousePos);
+            mousePos = window.getMousePosition();
+        }
+
+        boolean focus = window.isFocused();
+
+        // process char input
+        Character c;
+        while ((c = window.getNextCharacter()) != null) {
+            if (focus) {
+                ui.charInput(c);
+            }
+            charInput(c);
+        }
+
+        // process key input
+        Window.KeyPressInfo keyPressInfo;
+        while ((keyPressInfo = window.getNextKeyPressInfo()) != null) {
+            int key = keyPressInfo.key();
+            int mods = keyPressInfo.mods();
+            switch (keyPressInfo.action()) {
+                case GLFW.GLFW_PRESS, GLFW.GLFW_REPEAT -> {
+                    if (key == GLFW.GLFW_KEY_CAPS_LOCK && closeOnEscape) {
+                        window.requestClose();
+                    }
+
+                    if (0 <= key && key < keys.length) {
+                        keys[key] = true;
+                    }
+
+                    if (focus) {
+                        ui.keyPressed(key, mods);
+                    }
+                    keyPressed(key, mods);
+                }
+                case GLFW.GLFW_RELEASE -> {
+                    if (0 <= key && key < keys.length) {
+                        keys[key] = false;
+                    }
+
+                    keyReleased(key, mods);
+                }
+            }
+        }
+
+        // process mouse button input
+        Window.MouseButtonInfo mouseButtonInfo;
+        while ((mouseButtonInfo = window.getNextMouseButtonInfo()) != null) {
+            int button = mouseButtonInfo.button();
+            int mods = mouseButtonInfo.mods();
+            switch (mouseButtonInfo.action()) {
+                case GLFW.GLFW_PRESS -> {
+                    if (0 <= button && button < mouseButtons.length) {
+                        mouseButtons[button] = true;
+                    }
+
+                    if (focus) {
+                        ui.mousePressed(button, mods);
+                    }
+                    mousePressed(button, mods);
+                }
+                case GLFW.GLFW_RELEASE -> {
+                    if (0 <= button && button < mouseButtons.length) {
+                        mouseButtons[button] = false;
+                    }
+
+                    if (focus) {
+                        ui.mouseReleased(button, mods);
+                    }
+                    mouseReleased(button, mods);
+                }
+            }
+        }
+
+        // process scroll input
+        Window.ScrollInfo scrollInfo;
+        while ((scrollInfo = window.getNextScrollInfo()) != null) {
+            if (focus) {
+                ui.mouseWheel(new SVector(scrollInfo.xoffset(), scrollInfo.yoffset()), mousePos);
+            }
+            mouseScroll(scrollInfo.xoffset(), scrollInfo.yoffset());
+        }
+
         // empty event queue
         while (!eventQueue.isEmpty()) {
             eventQueue.removeFirst().run();
         }
 
-        boolean[] keys = window.getKeys();
-        boolean[] prevKeys = window.getPrevKeys();
-        SVector mousePos = window.getMousePosition();
-        boolean[] mouseButtons = window.getMouseButtons();
-        boolean[] prevMouseButtons = window.getPrevMouseButtons();
-        SVector mouseScroll = window.getMouseScroll();
-        SVector prevMouseScroll = window.getPrevMouseScroll();
-
-        // toggle debug outline
-        if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_COMMA)) {
-            toggleDebugOutline();
-        }
-
-        // reload shaders
-        if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_S) && keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
-            renderer.reloadShaders();
-        }
-
-        // reload UI
-        if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_R) && keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
-            createUI();
-        }
-
         int[] displaySize = window.getDisplaySize();
         ui.setRootSize(displaySize[0], displaySize[1]);
 
-        boolean focus = window.isFocused();
-        // UI mouse and keyboard inputs
-        if (focus) {
-            // UI mouse pressed
-            for (int i = 0; i < mouseButtons.length; i++) {
-                if (mouseButtons[i] && !prevMouseButtons[i]) {
-                    ui.mousePressed(i);
-                }
-                if (!mouseButtons[i] && prevMouseButtons[i]) {
-                    ui.mouseReleased(i);
-                }
-            }
-
-            // UI mouse scroll
-            SVector scrollAmount = mouseScroll.copy().sub(prevMouseScroll);
-            boolean shiftPressed = keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT];
-            if (shiftPressed) {
-                double temp = scrollAmount.x;
-                scrollAmount.x = scrollAmount.y;
-                scrollAmount.y = temp;
-            }
-            if (scrollAmount.magSq() > 0) {
-                ui.mouseWheel(scrollAmount, mousePos);
-            }
-
-            // UI key presses
-            boolean shift = keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT];
-            for (char c : window.getCharBuffer().toCharArray()) {
-                ui.keyPressed(c, shift);
-            }
-            int[] specialKeys = {
-                    GLFW.GLFW_KEY_BACKSPACE,
-                    GLFW.GLFW_KEY_ENTER,
-                    GLFW.GLFW_KEY_TAB
-            };
-            for (int i = 0; i < specialKeys.length; i++) {
-                if (keyPressed(keys, prevKeys, specialKeys[i])) {
-                    // this is just a hack for now.
-                    // GLFW offers key callbacks and char callbacks. Properly combining both would
-                    // make things quite complicated.
-                    ui.keyPressed((char) specialKeys[i], shift);
-                }
-            }
-        }
-
+        SVector mousePos = window.getMousePosition();
         ui.update(mousePos, focus);
 
         window.setArrowCursor();
         if (ui.mouseAboveTextInput()) {
             window.setIBeamCursor();
         }
+    }
+
+    protected void charInput(char c) {
+    }
+
+    protected void keyPressed(int key, int mods) {
+        // System.out.format("Key pressed: key = %d, mods = %d, time = %d\n", key, mods, System.nanoTime());
+
+        switch (key) {
+            // Comma -> toggle debug outline
+            case GLFW.GLFW_KEY_COMMA -> toggleDebugOutline();
+
+            // Shift + S -> reload shaders
+            case GLFW.GLFW_KEY_S -> {
+                if ((mods & GLFW.GLFW_MOD_SHIFT) != 0) {
+                    renderer.reloadShaders();
+                }
+            }
+
+            // Shift + R -> reload UI
+            case GLFW.GLFW_KEY_R -> {
+                if ((mods & GLFW.GLFW_MOD_SHIFT) != 0) {
+                    createUI();
+                }
+            }
+        }
+    }
+
+    protected void keyReleased(int key, int mods) {
+    }
+
+    protected void mousePressed(int button, int mods) {
+    }
+
+    protected void mouseReleased(int button, int mods) {
+    }
+
+    protected void mouseScroll(double xoff, double yoff) {
     }
 
     public void finish() {
@@ -247,7 +316,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
     public static void setHSLColorSpace(boolean hslColorSpace) {
         App.hslColorSpace.set(hslColorSpace);
     }
-        
+
     public static void setCircularHueSatField(boolean circularHueSatField) {
         App.circularHueSatField.set(circularHueSatField);
     }

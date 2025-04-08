@@ -92,7 +92,10 @@ public abstract class UIElement {
         return false;
     }
 
-    public void keyPressed(char key) {
+    public void keyPressed(int key) {
+    }
+
+    public void charInput(char c) {
     }
 
     public boolean isSelectable() {

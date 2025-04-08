@@ -1,6 +1,7 @@
 package renderEngine;
 
 import java.nio.IntBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.lwjgl.PointerBuffer;
@@ -30,19 +31,12 @@ public class Window {
     private static long handCursor;
     private static long iBeamCursor;
 
-    private boolean[] keys;
-    private boolean[] mouseButtons;
     private SVector mousePos;
-    private SVector mouseScroll;
-
-    private boolean[] prevKeys;
-    private boolean[] prevMouseButtons;
-    private SVector prevMousePosition;
-    private SVector prevMouseScroll;
 
     private String charBuffer;
-
-    private boolean closeOnEscape = true;
+    private ArrayList<KeyPressInfo> keyPressInfos;
+    private ArrayList<MouseButtonInfo> mouseButtonInfos;
+    private ArrayList<ScrollInfo> scrollInfos;
 
     public Window(int width, int height, int windowMode, boolean resizable, String title) {
         // Configure GLFW
@@ -75,10 +69,10 @@ public class Window {
 
         // Setup a key callback. It will be called every time a key is pressed, repeated
         // or released.
+        GLFW.glfwSetCharCallback(windowHandle, new CharCallback());
         GLFW.glfwSetKeyCallback(windowHandle, new KeyCallback());
         GLFW.glfwSetMouseButtonCallback(windowHandle, new MouseButtonCallback());
         GLFW.glfwSetScrollCallback(windowHandle, new ScrollCallback());
-        GLFW.glfwSetCharCallback(windowHandle, new CharCallback());
 
         center();
 
@@ -90,7 +84,8 @@ public class Window {
         // onto its own thread. For now though, this is not neccessary.
         GLFW.glfwSwapInterval(1);
 
-        // GLFW.glfwSetWindowSizeLimits(windowHandle, 200, 200, Integer.MAX_VALUE, Integer.MAX_VALUE);
+        // GLFW.glfwSetWindowSizeLimits(windowHandle, 200, 200, Integer.MAX_VALUE,
+        // Integer.MAX_VALUE);
         GLFW.glfwSetWindowSizeLimits(windowHandle, 200, 200, GLFW.GLFW_DONT_CARE, GLFW.GLFW_DONT_CARE);
 
         arrowCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
@@ -102,25 +97,16 @@ public class Window {
 
         GL.createCapabilities();
 
-        keys = new boolean[512];
-        mouseButtons = new boolean[2];
         mousePos = new SVector();
-        mouseScroll = new SVector();
-
-        prevKeys = new boolean[keys.length];
-        prevMouseButtons = new boolean[mouseButtons.length];
-        prevMousePosition = null;
-        prevMouseScroll = new SVector();
 
         charBuffer = "";
+        keyPressInfos = new ArrayList<>();
+        mouseButtonInfos = new ArrayList<>();
+        scrollInfos = new ArrayList<>();
     }
 
     public void updateDisplay() {
-        System.arraycopy(keys, 0, prevKeys, 0, keys.length);
-        System.arraycopy(mouseButtons, 0, prevMouseButtons, 0, mouseButtons.length);
-        prevMousePosition = new SVector(getMousePosition());
         mousePos = null;
-        prevMouseScroll = new SVector(mouseScroll);
         charBuffer = "";
 
         int[] size = getDisplaySize();
@@ -160,14 +146,6 @@ public class Window {
 
     public long getWindowHandle() {
         return windowHandle;
-    }
-
-    public boolean[] getKeys() {
-        return keys;
-    }
-
-    public boolean[] getMouseButtons() {
-        return mouseButtons;
     }
 
     public SVector getMousePosition() {
@@ -226,114 +204,94 @@ public class Window {
                 (pmVideoMode.height() - height) / 2);
     }
 
-    public void setCloseOnEscape(boolean closeOnEscape) {
-        this.closeOnEscape = closeOnEscape;
-    }
-
     public void requestFocus() {
         GLFW.glfwFocusWindow(windowHandle);
     }
 
-    public SVector getMouseScroll() {
-        return mouseScroll;
-    }
-
-    public boolean[] getPrevKeys() {
-        return prevKeys;
-    }
-
-    public boolean[] getPrevMouseButtons() {
-        return prevMouseButtons;
-    }
-
-    public SVector getPrevMousePosition() {
-        return prevMousePosition == null ? getMousePosition() : new SVector(prevMousePosition);
-    }
-
-    public SVector getPrevMouseScroll() {
-        return prevMouseScroll;
-    }
-
-    public String getCharBuffer() {
-        return charBuffer;
-    }
-
-    public void keyCallback(int key, int scancode, int action, int mods) {
-        switch (action) {
-            case GLFW.GLFW_PRESS, GLFW.GLFW_REPEAT -> {
-                // if (key == GLFW.GLFW_KEY_ESCAPE && action == GLFW.GLFW_RELEASE)
-                if (key == GLFW.GLFW_KEY_CAPS_LOCK && closeOnEscape) {
-                    requestClose();
-                }
-
-                if (0 <= key && key < keys.length) {
-                    keys[key] = true;
-                }
-
-            }
-            case GLFW.GLFW_RELEASE -> {
-                if (0 <= key && key < keys.length) {
-                    keys[key] = false;
-                }
-            }
-        }
-    }
-
-    public void mouseButtonCallback(int button, int action, int mods) {
-        switch (action) {
-            case GLFW.GLFW_PRESS -> {
-                switch (button) {
-                    case GLFW.GLFW_MOUSE_BUTTON_LEFT -> mouseButtons[0] = true;
-                    case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> mouseButtons[1] = true;
-                }
-            }
-            case GLFW.GLFW_RELEASE -> {
-                switch (button) {
-                    case GLFW.GLFW_MOUSE_BUTTON_LEFT -> mouseButtons[0] = false;
-                    case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> mouseButtons[1] = false;
-                }
-            }
-        }
-    }
-
-    public void scrollCallback(double xoffset, double yoffset) {
-        mouseScroll.x += xoffset;
-        mouseScroll.y += yoffset;
-    }
-
-    public void charCallback(int codepoint) {
+    private void addCharacter(int codepoint) {
         charBuffer += (char) codepoint;
     }
 
-    private static class KeyCallback implements GLFWKeyCallbackI {
-
-        @Override
-        public void invoke(long window, int key, int scancode, int action, int mods) {
-            windows.get(window).keyCallback(key, scancode, action, mods);
+    public Character getNextCharacter() {
+        if (charBuffer.isEmpty()) {
+            return null;
         }
+        char c = charBuffer.charAt(0);
+        charBuffer = charBuffer.substring(1);
+        return c;
     }
 
-    private static class MouseButtonCallback implements GLFWMouseButtonCallbackI {
-
-        @Override
-        public void invoke(long window, int button, int action, int mods) {
-            windows.get(window).mouseButtonCallback(button, action, mods);
-        }
+    private void addKeyPressInfo(KeyPressInfo keyPressInfo) {
+        keyPressInfos.add(keyPressInfo);
     }
 
-    private static class ScrollCallback implements GLFWScrollCallbackI {
-
-        @Override
-        public void invoke(long window, double xoffset, double yoffset) {
-            windows.get(window).scrollCallback(xoffset, yoffset);
+    public KeyPressInfo getNextKeyPressInfo() {
+        if (keyPressInfos.isEmpty()) {
+            return null;
         }
+        return keyPressInfos.removeFirst();
+    }
+
+    private void addMouseButtonInfo(MouseButtonInfo mouseButtonInfo) {
+        mouseButtonInfos.add(mouseButtonInfo);
+    }
+
+    public MouseButtonInfo getNextMouseButtonInfo() {
+        if (mouseButtonInfos.isEmpty()) {
+            return null;
+        }
+        return mouseButtonInfos.removeFirst();
+    }
+
+    private void addScrollInfo(ScrollInfo scrollInfo) {
+        scrollInfos.add(scrollInfo);
+    }
+
+    public ScrollInfo getNextScrollInfo() {
+        if (scrollInfos.isEmpty()) {
+            return null;
+        }
+        return scrollInfos.removeFirst();
     }
 
     private static class CharCallback implements GLFWCharCallbackI {
 
         @Override
         public void invoke(long window, int codepoint) {
-            windows.get(window).charCallback(codepoint);
+            windows.get(window).addCharacter(codepoint);
         }
+    }
+
+    private static class KeyCallback implements GLFWKeyCallbackI {
+
+        @Override
+        public void invoke(long window, int key, int scancode, int action, int mods) {
+            windows.get(window).addKeyPressInfo(new KeyPressInfo(key, scancode, action, mods));
+        }
+    }
+
+    public record KeyPressInfo(int key, int scancode, int action, int mods) {
+    }
+
+    private static class MouseButtonCallback implements GLFWMouseButtonCallbackI {
+
+        @Override
+        public void invoke(long window, int button, int action, int mods) {
+            windows.get(window).addMouseButtonInfo(new MouseButtonInfo(button, action, mods));
+        }
+    }
+
+    public record MouseButtonInfo(int button, int action, int mods) {
+    }
+
+    private static class ScrollCallback implements GLFWScrollCallbackI {
+
+        @Override
+        public void invoke(long window, double xoffset, double yoffset) {
+            windows.get(window).addScrollInfo(new ScrollInfo(xoffset, yoffset));
+        }
+    }
+
+    public record ScrollInfo(double xoffset, double yoffset) {
     }
 }

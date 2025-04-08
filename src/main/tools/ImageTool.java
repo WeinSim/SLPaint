@@ -5,18 +5,20 @@ import java.util.ArrayList;
 import main.apps.MainApp;
 import sutil.ui.UIAction;
 
-public abstract sealed class ImageTool permits ClickTool, PencilTool, SelectionTool { // , TextTool {
+public abstract sealed class ImageTool permits ClickTool, PencilTool, SelectionTool, TextTool {
 
     public static final PencilTool PENCIL = PencilTool.INSTANCE;
     public static final FillBucketTool FILL_BUCKET = FillBucketTool.INSTANCE;
     public static final PipetteTool PIPETTE = PipetteTool.INSTANCE;
     public static final SelectionTool SELECTION = SelectionTool.INSTANCE;
+    public static final TextTool TEXT = TextTool.INSTANCE;
 
     public static final ImageTool[] INSTANCES = {
             PENCIL,
             FILL_BUCKET,
             PIPETTE,
-            SELECTION
+            SELECTION,
+            TEXT
     };
 
     public static final int NONE = 0x01, INITIAL_DRAG = 0x02, IDLE = 0x04, IDLE_DRAG = 0x08;
@@ -31,15 +33,13 @@ public abstract sealed class ImageTool permits ClickTool, PencilTool, SelectionT
 
     protected ImageTool() {
         keyboardShortcuts = new ArrayList<>();
-
-        start();
+        state = NONE;
     }
 
     public static void init(MainApp app) {
-        PENCIL.app = app;
-        FILL_BUCKET.app = app;
-        PIPETTE.app = app;
-        SELECTION.app = app;
+        for (ImageTool tool : INSTANCES) {
+            tool.app = app;
+        }
     }
 
     public void start() {

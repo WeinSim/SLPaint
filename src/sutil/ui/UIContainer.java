@@ -209,7 +209,7 @@ public class UIContainer extends UIElement {
     }
 
     @Override
-    public void keyPressed(char key) {
+    public void keyPressed(int key) {
         super.keyPressed(key);
 
         for (UIElement child : getChildren()) {
@@ -217,6 +217,15 @@ public class UIContainer extends UIElement {
         }
     }
 
+    @Override
+    public void charInput(char c) {
+        super.charInput(c);
+
+        for (UIElement child : getChildren()) {
+            child.charInput(c);
+        }
+    }
+    
     public final void setMinSize() {
         for (UIElement child : getChildren()) {
             if (child instanceof UIContainer container) {

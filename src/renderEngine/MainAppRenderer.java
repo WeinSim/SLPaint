@@ -4,6 +4,7 @@ import main.Image;
 import main.apps.MainApp;
 import main.tools.ImageTool;
 import main.tools.SelectionTool;
+import main.tools.XYWH;
 import sutil.math.SVector;
 import ui.Colors;
 
@@ -37,7 +38,8 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
         uiMaster.image(image.getTextureID(), new SVector(), imageSize);
 
         // render selection
-        if (app.getActiveTool() == ImageTool.SELECTION) {
+        ImageTool activeTool = app.getActiveTool();
+        if (activeTool == ImageTool.SELECTION) {
             SelectionTool selection = ImageTool.SELECTION;
             Image selectionImg = selection.getSelection();
             if (selectionImg != null) {
@@ -46,10 +48,13 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
                         selection.getHeight());
                 uiMaster.image(selectionImg.getTextureID(), position, size);
             }
+        }
 
+        if (activeTool == ImageTool.SELECTION || activeTool == ImageTool.TEXT) {
+            XYWH selection = (XYWH) activeTool;
             uiMaster.resetMatrix();
             uiMaster.translate(translation);
-            int selectionPhase = selection.getState();
+            int selectionPhase = activeTool.getState();
             if (selectionPhase != SelectionTool.NONE) {
                 int x, y, w, h;
                 if (selectionPhase == ImageTool.INITIAL_DRAG) {

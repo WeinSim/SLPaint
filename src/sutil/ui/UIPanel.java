@@ -87,7 +87,7 @@ public abstract class UIPanel {
         dragging = true;
     }
 
-    public void mousePressed(int mouseButton) {
+    public void mousePressed(int mouseButton, int mods) {
         queueEvent(() -> {
             if (mouseButton == LEFT) {
                 mousePressed = true;
@@ -97,16 +97,22 @@ public abstract class UIPanel {
         });
     }
 
-    public void mouseReleased(int mouseButton) {
+    public void mouseReleased(int mouseButton, int mods) {
         if (mouseButton == LEFT) {
             queueEvent(() -> mousePressed = false);
         }
     }
 
-    public void keyPressed(char key, boolean shift) {
+    public void charInput(char c) {
+        queueEvent(() -> {
+            root.charInput(c);
+        });
+    }
+
+    public void keyPressed(int key, int mods) {
         queueEvent(() -> {
             if (key == GLFW.GLFW_KEY_TAB) {
-                cycleSelectedElement(shift);
+                cycleSelectedElement((mods & GLFW.GLFW_MOD_SHIFT) != 0);
             } else if (key == GLFW.GLFW_KEY_ENTER) {
                 if (selectedElement != null) {
                     UIAction clickAction = selectedElement.getLeftClickAction();

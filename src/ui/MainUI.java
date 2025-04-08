@@ -16,6 +16,7 @@ import sutil.ui.UIToggle;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.ImageCanvas;
+import ui.components.TextFloatContainer;
 import ui.components.ToolButton;
 import ui.components.UIColorElement;
 
@@ -140,8 +141,11 @@ public class MainUI extends AppUI<MainApp> {
         // }
         debugPanel.add(new UIText(() -> String.format("Active tool: %s", app.getActiveTool().getName())));
         debugPanel.add(new UIText(() -> String.format("  State: %d", app.getActiveTool().getState())));
+        debugPanel.add(new UIText(() -> String.format("TextTool.text: \"%s\"", ImageTool.TEXT.getText())));
         debugPanel.add(new UIText("                           "));
         canvas.add(debugPanel);
+
+        canvas.add(new TextFloatContainer(app));
 
         root.add(canvas);
 

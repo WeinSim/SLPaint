@@ -9,7 +9,7 @@ import main.Image;
 import main.apps.MainApp;
 import sutil.math.SVector;
 
-public final class SelectionTool extends ImageTool {
+public final class SelectionTool extends ImageTool implements XYWH {
 
     public static final SelectionTool INSTANCE = new SelectionTool();
 

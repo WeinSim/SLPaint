@@ -23,7 +23,7 @@ public class UITextInput extends UIContainer {
         vMarginScale = 0.5;
         paddingScale = 0.33;
 
-        uiText = new UIText(textUpdater::get);
+        uiText = new UIText(textUpdater);
         add(uiText);
 
         outlineNormal = true;
@@ -43,7 +43,7 @@ public class UITextInput extends UIContainer {
     }
 
     @Override
-    public void keyPressed(char key) {
+    public void keyPressed(int key) {
         if (active()) {
             String text = uiText.getText();
             String newText = text;
@@ -55,21 +55,32 @@ public class UITextInput extends UIContainer {
             } else if (key == GLFW.GLFW_KEY_ENTER) {
                 panel.setSelectedElement(null);
             } else {
-                boolean validKey = false;
-                if (numberInput) {
-                    validKey = key >= '0' && key <= '9';
-                } else {
-                    if (key >= 32 && key <= 126)
-                        validKey = true;
-                    if (key >= 160 && key < 255)
-                        validKey = true;
-                }
-                if (!validKey)
-                    return;
-                newText = text + key;
+                return;
             }
-            valueUpdater.accept(newText);
 
+            valueUpdater.accept(newText);
+            cursor.resetTimer();
+        }
+    }
+
+    public void charInput(char c) {
+        if (active()) {
+            String text = uiText.getText();
+            String newText = text;
+            boolean validKey = false;
+            if (numberInput) {
+                validKey = c >= '0' && c <= '9';
+            } else {
+                if (c >= 32 && c <= 126)
+                    validKey = true;
+                if (c >= 160 && c < 255)
+                    validKey = true;
+            }
+            if (!validKey)
+                return;
+
+            newText = text + c;
+            valueUpdater.accept(newText);
             cursor.resetTimer();
         }
     }

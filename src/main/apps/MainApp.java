@@ -25,6 +25,7 @@ import renderEngine.MainAppRenderer;
 import renderEngine.Window;
 import sutil.SUtil;
 import sutil.math.SVector;
+import sutil.ui.UITextInput;
 import ui.MainUI;
 import ui.Sizes;
 import ui.components.ImageCanvas;
@@ -32,13 +33,11 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * Continue:
- *   Text tool: text tool should probably use a UITextInput (inside of a
- *     UIFloatContainer for the actual text input).
+ *   Text tool:
  *     Text rendering: done on the GPU using the TextFramebuffer, data is
  *       transferred to the BufferedImage using glReadPixels.
  *       This framebuffer can be used both to show the text preview and to
  *       render the text onto the BufferedImage.
- * Properly implement modifier keys
  * App:
  *   Pencil
  *     Add different sizes
@@ -74,6 +73,8 @@ import ui.components.ImageCanvas;
  *     Selection border sometimes has artifacts on bottom and right inner edges
  *     AlphaScale has artifacts on bottom edge (whose size depends on wether a
  *       text cursor is currently visible?!?)
+ *     Text from text input tool renders incorrectly over side panel (something
+ *       to do with alpha values / glBlendFunc)
  *   Fix stuttering artifact when resizing windows on Linux
  *     (see https://www.glfw.org/docs/latest/window.html#window_refresh)
  *   Clean up UIRenderMaster API and UI shaders (especially with regards to
@@ -143,6 +144,8 @@ public final class MainApp extends App {
     private ImageTool prevTool;
     private ImageTool activeTool;
 
+    private UITextInput textToolInput;
+
     private int primaryColor;
     private int secondaryColor;
     /**
@@ -164,7 +167,7 @@ public final class MainApp extends App {
     public MainApp() {
         super((int) Sizes.MAIN_APP.width, (int) Sizes.MAIN_APP.height, Window.MAXIMIZED, "SLPaint");
 
-        window.setCloseOnEscape(false);
+        closeOnEscape = false;
 
         customColorButtonArray = new ColorArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
 
@@ -183,7 +186,8 @@ public final class MainApp extends App {
 
         ImageTool.init(this);
 
-        activeTool = ImageTool.PENCIL;
+        // activeTool = ImageTool.PENCIL;
+        setActiveTool(ImageTool.PENCIL);
         prevTool = ImageTool.PENCIL;
     }
 
@@ -197,61 +201,9 @@ public final class MainApp extends App {
             resetImageTransform();
         }
 
-        boolean[] keys = window.getKeys();
-        boolean[] prevKeys = window.getPrevKeys();
-        SVector mousePos = window.getMousePosition();
-        SVector prevMousePos = window.getPrevMousePosition();
-        boolean[] mouseButtons = window.getMouseButtons();
-        boolean[] prevMouseButtons = window.getPrevMouseButtons();
-        SVector mouseScroll = window.getMouseScroll();
-        SVector prevMouseScroll = window.getPrevMouseScroll();
-
         int[] mouseImagePos = getMouseImagePosition();
         int mouseX = mouseImagePos[0];
         int mouseY = mouseImagePos[1];
-
-        Image image = imageFileManager.getImage();
-        // canvas actions
-        if (canvas.mouseTrulyAbove()) {
-            SVector scrollAmount = new SVector(mouseScroll).sub(prevMouseScroll).scale(MOUSE_WHEEL_SENSITIVITY);
-            boolean ctrlPressed = keys[GLFW.GLFW_KEY_LEFT_CONTROL];
-            if (ctrlPressed) {
-                // zoom
-                double prevZoom = getImageZoom();
-                imageZoomLevel += (int) Math.signum(scrollAmount.y);
-                imageZoomLevel = Math.min(Math.max(MIN_ZOOM_LEVEL, imageZoomLevel), MAX_ZOOM_LEVEL);
-                double zoom = getImageZoom();
-                imageTranslation.set(imageTranslation.sub(mousePos).scale(zoom / prevZoom).add(mousePos));
-
-                window.setHandCursor();
-            } else {
-                // scroll
-                boolean shiftPressed = keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT];
-                if (shiftPressed) {
-                    double temp = scrollAmount.x;
-                    scrollAmount.x = scrollAmount.y;
-                    scrollAmount.y = temp;
-                }
-                imageTranslation.add(scrollAmount);
-            }
-
-            // right click
-            if (mouseButtons[1] && !prevMouseButtons[1]) {
-                if (keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
-                    // start dragging image
-                    draggingImage = true;
-                }
-            }
-
-            // tool click
-            if (!keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
-                for (int i = 0; i < mouseButtons.length; i++) {
-                    if (mouseButtons[i] && !prevMouseButtons[i]) {
-                        activeTool.mousePressed(mouseX, mouseY, i);
-                    }
-                }
-            }
-        }
 
         // tool update / release
         for (int i = 0; i < mouseButtons.length; i++) {
@@ -261,9 +213,6 @@ public final class MainApp extends App {
                     int[] pMouse = getMouseImagePosition(prevMousePos);
                     activeTool.mouseDragged(mouseX, mouseY, pMouse[0], pMouse[1], i);
                 }
-            } else if (prevMouseButtons[i]) {
-                // tool release
-                activeTool.mouseReleased(i);
             }
         }
 
@@ -277,39 +226,6 @@ public final class MainApp extends App {
             imageTranslation.add(mouseMovement);
         }
 
-        // this is quite an ugly way to handle modifier keys
-        int modifiers = 0;
-        if (keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT]) {
-            modifiers |= GLFW.GLFW_MOD_SHIFT;
-        }
-        if (keys[GLFW.GLFW_KEY_LEFT_CONTROL] || keys[GLFW.GLFW_KEY_RIGHT_CONTROL]) {
-            modifiers |= GLFW.GLFW_MOD_CONTROL;
-        }
-        for (int i = 0; i < keys.length; i++) {
-            if (keyPressed(keys, prevKeys, i)) {
-                for (ImageTool tool : ImageTool.INSTANCES) {
-                    tool.keyPressed(i, modifiers);
-                }
-            }
-        }
-
-        // keyboard shortcuts
-        if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_R) && !keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
-            // R -> reset viewport transform
-            resetImageTransform();
-        }
-
-        if (keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
-            // Ctr (+ Shift) + S -> save (as)
-            if (keyPressed(keys, prevKeys, GLFW.GLFW_KEY_S)) {
-                if (keys[GLFW.GLFW_KEY_LEFT_SHIFT]) {
-                    saveImageAs();
-                } else {
-                    saveImage();
-                }
-            }
-        }
-
         if (colorSelection == PRIMARY_COLOR) {
             primaryColor = selectedColorPicker.getRGB();
         } else {
@@ -317,7 +233,100 @@ public final class MainApp extends App {
         }
 
         // update image texture
-        image.updateOpenGLTexture();
+        getImage().updateOpenGLTexture();
+    }
+
+    @Override
+    protected void keyPressed(int key, int mods) {
+        super.keyPressed(key, mods);
+
+        // tool keyboard shortcuts
+        for (ImageTool tool : ImageTool.INSTANCES) {
+            tool.keyPressed(key, mods);
+        }
+
+        switch (key) {
+            // R -> reset image transform
+            case GLFW.GLFW_KEY_R -> {
+                if ((mods & GLFW.GLFW_MOD_SHIFT) == 0) {
+                    resetImageTransform();
+                }
+            }
+
+            // Ctrl + (Shift +) S -> save (as)
+            case GLFW.GLFW_KEY_S -> {
+                if ((mods & GLFW.GLFW_MOD_CONTROL) != 0) {
+                    if ((mods & GLFW.GLFW_MOD_SHIFT) == 0) {
+                        saveImage();
+                    } else {
+                        saveImageAs();
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void mousePressed(int button, int mods) {
+        super.mousePressed(button, mods);
+
+        if (canvas.mouseTrulyAbove()) {
+            int[] mousePos = getMouseImagePosition();
+            int mouseX = mousePos[0],
+                    mouseY = mousePos[1];
+
+            // tool click
+            if ((mods & GLFW.GLFW_MOD_CONTROL) == 0) {
+                activeTool.mousePressed(mouseX, mouseY, button);
+            }
+
+            switch (button) {
+                // start dragging image
+                case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> {
+                    if ((mods & GLFW.GLFW_MOD_CONTROL) != 0) {
+                        draggingImage = true;
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void mouseReleased(int button, int mods) {
+        super.mouseReleased(button, mods);
+
+        activeTool.mouseReleased(button);
+    }
+
+    @Override
+    protected void mouseScroll(double xoff, double yoff) {
+        super.mouseScroll(xoff, yoff);
+
+        SVector mousePos = window.getMousePosition();
+
+        // canvas actions
+        if (canvas.mouseTrulyAbove()) {
+            SVector scrollAmount = new SVector(xoff, yoff).scale(MOUSE_WHEEL_SENSITIVITY);
+            boolean ctrlPressed = keys[GLFW.GLFW_KEY_LEFT_CONTROL];
+            if (ctrlPressed) {
+                // zoom
+                double prevZoom = getImageZoom();
+                imageZoomLevel += (int) Math.signum(scrollAmount.y);
+                imageZoomLevel = Math.min(Math.max(MIN_ZOOM_LEVEL, imageZoomLevel), MAX_ZOOM_LEVEL);
+                double zoom = getImageZoom();
+                imageTranslation.set(imageTranslation.sub(mousePos).scale(zoom / prevZoom).add(mousePos));
+                window.setHandCursor();
+            } else {
+                // scroll
+                boolean shiftPressed = keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT];
+                if (shiftPressed) {
+                    double temp = scrollAmount.x;
+                    scrollAmount.x = scrollAmount.y;
+                    scrollAmount.y = temp;
+                }
+                imageTranslation.add(scrollAmount);
+            }
+        }
     }
 
     @Override
@@ -330,21 +339,13 @@ public final class MainApp extends App {
     public void selectColor(int color) {
         if (colorSelection == PRIMARY_COLOR) {
             setPrimaryColor(color);
-            // primaryColor = color;
         } else {
             setSecondaryColor(color);
-            // secondaryColor = color;
         }
     }
 
     public void addCustomColor(int color) {
         selectColor(color);
-        // if (colorSelection == 0) {
-        // primaryColor = color;
-        // } else {
-        // secondaryColor = color;
-        // }
-
         customColorButtonArray.addColor(color);
     }
 
@@ -451,10 +452,6 @@ public final class MainApp extends App {
         imageTranslation = canvas.getAbsolutePosition().add(new SVector(canvas.getHMargin(), canvas.getVMargin()));
     }
 
-    // public SelectionManager getSelectionManager() {
-    // return selectionManager;
-    // }
-
     public Image getImage() {
         return imageFileManager.getImage();
     }
@@ -469,6 +466,18 @@ public final class MainApp extends App {
 
     public void setCanvas(ImageCanvas element) {
         canvas = element;
+    }
+
+    public ImageCanvas getCanvas() {
+        return canvas;
+    }
+
+    public UITextInput getTextToolInput() {
+        return textToolInput;
+    }
+
+    public void setTextToolInput(UITextInput textToolInput) {
+        this.textToolInput = textToolInput;
     }
 
     public ColorPicker getSelectedColorPicker() {
@@ -522,10 +531,15 @@ public final class MainApp extends App {
             return;
         }
 
-        activeTool.forceQuit();
-        if (tool == ImageTool.PIPETTE) {
-            prevTool = activeTool;
+        // quit old tool
+        if (activeTool != null) {
+            activeTool.forceQuit();
+            if (tool == ImageTool.PIPETTE) {
+                prevTool = activeTool;
+            }
         }
+
+        // start new tool
         activeTool = tool;
         activeTool.start();
     }
@@ -553,14 +567,6 @@ public final class MainApp extends App {
 
     public SVector getMouseImagePosVec() {
         return window.getMousePosition().copy().sub(imageTranslation).div(getImageZoom());
-    }
-
-    public int getMouseImageX() {
-        return getMouseImagePosition()[0];
-    }
-
-    public int getMouseImageY() {
-        return getMouseImagePosition()[1];
     }
 
     public int[] getDisplaySize() {
