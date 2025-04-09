@@ -85,6 +85,11 @@ public abstract class AppUI<T extends App> extends UIPanel{
     }
 
     @Override
+    public SVector getTextColor() {
+        return Colors.getTextColor();
+    }
+
+    @Override
     public SVector getBackgroundNormalColor() {
         return Colors.getBackgroundNormalColor();
     }

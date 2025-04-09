@@ -91,7 +91,7 @@ public class Loader {
         // attach texture to framebuffer
         GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, texture, 0);
 
-        return new FrameBufferObject(fbo, texture);
+        return new FrameBufferObject(fbo, texture, width, height);
     }
 
     public int loadTexture(String path) {

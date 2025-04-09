@@ -181,6 +181,10 @@ public abstract class UIPanel {
         return padding;
     }
 
+    public SVector getTextColor() {
+        return new SVector(1, 1, 1).scale(1.0);
+    }
+
     public SVector getBackgroundNormalColor() {
         return new SVector(1, 1, 1).scale(0.1);
     }

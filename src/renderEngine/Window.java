@@ -13,7 +13,6 @@ import org.lwjgl.glfw.GLFWMouseButtonCallbackI;
 import org.lwjgl.glfw.GLFWScrollCallbackI;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
@@ -109,8 +108,6 @@ public class Window {
         mousePos = null;
         charBuffer = "";
 
-        int[] size = getDisplaySize();
-        GL11.glViewport(0, 0, size[0], size[1]);
         GLFW.glfwSwapBuffers(windowHandle);
     }
 

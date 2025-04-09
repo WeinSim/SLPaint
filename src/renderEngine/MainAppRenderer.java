@@ -18,9 +18,8 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
 
     @Override
     public void render() {
-        setBGColor(Colors.getCanvasColor());
-
         uiMaster.start();
+        uiMaster.setBGColor(Colors.getCanvasColor());
 
         SVector translation = app.getImageTranslation();
         double zoom = app.getImageZoom();
@@ -36,6 +35,9 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
         SVector imageSize = new SVector(width, height);
         uiMaster.rect(new SVector(), imageSize);
         uiMaster.image(image.getTextureID(), new SVector(), imageSize);
+        // test: draw text fbo on top of image
+        // FrameBufferObject fbo = uiMaster.getTextFBO();
+        // uiMaster.image(fbo.textureID(), new SVector(-fbo.width(), 0), new SVector(fbo.width(), fbo.height()));
 
         // render selection
         ImageTool activeTool = app.getActiveTool();

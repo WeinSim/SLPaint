@@ -34,6 +34,8 @@ public class UIRenderMaster {
 
     private FrameBufferObject textFBO;
 
+    private FrameBufferObject currentFramebuffer;
+
     private Matrix3f uiMatrix;
     private LinkedList<Matrix3f> uiMatrixStack;
 
@@ -121,11 +123,32 @@ public class UIRenderMaster {
     }
 
     public void defaultFramebuffer() {
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+        framebuffer(null);
     }
 
     public void textFramebuffer() {
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, textFBO.fboID());
+        framebuffer(textFBO);
+    }
+
+    public void framebuffer(FrameBufferObject framebuffer) {
+        int fboID = framebuffer == null ? 0 : framebuffer.fboID();
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, fboID);
+
+        int[] size = framebuffer == null
+                ? app.getWindow().getDisplaySize()
+                : new int[] { framebuffer.width(), framebuffer.height() };
+        GL11.glViewport(0, 0, size[0], size[1]);
+
+        currentFramebuffer = framebuffer;
+    }
+
+    public void setBGColor(SVector bgColor) {
+        setBGColor(bgColor, 1.0);
+    }
+
+    public void setBGColor(SVector bgColor, double alpha) {
+        GL11.glClearColor((float) bgColor.x, (float) bgColor.y, (float) bgColor.z, (float) alpha);
+        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
     }
 
     public void rect(SVector position, SVector size) {
@@ -502,13 +525,26 @@ public class UIRenderMaster {
     }
 
     private Matrix3f createViewMatrix() {
-        int[] displaySize = app.getWindow().getDisplaySize();
         Matrix3f matrix = new Matrix3f();
-        matrix.m00 = 2f / displaySize[0];
-        matrix.m11 = -2f / displaySize[1];
+        int width, height;
+        float sign = currentFramebuffer == null ? -1 : 1;
+        if (currentFramebuffer == null) {
+            int[] displaySize = app.getWindow().getDisplaySize();
+            width = displaySize[0];
+            height = displaySize[1];
+        } else {
+            width = currentFramebuffer.width();
+            height = currentFramebuffer.height();
+        }
+        matrix.m00 = 2f / width;
+        matrix.m11 = sign * 2f / height;
         matrix.m20 = -1;
-        matrix.m21 = 1;
+        matrix.m21 = -sign;
         return matrix;
+    }
+
+    public FrameBufferObject getTextFBO() {
+        return textFBO;
     }
 
     private class ScissorInfo {

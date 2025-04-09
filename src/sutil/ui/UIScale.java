@@ -1,22 +1,11 @@
-package ui.components;
+package sutil.ui;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import sutil.math.SVector;
-import sutil.ui.Draggable;
-import sutil.ui.UIDragContainer;
-import sutil.ui.UIElement;
-import sutil.ui.UIStyle;
-import ui.Colors;
-import ui.Sizes;
 
 public class UIScale extends UIDragContainer<UIScale.Slider> {
-
-    private static final UIStyle SLIDER_STYLE = new UIStyle(
-            Colors::getTextColor,
-            () -> null,
-            () -> Sizes.STROKE_WEIGHT.size);
 
     public UIScale(int orientation, Supplier<Double> getter, Consumer<Double> setter) {
         super(new Slider(orientation, getter, setter));
@@ -73,7 +62,10 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
             this.Supplier = Supplier;
             this.setter = setter;
 
-            setStyle(SLIDER_STYLE);
+            setStyle(new UIStyle(
+                    () -> panel.getTextColor(),
+                    () -> null,
+                    () -> panel.getStrokeWeight()));
         }
 
         @Override

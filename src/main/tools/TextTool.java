@@ -10,7 +10,7 @@ public final class TextTool extends ImageTool implements XYWH {
 
     private static final String DEFAULT_FONT_NAME = "Courier New Bold";
 
-    private static final int DEFAULT_SIZE = 28;
+    private static final int DEFAULT_SIZE = 64;
 
     private String text;
 
@@ -32,15 +32,22 @@ public final class TextTool extends ImageTool implements XYWH {
     }
 
     @Override
-    public boolean startInitialDrag(int x, int y, int mouseButton) {
-        if (mouseButton != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            return false;
-        }
+    public void start() {
+        super.start();
 
         if (font == null) {
             font = app.getLoader().loadFont(DEFAULT_FONT_NAME, size, false);
         }
         text = "";
+    }
+
+    @Override
+    public boolean startInitialDrag(int x, int y, int mouseButton) {
+        if (mouseButton != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            return false;
+        }
+
+        start();
 
         startX = Math.min(Math.max(0, x), app.getImage().getWidth());
         startY = Math.min(Math.max(0, y), app.getImage().getHeight());
@@ -72,6 +79,7 @@ public final class TextTool extends ImageTool implements XYWH {
 
     @Override
     protected boolean startIdleDrag(int x, int y, int mouseButton) {
+        flattenText();
         return false;
     }
 
@@ -101,8 +109,7 @@ public final class TextTool extends ImageTool implements XYWH {
     }
 
     private void flattenText() {
-        // TODO
-        // glReadPixels(...)
+        app.renderTextToImage(text, x, y, size, font);
     }
 
     public int getX() {

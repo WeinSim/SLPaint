@@ -10,6 +10,7 @@ import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
+import sutil.ui.UIScale;
 import sutil.ui.UIStyle;
 import sutil.ui.UIText;
 import sutil.ui.UITextInput;

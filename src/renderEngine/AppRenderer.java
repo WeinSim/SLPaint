@@ -1,14 +1,21 @@
 package renderEngine;
 
+import java.awt.image.BufferedImage;
+import java.nio.ByteBuffer;
+
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
+import main.Image;
 import main.apps.App;
 import main.apps.MainApp;
+import renderEngine.fonts.TextFont;
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIFloatContainer;
+import sutil.ui.UIScale;
 import sutil.ui.UIText;
 import sutil.ui.UIToggle;
 import ui.AppUI;
@@ -18,7 +25,6 @@ import ui.components.AlphaScale;
 import ui.components.HueSatField;
 import ui.components.LightnessScale;
 import ui.components.UIColorElement;
-import ui.components.UIScale;
 
 public class AppRenderer<T extends App> {
 
@@ -45,12 +51,7 @@ public class AppRenderer<T extends App> {
     }
 
     protected void setDefaultBGColor() {
-        setBGColor(Colors.getBackgroundNormalColor());
-    }
-
-    protected void setBGColor(SVector bgColor) {
-        GL11.glClearColor((float) bgColor.x, (float) bgColor.y, (float) bgColor.z, 1);
-        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+        uiMaster.setBGColor(Colors.getBackgroundNormalColor());
     }
 
     protected void renderUI() {
@@ -125,14 +126,6 @@ public class AppRenderer<T extends App> {
         }
         if (element instanceof UIContainer container) {
             boolean isScrollable = container.isHScroll() || container.isVScroll();
-            // SVector pos = new SVector(position),
-            // siz = new SVector(size);
-            // double extra = 1;
-            // pos.x -= extra;
-            // pos.y -= extra;
-            // siz.x += 2 * extra;
-            // siz.y += 2 * extra;
-            // isScrollable = true;
             if (isScrollable) {
                 uiMaster.pushScissor();
                 uiMaster.scissor(position, size);
@@ -154,7 +147,8 @@ public class AppRenderer<T extends App> {
             SVector pos = new SVector(position).add(scale.getScaleOffset());
             SVector siz = scale.getScaleSize();
             if (scale instanceof LightnessScale l) {
-                uiMaster.lightnessScale(pos, siz, l.getHue(), l.getSaturation(), l.getOrientation(), App.isHSLColorSpace());
+                uiMaster.lightnessScale(pos, siz, l.getHue(), l.getSaturation(), l.getOrientation(),
+                        App.isHSLColorSpace());
             }
             if (scale instanceof AlphaScale a) {
                 // checkerboard background
@@ -192,5 +186,48 @@ public class AppRenderer<T extends App> {
 
     public void reloadShaders() {
         uiMaster = new UIRenderMaster(app);
+    }
+
+    // https://computergraphics.stackexchange.com/questions/4936/lwjgl-opengl-get-bufferedimage-from-texture-id
+    public void renderTextToImage(String text, int x, int y, int size, SVector color, TextFont font, Image image) {
+        uiMaster.start();
+        uiMaster.textFramebuffer();
+
+        uiMaster.setBGColor(color, 0.0);
+        uiMaster.fill(color);
+        uiMaster.textFont(font);
+        uiMaster.textSize(size);
+        uiMaster.text(text, new SVector());
+
+        uiMaster.stop();
+
+        FrameBufferObject fbo = uiMaster.getTextFBO();
+        int width = fbo.width(), height = fbo.height();
+
+        // int format = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, 0,
+        // GL11.GL_TEXTURE_INTERNAL_FORMAT);
+        // System.out.println("format = " + format);
+        // int channels = 4;
+        // if (format == GL11.GL_RGB)
+        // channels = 3;
+        int format = GL11.GL_RGBA;
+
+        ByteBuffer buffer = BufferUtils.createByteBuffer(width * height * 4);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID());
+        GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, format, GL11.GL_UNSIGNED_BYTE, buffer);
+
+        BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        int i = 0;
+        for (int yoff = 0; yoff < height; yoff++) {
+            for (int xoff = 0; xoff < width; xoff++) {
+                int r = buffer.get(i++) & 0xFF,
+                        g = buffer.get(i++) & 0xFF,
+                        b = buffer.get(i++) & 0xFF,
+                        a = buffer.get(i++) & 0xFF;
+                bufferedImage.setRGB(xoff, yoff, SUtil.toARGB(r, g, b, a));
+            }
+        }
+
+        image.setSubImage(bufferedImage, x, y);
     }
 }

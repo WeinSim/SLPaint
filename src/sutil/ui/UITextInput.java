@@ -9,7 +9,7 @@ public class UITextInput extends UIContainer {
 
     private boolean numberInput;
 
-    private UIText uiText;
+    protected UIText uiText;
 
     private Cursor cursor;
 

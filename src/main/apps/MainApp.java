@@ -23,6 +23,7 @@ import main.settings.Settings;
 import main.tools.ImageTool;
 import renderEngine.MainAppRenderer;
 import renderEngine.Window;
+import renderEngine.fonts.TextFont;
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UITextInput;
@@ -334,6 +335,10 @@ public final class MainApp extends App {
         super.finish();
 
         Settings.finish();
+    }
+
+    public void renderTextToImage(String text, int x, int y, int size, TextFont font) {
+        renderer.renderTextToImage(text, x, y, size, toSVector(primaryColor), font, getImage());
     }
 
     public void selectColor(int color) {

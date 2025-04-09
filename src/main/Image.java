@@ -111,21 +111,21 @@ public class Image {
         int index = 0;
         for (int yoff = 0; yoff < h; yoff++) {
             for (int xoff = 0; xoff < w; xoff++) {
-                int dest = bufferedImage.getRGB(x0 + xoff, y0 + yoff);
-                int destRed = SUtil.red(dest),
-                        destGreen = SUtil.green(dest),
-                        destBlue = SUtil.blue(dest);
-                double destAlpha = SUtil.alpha(dest) / 255.0;
                 int source = image.getRGB(xoff - x + x0, yoff - y + y0);
                 int sourceRed = SUtil.red(source),
                         sourceGreen = SUtil.green(source),
                         sourceBlue = SUtil.blue(source);
                 double sourceAlpha = SUtil.alpha(source) / 255.0;
+                int dest = bufferedImage.getRGB(x0 + xoff, y0 + yoff);
+                int destRed = SUtil.red(dest),
+                        destGreen = SUtil.green(dest),
+                        destBlue = SUtil.blue(dest);
+                double destAlpha = SUtil.alpha(dest) / 255.0;
 
-                pixels[index++] = (int) (destRed * (1 - sourceAlpha) + sourceRed * sourceAlpha);
-                pixels[index++] = (int) (destGreen * (1 - sourceAlpha) + sourceGreen * sourceAlpha);
-                pixels[index++] = (int) (destBlue * (1 - sourceAlpha) + sourceBlue * sourceAlpha);
-                pixels[index++] = (int) (255 * (1 - (1 - destAlpha) * (1 - sourceAlpha)));
+                pixels[index++] = (int) (sourceRed * sourceAlpha + destRed * (1 - sourceAlpha));
+                pixels[index++] = (int) (sourceGreen * sourceAlpha + destGreen * (1 - sourceAlpha));
+                pixels[index++] = (int) (sourceBlue * sourceAlpha + destBlue * (1 - sourceAlpha));
+                pixels[index++] = (int) (255 * (1 - (1 - sourceAlpha) * (1 - destAlpha)));
             }
         }
 
