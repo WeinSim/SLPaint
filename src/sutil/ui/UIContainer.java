@@ -852,9 +852,9 @@ public class UIContainer extends UIElement {
 
         public void expandAsNeccessary() {
             if (orientation == VERTICAL) {
-                size.y = scrollArea.getHeightFraction() * parent.size.y;
+                size.y = Math.max(size.y, scrollArea.getHeightFraction() * parent.size.y);
             } else {
-                size.x = scrollArea.getWidthFraction() * parent.size.x;
+                size.x = Math.max(size.x, scrollArea.getWidthFraction() * parent.size.x);
             }
         }
 

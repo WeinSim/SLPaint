@@ -12,11 +12,9 @@ import sutil.ui.UIRoot;
 import sutil.ui.UIStyle;
 import sutil.ui.UITextInput;
 
-public abstract class AppUI<T extends App> extends UIPanel{
+public abstract class AppUI<T extends App> extends UIPanel {
 
     protected T app;
-
-    private TextFont courierNew;
 
     public AppUI(T app) {
         this.app = app;
@@ -24,8 +22,7 @@ public abstract class AppUI<T extends App> extends UIPanel{
         margin = Sizes.MARGIN.size;
         padding = Sizes.PADDING.size;
 
-        textSize = Sizes.TEXT.size;
-        courierNew = app.getLoader().loadFont("Courier New Bold", (int) textSize, false);
+        defaultTextSize = Sizes.TEXT.size;
 
         root = new UIRoot(this, UIContainer.VERTICAL, UIContainer.LEFT);
         root.zeroMargin().zeroPadding().noBackground().noOutline();
@@ -57,10 +54,6 @@ public abstract class AppUI<T extends App> extends UIPanel{
         return element;
     }
 
-    public TextFont getFont() {
-        return courierNew;
-    }
-
     public boolean mouseAboveTextInput() {
         return mouseAboveTextInput(root);
     }
@@ -80,12 +73,13 @@ public abstract class AppUI<T extends App> extends UIPanel{
     }
 
     @Override
-    public double textWidth(String text) {
-        return courierNew.textWidth(text) * textSize / courierNew.getSize();
+    public double textWidth(String text, double textSize, String fontName) {
+        TextFont font = app.getLoader().loadFont(fontName, (int) textSize, false);
+        return font.textWidth(text) * textSize / font.getSize();
     }
 
     @Override
-    public SVector getTextColor() {
+    public SVector getDefaultTextColor() {
         return Colors.getTextColor();
     }
 

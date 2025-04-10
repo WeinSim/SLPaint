@@ -1,5 +1,5 @@
 {
-    "transparentSelection" : false,
+    "transparentSelection" : true,
     "customUIColors" : {
         "capacity" : 10,
         "values" : []

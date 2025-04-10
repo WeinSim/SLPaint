@@ -1,18 +1,32 @@
 package main.tools;
 
+import java.awt.GraphicsEnvironment;
+
 import org.lwjgl.glfw.GLFW;
 
 import renderEngine.fonts.TextFont;
 
 public final class TextTool extends ImageTool implements XYWH {
 
-    public static final TextTool INSTANCE = new TextTool();
+    public static final TextTool INSTANCE;
 
-    private static final String DEFAULT_FONT_NAME = "Courier New Bold";
+    static {
+        INSTANCE = new TextTool();
+        FONT_NAMES = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+        DEFAULT_FONT_NAME = "Courier New Bold";
+        // DEFAULT_FONT_NAME = (new Font("Courier", Font.PLAIN, 1)).getFamily();
+    }
 
-    private static final int DEFAULT_SIZE = 64;
+    public static final String[] FONT_NAMES;
+    private static final String DEFAULT_FONT_NAME;
+
+    public static final int MIN_TEXT_SIZE = 0,
+            MAX_TEXT_SIZE = 128,
+            DEFAULT_TEXT_SIZE = 32;
 
     private String text;
+    private int size;
+    private TextFont font;
 
     // INITIAL_DRAG
     private int startX, startY;
@@ -21,12 +35,8 @@ public final class TextTool extends ImageTool implements XYWH {
     private int x, y;
     private int width, height;
 
-    // private String text;
-    private int size;
-    private TextFont font;
-
     private TextTool() {
-        size = DEFAULT_SIZE;
+        size = DEFAULT_TEXT_SIZE;
 
         addKeyboardShortcut(new KeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, IDLE, NONE, this::flattenText));
     }
@@ -109,7 +119,9 @@ public final class TextTool extends ImageTool implements XYWH {
     }
 
     private void flattenText() {
-        app.renderTextToImage(text, x, y, size, font);
+        if (getState() == IDLE) {
+            app.renderTextToImage(text, x, y, size, font);
+        }
     }
 
     public int getX() {
@@ -155,7 +167,7 @@ public final class TextTool extends ImageTool implements XYWH {
     }
 
     public void setSize(int size) {
-        this.size = size;
+        this.size = Math.min(Math.max(MIN_TEXT_SIZE, size), MAX_TEXT_SIZE);
     }
 
     public TextFont getFont() {

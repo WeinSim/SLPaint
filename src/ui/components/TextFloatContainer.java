@@ -23,7 +23,8 @@ public class TextFloatContainer extends UIFloatContainer {
 
         clipToRoot = false;
 
-        setVisibilitySupplier(() -> ImageTool.TEXT.getState() == ImageTool.IDLE);
+        setVisibilitySupplier(() -> app.getActiveTool() == ImageTool.TEXT
+                && ImageTool.TEXT.getState() == ImageTool.IDLE);
 
         textInput = new TextInput();
         textInput.setFillSize();
@@ -51,9 +52,18 @@ public class TextFloatContainer extends UIFloatContainer {
         TextInput() {
             super(ImageTool.TEXT::getText, ImageTool.TEXT::setText);
 
+            hAlignment = LEFT;
+            vAlignment = TOP;
+
             style.setStrokeWeightSupplier(() -> 0.0);
 
             app.setTextToolInput(this);
+
+            // ImageTool.TEXT::getSize doesn't work because it returns an int and not a
+            // double (and Supplier<Integer> is not a subtype of Supplier<Double>)
+            uiText.setTextSize(() -> ImageTool.TEXT.getSize() * app.getImageZoom());
+            uiText.setFontName(() -> ImageTool.TEXT.getFont().getName());
+            uiText.setColor(() -> MainApp.toSVector(app.getPrimaryColor()));
         }
 
         @Override

@@ -7,11 +7,14 @@ import main.ImageFormat;
 import main.apps.MainApp;
 import main.tools.ImageTool;
 import main.tools.SelectionTool;
+import main.tools.TextTool;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
+import sutil.ui.UIDropdown;
 import sutil.ui.UILabel;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
+import sutil.ui.UITextInput;
 import sutil.ui.UIToggle;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
@@ -56,7 +59,47 @@ public class MainUI extends AppUI<MainApp> {
             toolbox.add(new ToolButton(app, tool));
         }
 
-        addTopRowSection(topRow, "Size");
+        Supplier<Boolean> textToolsVisibility = () -> app.getActiveTool() == ImageTool.TEXT;
+        UIContainer textTools = addTopRowSection(topRow, "Text", textToolsVisibility);
+        textTools.setPaddingScale(2);
+
+        UIContainer textSizeContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+        textSizeContainer.zeroMargin().noOutline();
+        UIContainer textSizeRow1 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        textSizeRow1.zeroMargin().zeroPadding().noOutline();
+        textSizeRow1.add(new UIButton("-", () -> ImageTool.TEXT.setSize(ImageTool.TEXT.getSize() - 1)));
+        UITextInput textSizeInput = new UITextInput(
+                () -> Integer.toString(ImageTool.TEXT.getSize()),
+                s -> {
+                    int intValue = 0;
+                    if (s.length() > 0) {
+                        try {
+                            intValue = Integer.parseInt(s);
+                        } catch (NumberFormatException e) {
+                            return;
+                        }
+                    }
+                    ImageTool.TEXT.setSize(intValue);
+                });
+        textSizeInput.setVFillSize();
+        textSizeRow1.add(textSizeInput);
+        textSizeRow1.add(new UIButton("+", () -> ImageTool.TEXT.setSize(ImageTool.TEXT.getSize() + 1)));
+        textSizeContainer.add(textSizeRow1);
+        textSizeContainer.add(new UIText("Size"));
+        textTools.add(textSizeContainer);
+
+        UIContainer textFontContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+        textFontContainer.zeroMargin().noOutline();
+        UIContainer textFontRow1 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        textFontRow1.zeroMargin().noOutline();
+        textFontRow1.add(new UIDropdown(
+                TextTool.FONT_NAMES,
+                () -> 0,
+                _ -> {
+                }, true));
+        textFontContainer.add(textFontRow1);
+        textFontContainer.add(new UIText("Font"));
+        textTools.add(textFontContainer);
 
         for (int i = 0; i < 2; i++) {
             final int index = i;
@@ -137,7 +180,8 @@ public class MainUI extends AppUI<MainApp> {
         debugPanel.setVFillSize();
         // debugPanel.add(new UIText("Tools"));
         // for (ImageTool tool : ImageTool.INSTANCES) {
-        //     debugPanel.add(new UIText(() -> String.format("  %s: state = %d", tool.getName(), tool.getState())));
+        // debugPanel.add(new UIText(() -> String.format(" %s: state = %d",
+        // tool.getName(), tool.getState())));
         // }
         debugPanel.add(new UIText(() -> String.format("Active tool: %s", app.getActiveTool().getName())));
         debugPanel.add(new UIText(() -> String.format("  State: %d", app.getActiveTool().getState())));
@@ -204,16 +248,29 @@ public class MainUI extends AppUI<MainApp> {
     }
 
     private UIContainer addTopRowSection(UIContainer topRow, String name) {
+        return addTopRowSection(topRow, name, null);
+    }
+
+    private UIContainer addTopRowSection(UIContainer topRow, String name, Supplier<Boolean> visibilitySupplier) {
         UIContainer options = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
         options.zeroMargin().noOutline();
         options.setVFillSize();
+        options.setPaddingScale(2);
+        // options.zeroPadding();
+        if (visibilitySupplier != null) {
+            options.setVisibilitySupplier(visibilitySupplier);
+        }
 
         UIContainer optionButtons = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         optionButtons.zeroMargin().noOutline();
-        // optionButtons.setMaximalSize();
-
         options.add(optionButtons);
+
+        // UIContainer fill = new UIContainer(0, 0);
+        // fill.setVFillSize().zeroMargin().noOutline();
+        // options.add(fill);
+
         options.add(new UIText(name));
+
         topRow.add(options);
         return optionButtons;
     }

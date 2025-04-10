@@ -52,7 +52,13 @@ public abstract sealed class ImageTool permits ClickTool, PencilTool, SelectionT
                     ? startInitialDrag(x, y, mouseButton)
                     : startIdleDrag(x, y, mouseButton);
             if (startDrag) {
-                state = state == NONE ? INITIAL_DRAG : IDLE_DRAG;
+                if (state == NONE) {
+                    state = INITIAL_DRAG;
+                    handleInitialDrag(x, y, x, y);
+                } else {
+                    state = IDLE_DRAG;
+                    handleIdleDrag(x, y, x, y);
+                }
                 mouseDragButton = mouseButton;
             } else {
                 state = NONE;

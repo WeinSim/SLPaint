@@ -63,7 +63,7 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
             this.setter = setter;
 
             setStyle(new UIStyle(
-                    () -> panel.getTextColor(),
+                    () -> panel.getDefaultTextColor(),
                     () -> null,
                     () -> panel.getStrokeWeight()));
         }

@@ -33,12 +33,21 @@ import ui.components.ImageCanvas;
 
 /**
  * <pre>
- * Continue:
- *   Text tool:
- *     Text rendering: done on the GPU using the TextFramebuffer, data is
- *       transferred to the BufferedImage using glReadPixels.
- *       This framebuffer can be used both to show the text preview and to
- *       render the text onto the BufferedImage.
+ * Text tool:
+ *   Text rendering:
+ *     Add support for font selection (automatically recognize fonts installed
+ *       on system?)
+ *     AppRenderer.renderTextToImage is probably incredibly inefficient
+ *     Preview doesn't exactly align with actual output (are all MIN and MAG
+ *       filters set up in the same way?)
+ *     Text preview renders above UI
+ *     How to handle big font sizes? Generate texture atlas using fontbm on
+ *       demand?
+ *     Text wrapping / new lines with ENTER
+ *     Make text FBO the correct size (= image size)
+ *     Text that renders above other text has a weird blurry white-ish outline
+ *     TextTool.MIN_TEXT_SIZE should be set to 1, not 0. However, currently the
+ *       UI doesn't allow to input single-digit values if the minimum is not 0.
  * App:
  *   Pencil
  *     Add different sizes
@@ -54,14 +63,14 @@ import ui.components.ImageCanvas;
  *       of the image with the secondary color. Placing the transparent
  *       selection back onto the opaque background leaves the background
  *       unaffected. What is the expected behavior here?
- *   Recognize remapping from CAPS_LOCK to ESCAPE
  *   Dialogs
  *     Save dialog
  *       Keep track of unsaved changes, ask user to save before quitting if
  *       there are unsaved changes
  *     Only one at a time
  *     Keep track of all file locks in one centralized place to avoid leaking
- *   When parent app closes, shouldren should also close
+ *   Recognize remapping from CAPS_LOCK to ESCAPE
+ *   (When parent app closes, shouldren should also close)
  * UI:
  *   Fix bug in UIPanel: when the textUpdater returns text containig newline
  *     characters, the text is not properly split across multiple lines

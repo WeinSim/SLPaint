@@ -24,7 +24,7 @@ public class UIFloatMenu extends UIFloatContainer {
 
         if (scroll) {
             UIContainer scrollArea = new UIContainer(VERTICAL, LEFT, TOP, UIContainer.VERTICAL);
-            scrollArea.setVFixedSize(200).zeroMargin().zeroPadding();
+            scrollArea.setVFixedSize(400).zeroMargin().zeroPadding();
             contents = scrollArea;
             add(scrollArea.addScrollbars(), true);
         } else {

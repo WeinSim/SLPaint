@@ -86,7 +86,7 @@ public class ColorPickContainer extends UIContainer {
         row2.add(new UIText("Alpha:"));
 
         Supplier<String> textUpdater = () -> Integer.toString(SUtil.alpha(colorPicker.getRGB()));
-        Consumer<String> valueUpdater = (String s) -> {
+        Consumer<String> valueUpdater = s -> {
             int alpha = 0;
             if (s.length() > 0) {
                 try {

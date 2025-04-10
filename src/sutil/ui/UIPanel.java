@@ -24,7 +24,8 @@ public abstract class UIPanel {
      */
     protected double padding = 10;
 
-    protected double textSize = 32;
+    protected double defaultTextSize = 32;
+    protected String defaultFontName = "Courier New Bold";
 
     protected double mouseWheelSensitivity = 100;
 
@@ -167,11 +168,7 @@ public abstract class UIPanel {
         return root;
     }
 
-    public abstract double textWidth(String text);
-
-    public double getTextSize() {
-        return textSize;
-    }
+    public abstract double textWidth(String text, double textSize, String fontName);
 
     public double getMargin() {
         return margin;
@@ -181,7 +178,7 @@ public abstract class UIPanel {
         return padding;
     }
 
-    public SVector getTextColor() {
+    public SVector getDefaultTextColor() {
         return new SVector(1, 1, 1).scale(1.0);
     }
 
@@ -207,6 +204,14 @@ public abstract class UIPanel {
 
     public double getStrokeWeight() {
         return 1.0;
+    }
+
+    public double getDefaultTextSize() {
+        return defaultTextSize;
+    }
+
+    public String getDefaultFontName() {
+        return defaultFontName;
     }
 
     public void setSelectedElement(UIElement element) {

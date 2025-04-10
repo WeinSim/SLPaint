@@ -58,8 +58,8 @@ public class AppRenderer<T extends App> {
         uiMaster.resetMatrix();
         AppUI<?> ui = app.getUI();
 
-        uiMaster.textFont(ui.getFont());
-        uiMaster.textSize(ui.getTextSize());
+        // uiMaster.textFont(ui.getFont());
+        // uiMaster.textSize(ui.getTextSize());
 
         foregroundDraw = false;
 
@@ -121,7 +121,13 @@ public class AppRenderer<T extends App> {
             uiMaster.ellipse(pos, s);
         }
         if (element instanceof UIText text) {
-            uiMaster.fill(Colors.getTextColor());
+            String fontName = text.getFontName();
+            double textSize = text.getTextSize();
+            // int textSize = (int) app.getUI().getTextSize();
+            TextFont font = app.getLoader().loadFont(fontName, (int) textSize, false);
+            uiMaster.textFont(font);
+            uiMaster.textSize(textSize);
+            uiMaster.fill(text.getColor());
             uiMaster.text(text.getText(), position);
         }
         if (element instanceof UIContainer container) {

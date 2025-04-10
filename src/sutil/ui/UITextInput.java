@@ -39,7 +39,7 @@ public class UITextInput extends UIContainer {
     @Override
     public void update() {
         super.update();
-        setHFixedSize(panel.getTextSize() * 3.3333);
+        setHFixedSize(uiText.getTextSize() * 3.3333);
     }
 
     @Override
