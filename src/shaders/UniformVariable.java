@@ -32,7 +32,7 @@ public class UniformVariable {
 
     public void load(Object value) {
         switch (type) {
-            case INT -> GL20.glUniform1i(location, (int) value);
+            case INT, SAMPLER_2D -> GL20.glUniform1i(location, (int) value);
             case FLOAT ->
                 GL20.glUniform1f(location,
                         value instanceof Double d

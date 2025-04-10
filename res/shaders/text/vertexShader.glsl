@@ -2,14 +2,17 @@
 
 in vec2 position;
 in vec2 textureCoords;
+in int page;
 in vec2 size;
 
 out vec2 pass_position;
 out vec2 pass_textureCoords;
+out int pass_page;
 out vec2 pass_size;
 
 void main(void) {
     pass_position = position;
     pass_textureCoords = textureCoords;
+    pass_page = page;
     pass_size = size;
 }

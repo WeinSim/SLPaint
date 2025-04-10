@@ -19,6 +19,9 @@ public class MainLoop {
     private static ArrayList<App> apps;
 
     public static void main(String[] args) {
+        long programStartTime = System.nanoTime();
+        boolean firstLoop = true;
+
         SUtil.printNumLines();
 
         testImports();
@@ -54,6 +57,12 @@ public class MainLoop {
             }
 
             GLFW.glfwPollEvents();
+
+            if (firstLoop) {
+                long duration = System.nanoTime() - programStartTime;
+                System.out.format("Startup time: %.1fms\n", duration * 1e-6);
+                firstLoop = false;
+            }
 
             long duration = System.nanoTime() - startTime;
             deltaT = 1e-9 * duration;

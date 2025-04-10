@@ -74,7 +74,7 @@ public abstract class AppUI<T extends App> extends UIPanel {
 
     @Override
     public double textWidth(String text, double textSize, String fontName) {
-        TextFont font = app.getLoader().loadFont(fontName, (int) textSize, false);
+        TextFont font = app.getLoader().loadFont(fontName);
         return font.textWidth(text) * textSize / font.getSize();
     }
 

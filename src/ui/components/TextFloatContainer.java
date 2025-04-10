@@ -52,6 +52,8 @@ public class TextFloatContainer extends UIFloatContainer {
         TextInput() {
             super(ImageTool.TEXT::getText, ImageTool.TEXT::setText);
 
+            zeroMargin();
+
             hAlignment = LEFT;
             vAlignment = TOP;
 

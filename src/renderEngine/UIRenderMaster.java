@@ -10,14 +10,12 @@ import org.lwjglx.util.vector.Matrix3f;
 import org.lwjglx.util.vector.Vector3f;
 
 import main.apps.App;
+import main.apps.MainApp;
 import renderEngine.fonts.TextFont;
 import shaders.ShaderProgram;
 import sutil.math.SVector;
 
 public class UIRenderMaster {
-
-    public static final int FONT_TEXTURE_WIDTH = 256;
-    public static final int FONT_TEXTURE_HEIGHT = 512;
 
     private static final int NONE = 0, NORMAL = 1, CHECKERBOARD = 2;
 
@@ -61,7 +59,7 @@ public class UIRenderMaster {
     public UIRenderMaster(App app) {
         this.app = app;
 
-        textShader = new ShaderProgram("text", new String[] { "position", "textureCoords", "size" }, true);
+        textShader = new ShaderProgram("text", new String[] { "position", "textureCoords", "page", "size" }, true);
         rectShader = new ShaderProgram("rect", null, true);
         ellipseShader = new ShaderProgram("ellipse", null, true);
         imageShader = new ShaderProgram("image", null, true);
@@ -69,7 +67,9 @@ public class UIRenderMaster {
 
         Loader loader = app.getLoader();
         dummyVAO = loader.loadToVAO(new double[] { 0, 0 });
-        textFBO = loader.createFBO(400, 400);
+        if (app instanceof MainApp mainApp) {
+            textFBO = loader.createFBO(mainApp.getImage().getWidth(), mainApp.getImage().getHeight());
+        }
 
         uiMatrixStack = new LinkedList<>();
         scissorStack = new LinkedList<>();
@@ -82,7 +82,9 @@ public class UIRenderMaster {
 
     public void start() {
         GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL30.glBlendFuncSeparate(
+                GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, // rgb
+                GL11.GL_ONE_MINUS_DST_ALPHA, GL11.GL_ONE); // alpha
 
         GL11.glEnable(GL13.GL_MULTISAMPLE);
 
@@ -169,7 +171,7 @@ public class UIRenderMaster {
         rectShader.loadUniform("viewMatrix", createViewMatrix());
         rectShader.loadUniform("depth", depth);
 
-        GL30.glBindVertexArray(dummyVAO.getVaoID());
+        GL30.glBindVertexArray(dummyVAO.vaoID());
         GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
         GL30.glBindVertexArray(0);
     }
@@ -186,7 +188,7 @@ public class UIRenderMaster {
         ellipseShader.loadUniform("viewMatrix", createViewMatrix());
         ellipseShader.loadUniform("depth", depth);
 
-        GL30.glBindVertexArray(dummyVAO.getVaoID());
+        GL30.glBindVertexArray(dummyVAO.vaoID());
         GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
         GL30.glBindVertexArray(0);
 
@@ -205,10 +207,17 @@ public class UIRenderMaster {
         activateShader(textShader);
 
         RawModel textVAO = textFont.generateVAO(text, app.getLoader());
-        GL30.glBindVertexArray(textVAO.getVaoID());
+        GL30.glBindVertexArray(textVAO.vaoID());
 
-        GL13.glActiveTexture(GL13.GL_TEXTURE0);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textFont.getTextureID());
+        int[] textureIDs = textFont.getTextureIDs();
+        for (int i = 0; i < textureIDs.length; i++) {
+            GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureIDs[i]);
+            textShader.loadUniform(String.format("textureSamplers[%d]", i), i);
+        }
+        // GL13.glActiveTexture(GL13.GL_TEXTURE0);
+        // GL11.glBindTexture(GL11.GL_TEXTURE_2D, textFont.getTextureIDs()[0]);
+
         // GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER,
         // GL30.GL_NEAREST_MIPMAP_NEAREST);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR_MIPMAP_NEAREST);
@@ -217,6 +226,7 @@ public class UIRenderMaster {
         Matrix3f viewMatrix = createViewMatrix();
         textShader.loadUniform("viewMatrix", viewMatrix);
         textShader.loadUniform("transformationMatrix", uiMatrix);
+        textShader.loadUniform("textureSize", new SVector(textFont.getTextureWidth(), textFont.getTextureHeight()));
         textShader.loadUniform("depth", depth);
         textShader.loadUniform("fill", fill);
         textShader.loadUniform("doFill", fillMode == NONE ? 0 : 1);
@@ -224,10 +234,12 @@ public class UIRenderMaster {
         GL20.glEnableVertexAttribArray(0);
         GL20.glEnableVertexAttribArray(1);
         GL20.glEnableVertexAttribArray(2);
-        GL11.glDrawArrays(GL11.GL_POINTS, 0, textVAO.getVertexCount());
+        GL20.glEnableVertexAttribArray(3);
+        GL11.glDrawArrays(GL11.GL_POINTS, 0, textVAO.vertexCount());
         GL20.glDisableVertexAttribArray(0);
         GL20.glDisableVertexAttribArray(1);
         GL20.glDisableVertexAttribArray(2);
+        GL20.glDisableVertexAttribArray(3);
         GL30.glBindVertexArray(0);
 
         popMatrix();
@@ -250,7 +262,7 @@ public class UIRenderMaster {
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 
-        GL30.glBindVertexArray(dummyVAO.getVaoID());
+        GL30.glBindVertexArray(dummyVAO.vaoID());
         GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
         GL30.glBindVertexArray(0);
 
@@ -269,7 +281,7 @@ public class UIRenderMaster {
         hslShader.loadUniform("transformationMatrix", uiMatrix);
         hslShader.loadUniform("depth", depth);
 
-        GL30.glBindVertexArray(dummyVAO.getVaoID());
+        GL30.glBindVertexArray(dummyVAO.vaoID());
         GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
         GL30.glBindVertexArray(0);
 
@@ -292,7 +304,7 @@ public class UIRenderMaster {
         hslShader.loadUniform("transformationMatrix", uiMatrix);
         hslShader.loadUniform("depth", depth);
 
-        GL30.glBindVertexArray(dummyVAO.getVaoID());
+        GL30.glBindVertexArray(dummyVAO.vaoID());
         GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
         GL30.glBindVertexArray(0);
 
@@ -312,7 +324,7 @@ public class UIRenderMaster {
         hslShader.loadUniform("depth", depth);
         hslShader.loadUniform("fill", fill);
 
-        GL30.glBindVertexArray(dummyVAO.getVaoID());
+        GL30.glBindVertexArray(dummyVAO.vaoID());
         GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
         GL30.glBindVertexArray(0);
 

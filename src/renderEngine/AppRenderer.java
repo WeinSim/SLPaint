@@ -1,9 +1,5 @@
 package renderEngine;
 
-import java.awt.image.BufferedImage;
-import java.nio.ByteBuffer;
-
-import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
 import main.Image;
@@ -24,18 +20,19 @@ import ui.Sizes;
 import ui.components.AlphaScale;
 import ui.components.HueSatField;
 import ui.components.LightnessScale;
+import ui.components.TextFloatContainer;
 import ui.components.UIColorElement;
 
 public class AppRenderer<T extends App> {
 
-    private static final double BACKGROUND_DEPTH = 0.0, FOREGROUND_DEPTH = -0.5;
+    private static final double MIN_DEPTH = -1.0, MAX_DEPTH = 1.0;
+    private static final int MIN_LAYER = 0, MAX_LAYER = 10, START_LAYER = 5;
 
     protected T app;
 
     protected UIRenderMaster uiMaster;
 
-    // true while float elements are being drawn
-    protected boolean foregroundDraw;
+    protected int layer;
 
     public AppRenderer(T app) {
         this.app = app;
@@ -58,10 +55,7 @@ public class AppRenderer<T extends App> {
         uiMaster.resetMatrix();
         AppUI<?> ui = app.getUI();
 
-        // uiMaster.textFont(ui.getFont());
-        // uiMaster.textSize(ui.getTextSize());
-
-        foregroundDraw = false;
+        layer = START_LAYER;
 
         renderUIElement(ui.getRoot());
     }
@@ -73,15 +67,21 @@ public class AppRenderer<T extends App> {
         SVector bgColor = element.getBackgroundColor();
         SVector olColor = element.getOutlineColor();
 
-        boolean oldForegroundDraw = foregroundDraw;
+        int oldLayer = layer;
 
         if (element instanceof UIFloatContainer) {
-            foregroundDraw = true;
-            // uiMaster.depth(-0.5);
+            // Not beautiful but it works for now.
+            // Without this check, the text inside of a TextFloatContainer would render
+            // above the rest of the UI.
+            if (element instanceof TextFloatContainer) {
+                layer = START_LAYER - 1;
+            } else {
+                layer++;
+            }
             uiMaster.pushScissor();
             uiMaster.noScissor();
         }
-        uiMaster.depth(foregroundDraw ? FOREGROUND_DEPTH : BACKGROUND_DEPTH);
+        uiMaster.depth(SUtil.map(layer, MIN_LAYER, MAX_LAYER, MAX_DEPTH, MIN_DEPTH));
 
         if (element instanceof UIColorElement e && bgColor != null) {
             uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
@@ -123,8 +123,7 @@ public class AppRenderer<T extends App> {
         if (element instanceof UIText text) {
             String fontName = text.getFontName();
             double textSize = text.getTextSize();
-            // int textSize = (int) app.getUI().getTextSize();
-            TextFont font = app.getLoader().loadFont(fontName, (int) textSize, false);
+            TextFont font = app.getLoader().loadFont(fontName);
             uiMaster.textFont(font);
             uiMaster.textSize(textSize);
             uiMaster.fill(text.getColor());
@@ -187,19 +186,19 @@ public class AppRenderer<T extends App> {
             uiMaster.popScissor();
         }
 
-        foregroundDraw = oldForegroundDraw;
+        layer = oldLayer;
     }
 
     public void reloadShaders() {
         uiMaster = new UIRenderMaster(app);
     }
 
-    // https://computergraphics.stackexchange.com/questions/4936/lwjgl-opengl-get-bufferedimage-from-texture-id
     public void renderTextToImage(String text, int x, int y, int size, SVector color, TextFont font, Image image) {
         uiMaster.start();
         uiMaster.textFramebuffer();
 
         uiMaster.setBGColor(color, 0.0);
+        // uiMaster.setBGColor(new SVector(), 0.0);
         uiMaster.fill(color);
         uiMaster.textFont(font);
         uiMaster.textSize(size);
@@ -210,30 +209,15 @@ public class AppRenderer<T extends App> {
         FrameBufferObject fbo = uiMaster.getTextFBO();
         int width = fbo.width(), height = fbo.height();
 
-        // int format = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, 0,
-        // GL11.GL_TEXTURE_INTERNAL_FORMAT);
-        // System.out.println("format = " + format);
-        // int channels = 4;
-        // if (format == GL11.GL_RGB)
-        // channels = 3;
-        int format = GL11.GL_RGBA;
-
-        ByteBuffer buffer = BufferUtils.createByteBuffer(width * height * 4);
+        int[] array = new int[width * height * 4];
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID());
-        GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, format, GL11.GL_UNSIGNED_BYTE, buffer);
+        GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, GL11.GL_INT, array);
 
-        BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        int i = 0;
-        for (int yoff = 0; yoff < height; yoff++) {
-            for (int xoff = 0; xoff < width; xoff++) {
-                int r = buffer.get(i++) & 0xFF,
-                        g = buffer.get(i++) & 0xFF,
-                        b = buffer.get(i++) & 0xFF,
-                        a = buffer.get(i++) & 0xFF;
-                bufferedImage.setRGB(xoff, yoff, SUtil.toARGB(r, g, b, a));
-            }
+        // final int divisor = 1 << (31 - 8);
+        final int divisor = (int) (Integer.MAX_VALUE / 255.0);
+        for (int i = 0; i < array.length; i++) {
+            array[i] /= divisor;
         }
-
-        image.setSubImage(bufferedImage, x, y);
+        image.drawSubImage(x, y, width, height, array);
     }
 }

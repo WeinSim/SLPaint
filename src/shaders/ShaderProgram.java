@@ -123,7 +123,18 @@ public class ShaderProgram {
                     continue;
                 }
                 String name = parts[2].replaceAll(";", "");
-                uniforms.put(name, new UniformVariable(datatype, name));
+                int openIndex = name.indexOf('[');
+                if (openIndex != -1) {
+                    int closeIndex = name.indexOf(']');
+                    String baseName = name.substring(0, openIndex);
+                    int len = Integer.parseInt(name.substring(openIndex + 1, closeIndex));
+                    for (int i = 0; i < len; i++) {
+                        name = String.format("%s[%d]", baseName, i);
+                        uniforms.put(name, new UniformVariable(datatype, name));
+                    }
+                } else {
+                    uniforms.put(name, new UniformVariable(datatype, name));
+                }
             }
             reader.close();
         } catch (IOException e) {

@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -23,7 +24,7 @@ import sutil.SUtil;
 
 public class Loader {
 
-    // private App app;
+    public static final String FONT_DIRECTORY = "res/fonts/";
 
     private ArrayList<Integer> vaos;
     private ArrayList<Integer> vbos;
@@ -60,12 +61,13 @@ public class Loader {
         return new RawModel(vaoID, positions.length / 2);
     }
 
-    public RawModel loadToTextVAO(double[] positions, double[] textureCoords, double[] sizes) {
+    public RawModel loadToTextVAO(double[] positions, double[] textureCoords, int[] pages, double[] sizes) {
         textMode = true;
         int vaoID = createVAO();
         storeDataInAttributeList(0, 2, positions);
         storeDataInAttributeList(1, 2, textureCoords);
-        storeDataInAttributeList(2, 2, sizes);
+        storeDataInAttributeList(2, 1, pages);
+        storeDataInAttributeList(3, 2, sizes);
         unbindVAO();
         return new RawModel(vaoID, positions.length);
     }
@@ -98,18 +100,18 @@ public class Loader {
         Texture texture = null;
         try {
             texture = TextureLoader.getTexture("PNG", new FileInputStream(path));
-            GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
         } catch (Exception e) {
             System.out.format("Could not load texture \"%s\"!\n", path);
             e.printStackTrace();
             System.exit(-1);
         }
+        GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
         int textureID = texture.getTextureID();
         textures.add(textureID);
         return textureID;
     }
 
-    public TextFont loadFont(String name, int textSize, boolean generate) {
+    public TextFont loadFont(String name) {
         // try returning already loaded font
         TextFont loadedFont = loadedFonts.get(name);
         if (loadedFont != null) {
@@ -117,15 +119,9 @@ public class Loader {
         }
 
         // actually load font
-        String directoryName = String.format("res/fonts/%s/", name);
-        if (generate) {
-            MainApp.runCommand(directoryName,
-                    getFontGenerationCommand(name, 2, UIRenderMaster.FONT_TEXTURE_WIDTH,
-                            UIRenderMaster.FONT_TEXTURE_HEIGHT, textSize, new int[] { 32, 126, 160, 255 },
-                            new int[] { 9633 }, 0));
-        }
+        String directoryName = String.format("%s%s/", Loader.FONT_DIRECTORY, name);
         ArrayList<FontChar> chars = new ArrayList<>();
-        int size = 0, lineHeight = 0, base = 0;
+        int size = 0, lineHeight = 0, base = 0, pages = 0, textureWidth = 0, textureHeight = 0;
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(directoryName + "output.fnt"))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
@@ -156,24 +152,26 @@ public class Loader {
                     }
                 }
                 switch (lineType) {
-                    case "char" -> {
-                        FontChar newChar = new FontChar();
-                        newChar.id = (int) properties.get("id");
-                        newChar.x = (int) properties.get("x");
-                        newChar.y = (int) properties.get("y");
-                        newChar.width = (int) properties.get("width");
-                        newChar.height = (int) properties.get("height");
-                        newChar.xOffset = (int) properties.get("xoffset");
-                        newChar.yOffset = (int) properties.get("yoffset");
-                        newChar.xAdvance = (int) properties.get("xadvance");
-                        chars.add(newChar);
-                    }
+                    case "char" ->
+                        chars.add(new FontChar(
+                                (int) properties.get("id"),
+                                (pages > 1) ? (int) properties.get("page") : 0,
+                                (int) properties.get("x"),
+                                (int) properties.get("y"),
+                                (int) properties.get("width"),
+                                (int) properties.get("height"),
+                                (int) properties.get("xoffset"),
+                                (int) properties.get("yoffset"),
+                                (int) properties.get("xadvance")));
                     case "info" -> {
                         size = Math.abs((int) properties.get("size"));
                     }
                     case "common" -> {
                         lineHeight = (int) properties.get("lineHeight");
                         base = (int) properties.get("base");
+                        pages = (int) properties.get("pages");
+                        textureWidth = (int) properties.get("scaleW");
+                        textureHeight = (int) properties.get("scaleH");
                     }
                 }
             }
@@ -182,17 +180,37 @@ public class Loader {
             System.exit(1);
         }
 
-        int textureID = loadTexture(directoryName + "output_0.png");
+        int[] textureIDs = new int[pages];
+        for (int i = 0; i < pages; i++) {
+            textureIDs[i] = loadTexture(String.format("%soutput_%d.png", directoryName, i));
+        }
+        // int textureID = loadTexture(directoryName + "output_0.png");
 
         // TextFont font = new TextFont(app, name, size, lineHeight, base, texture);
-        TextFont font = new TextFont(name, size, lineHeight, base, textureID);
+        TextFont font = new TextFont(name, size, lineHeight, base, textureIDs, textureWidth, textureHeight);
         font.loadChars(chars);
         loadedFonts.put(name, font);
 
         return font;
     }
 
-    private ArrayList<String> getFontGenerationCommand(String fontName, int padding, int textureWidth,
+    public static void createFontAtlas(String name, int textSize) {
+        String directoryName = String.format("%s%s/", FONT_DIRECTORY, name);
+        MainApp.runCommand(directoryName,
+                getFontGenerationCommand(name, 2, 256, 256, textSize, new int[] { 32, 126, 160, 255 },
+                        new int[] { 9633 }, 0));
+    }
+
+    private static void addArgument(ArrayList<String> commands, String argument, int value) {
+        addArgument(commands, argument, Integer.toString(value));
+    }
+
+    private static void addArgument(ArrayList<String> commands, String argument, String value) {
+        commands.add("--" + argument);
+        commands.add(value);
+    }
+
+    private static ArrayList<String> getFontGenerationCommand(String fontName, int padding, int textureWidth,
             int textureHeight, int fontSize, int[] charRanges, int[] extraChars, int bgColor) {
 
         ArrayList<String> commands = new ArrayList<>();
@@ -227,15 +245,6 @@ public class Loader {
         // System.out.println();
 
         return commands;
-    }
-
-    private void addArgument(ArrayList<String> commands, String argument, int value) {
-        addArgument(commands, argument, Integer.toString(value));
-    }
-
-    private void addArgument(ArrayList<String> commands, String argument, String value) {
-        commands.add("--" + argument);
-        commands.add(value);
     }
 
     public void cleanUp() {
@@ -283,6 +292,16 @@ public class Loader {
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
     }
 
+    private void storeDataInAttributeList(int attributeNumber, int coordinateSize, int[] data) {
+        int vboID = GL15.glGenBuffers();
+        (textMode ? tempVBOs : vbos).add(vboID);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
+        IntBuffer buffer = storeDataInIntBuffer(data);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
+        GL30.glVertexAttribIPointer(attributeNumber, coordinateSize, GL11.GL_INT, 0, 0);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+    }
+
     private void unbindVAO() {
         GL30.glBindVertexArray(0);
     }
@@ -295,12 +314,12 @@ public class Loader {
     // GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
     // }
 
-    // private IntBuffer storeDataInIntBuffer(int[] data) {
-    // IntBuffer buffer = BufferUtils.createIntBuffer(data.length);
-    // buffer.put(data);
-    // buffer.flip();
-    // return buffer;
-    // }
+    private IntBuffer storeDataInIntBuffer(int[] data) {
+        IntBuffer buffer = BufferUtils.createIntBuffer(data.length);
+        buffer.put(data);
+        buffer.flip();
+        return buffer;
+    }
 
     private FloatBuffer storeDataInFloatBuffer(double[] data) {
         FloatBuffer buffer = BufferUtils.createFloatBuffer(data.length);

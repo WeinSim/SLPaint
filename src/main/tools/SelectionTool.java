@@ -132,7 +132,7 @@ public final class SelectionTool extends ImageTool implements XYWH {
     }
 
     private void flattenSelection() {
-        app.getImage().setSubImage(selection.getBufferedImage(), this.x, this.y);
+        app.getImage().drawSubImage(x, y, selection.getBufferedImage());
         clearSelection();
     }
 

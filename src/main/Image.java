@@ -58,7 +58,6 @@ public class Image {
                 buffer.put((byte) ((pixel >> 16) & 0xFF));
                 buffer.put((byte) ((pixel >> 8) & 0xFF));
                 buffer.put((byte) (pixel & 0xFF));
-                // buffer.put((byte) 0xFF);
                 buffer.put((byte) ((pixel >> 24) & 0xFF));
             }
         }
@@ -97,25 +96,46 @@ public class Image {
         return SUtil.toARGB(array[0], array[1], array[2], array[3]);
     }
 
-    public void setSubImage(BufferedImage image, int x, int y) {
+    public void drawSubImage(int x, int y, BufferedImage image) {
+        drawSubImage(x, y, image.getWidth(), image.getHeight(), image, null);
+    }
+
+    public void drawSubImage(int x, int y, int width, int height, int[] pixels) {
+        drawSubImage(x, y, width, height, null, pixels);
+    }
+
+    private void drawSubImage(int x, int y, int width, int height, BufferedImage image, int[] pixels) {
         int x0 = Math.max(0, x);
         int y0 = Math.max(0, y);
-        int x1 = Math.min(x + image.getWidth(), getWidth());
-        int y1 = Math.min(y + image.getHeight(), getHeight());
+        int x1 = Math.min(x + width, getWidth());
+        int y1 = Math.min(y + height, getHeight());
         int w = x1 - x0;
         int h = y1 - y0;
         if (w <= 0 || h <= 0) {
             return;
         }
-        int[] pixels = new int[4 * w * h];
+        if (image != null) {
+            pixels = new int[4 * w * h];
+        }
         int index = 0;
         for (int yoff = 0; yoff < h; yoff++) {
             for (int xoff = 0; xoff < w; xoff++) {
-                int source = image.getRGB(xoff - x + x0, yoff - y + y0);
-                int sourceRed = SUtil.red(source),
-                        sourceGreen = SUtil.green(source),
-                        sourceBlue = SUtil.blue(source);
-                double sourceAlpha = SUtil.alpha(source) / 255.0;
+                int sourceRed, sourceGreen, sourceBlue;
+                double sourceAlpha;
+                if (image != null) {
+                    int source = image.getRGB(xoff - x + x0, yoff - y + y0);
+                    sourceRed = SUtil.red(source);
+                    sourceGreen = SUtil.green(source);
+                    sourceBlue = SUtil.blue(source);
+                    sourceAlpha = SUtil.alpha(source) / 255.0;
+                } else {
+                    int i = (yoff * width + xoff) * 4;
+                    sourceRed = pixels[i++];
+                    sourceGreen = pixels[i++];
+                    sourceBlue = pixels[i++];
+                    sourceAlpha = pixels[i++] / 255.0;
+                }
+
                 int dest = bufferedImage.getRGB(x0 + xoff, y0 + yoff);
                 int destRed = SUtil.red(dest),
                         destGreen = SUtil.green(dest),

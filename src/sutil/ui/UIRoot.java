@@ -56,7 +56,6 @@ public class UIRoot extends UIContainer {
     }
 
     public void updateSize() {
-        // updateSizeReferences();
         setMinSize();
         setPreferredSize();
         expandAsNeccessary();

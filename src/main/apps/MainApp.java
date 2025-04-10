@@ -35,23 +35,25 @@ import ui.components.ImageCanvas;
  * <pre>
  * Text tool:
  *   Text rendering:
- *     Add support for font selection (automatically recognize fonts installed
- *       on system?)
- *     AppRenderer.renderTextToImage is probably incredibly inefficient
- *     Preview doesn't exactly align with actual output (are all MIN and MAG
- *       filters set up in the same way?)
- *     Text preview renders above UI
- *     How to handle big font sizes? Generate texture atlas using fontbm on
- *       demand?
+ *     How to handle fonts?
+ *       How to handle big font sizes? Generate texture atlas using fontbm on
+ *         demand?
  *     Text wrapping / new lines with ENTER
- *     Make text FBO the correct size (= image size)
- *     Text that renders above other text has a weird blurry white-ish outline
  *     TextTool.MIN_TEXT_SIZE should be set to 1, not 0. However, currently the
  *       UI doesn't allow to input single-digit values if the minimum is not 0.
+ *       Create an interface or similar for number UIInputs?
+ * Tools: figure out proper way when a tool should start / finish.
+ *   Fix bug: choose selection tool -> select something -> choose different
+ *     tool -> press escape -> crash (because the selection tool remains in its
+ *     idle state)
+ * 
  * App:
  *   Pencil
  *     Add different sizes
  *   Line tool
+ *   Text tool
+ *     When the size of the image changes, the FBO's texture should also
+ *       update its size.
  *   Resizing
  *     Selection resizing
  *     Selection Ctrl+Shift+X
@@ -71,12 +73,24 @@ import ui.components.ImageCanvas;
  *     Keep track of all file locks in one centralized place to avoid leaking
  *   Recognize remapping from CAPS_LOCK to ESCAPE
  *   (When parent app closes, shouldren should also close)
+ *   ColorPicker: hue values still sometimes show up negative
  * UI:
+ *   Shift + mouse wheel should scroll horizontally
  *   Fix bug in UIPanel: when the textUpdater returns text containig newline
  *     characters, the text is not properly split across multiple lines
  *   Tool icons & cursors
  *   Make side panel collapsable
  * Rendering:
+ *   The outline of the text size input is sometimes cut off by the plus button
+ *     next to it (depending on the horizontal scroll)
+ *   Text rendering can become kind of slow (e.g. when the dropdown menu with
+ *     the entire font selection is opened).
+ *     Solutions:
+ *       Keep track of which VAO belongs to which text. Keep all VAOs loaded,
+ *         and always check for cached text before generating new VAO.
+ *         Keep track of how often each VAO is being used and clean up unused
+ *         ones from time to time (algorithm LRU / CLOCK / similar, can also
+ *         consider size of VAO).
  *   Weird rendering bugs:
  *     Anti aliasing doesn't work despite being enabled
  *       (glfwWindowHint(GLFW_SAMPLES, 4) and glEnable(GL_MULTISAMPLE))
@@ -196,9 +210,8 @@ public final class MainApp extends App {
 
         ImageTool.init(this);
 
-        // activeTool = ImageTool.PENCIL;
-        setActiveTool(ImageTool.PENCIL);
-        prevTool = ImageTool.PENCIL;
+        setActiveTool(ImageTool.SELECTION);
+        prevTool = ImageTool.SELECTION;
     }
 
     @Override

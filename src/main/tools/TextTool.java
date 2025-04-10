@@ -10,19 +10,27 @@ public final class TextTool extends ImageTool implements XYWH {
 
     public static final TextTool INSTANCE;
 
-    static {
-        INSTANCE = new TextTool();
-        FONT_NAMES = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
-        DEFAULT_FONT_NAME = "Courier New Bold";
-        // DEFAULT_FONT_NAME = (new Font("Courier", Font.PLAIN, 1)).getFamily();
-    }
-
     public static final String[] FONT_NAMES;
     private static final String DEFAULT_FONT_NAME;
 
-    public static final int MIN_TEXT_SIZE = 0,
+    private static final int MIN_TEXT_SIZE = 0,
             MAX_TEXT_SIZE = 128,
             DEFAULT_TEXT_SIZE = 32;
+
+    static {
+        INSTANCE = new TextTool();
+
+        // this method takes ~300 milliseconds to run!
+        // long startTime = System.nanoTime();
+        FONT_NAMES = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+        // System.out.format("getFontFamilyNames: %.3fms\n", (System.nanoTime() -
+        // startTime) * 1e-6);
+
+        // FONT_NAMES = new String[] { "Font 1", "Font 2", "Font 3" };
+
+        DEFAULT_FONT_NAME = "Courier New Bold";
+        // DEFAULT_FONT_NAME = (new Font("Courier", Font.PLAIN, 1)).getFamily();
+    }
 
     private String text;
     private int size;
@@ -46,7 +54,7 @@ public final class TextTool extends ImageTool implements XYWH {
         super.start();
 
         if (font == null) {
-            font = app.getLoader().loadFont(DEFAULT_FONT_NAME, size, false);
+            font = app.getLoader().loadFont(DEFAULT_FONT_NAME);
         }
         text = "";
     }
