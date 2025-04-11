@@ -42,10 +42,6 @@ public abstract sealed class ImageTool permits ClickTool, PencilTool, SelectionT
         }
     }
 
-    public void start() {
-        state = NONE;
-    }
-
     public void mousePressed(int x, int y, int mouseButton) {
         if (state == NONE || state == IDLE) {
             boolean startDrag = state == NONE
@@ -117,7 +113,9 @@ public abstract sealed class ImageTool permits ClickTool, PencilTool, SelectionT
         }
     }
 
-    public abstract void forceQuit();
+    public void forceQuit() {
+        state = NONE;
+    }
 
     protected int getMouseDragButton() {
         return mouseDragButton;

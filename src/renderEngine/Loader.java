@@ -38,8 +38,6 @@ public class Loader {
     private HashMap<String, TextFont> loadedFonts;
 
     public Loader() {
-        // this.app = app;
-
         vaos = new ArrayList<>();
         vbos = new ArrayList<>();
         textures = new ArrayList<>();
@@ -180,6 +178,10 @@ public class Loader {
             System.exit(1);
         }
 
+        if (pages > UIRenderMaster.MAX_FONT_ATLASSES) {
+            final String baseString = "Font \"%s\" has too many texture atlasses (%d). Maximum is %d.";
+            throw new RuntimeException(String.format(baseString, name, pages, UIRenderMaster.MAX_FONT_ATLASSES));
+        }
         int[] textureIDs = new int[pages];
         for (int i = 0; i < pages; i++) {
             textureIDs[i] = loadTexture(String.format("%soutput_%d.png", directoryName, i));
@@ -195,6 +197,13 @@ public class Loader {
     }
 
     public static void createFontAtlas(String name, int textSize) {
+        // doesn't work, don't know why
+        // delete old files
+        // ArrayList<String> deleteArgs = new ArrayList<>();
+        // deleteArgs.add("rm");
+        // deleteArgs.add("output*");
+        // MainApp.runCommand(String.format("%s%s", FONT_DIRECTORY, name), deleteArgs);
+
         String directoryName = String.format("%s%s/", FONT_DIRECTORY, name);
         MainApp.runCommand(directoryName,
                 getFontGenerationCommand(name, 2, 256, 256, textSize, new int[] { 32, 126, 160, 255 },

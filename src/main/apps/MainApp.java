@@ -42,10 +42,6 @@ import ui.components.ImageCanvas;
  *     TextTool.MIN_TEXT_SIZE should be set to 1, not 0. However, currently the
  *       UI doesn't allow to input single-digit values if the minimum is not 0.
  *       Create an interface or similar for number UIInputs?
- * Tools: figure out proper way when a tool should start / finish.
- *   Fix bug: choose selection tool -> select something -> choose different
- *     tool -> press escape -> crash (because the selection tool remains in its
- *     idle state)
  * 
  * App:
  *   Pencil
@@ -54,9 +50,11 @@ import ui.components.ImageCanvas;
  *   Text tool
  *     When the size of the image changes, the FBO's texture should also
  *       update its size.
- *   Resizing
+ *   Seelction tool
+ *     Add ability to move selection with arrow keys (keyboard shortcuts)
  *     Selection resizing
  *     Selection Ctrl+Shift+X
+ *   Image resizing
  *   Undo / redo
  *   Transparency
  *     Grey-white squares should always appear the same size
@@ -74,9 +72,11 @@ import ui.components.ImageCanvas;
  *   Recognize remapping from CAPS_LOCK to ESCAPE
  *   (When parent app closes, shouldren should also close)
  *   ColorPicker: hue values still sometimes show up negative
+ *   Pixels with an alpha value of 0 lose color information when saving and
+ *     reopening
  * UI:
  *   Shift + mouse wheel should scroll horizontally
- *   Fix bug in UIPanel: when the textUpdater returns text containig newline
+ *   Fix bug in UILabel: when the textUpdater returns text containig newline
  *     characters, the text is not properly split across multiple lines
  *   Tool icons & cursors
  *   Make side panel collapsable
@@ -97,8 +97,6 @@ import ui.components.ImageCanvas;
  *     Selection border sometimes has artifacts on bottom and right inner edges
  *     AlphaScale has artifacts on bottom edge (whose size depends on wether a
  *       text cursor is currently visible?!?)
- *     Text from text input tool renders incorrectly over side panel (something
- *       to do with alpha values / glBlendFunc)
  *   Fix stuttering artifact when resizing windows on Linux
  *     (see https://www.glfw.org/docs/latest/window.html#window_refresh)
  *   Clean up UIRenderMaster API and UI shaders (especially with regards to
@@ -568,7 +566,7 @@ public final class MainApp extends App {
 
         // start new tool
         activeTool = tool;
-        activeTool.start();
+        // activeTool.start();
     }
 
     public void switchBackToPreviousTool() {

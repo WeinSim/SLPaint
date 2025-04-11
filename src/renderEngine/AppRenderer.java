@@ -1,6 +1,7 @@
 package renderEngine;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
 
 import main.Image;
 import main.apps.App;
@@ -197,8 +198,13 @@ public class AppRenderer<T extends App> {
         uiMaster.start();
         uiMaster.textFramebuffer();
 
-        uiMaster.setBGColor(color, 0.0);
-        // uiMaster.setBGColor(new SVector(), 0.0);
+        // For this text rendering, we only care about the alpha output.
+        // The color channel should be filled with the text color.
+        GL30.glBlendFuncSeparate(
+                GL11.GL_ONE, GL11.GL_ONE, // rgb
+                GL11.GL_ONE_MINUS_DST_ALPHA, GL11.GL_ONE); // alpha
+
+        uiMaster.setBGColor(new SVector(), 0.0);
         uiMaster.fill(color);
         uiMaster.textFont(font);
         uiMaster.textSize(size);

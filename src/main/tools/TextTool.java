@@ -4,8 +4,6 @@ import java.awt.GraphicsEnvironment;
 
 import org.lwjgl.glfw.GLFW;
 
-import renderEngine.fonts.TextFont;
-
 public final class TextTool extends ImageTool implements XYWH {
 
     public static final TextTool INSTANCE;
@@ -18,8 +16,6 @@ public final class TextTool extends ImageTool implements XYWH {
             DEFAULT_TEXT_SIZE = 32;
 
     static {
-        INSTANCE = new TextTool();
-
         // this method takes ~300 milliseconds to run!
         // long startTime = System.nanoTime();
         FONT_NAMES = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
@@ -30,11 +26,13 @@ public final class TextTool extends ImageTool implements XYWH {
 
         DEFAULT_FONT_NAME = "Courier New Bold";
         // DEFAULT_FONT_NAME = (new Font("Courier", Font.PLAIN, 1)).getFamily();
+
+        INSTANCE = new TextTool();
     }
 
     private String text;
     private int size;
-    private TextFont font;
+    private String font = DEFAULT_FONT_NAME;
 
     // INITIAL_DRAG
     private int startX, startY;
@@ -45,18 +43,9 @@ public final class TextTool extends ImageTool implements XYWH {
 
     private TextTool() {
         size = DEFAULT_TEXT_SIZE;
+        text = "";
 
         addKeyboardShortcut(new KeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, IDLE, NONE, this::flattenText));
-    }
-
-    @Override
-    public void start() {
-        super.start();
-
-        if (font == null) {
-            font = app.getLoader().loadFont(DEFAULT_FONT_NAME);
-        }
-        text = "";
     }
 
     @Override
@@ -65,10 +54,10 @@ public final class TextTool extends ImageTool implements XYWH {
             return false;
         }
 
-        start();
-
         startX = Math.min(Math.max(0, x), app.getImage().getWidth());
         startY = Math.min(Math.max(0, y), app.getImage().getHeight());
+
+        text = "";
 
         return true;
     }
@@ -113,7 +102,11 @@ public final class TextTool extends ImageTool implements XYWH {
 
     @Override
     public void forceQuit() {
-        flattenText();
+        if (!text.isEmpty()) {
+            flattenText();
+        }
+
+        super.forceQuit();
     }
 
     private void invalidState() {
@@ -127,9 +120,8 @@ public final class TextTool extends ImageTool implements XYWH {
     }
 
     private void flattenText() {
-        if (getState() == IDLE) {
-            app.renderTextToImage(text, x, y, size, font);
-        }
+        app.renderTextToImage(text, x, y, size, app.getLoader().loadFont(font));
+        text = "";
     }
 
     public int getX() {
@@ -178,12 +170,8 @@ public final class TextTool extends ImageTool implements XYWH {
         this.size = Math.min(Math.max(MIN_TEXT_SIZE, size), MAX_TEXT_SIZE);
     }
 
-    public TextFont getFont() {
+    public String getFont() {
         return font;
-    }
-
-    public void setFont(TextFont font) {
-        this.font = font;
     }
 
     public String getText() {

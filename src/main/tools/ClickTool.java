@@ -40,11 +40,6 @@ public abstract sealed class ClickTool extends ImageTool permits PipetteTool, Fi
         invalidState();
     }
 
-    @Override
-    public void forceQuit() {
-        // nothing to do
-    }
-    
     private void invalidState() {
         final String baseString = "INITIAL_DRAG, IDLE and IDLE_DRAG states undefined for %s tool";
         throw new UnsupportedOperationException(String.format(baseString, getName()));

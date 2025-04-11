@@ -17,6 +17,8 @@ import sutil.math.SVector;
 
 public class UIRenderMaster {
 
+    public static final int MAX_FONT_ATLASSES = 4;
+
     private static final int NONE = 0, NORMAL = 1, CHECKERBOARD = 2;
 
     private App app;

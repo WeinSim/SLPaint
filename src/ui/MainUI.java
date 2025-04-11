@@ -186,6 +186,7 @@ public class MainUI extends AppUI<MainApp> {
         debugPanel.add(new UIText(() -> String.format("Active tool: %s", app.getActiveTool().getName())));
         debugPanel.add(new UIText(() -> String.format("  State: %d", app.getActiveTool().getState())));
         debugPanel.add(new UIText(() -> String.format("TextTool.text: \"%s\"", ImageTool.TEXT.getText())));
+        debugPanel.add(new UIText(() -> String.format("TextTool.font: \"%s\"", ImageTool.TEXT.getFont())));
         debugPanel.add(new UIText("                           "));
         canvas.add(debugPanel);
 

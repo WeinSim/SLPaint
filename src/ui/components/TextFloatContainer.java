@@ -64,7 +64,7 @@ public class TextFloatContainer extends UIFloatContainer {
             // ImageTool.TEXT::getSize doesn't work because it returns an int and not a
             // double (and Supplier<Integer> is not a subtype of Supplier<Double>)
             uiText.setTextSize(() -> ImageTool.TEXT.getSize() * app.getImageZoom());
-            uiText.setFontName(() -> ImageTool.TEXT.getFont().getName());
+            uiText.setFontName(() -> ImageTool.TEXT.getFont());
             uiText.setColor(() -> MainApp.toSVector(app.getPrimaryColor()));
         }
 

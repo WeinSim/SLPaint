@@ -14,8 +14,9 @@ void main(void) {
     vec4 textureColor = texture(textureSamplers[int(page)], textureCoords);
     float alpha = textureColor.r;
 
-    // outColor = vec4(fill, alpha * doFill);
-    vec3 baseColor = vec3(page, page, page)  * 0.0000001;
-    outColor = vec4(baseColor, alpha * doFill);
+    outColor = vec4(fill, alpha * doFill);
+
+    // vec3 baseColor = vec3(page, page, page)  * 0.0000001;
+    // outColor = vec4(baseColor, alpha * doFill);
     // outColor = vec4(alpha, alpha, alpha, 1.0);
 }

@@ -53,13 +53,6 @@ public final class SelectionTool extends ImageTool implements XYWH {
     }
 
     @Override
-    public void start() {
-        super.start();
-
-        selection = null;
-    }
-
-    @Override
     public boolean startInitialDrag(int x, int y, int mouseButton) {
         if (mouseButton != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return false;
@@ -120,6 +113,8 @@ public final class SelectionTool extends ImageTool implements XYWH {
 
     @Override
     public void forceQuit() {
+        super.forceQuit();
+
         if (selection != null) {
             flattenSelection();
         }
@@ -147,6 +142,7 @@ public final class SelectionTool extends ImageTool implements XYWH {
         if (selection != null) {
             flattenSelection();
         }
+
         x = 0;
         y = 0;
         width = app.getImage().getWidth();
@@ -167,6 +163,10 @@ public final class SelectionTool extends ImageTool implements XYWH {
         BufferedImage paste = ClipboardManager.getImage();
         if (paste == null) {
             return;
+        }
+
+        if (selection != null) {
+            flattenSelection();
         }
 
         x = 0;

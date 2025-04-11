@@ -26,10 +26,12 @@ public class MainLoop {
 
         testImports();
 
+        // Loader.createFontAtlas("Courier New", 32);
+        // Loader.createFontAtlas("Courier New Bold", 32);
+
         initGLFW();
 
         apps = new ArrayList<>();
-
         MainApp mainApp = new MainApp();
         Window mainWindow = mainApp.getWindow();
 

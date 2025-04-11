@@ -41,11 +41,6 @@ public final class PencilTool extends ImageTool {
         invalidState();
     }
 
-    @Override
-    public void forceQuit() {
-        // nothing to do
-    }
-
     private void invalidState() {
         throw new UnsupportedOperationException("IDLE and IDLE_DRAG states undefined for Pencil tool");
     }

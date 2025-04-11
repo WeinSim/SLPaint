@@ -142,10 +142,43 @@ public class Image {
                         destBlue = SUtil.blue(dest);
                 double destAlpha = SUtil.alpha(dest) / 255.0;
 
-                pixels[index++] = (int) (sourceRed * sourceAlpha + destRed * (1 - sourceAlpha));
-                pixels[index++] = (int) (sourceGreen * sourceAlpha + destGreen * (1 - sourceAlpha));
-                pixels[index++] = (int) (sourceBlue * sourceAlpha + destBlue * (1 - sourceAlpha));
+                double srcFactor = sourceAlpha,
+                        dstFactor = (1 - sourceAlpha) * destAlpha;
+
+                // normalize srcFactor and dstFactor
+                double sum = srcFactor + dstFactor;
+                if (sum < 1e-6) {
+                    srcFactor = dstFactor = 0.5;
+                } else {
+                    srcFactor /= sum;
+                    dstFactor /= sum;
+                }
+
+                pixels[index++] = (int) (sourceRed * srcFactor + destRed * dstFactor);
+                pixels[index++] = (int) (sourceGreen * srcFactor + destGreen * dstFactor);
+                pixels[index++] = (int) (sourceBlue * srcFactor + destBlue * dstFactor);
                 pixels[index++] = (int) (255 * (1 - (1 - sourceAlpha) * (1 - destAlpha)));
+
+                // how much light is transmitted
+                // (1 - (1 - d.c) * d.a) * (1 - (1 - s.c) * s.a)
+                // = (1 - (d.a - d.c * d.a)) * (1 - (s.a - s.c * s.a))
+                // = (1 - d.a + d.c * d.a) * (1 - s.a + s.c * s.a)
+                // = 1 - s.a + s.c * s.a
+                // - d.a + d.a * s.a - d.a * s.c * s.a
+                // + d.c * d.a - d.c * d.a * s.a + d.c * d.a * s.c * s.a
+                // = 1 - s.a - d.a + d.a * s.a
+                // + s.c * s.a + d.c * d.a
+                // - d.a * s.c * s.a - d.c * d.a * s.a
+                // + d.c * d.a * s.c * s.a
+                // = (*)
+                // =! 1 - (1 - r.c) * r.a
+                //
+                // (r.a = d.a + s.a - d.a * s.a)
+                //
+                // (*) = 1 - r.a
+                // + s.c * s.a + d.c * d.a
+                // - d.a * s.c * s.a
+                // + d.c * d.a * (s.c * s.a - s.a)
             }
         }
 
