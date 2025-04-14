@@ -1,5 +1,8 @@
 package ui;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.function.Supplier;
 
 import main.apps.App;
@@ -111,5 +114,48 @@ public abstract class AppUI<T extends App> extends UIPanel {
     @Override
     public double getStrokeWeight() {
         return Sizes.STROKE_WEIGHT.size;
+    }
+
+    /**
+     * Returns a {@code String[]} containing the first {@code numWords} words of
+     * lorem ipsum, split into lines of {@code lineLength} words each.
+     * 
+     * @param numWords
+     * @param lineLength
+     * @return
+     */
+    public static String[] lipsum(int numWords, int lineLength) {
+        String lipsum = "";
+        try (BufferedReader reader = new BufferedReader(new FileReader("res/misc/lipsum.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lipsum += line;
+                lipsum += "\n ";
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new String[] { "[unable to load lipsum]" };
+        }
+
+        String[] words = lipsum.split(" ");
+        numWords = Math.min(numWords, words.length);
+        String[] ret = new String[numWords / lineLength];
+        int index = 0;
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] = "";
+            for (int j = 0; j < lineLength; j++) {
+                String nextWord = words[index++];
+                boolean newLine = nextWord.endsWith("\n");
+                if (newLine) {
+                    ret[i] += nextWord.substring(0, nextWord.length() - 1);
+                    break;
+                } else {
+                    ret[i] += nextWord;
+                    ret[i] += " ";
+                }
+            }
+        }
+
+        return ret;
     }
 }

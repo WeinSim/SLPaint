@@ -1,13 +1,17 @@
-package shaders;
+package renderEngine.shaders;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.FloatBuffer;
 import java.util.HashMap;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL32;
+
+import renderEngine.Loader;
 
 public class ShaderProgram {
 
@@ -18,11 +22,14 @@ public class ShaderProgram {
 
     private boolean hasGemoetryShader;
 
-    private HashMap<String, UniformVariable> uniforms;
+    private HashMap<String, UniformVariable> uniformVariables;
+    private HashMap<String, UniformBufferObject> uniformBufferObjects;
 
     public ShaderProgram(String name, String[] attributeNames, boolean hasGemoetryShader) {
         this.hasGemoetryShader = hasGemoetryShader;
-        uniforms = new HashMap<>();
+
+        uniformVariables = new HashMap<>();
+        uniformBufferObjects = new HashMap<>();
 
         vertexShaderID = loadShader("res/shaders/" + name + "/vertexShader.glsl", GL20.GL_VERTEX_SHADER);
         if (hasGemoetryShader) {
@@ -47,17 +54,18 @@ public class ShaderProgram {
         GL20.glLinkProgram(programID);
         GL20.glValidateProgram(programID);
 
-        getAllUniformLocations();
+        for (UniformVariable uniform : uniformVariables.values()) {
+            uniform.setLocation(GL20.glGetUniformLocation(programID, uniform.getName()));
+        }
+
+        for (UniformBufferObject ubo : uniformBufferObjects.values()) {
+            int blockIndex = GL31.glGetUniformBlockIndex(programID, ubo.getName());
+            GL31.glUniformBlockBinding(programID, blockIndex, ubo.getBinding());
+        }
     }
 
     protected void bindAttribute(int attribute, String variableName) {
         GL20.glBindAttribLocation(programID, attribute, variableName);
-    }
-
-    protected void getAllUniformLocations() {
-        for (UniformVariable uniform : uniforms.values()) {
-            uniform.setLocation(GL20.glGetUniformLocation(programID, uniform.getName()));
-        }
     }
 
     public void start() {
@@ -87,12 +95,29 @@ public class ShaderProgram {
     }
 
     public void loadUniform(String name, Object value) {
-        UniformVariable uniform = uniforms.get(name);
+        UniformVariable uniform = uniformVariables.get(name);
         if (uniform == null) {
-            System.out.format("Uniform variable \"%s\" doesn't exist!\n", name);
-            System.exit(1);
+            throw new RuntimeException(String.format("Uniform variable \"%s\" doesn't exist!\n", name));
         }
         uniform.load(value);
+    }
+
+    public void setUniformBlockData(String name, FloatBuffer data) {
+        UniformBufferObject ubo = getUniformBlock(name);
+        ubo.setData(data);
+    }
+
+    public void syncUniformBlock(String name, Loader loader) {
+        UniformBufferObject ubo = getUniformBlock(name);
+        ubo.syncData(loader);
+    }
+
+    private UniformBufferObject getUniformBlock(String name) {
+        UniformBufferObject ubo = uniformBufferObjects.get(name);
+        if (ubo == null) {
+            throw new RuntimeException(String.format("Uniform block \"%s\" doesn't exist!\n", name));
+        }
+        return ubo;
     }
 
     private int loadShader(String filename, int type) {
@@ -111,29 +136,36 @@ public class ShaderProgram {
                 if (!parts[0].equals("uniform")) {
                     continue;
                 }
-                int datatype = -1;
-                for (int i = 0; i < UniformVariable.TYPE_NAMES.length; i++) {
-                    if (parts[1].equals(UniformVariable.TYPE_NAMES[i])) {
-                        datatype = i;
-                        break;
-                    }
-                }
-                if (datatype == -1) {
-                    System.out.format("Invalid datatype: \"%s\"!\n", parts[1]);
-                    continue;
-                }
-                String name = parts[2].replaceAll(";", "");
-                int openIndex = name.indexOf('[');
-                if (openIndex != -1) {
-                    int closeIndex = name.indexOf(']');
-                    String baseName = name.substring(0, openIndex);
-                    int len = Integer.parseInt(name.substring(openIndex + 1, closeIndex));
-                    for (int i = 0; i < len; i++) {
-                        name = String.format("%s[%d]", baseName, i);
-                        uniforms.put(name, new UniformVariable(datatype, name));
-                    }
+                if (parts[2].equals("{")) {
+                    // uniform buffer object
+                    UniformBufferObject ubo = new UniformBufferObject(parts[1], uniformBufferObjects.size());
+                    uniformBufferObjects.put(parts[1], ubo);
                 } else {
-                    uniforms.put(name, new UniformVariable(datatype, name));
+                    // normal uniform variable
+                    int datatype = -1;
+                    for (int i = 0; i < UniformVariable.TYPE_NAMES.length; i++) {
+                        if (parts[1].equals(UniformVariable.TYPE_NAMES[i])) {
+                            datatype = i;
+                            break;
+                        }
+                    }
+                    if (datatype == -1) {
+                        System.out.format("Invalid datatype: \"%s\"!\n", parts[1]);
+                        continue;
+                    }
+                    String name = parts[2].replaceAll(";", "");
+                    int openIndex = name.indexOf('[');
+                    if (openIndex != -1) {
+                        int closeIndex = name.indexOf(']');
+                        String baseName = name.substring(0, openIndex);
+                        int len = Integer.parseInt(name.substring(openIndex + 1, closeIndex));
+                        for (int i = 0; i < len; i++) {
+                            name = String.format("%s[%d]", baseName, i);
+                            uniformVariables.put(name, new UniformVariable(datatype, name));
+                        }
+                    } else {
+                        uniformVariables.put(name, new UniformVariable(datatype, name));
+                    }
                 }
             }
             reader.close();

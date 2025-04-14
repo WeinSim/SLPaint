@@ -13,4 +13,6 @@ void main(void) {
     float alpha = sampleColor.a;
     // outColor = vec4(alpha, alpha, alpha, 1.0);
     outColor = sampleColor;
+
+    gl_FragDepth = gl_FragCoord.z;
 }

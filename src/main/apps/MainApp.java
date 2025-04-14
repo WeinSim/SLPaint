@@ -35,10 +35,14 @@ import ui.components.ImageCanvas;
  * <pre>
  * Text tool:
  *   Text rendering:
+ *     Add text clipping
+ *     Properly measure performance increase
  *     How to handle fonts?
- *       How to handle big font sizes? Generate texture atlas using fontbm on
- *         demand?
- *     Text wrapping / new lines with ENTER
+ *       How to handle big font sizes?
+ *         Generate texture atlas using fontbm on demand?
+ *         Use SDFs (either in addition to or instead of regular bitmap fonts)?
+ *     Text wrapping / new lines with ENTER (in combination with proper UI text
+ *       input?)
  *     TextTool.MIN_TEXT_SIZE should be set to 1, not 0. However, currently the
  *       UI doesn't allow to input single-digit values if the minimum is not 0.
  *       Create an interface or similar for number UIInputs?
@@ -81,17 +85,13 @@ import ui.components.ImageCanvas;
  *   Tool icons & cursors
  *   Make side panel collapsable
  * Rendering:
+ *   Use GL_LINES for rendering rect outlines?
  *   The outline of the text size input is sometimes cut off by the plus button
  *     next to it (depending on the horizontal scroll)
- *   Text rendering can become kind of slow (e.g. when the dropdown menu with
- *     the entire font selection is opened).
- *     Solutions:
- *       Keep track of which VAO belongs to which text. Keep all VAOs loaded,
- *         and always check for cached text before generating new VAO.
- *         Keep track of how often each VAO is being used and clean up unused
- *         ones from time to time (algorithm LRU / CLOCK / similar, can also
- *         consider size of VAO).
- *   Weird rendering bugs:
+ *   Text renders inconsistently: some letters are blurry and other are not.
+ *     For example, using Courier New Bold with a rasterized text size of 32,
+ *     the letters 'e', 'r', 'i' and 'd' are blurry, whereas 'p', 'u', 'm' and
+ *     'b' are sharp. (it seems like most blurry letters are on page 2.)
  *     Anti aliasing doesn't work despite being enabled
  *       (glfwWindowHint(GLFW_SAMPLES, 4) and glEnable(GL_MULTISAMPLE))
  *     Selection border sometimes has artifacts on bottom and right inner edges

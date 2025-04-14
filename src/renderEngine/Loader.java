@@ -14,15 +14,48 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL31;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
 import main.apps.MainApp;
 import renderEngine.fonts.FontChar;
 import renderEngine.fonts.TextFont;
+import renderEngine.shaders.UniformBufferObject;
 import sutil.SUtil;
 
 public class Loader {
+
+    /*
+     * Test scene: side panel containing 30 copies of lipsum(Integer.MAX_VALUE, 3)
+     *
+     * render mode: normal fps (font selection expanded fps)
+     * NO_CACHE: 3.5 fps (2.9 fps)
+     * DEFAULT_CACHE: 6.3 fps (5.5 fps)
+     * GIANT_VAO: 18.8 fps (16 fps)
+     */
+
+    public enum RenderMode {
+        NO_CACHE, DEFAULT_CACHE, GIANT_VAO;
+    }
+
+    /**
+     * <p>
+     * 0 = no caching. textVAOs and textVBOs get cleared every frame
+     * </p>
+     * 
+     * <p>
+     * 1 = standard caching. A {@code HashMap<TextFont, HashMap<String, RawModel>>}
+     * is used to cache text VAOs.
+     * </p>
+     * 
+     * <p>
+     * 2 = giant VAOs. All text draw calls get queued until the end of the frame,
+     * when one VAO with all the text information is generated.
+     * (how to handle scissor test???)
+     * </p>
+     */
+    public static RenderMode renderMode = RenderMode.GIANT_VAO;
 
     public static final String FONT_DIRECTORY = "res/fonts/";
 
@@ -32,8 +65,10 @@ public class Loader {
     private ArrayList<Integer> fbos;
 
     private boolean textMode;
-    private ArrayList<Integer> tempVAOs;
-    private ArrayList<Integer> tempVBOs;
+    private ArrayList<Integer> textVAOs;
+    private ArrayList<Integer> textVBOs;
+
+    private HashMap<TextFont, HashMap<String, RawModel>> fontCaches;
 
     private HashMap<String, TextFont> loadedFonts;
 
@@ -43,8 +78,10 @@ public class Loader {
         textures = new ArrayList<>();
         fbos = new ArrayList<>();
 
-        tempVAOs = new ArrayList<>();
-        tempVBOs = new ArrayList<>();
+        textVAOs = new ArrayList<>();
+        textVBOs = new ArrayList<>();
+
+        fontCaches = new HashMap<>();
 
         loadedFonts = new HashMap<>();
 
@@ -59,13 +96,65 @@ public class Loader {
         return new RawModel(vaoID, positions.length / 2);
     }
 
-    public RawModel loadToTextVAO(double[] positions, double[] textureCoords, int[] pages, double[] sizes) {
+    public void loadToUBO(UniformBufferObject ubo, FloatBuffer data) {
+        int bufferID = ubo.getBufferID();
+        if (bufferID != 0) {
+            GL15.glDeleteBuffers(bufferID);
+        }
+        bufferID = GL15.glGenBuffers();
+        ubo.setBufferID(bufferID);
+
+        GL15.glBindBuffer(GL31.GL_UNIFORM_BUFFER, bufferID);
+        GL15.glBufferData(GL31.GL_UNIFORM_BUFFER, data, GL15.GL_STATIC_DRAW);
+        GL15.glBindBuffer(GL31.GL_UNIFORM_BUFFER, 0);
+
+        GL31.glBindBufferBase(GL31.GL_UNIFORM_BUFFER, ubo.getBinding(), bufferID);
+    }
+
+    public RawModel loadTextVAO(String text, TextFont font) {
+        switch (renderMode) {
+            case NO_CACHE -> {
+                return font.generateVAO(text, this);
+            }
+            case DEFAULT_CACHE -> {
+                HashMap<String, RawModel> fontCache = fontCaches.get(font);
+                if (fontCache == null) {
+                    fontCache = new HashMap<>();
+                    fontCaches.put(font, fontCache);
+                }
+
+                RawModel model = fontCache.get(text);
+                if (model == null) {
+                    model = font.generateVAO(text, this);
+                    fontCache.put(text, model);
+                    // System.out.format("Caching \"%s\" for font %s\n", text, font.getName());
+                }
+
+                return model;
+            }
+            default -> {
+                return null;
+            }
+        }
+    }
+
+    public RawModel generateTextVAO(int[] charIDs, double[] positions, double[] textSizes, double[] colors) {
+        textMode = true;
+        int vaoID = createVAO();
+        storeDataInAttributeList(0, 1, charIDs);
+        storeDataInAttributeList(1, 3, positions);
+        storeDataInAttributeList(2, 1, textSizes);
+        storeDataInAttributeList(3, 3, colors);
+        unbindVAO();
+        return new RawModel(vaoID, positions.length);
+    }
+
+    public RawModel generateTextVAO(double[] positions, double[] textureCoords, double[] sizes) {
         textMode = true;
         int vaoID = createVAO();
         storeDataInAttributeList(0, 2, positions);
         storeDataInAttributeList(1, 2, textureCoords);
-        storeDataInAttributeList(2, 1, pages);
-        storeDataInAttributeList(3, 2, sizes);
+        storeDataInAttributeList(2, 2, sizes);
         unbindVAO();
         return new RawModel(vaoID, positions.length);
     }
@@ -174,24 +263,38 @@ public class Loader {
                 }
             }
         } catch (IOException e) {
-            System.out.format("Could not load font \"%s\"!\n", name);
-            System.exit(1);
+            throw new RuntimeException(String.format("Could not load font \"%s\"!\n", name));
         }
 
+        if (chars.size() > UIRenderMaster.MAX_FONT_CHARS) {
+            final String baseString = "Font \"%s\" has too many characters (%d). Maximum is %d.";
+            throw new RuntimeException(String.format(baseString, chars.size(), UIRenderMaster.MAX_FONT_CHARS));
+        }
         if (pages > UIRenderMaster.MAX_FONT_ATLASSES) {
             final String baseString = "Font \"%s\" has too many texture atlasses (%d). Maximum is %d.";
             throw new RuntimeException(String.format(baseString, name, pages, UIRenderMaster.MAX_FONT_ATLASSES));
         }
+
         int[] textureIDs = new int[pages];
         for (int i = 0; i < pages; i++) {
             textureIDs[i] = loadTexture(String.format("%soutput_%d.png", directoryName, i));
         }
-        // int textureID = loadTexture(directoryName + "output_0.png");
 
-        // TextFont font = new TextFont(app, name, size, lineHeight, base, texture);
         TextFont font = new TextFont(name, size, lineHeight, base, textureIDs, textureWidth, textureHeight);
         font.loadChars(chars);
         loadedFonts.put(name, font);
+
+        // load ubo
+        FloatBuffer uboData = BufferUtils.createFloatBuffer(UIRenderMaster.MAX_FONT_CHARS * 4);
+        FontChar[] fontChars = font.getFontChars();
+        for (int i = 0; i < fontChars.length; i++) {
+            uboData.put(fontChars[i].x() + font.getTextureWidth() * fontChars[i].page());
+            uboData.put(fontChars[i].y());
+            uboData.put(fontChars[i].width());
+            uboData.put(fontChars[i].height());
+        }
+        uboData.flip();
+        font.setUBOData(uboData);
 
         return font;
     }
@@ -258,7 +361,7 @@ public class Loader {
 
     public void cleanUp() {
         cleanUp(vaos, vbos);
-        cleanUp(tempVAOs, tempVBOs);
+        cleanUp(textVAOs, textVBOs);
 
         for (int textureID : textures) {
             GL11.glDeleteTextures(textureID);
@@ -269,8 +372,14 @@ public class Loader {
         }
     }
 
-    public void tempCleanUp() {
-        cleanUp(tempVAOs, tempVBOs);
+    public void textCleanUp() {
+        switch (renderMode) {
+            case NO_CACHE, GIANT_VAO -> {
+                cleanUp(textVAOs, textVBOs);
+            }
+            default -> {
+            }
+        }
     }
 
     private void cleanUp(ArrayList<Integer> vaos, ArrayList<Integer> vbos) {
@@ -286,14 +395,14 @@ public class Loader {
 
     private int createVAO() {
         int vaoID = GL30.glGenVertexArrays();
-        (textMode ? tempVAOs : vaos).add(vaoID);
+        (textMode ? textVAOs : vaos).add(vaoID);
         GL30.glBindVertexArray(vaoID);
         return vaoID;
     }
 
     private void storeDataInAttributeList(int attributeNumber, int coordinateSize, double[] data) {
         int vboID = GL15.glGenBuffers();
-        (textMode ? tempVBOs : vbos).add(vboID);
+        (textMode ? textVBOs : vbos).add(vboID);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
         FloatBuffer buffer = storeDataInFloatBuffer(data);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
@@ -303,7 +412,7 @@ public class Loader {
 
     private void storeDataInAttributeList(int attributeNumber, int coordinateSize, int[] data) {
         int vboID = GL15.glGenBuffers();
-        (textMode ? tempVBOs : vbos).add(vboID);
+        (textMode ? textVBOs : vbos).add(vboID);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
         IntBuffer buffer = storeDataInIntBuffer(data);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
@@ -317,7 +426,7 @@ public class Loader {
 
     // private void bindIndicesBuffer(int[] indices) {
     // int vboID = GL15.glGenBuffers();
-    // (textMode? textVBOs : vbos).add(vboID);
+    // (textMode ? textVBOs : vbos).add(vboID);
     // GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboID);
     // IntBuffer buffer = storeDataInIntBuffer(indices);
     // GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);

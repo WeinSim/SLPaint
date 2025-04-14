@@ -3,14 +3,9 @@
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
-layout(std140)
-uniform FontData {
-    // (x, y, w, h)
-    vec4[256] fontData;
-} fontData;
-
-in int[] pass_charIndex;
 in vec3[] pass_position;
+in vec2[] pass_textureCoords;
+in vec2[] pass_textureSize;
 in float[] pass_textSize;
 in vec3[] pass_color;
 
@@ -20,6 +15,8 @@ out vec3 color;
 // converts from "normal" screen coordinates (0, 0) to (w, h)
 // to OpenGL coordinates (-1, 1) to (1, -1)
 uniform mat3 viewMatrix;
+// uniform mat3 transformationMatrix;
+// uniform float depth;
 
 uniform vec2 textureSize;
 
@@ -31,16 +28,13 @@ const vec2 offsets[4] = vec2[4](
 );
 
 void main(void) {
-    vec2 baseTextureCoords = fontData.fontData[pass_charIndex[0]].xy;
-    vec2 textureOffset = fontData.fontData[pass_charIndex[0]].zw;
-
     for (int i = 0; i < 4; i++) {
-        vec3 screenPos = vec3(pass_position[0].xy + offsets[i] * textureOffset * pass_textSize[0], 1.0);
+        vec3 screenPos = vec3(pass_position[0].xy + offsets[i] * pass_textureSize[0] * pass_textSize[0], 1.0);
         // screenPos = viewMatrix * transformationMatrix * screenPos;
         screenPos = viewMatrix * screenPos;
         gl_Position = vec4(screenPos.xy, pass_position[0].z, 1.0);
 
-        textureCoords = (baseTextureCoords + textureOffset * offsets[i]) / textureSize;
+        textureCoords = (pass_textureCoords[0] + pass_textureSize[0] * offsets[i]) / textureSize;
         color = pass_color[0];
 
         EmitVertex();

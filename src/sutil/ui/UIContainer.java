@@ -225,7 +225,7 @@ public class UIContainer extends UIElement {
             child.charInput(c);
         }
     }
-    
+
     public final void setMinSize() {
         for (UIElement child : getChildren()) {
             if (child instanceof UIContainer container) {
@@ -483,11 +483,10 @@ public class UIContainer extends UIElement {
                 runningTotal += padding;
             }
 
+            if (!(child instanceof UIFloatContainer)) {
+                child.getPosition().add(scrollOffset);
+            }
             if (child instanceof UIContainer container) {
-                if (!(child instanceof UIFloatContainer)) {
-                    child.getPosition().add(scrollOffset);
-                }
-
                 container.positionChildren();
             }
         }

@@ -26,13 +26,27 @@ import ui.components.UIColorElement;
 
 public class AppRenderer<T extends App> {
 
-    private static final double MIN_DEPTH = -1.0, MAX_DEPTH = 1.0;
-    private static final int MIN_LAYER = 0, MAX_LAYER = 10, START_LAYER = 5;
+    /**
+     * Depth value usage: 1.0 - 0.0 is used for the base UI,
+     * 0.0 - -1.0 is used for floating UI elements.
+     * Each regoin is subdivided into NUM_LAYER_SUBDIVISIONS divisions;
+     */
+    private static final int NUM_LAYER_SUBDIVISIONS = 3;
 
     protected T app;
 
     protected UIRenderMaster uiMaster;
 
+    /**
+     * When this is set to true, the depth value will be negative (foreground UI,
+     * see above). When it is set to false, the depth value will be positive (base
+     * UI).
+     */
+    protected boolean foregroundDraw;
+    /**
+     * 0 = front
+     * NUM_LAYER_SUBDIVISION - 1 = back
+     */
     protected int layer;
 
     public AppRenderer(T app) {
@@ -56,43 +70,53 @@ public class AppRenderer<T extends App> {
         uiMaster.resetMatrix();
         AppUI<?> ui = app.getUI();
 
-        layer = START_LAYER;
+        layer = 0;
+        foregroundDraw = false;
 
         renderUIElement(ui.getRoot());
     }
 
     private void renderUIElement(UIElement element) {
+        // System.out.format("Rendering UIElement \"%s\", position = %s, size = %s\n",
+        // element.getClass().getName(), element.getPosition().toString(),
+        // element.getSize().toString());
+        int oldLayer = layer;
+        boolean oldForegroundDraw = foregroundDraw;
+
+        boolean isScrollable = false;
+        if (element instanceof UIContainer container) {
+            isScrollable = container.isHScroll() || container.isVScroll();
+
+            if (element instanceof UIFloatContainer) {
+                // Not beautiful but it works for now.
+                // Without this check, the text inside of a TextFloatContainer would render
+                // above the rest of the UI.
+                if (element instanceof TextFloatContainer) {
+                    foregroundDraw = false;
+                    layer = NUM_LAYER_SUBDIVISIONS - 1;
+                } else {
+                    // layer++;
+                    foregroundDraw = true;
+                }
+                // uiMaster.pushScissor();
+                // uiMaster.noScissor();
+            }
+        }
+        uiMaster.depth(getDepth());
+
         SVector position = element.getPosition();
         SVector size = element.getSize();
 
         SVector bgColor = element.getBackgroundColor();
-        SVector olColor = element.getOutlineColor();
-
-        int oldLayer = layer;
-
-        if (element instanceof UIFloatContainer) {
-            // Not beautiful but it works for now.
-            // Without this check, the text inside of a TextFloatContainer would render
-            // above the rest of the UI.
-            if (element instanceof TextFloatContainer) {
-                layer = START_LAYER - 1;
-            } else {
-                layer++;
-            }
-            uiMaster.pushScissor();
-            uiMaster.noScissor();
-        }
-        uiMaster.depth(SUtil.map(layer, MIN_LAYER, MAX_LAYER, MAX_DEPTH, MIN_DEPTH));
-
-        if (element instanceof UIColorElement e && bgColor != null) {
-            uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
-            uiMaster.noStroke();
-            uiMaster.rect(position, size);
-
-            uiMaster.fillAlpha(SUtil.alpha(e.getColor()) / 255.0);
-        }
-
         if (bgColor != null) {
+            if (element instanceof UIColorElement e) {
+                uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
+                uiMaster.noStroke();
+                uiMaster.rect(position, size);
+
+                uiMaster.fillAlpha(SUtil.alpha(e.getColor()) / 255.0);
+            }
+
             uiMaster.fill(bgColor);
             uiMaster.noStroke();
             uiMaster.rect(position, size);
@@ -131,12 +155,13 @@ public class AppRenderer<T extends App> {
             uiMaster.text(text.getText(), position);
         }
         if (element instanceof UIContainer container) {
-            boolean isScrollable = container.isHScroll() || container.isVScroll();
+            boolean oldOldForegrundDraw = foregroundDraw;
             if (isScrollable) {
-                uiMaster.pushScissor();
-                uiMaster.scissor(position, size);
+                // uiMaster.pushScissor();
+                // uiMaster.scissor(position, size);
+                // foregroundDraw = false;
+                // layer++;
             }
-
             uiMaster.pushMatrix();
             uiMaster.translate(position);
 
@@ -146,8 +171,10 @@ public class AppRenderer<T extends App> {
 
             uiMaster.popMatrix();
             if (isScrollable) {
-                uiMaster.popScissor();
+                // uiMaster.popScissor();
+                // layer--;
             }
+            foregroundDraw = oldOldForegrundDraw;
         }
         if (element instanceof UIScale scale) {
             SVector pos = new SVector(position).add(scale.getScaleOffset());
@@ -168,6 +195,7 @@ public class AppRenderer<T extends App> {
             }
         }
 
+        SVector olColor = element.getOutlineColor();
         boolean doOutline = false;
         if (App.showDebugOutline()) {
             uiMaster.stroke(new SVector(1, 0.7, 0.1));
@@ -183,11 +211,22 @@ public class AppRenderer<T extends App> {
             uiMaster.rect(position, size);
         }
 
-        if (element instanceof UIFloatContainer) {
-            uiMaster.popScissor();
-        }
+        // if (element instanceof UIFloatContainer) {
+        // uiMaster.popScissor();
+        // }
 
         layer = oldLayer;
+        foregroundDraw = oldForegroundDraw;
+    }
+
+    private double getDepth() {
+        return getDepth(layer, foregroundDraw);
+    }
+
+    private double getDepth(int layer, boolean foregroundDraw) {
+        double depth = layer * 1.0 / NUM_LAYER_SUBDIVISIONS + (foregroundDraw ? -1 : 0);
+        // System.out.format("getDepth(%d, %b) = %.3f\n", layer, foregroundDraw, depth);
+        return depth;
     }
 
     public void reloadShaders() {

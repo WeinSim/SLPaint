@@ -12,8 +12,7 @@ uniform vec2 size;
 uniform float strokeWeight;
 
 void main(void) {
-
-    if (applyCheckerboard < 0.5) {
+    if (applyCheckerboard == 0) {
         outColor = color;
     } else {
         float width = size.x - strokeWeight / 2;

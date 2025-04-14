@@ -146,6 +146,8 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
         public CursorLine(boolean vertical) {
             super(0, 0);
 
+            clipToRoot = false;
+
             setStyle(new UIStyle(Colors::getTextColor, () -> null, () -> Sizes.STROKE_WEIGHT.size));
 
             if (vertical) {

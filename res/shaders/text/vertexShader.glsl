@@ -1,18 +1,18 @@
 #version 400 core
 
-in vec2 position;
-in vec2 textureCoords;
-in int page;
-in vec2 size;
+in int charIndex;
+in vec3 position;
+in float textSize;
+in vec3 color;
 
-out vec2 pass_position;
-out vec2 pass_textureCoords;
-out int pass_page;
-out vec2 pass_size;
+out int pass_charIndex;
+out vec3 pass_position;
+out float pass_textSize;
+out vec3 pass_color;
 
 void main(void) {
+    pass_charIndex = charIndex;
     pass_position = position;
-    pass_textureCoords = textureCoords;
-    pass_page = page;
-    pass_size = size;
+    pass_textSize = textSize;
+    pass_color = color;
 }

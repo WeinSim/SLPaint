@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.newdawn.slick.util.Log;
 
 import main.apps.App;
 import main.apps.MainApp;
@@ -28,6 +29,11 @@ public class MainLoop {
 
         // Loader.createFontAtlas("Courier New", 32);
         // Loader.createFontAtlas("Courier New Bold", 32);
+
+        // Disables the message
+        // "INFO:Use Java PNG Loader = true"
+        // that would otherwise show up when loading the first image
+        Log.setVerbose(false);
 
         initGLFW();
 
