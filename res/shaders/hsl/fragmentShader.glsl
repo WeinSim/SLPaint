@@ -60,8 +60,6 @@ void main(void) {
                 : hslToRGB(angle * 180 / PI, mag, 0.5),
             1.0);
     }
-
-    gl_FragDepth = gl_FragCoord.z;
 }
 
 float mag(vec2 v) {

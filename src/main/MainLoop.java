@@ -28,7 +28,7 @@ public class MainLoop {
         testImports();
 
         // Loader.createFontAtlas("Courier New", 32);
-        // Loader.createFontAtlas("Courier New Bold", 32);
+        // Loader.createFontAtlas("Courier New Bold", 18);
 
         // Disables the message
         // "INFO:Use Java PNG Loader = true"

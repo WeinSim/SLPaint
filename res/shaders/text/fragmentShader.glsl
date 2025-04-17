@@ -1,16 +1,30 @@
 #version 400 core
 
+in vec2 position;
 in vec2 textureCoords;
 in vec3 color;
+in vec2 boundingBoxMin;
+in vec2 boundingBoxMax;
 
 out vec4 outColor;
-
-// uniform vec3 fill;
-// uniform int doFill;
 
 uniform sampler2D textureSamplers[4];
 
 void main(void) {
+
+    if (position.x < boundingBoxMin.x) {
+        discard;
+    }
+    if (position.x > boundingBoxMax.x) {
+        discard;
+    }
+    if (position.y < boundingBoxMin.y) {
+        discard;
+    }
+    if (position.y > boundingBoxMax.y) {
+        discard;
+    }
+
     int page = int(floor(textureCoords.x));
     vec2 actualTextureCoords = vec2(textureCoords.x - page, textureCoords.y);
 
@@ -18,10 +32,4 @@ void main(void) {
     float alpha = textureColor.r;
 
     outColor = vec4(color, alpha);
-
-    // vec3 baseColor = vec3(page, page, page)  * 0.0000001;
-    // outColor = vec4(baseColor, alpha * doFill);
-    // outColor = vec4(alpha, alpha, alpha, 1.0);
-
-    gl_FragDepth = gl_FragCoord.z;
 }

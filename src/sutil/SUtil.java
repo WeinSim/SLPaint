@@ -3,6 +3,7 @@ package sutil;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 
 import sutil.math.SVector;
 
@@ -299,7 +300,7 @@ public class SUtil {
 
     public static SVector hslToHSV(double h, double s, double l) {
         double v = l + s * Math.min(l, 1 - l);
-        double sv = v < 0.0001 ? 0 : 2 * (1 - l / v); 
+        double sv = v < 0.0001 ? 0 : 2 * (1 - l / v);
         return new SVector(h, sv, v);
     }
 
@@ -370,5 +371,57 @@ public class SUtil {
             }
         }
         return -1;
+    }
+
+    /**
+     * Adds {@code element} to {@code list} while maintaining the list's order,
+     * which can be either ascending or descending.
+     * The list is assumed to already be sorted according to the specified order.
+     * 
+     * @param <T>
+     * @param list
+     * @param element
+     * @param descending
+     */
+    public static <T extends Comparable<T>> void addSorted(List<T> list, T element, boolean descending) {
+        // edge case: list is empty
+        if (list.isEmpty()) {
+            list.add(element);
+            return;
+        }
+
+        // edge cases: element is less than smallest / greater than largest element in
+        // the list
+        int sign = descending ? -1 : 1;
+        if (sign * element.compareTo(list.getFirst()) < 0) {
+            list.addFirst(element);
+            return;
+        }
+        if (sign * element.compareTo(list.getLast()) > 0) {
+            list.addLast(element);
+            return;
+        }
+
+        // base case: element is somewhere in the middle
+        int index;
+        int left = 0, right = list.size() - 1;
+        while (true) {
+            if (right - left <= 1) {
+                index = right;
+                break;
+            }
+            int middle = (left + right) / 2;
+            T middleElement = list.get(middle);
+            int compare = sign * element.compareTo(middleElement);
+            if (compare < 0) {
+                right = middle;
+            } else if (compare > 0) {
+                left = middle;
+            } else {
+                index = middle;
+                break;
+            }
+        }
+        list.add(index, element);
     }
 }

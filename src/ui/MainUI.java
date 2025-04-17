@@ -8,6 +8,7 @@ import main.apps.MainApp;
 import main.tools.ImageTool;
 import main.tools.SelectionTool;
 import main.tools.TextTool;
+import sutil.math.SVector;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UIDropdown;
@@ -98,7 +99,10 @@ public class MainUI extends AppUI<MainApp> {
                 _ -> {
                 }, true));
         textFontContainer.add(textFontRow1);
-        textFontContainer.add(new UIText("Font"));
+        UIText text = new UIText("Font");
+        text.setTextSize(100);
+        text.setColor(new SVector(0, 0, 1));
+        textFontContainer.add(text);
         textTools.add(textFontContainer);
 
         for (int i = 0; i < 2; i++) {

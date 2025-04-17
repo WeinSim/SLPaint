@@ -35,8 +35,6 @@ import ui.components.ImageCanvas;
  * <pre>
  * Text tool:
  *   Text rendering:
- *     Add text clipping
- *     Properly measure performance increase
  *     How to handle fonts?
  *       How to handle big font sizes?
  *         Generate texture atlas using fontbm on demand?
@@ -46,6 +44,7 @@ import ui.components.ImageCanvas;
  *     TextTool.MIN_TEXT_SIZE should be set to 1, not 0. However, currently the
  *       UI doesn't allow to input single-digit values if the minimum is not 0.
  *       Create an interface or similar for number UIInputs?
+ * Collapse all draw calls (rects, etc.) each into a single VAO?
  * 
  * App:
  *   Pencil
@@ -88,22 +87,29 @@ import ui.components.ImageCanvas;
  *   Use GL_LINES for rendering rect outlines?
  *   The outline of the text size input is sometimes cut off by the plus button
  *     next to it (depending on the horizontal scroll)
- *   Text renders inconsistently: some letters are blurry and other are not.
- *     For example, using Courier New Bold with a rasterized text size of 32,
- *     the letters 'e', 'r', 'i' and 'd' are blurry, whereas 'p', 'u', 'm' and
- *     'b' are sharp. (it seems like most blurry letters are on page 2.)
- *     Anti aliasing doesn't work despite being enabled
- *       (glfwWindowHint(GLFW_SAMPLES, 4) and glEnable(GL_MULTISAMPLE))
- *     Selection border sometimes has artifacts on bottom and right inner edges
- *     AlphaScale has artifacts on bottom edge (whose size depends on wether a
- *       text cursor is currently visible?!?)
+ *   Text rendering
+ *     Use SDFs?
+ *     Text renders inconsistently: some letters are blurry and other are not.
+ *       For example, using Courier New Bold with a rasterized text size of 32,
+ *       the letters 'e', 'r', 'i' and 'd' are blurry, whereas 'p', 'u', 'm'
+ *       and 'b' are sharp. (it seems like most blurry letters are on page 2.)
+ *     Potential speedups for text rendering:
+ *       Offload matrix transforms of vertex data in text VAO to shader (see
+ *         comment in TextFont.createGiantVAO())
+ *       Cache conversion from String to FontChar[] in TextFont
+ *       Only override the parts of the text VAOs that actually change from one
+ *         frame to the next
+ *   Anti aliasing doesn't work despite being enabled
+ *     (glfwWindowHint(GLFW_SAMPLES, 4) and glEnable(GL_MULTISAMPLE))
+ *   Selection border sometimes has artifacts on bottom and right inner edges
+ *   AlphaScale has artifacts on bottom edge (whose size depends on wether a
+ *     text cursor is currently visible?!?)
  *   Fix stuttering artifact when resizing windows on Linux
  *     (see https://www.glfw.org/docs/latest/window.html#window_refresh)
  *   Clean up UIRenderMaster API and UI shaders (especially with regards to
- *     transparency!)
- *   Premultiply view matrix and transformation matrix (for rect and text
- *     shader)
- *   Rename transformationMatrix to uiMatrix
+ *     transparency and text rendering)
+ *     Premultiply view matrix and transformation matrix (for rect shader)
+ *     Rename transformationMatrix to uiMatrix
  *   Remove magic numbers in {@link renderEngine.MainAppRenderer#render()}
  *   "Activate alpha blending" in
  *     {@link renderEngine.UIRenderMaster#image(int, SVector, SVector)}

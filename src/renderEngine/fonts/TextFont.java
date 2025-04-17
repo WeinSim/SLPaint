@@ -5,20 +5,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.lwjglx.util.vector.Matrix3f;
-import org.lwjglx.util.vector.Vector3f;
 
 import renderEngine.Loader;
 import renderEngine.RawModel;
 import renderEngine.UIRenderMaster;
-import sutil.math.SVector;
 
 public class TextFont {
 
-    private static final char UNKNOWN_CHAR_ID = 9633;
+    private static final char UNKNOWN_CHAR = 9633;
 
     private HashMap<Character, Integer> charIDs;
     private FontChar[] fontChars;
     private FloatBuffer uboData;
+
+    private int unknownCharIndex;
 
     private String name;
     private int size;
@@ -42,98 +42,69 @@ public class TextFont {
     public void loadChars(ArrayList<FontChar> chars) {
         fontChars = new FontChar[chars.size()];
         charIDs = new HashMap<>();
+        unknownCharIndex = -1;
         int i = 0;
         for (FontChar fontChar : chars) {
-            charIDs.put((char) fontChar.id(), i);
+            char c = (char) fontChar.id();
+            if (c == UNKNOWN_CHAR) {
+                unknownCharIndex = i;
+            }
+            charIDs.put(c, i);
             fontChars[i++] = fontChar;
+        }
+
+        if (unknownCharIndex == -1) {
+            final String baseString = "\"Unknown character\" (\"\u9633\", id %d) missing from font!\n";
+            throw new RuntimeException(String.format(baseString, UNKNOWN_CHAR));
         }
     }
 
-    private ArrayList<FontChar> toChars(String text) {
-        ArrayList<FontChar> chars = new ArrayList<>();
+    private FontChar[] toChars(String text) {
+        FontChar[] chars = new FontChar[text.length()];
+        int i = 0;
         for (Character c : text.toCharArray()) {
-            Integer index = charIDs.get(c);
-            if (index == null) {
-                index = charIDs.get(UNKNOWN_CHAR_ID);
-            }
-            if (index == null) {
-                final String baseString = "\"Unknown character\" (\"\u9633\", id %d) missing from font!\n";
-                throw new RuntimeException(String.format(baseString, UNKNOWN_CHAR_ID));
-            }
-            chars.add(fontChars[index]);
+            chars[i++] = fontChars[charIDs.getOrDefault(c, unknownCharIndex)];
         }
         return chars;
     }
 
-    public RawModel generateVAO(String text, Loader loader) {
-        ArrayList<SVector> vertices = new ArrayList<>();
-        ArrayList<SVector> textureCoords = new ArrayList<>();
-        ArrayList<SVector> sizes = new ArrayList<>();
-
-        double x = 0;
-        for (FontChar fontChar : toChars(text)) {
-            vertices.add(new SVector(x + fontChar.xOffset(), fontChar.yOffset() - base + 0.8 * size));
-            textureCoords.add(new SVector(fontChar.x() + textureWidth * fontChar.page(), fontChar.y()));
-            sizes.add(new SVector(fontChar.width(), fontChar.height()));
-
-            x += fontChar.xAdvance();
-        }
-
-        double[] verticesArray = new double[vertices.size() * 2];
-        double[] textureCoordsArray = new double[vertices.size() * 2];
-        double[] sizesArray = new double[vertices.size() * 2];
-        for (int i = 0; i < vertices.size(); i++) {
-            SVector vertex = vertices.get(i);
-            verticesArray[2 * i] = vertex.x;
-            verticesArray[2 * i + 1] = vertex.y;
-
-            SVector textureCoord = textureCoords.get(i);
-            textureCoordsArray[2 * i] = textureCoord.x;
-            textureCoordsArray[2 * i + 1] = textureCoord.y;
-
-            SVector size = sizes.get(i);
-            sizesArray[2 * i] = size.x;
-            sizesArray[2 * i + 1] = size.y;
-        }
-
-        // return app.getLoader().loadToTextVAO(verticesArray, textureCoordsArray,
-        // sizesArray);
-        return loader.generateTextVAO(verticesArray, textureCoordsArray, sizesArray);
-    }
-
-    public RawModel createGiantVAO(UIRenderMaster.TextDrawCallList drawCalls, Loader loader) {
-        int totalTextLength = drawCalls.totalLength;
+    public RawModel createGiantVAO(UIRenderMaster.TextVAO textVAO, Loader loader) {
+        int totalTextLength = textVAO.totalLength;
         int[] charIDsArray = new int[totalTextLength];
-        double[] verticesArray = new double[totalTextLength * 3];
-        double[] textSizesArray = new double[totalTextLength];
-        double[] colorsArray = new double[totalTextLength * 3];
+        float[] vertices = new float[totalTextLength * 3];
+        int[] textDataIDs = new int[totalTextLength];
 
         int index = 0;
-        for (UIRenderMaster.TextDrawCall drawCall : drawCalls.drawCalls) {
+        for (UIRenderMaster.TextDrawCall drawCall : textVAO.drawCalls) {
             String text = drawCall.text();
             Matrix3f transformationMatrix = drawCall.transformationMatrix();
-            SVector color = drawCall.color();
-
-            double scaleFactor = transformationMatrix.m00;
 
             double x = 0;
             for (FontChar fontChar : toChars(text)) {
                 charIDsArray[index] = charIDs.get((char) fontChar.id());
 
-                SVector vertexPos = new SVector(x + fontChar.xOffset(), fontChar.yOffset() - base + 0.8 * size);
-                Vector3f vertexPos3f = new Vector3f((float) vertexPos.x, (float) vertexPos.y, 1.0f);
-                Matrix3f.transform(transformationMatrix, vertexPos3f, vertexPos3f);
-                vertexPos.set(vertexPos3f.x, vertexPos3f.y, drawCall.depth());
+                // this could be offloaded to the shader by creating a UBO for transformation
+                // matrices (similar to the UBO for color, size and bounding box)
+                float baseX = (float) x + fontChar.xOffset(),
+                        baseY = fontChar.yOffset() - base + 0.8f * size;
+                float vertexX = transformationMatrix.m00 * baseX
+                        + transformationMatrix.m10 * baseY
+                        + transformationMatrix.m20;
+                float vertexY = transformationMatrix.m01 * baseX
+                        + transformationMatrix.m11 * baseY
+                        + transformationMatrix.m21;
+                // SVector vertexPos = new SVector(x + fontChar.xOffset(), fontChar.yOffset() -
+                // base + 0.8 * size);
+                // Vector3f vertexPos3f = new Vector3f((float) vertexPos.x, (float) vertexPos.y,
+                // 1.0f);
+                // Matrix3f.transform(transformationMatrix, vertexPos3f, vertexPos3f);
+                // vertexPos.set(vertexPos3f.x, vertexPos3f.y, drawCall.depth());
 
-                verticesArray[3 * index] = vertexPos.x;
-                verticesArray[3 * index + 1] = vertexPos.y;
-                verticesArray[3 * index + 2] = vertexPos.z;
+                vertices[3 * index] = vertexX;
+                vertices[3 * index + 1] = vertexY;
+                vertices[3 * index + 2] = (float) drawCall.depth();
 
-                textSizesArray[index] = scaleFactor;
-
-                colorsArray[3 * index] = color.x;
-                colorsArray[3 * index + 1] = color.y;
-                colorsArray[3 * index + 2] = color.z;
+                textDataIDs[index] = drawCall.textDataIndex();
 
                 x += fontChar.xAdvance();
 
@@ -141,11 +112,11 @@ public class TextFont {
             }
         }
 
-        return loader.generateTextVAO(charIDsArray, verticesArray, textSizesArray, colorsArray);
+        return loader.generateTextVAO(charIDsArray, vertices, textDataIDs);
     }
 
     public double textWidth(String text) {
-        ArrayList<FontChar> chars = toChars(text);
+        FontChar[] chars = toChars(text);
         double sum = 0;
         for (FontChar fontChar : chars) {
             sum += fontChar.xAdvance();
@@ -155,10 +126,6 @@ public class TextFont {
 
     public int[] getTextureIDs() {
         return textureIDs;
-    }
-
-    public static char getUnknownCharId() {
-        return UNKNOWN_CHAR_ID;
     }
 
     public String getName() {

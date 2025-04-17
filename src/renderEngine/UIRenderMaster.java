@@ -1,9 +1,12 @@
 package renderEngine;
 
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -21,6 +24,7 @@ public class UIRenderMaster {
 
     public static final int MAX_FONT_ATLASSES = 4;
     public static final int MAX_FONT_CHARS = 256;
+    public static final int MAX_TEXT_DATA = 256;
 
     private static final int NONE = 0, NORMAL = 1, CHECKERBOARD = 2;
 
@@ -44,8 +48,8 @@ public class UIRenderMaster {
     private Matrix3f uiMatrix;
     private LinkedList<Matrix3f> uiMatrixStack;
 
-    private ScissorInfo scissorInfo;
-    private LinkedList<ScissorInfo> scissorStack;
+    private ClipAreaInfo clipAreaInfo;
+    private LinkedList<ClipAreaInfo> clipAreaStack;
 
     private double depth;
 
@@ -66,22 +70,17 @@ public class UIRenderMaster {
     public UIRenderMaster(App app) {
         this.app = app;
 
-        textShader = switch (Loader.renderMode) {
-            case Loader.RenderMode.NO_CACHE, Loader.RenderMode.DEFAULT_CACHE ->
-                new ShaderProgram("text", new String[] { "position", "textureCoords", "size" }, true);
-            case Loader.RenderMode.GIANT_VAO ->
-                new ShaderProgram(
-                        "text",
-                        new String[] { "charIndex", "position", "textSize", "color" },
-                        true);
-        };
+        textShader = new ShaderProgram(
+                "text",
+                new String[] { "charIndex", "position", "textSize", "color" },
+                true);
         rectShader = new ShaderProgram("rect", null, true);
         ellipseShader = new ShaderProgram("ellipse", null, true);
         imageShader = new ShaderProgram("image", null, true);
         hslShader = new ShaderProgram("hsl", null, true);
 
         Loader loader = app.getLoader();
-        dummyVAO = loader.loadToVAO(new double[] { 0, 0 });
+        dummyVAO = loader.loadToVAO(new float[] { 0, 0 });
         if (app instanceof MainApp mainApp) {
             textFBO = loader.createFBO(mainApp.getImage().getWidth(), mainApp.getImage().getHeight());
         }
@@ -89,7 +88,7 @@ public class UIRenderMaster {
         textDrawCalls = new HashMap<>();
 
         uiMatrixStack = new LinkedList<>();
-        scissorStack = new LinkedList<>();
+        clipAreaStack = new LinkedList<>();
 
         fill = new SVector();
         stroke = new SVector();
@@ -116,8 +115,8 @@ public class UIRenderMaster {
         uiMatrixStack.clear();
         uiMatrix = new Matrix3f();
 
-        scissorStack.clear();
-        scissorInfo = new ScissorInfo();
+        clipAreaStack.clear();
+        clipAreaInfo = new ClipAreaInfo();
 
         depth = 0;
 
@@ -135,11 +134,9 @@ public class UIRenderMaster {
     }
 
     public void stop() {
-        if (Loader.renderMode == Loader.RenderMode.GIANT_VAO) {
-            renderGiantTextVAO();
+        renderGiantTextVAO();
 
-            textDrawCalls.clear();
-        }
+        textDrawCalls.clear();
 
         app.getLoader().textCleanUp();
 
@@ -174,7 +171,7 @@ public class UIRenderMaster {
 
     public void setBGColor(SVector bgColor, double alpha) {
         GL11.glClearColor((float) bgColor.x, (float) bgColor.y, (float) bgColor.z, (float) alpha);
-        GL11.glClearDepth(0.5);
+        GL11.glClearDepth(1.0);
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
     }
 
@@ -221,94 +218,41 @@ public class UIRenderMaster {
     }
 
     public void text(String text, SVector position) {
-        switch (Loader.renderMode) {
-            case Loader.RenderMode.GIANT_VAO -> {
-                if (fillMode == NONE) {
-                    return;
-                }
-                TextDrawCallList drawCalls = textDrawCalls.get(textFont);
-                if (drawCalls == null) {
-                    drawCalls = new TextDrawCallList();
-                    textDrawCalls.put(textFont, drawCalls);
-                }
-
-                pushMatrix();
-                translate(position);
-                scale(textSize / textFont.getSize());
-
-                drawCalls.addDrawCall(
-                        text,
-                        Matrix3f.load(uiMatrix, null),
-                        depth,
-                        fill.copy());
-
-                popMatrix();
-                return;
-            }
-            default -> {
-            }
-        }
-
         if (textFont == null) {
             return;
+        }
+        if (fillMode == NONE) {
+            return;
+        }
+
+        TextDrawCallList drawCalls = textDrawCalls.get(textFont);
+        if (drawCalls == null) {
+            drawCalls = new TextDrawCallList(textFont);
+            textDrawCalls.put(textFont, drawCalls);
         }
 
         pushMatrix();
         translate(position);
         scale(textSize / textFont.getSize());
 
-        activateShader(textShader);
-
-        // RawModel textVAO = textFont.generateVAO(text, app.getLoader());
-        RawModel textVAO = app.getLoader().loadTextVAO(text, textFont);
-        GL30.glBindVertexArray(textVAO.vaoID());
-
-        int[] textureIDs = textFont.getTextureIDs();
-        for (int i = 0; i < textureIDs.length; i++) {
-            GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureIDs[i]);
-            textShader.loadUniform(String.format("textureSamplers[%d]", i), i);
-        }
-        // GL13.glActiveTexture(GL13.GL_TEXTURE0);
-        // GL11.glBindTexture(GL11.GL_TEXTURE_2D, textFont.getTextureIDs()[0]);
-
-        // GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER,
-        // GL30.GL_NEAREST_MIPMAP_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR_MIPMAP_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-
-        Matrix3f viewMatrix = createViewMatrix();
-        textShader.loadUniform("viewMatrix", viewMatrix);
-        textShader.loadUniform("transformationMatrix", uiMatrix);
-        textShader.loadUniform("textureSize", new SVector(textFont.getTextureWidth(), textFont.getTextureHeight()));
-        textShader.loadUniform("depth", depth);
-        textShader.loadUniform("fill", fill);
-        textShader.loadUniform("doFill", fillMode == NONE ? 0 : 1);
-
-        GL20.glEnableVertexAttribArray(0);
-        GL20.glEnableVertexAttribArray(1);
-        GL20.glEnableVertexAttribArray(2);
-        GL11.glDrawArrays(GL11.GL_POINTS, 0, textVAO.vertexCount());
-        GL20.glDisableVertexAttribArray(0);
-        GL20.glDisableVertexAttribArray(1);
-        GL20.glDisableVertexAttribArray(2);
-        GL30.glBindVertexArray(0);
+        drawCalls.addDrawCall(
+                text,
+                Matrix3f.load(uiMatrix, null),
+                depth,
+                fill.copy(),
+                textSize,
+                new ClipAreaInfo(clipAreaInfo));
 
         popMatrix();
     }
 
     private void renderGiantTextVAO() {
+        activateShader(textShader);
+
         for (Entry<TextFont, TextDrawCallList> entry : textDrawCalls.entrySet()) {
             TextFont font = entry.getKey();
-            TextDrawCallList drawCalls = entry.getValue();
-            RawModel model = font.createGiantVAO(drawCalls, app.getLoader());
 
-            activateShader(textShader);
-            textShader.setUniformBlockData("FontData", font.getUBOData());
-            textShader.syncUniformBlock("FontData", app.getLoader());
-
-            GL30.glBindVertexArray(model.vaoID());
-
+            // load textures and other font data
             int[] textureIDs = font.getTextureIDs();
             for (int i = 0; i < textureIDs.length; i++) {
                 GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
@@ -322,21 +266,27 @@ public class UIRenderMaster {
             textShader.loadUniform("viewMatrix", viewMatrix);
             textShader.loadUniform("textureSize", new SVector(font.getTextureWidth(), font.getTextureHeight()));
 
-            GL20.glEnableVertexAttribArray(0);
-            GL20.glEnableVertexAttribArray(1);
-            GL20.glEnableVertexAttribArray(2);
-            GL20.glEnableVertexAttribArray(3);
-            // GL20.glEnableVertexAttribArray(4);
+            textShader.setUniformBlockData("FontData", font.getUBOData());
+            textShader.syncUniformBlock("FontData", app.getLoader());
 
-            // GL11.glDrawElements(GL11.GL_POINTS, model.vertexCount(),
-            // GL11.GL_UNSIGNED_INT, 0);
-            GL11.glDrawArrays(GL11.GL_POINTS, 0, model.vertexCount());
+            TextDrawCallList drawCalls = entry.getValue();
+            for (TextVAO textVAO : drawCalls.textVAOs) {
+                RawModel model = font.createGiantVAO(textVAO, app.getLoader());
 
-            GL20.glDisableVertexAttribArray(0);
-            GL20.glDisableVertexAttribArray(1);
-            GL20.glDisableVertexAttribArray(2);
-            GL20.glDisableVertexAttribArray(3);
-            // GL20.glDisableVertexAttribArray(4);
+                textShader.setUniformBlockData("TextData", textVAO.getUBOData());
+                textShader.syncUniformBlock("TextData", app.getLoader());
+
+                GL30.glBindVertexArray(model.vaoID());
+                GL20.glEnableVertexAttribArray(0);
+                GL20.glEnableVertexAttribArray(1);
+                GL20.glEnableVertexAttribArray(2);
+
+                GL11.glDrawArrays(GL11.GL_POINTS, 0, model.vertexCount());
+
+                GL20.glDisableVertexAttribArray(0);
+                GL20.glDisableVertexAttribArray(1);
+                GL20.glDisableVertexAttribArray(2);
+            }
         }
     }
 
@@ -437,30 +387,26 @@ public class UIRenderMaster {
         activeShader = shader;
     }
 
-    public void scissor(SVector position, SVector size) {
-        scissor(position, size, true);
+    public void clipArea(SVector position, SVector size) {
+        clipArea(position, size, true);
     }
 
-    public void scissor(SVector position, SVector size, boolean clipToPrevScissor) {
+    public void clipArea(SVector position, SVector size, boolean clipToPrevClipArea) {
         Vector3f pos3f = new Vector3f((float) position.x, (float) position.y, 1);
         Matrix3f.transform(uiMatrix, pos3f, pos3f);
 
         Vector3f size3f = new Vector3f((float) size.x, (float) size.y, 0);
         Matrix3f.transform(uiMatrix, size3f, size3f);
 
-        // not entirely sure why, but this functions returns 4 ints (0, 0, w, h)
-        int[] dims = new int[4];
-        GL11.glGetIntegerv(GL11.GL_VIEWPORT, dims);
+        double x = pos3f.x, y = pos3f.y,
+                w = size3f.x, h = size3f.y;
 
-        int w = (int) size3f.x, h = (int) size3f.y;
-        int x = (int) pos3f.x, y = dims[3] - h - (int) pos3f.y;
-
-        // no need to clip if the previous scissor was disabled
-        if (clipToPrevScissor && scissorInfo.enabled) {
-            int x0 = scissorInfo.x,
-                    y0 = scissorInfo.y,
-                    w0 = scissorInfo.w,
-                    h0 = scissorInfo.h;
+        // no need to clip if the previous clip area was disabled
+        if (clipToPrevClipArea && clipAreaInfo.enabled) {
+            double x0 = clipAreaInfo.position.x,
+                    y0 = clipAreaInfo.position.y,
+                    w0 = clipAreaInfo.size.x,
+                    h0 = clipAreaInfo.size.y;
 
             // left
             if (x < x0) {
@@ -482,48 +428,24 @@ public class UIRenderMaster {
             }
         }
 
-        scissorInfo.set(x, y, w, h);
-
-        scissor(x, y, w, h);
+        clipAreaInfo.set(new SVector(x, y), new SVector(w, h));
     }
 
-    private void scissor(int x, int y, int w, int h) {
-        if (w < 0) {
-            w = 0;
-        }
-        if (h < 0) {
-            h = 0;
-        }
-        GL11.glScissor(x, y, w, h);
-
-        // GL11.glEnable(GL11.GL_SCISSOR_TEST);
-        GL11.glDisable(GL11.GL_SCISSOR_TEST);
+    public void noClipArea() {
+        clipAreaInfo.clear();
     }
 
-    public void noScissor() {
-        GL11.glDisable(GL11.GL_SCISSOR_TEST);
-
-        scissorInfo.clear();
+    public void pushClipArea() {
+        clipAreaStack.add(new ClipAreaInfo(clipAreaInfo));
     }
 
-    public void pushScissor() {
-        scissorStack.add(new ScissorInfo(scissorInfo));
-    }
-
-    public void popScissor() {
-        scissorInfo = scissorStack.removeLast();
-
-        if (scissorInfo.enabled) {
-            scissor(scissorInfo.x, scissorInfo.y, scissorInfo.w, scissorInfo.h);
-        } else {
-            noScissor();
-        }
+    public void popClipArea() {
+        clipAreaInfo = clipAreaStack.removeLast();
     }
 
     public void depth(double depth) {
         this.depth = depth;
         GL11.glEnable(GL11.GL_DEPTH_TEST);
-        // GL11.glDisable(GL11.GL_DEPTH_TEST);
     }
 
     public void noDepth() {
@@ -656,87 +578,204 @@ public class UIRenderMaster {
         return textFBO;
     }
 
-    private class ScissorInfo {
+    private class ClipAreaInfo {
 
         boolean enabled;
-        int x, y, w, h;
+        SVector position;
+        SVector size;
 
-        ScissorInfo() {
+        ClipAreaInfo() {
             clear();
         }
 
-        public ScissorInfo(ScissorInfo other) {
+        public ClipAreaInfo(ClipAreaInfo other) {
             this.enabled = other.enabled;
-            this.x = other.x;
-            this.y = other.y;
-            this.w = other.w;
-            this.h = other.h;
+            position = new SVector(other.position);
+            size = new SVector(other.size);
         }
 
-        public void set(int x, int y, int w, int h) {
-            this.x = x;
-            this.y = y;
-            this.w = w;
-            this.h = h;
+        public void set(SVector position, SVector size) {
+            this.position.set(position);
+            this.size.set(size);
             enabled = true;
         }
 
         public void clear() {
             enabled = false;
-            x = y = w = h = 0;
+            position = new SVector();
+            size = new SVector();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+
+            if (obj instanceof ClipAreaInfo clipArea) {
+                if (enabled != clipArea.enabled) {
+                    return false;
+                }
+
+                if (!enabled) {
+                    return true;
+                }
+
+                return position.equals(clipArea.position) && size.equals(clipArea.size);
+            }
+
+            return false;
         }
     }
 
-    public static record TextDrawCall(String text, Matrix3f transformationMatrix, double depth, SVector color) {
+    public static record TextDrawCall(String text, Matrix3f transformationMatrix, double depth, int textDataIndex)
+            implements Comparable<TextDrawCall> {
+
+        @Override
+        public int compareTo(TextDrawCall other) {
+            double difference = depth() - other.depth();
+            return difference < 0 ? -1 : (difference > 0 ? 1 : 0);
+        }
+    }
+
+    public static record TextData(SVector color, double textSize, ClipAreaInfo clipArea) {
     }
 
     public static class TextDrawCallList {
 
-        // this list will always be sorted by descending depth value
+        private TextFont font;
+
+        private ArrayList<TextVAO> textVAOs;
+
+        public long totalNanos;
+
+        public TextDrawCallList(TextFont font) {
+            this.font = font;
+
+            textVAOs = new ArrayList<>();
+            totalNanos = 0;
+        }
+
+        public void addDrawCall(String text, Matrix3f transformationMatrix, double depth, SVector color,
+                double textSize, ClipAreaInfo clipArea) {
+
+
+            TextData textData = new TextData(color, textSize, clipArea);
+
+            // Determine a TextVAO that already contains the correct text data.
+            TextVAO vao = null;
+            int textDataIndex = -1;
+            for (TextVAO textVAO : textVAOs) {
+                textDataIndex = textVAO.getTextDataIndex(textData);
+                if (textDataIndex != -1) {
+                    vao = textVAO;
+                    break;
+                }
+            }
+            if (vao == null) {
+                // No VAO has the correct text data. Create new one if neccessary.
+                boolean createNewVAO = true;
+                if (!textVAOs.isEmpty()) {
+                    vao = textVAOs.getLast();
+                    createNewVAO = !vao.hasRemainingCapacity();
+                }
+                if (createNewVAO) {
+                    vao = new TextVAO(font);
+                    textVAOs.add(vao);
+                }
+            }
+            if (textDataIndex == -1) {
+                // The text data already exists in some VAO.
+                vao.addDrawCall(text, transformationMatrix, depth, textData);
+            } else {
+                // A new array index needs to be allocated for the text data.
+                vao.addDrawCall(text, transformationMatrix, depth, textDataIndex);
+            }
+        }
+    }
+
+    public static class TextVAO {
+
+        // This list will always be sorted by descending depth value
         public LinkedList<TextDrawCall> drawCalls;
         public int totalLength;
 
-        public TextDrawCallList() {
+        public TextData[] textDataArray;
+        public int textDataLength;
+
+        private TextFont font;
+
+        public TextVAO(TextFont font) {
+            this.font = font;
+
             drawCalls = new LinkedList<>();
             totalLength = 0;
+
+            textDataArray = new TextData[MAX_TEXT_DATA];
+            textDataLength = 0;
         }
 
-        public void addDrawCall(String text, Matrix3f transformationMatrix, double depth, SVector color) {
-            TextDrawCall newDrawCall = new TextDrawCall(text, transformationMatrix, depth, color);
-            if (drawCalls.isEmpty()) {
-                drawCalls.add(newDrawCall);
-            } else {
-                // do a binary search to find the right place to insert the draw call
-                int index;
-                double maxDepth = drawCalls.get(0).depth(),
-                        minDepth = drawCalls.get(drawCalls.size() - 1).depth();
-                int maxIndex = 0, minIndex = drawCalls.size() - 1;
-                while (true) {
-                    if (minIndex - maxIndex <= 1) {
-                        index = minIndex;
-                        break;
-                    }
-                    if (depth >= maxDepth) {
-                        index = maxIndex;
-                        break;
-                    }
-                    if (depth <= minDepth) {
-                        index = minIndex;
-                        break;
-                    }
-                    int newIndex = (maxIndex + minIndex) / 2;
-                    double newDepth = drawCalls.get(newIndex).depth();
-                    if (newDepth < depth) {
-                        minDepth = newDepth;
-                        minIndex = newIndex;
-                    } else {
-                        maxDepth = newDepth;
-                        maxIndex = newIndex;
-                    }
+        public int getTextDataIndex(TextData textData) {
+            for (int i = 0; i < textDataLength; i++) {
+                if (textDataArray[i].equals(textData)) {
+                    return i;
                 }
-                drawCalls.add(index, newDrawCall);
             }
+            return -1;
+        }
+
+        public boolean hasRemainingCapacity() {
+            return textDataLength < MAX_TEXT_DATA;
+        }
+
+        public void addDrawCall(String text, Matrix3f transformationMatrix, double depth, TextData textData) {
+            int textDataIndex = textDataLength;
+            textDataArray[textDataLength++] = textData;
+            addDrawCall(text, transformationMatrix, depth, textDataIndex);
+        }
+
+        public void addDrawCall(String text, Matrix3f transformationMatrix, double depth, int textDataIndex) {
+            // this method is slow af
+            // SUtil.addSorted(drawCalls, new TextDrawCall(text, transformationMatrix, depth, textDataIndex), true);
+            drawCalls.add(new TextDrawCall(text, transformationMatrix, depth, textDataIndex));
             totalLength += text.length();
+        }
+
+        public FloatBuffer getUBOData() {
+            FloatBuffer buffer = BufferUtils.createFloatBuffer(8 * MAX_TEXT_DATA);
+            for (int i = 0; i < textDataLength; i++) {
+                SVector color = textDataArray[i].color();
+                buffer.put((float) color.x);
+                buffer.put((float) color.y);
+                buffer.put((float) color.z);
+
+                buffer.put((float) (textDataArray[i].textSize() / font.getSize()));
+            }
+            for (int i = 0; i < MAX_TEXT_DATA - textDataLength; i++) {
+                buffer.put(0f);
+                buffer.put(0f);
+                buffer.put(0f);
+                buffer.put(0f);
+            }
+            for (int i = 0; i < textDataLength; i++) {
+                ClipAreaInfo clipArea = textDataArray[i].clipArea();
+
+                SVector position = clipArea.enabled ? clipArea.position : new SVector(0, 0);
+                buffer.put((float) position.x);
+                buffer.put((float) position.y);
+
+                SVector size = clipArea.enabled ? clipArea.size : new SVector(100000, 100000);
+                buffer.put((float) (position.x + size.x));
+                buffer.put((float) (position.y + size.y));
+            }
+            for (int i = 0; i < MAX_TEXT_DATA - textDataLength; i++) {
+                buffer.put(0f);
+                buffer.put(0f);
+                buffer.put(0f);
+                buffer.put(0f);
+            }
+            buffer.flip();
+            return buffer;
         }
     }
 }

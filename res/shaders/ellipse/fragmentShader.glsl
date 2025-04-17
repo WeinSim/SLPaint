@@ -12,6 +12,4 @@ void main(void) {
         discard;
     }
     outColor = vec4(fill, 1.0);
-
-    gl_FragDepth = gl_FragCoord.z;
 }

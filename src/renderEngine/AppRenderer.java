@@ -31,7 +31,7 @@ public class AppRenderer<T extends App> {
      * 0.0 - -1.0 is used for floating UI elements.
      * Each regoin is subdivided into NUM_LAYER_SUBDIVISIONS divisions;
      */
-    private static final int NUM_LAYER_SUBDIVISIONS = 3;
+    private static final int NUM_LAYER_SUBDIVISIONS = 32;
 
     protected T app;
 
@@ -98,8 +98,8 @@ public class AppRenderer<T extends App> {
                     // layer++;
                     foregroundDraw = true;
                 }
-                // uiMaster.pushScissor();
-                // uiMaster.noScissor();
+                uiMaster.pushClipArea();
+                uiMaster.noClipArea();
             }
         }
         uiMaster.depth(getDepth());
@@ -157,8 +157,8 @@ public class AppRenderer<T extends App> {
         if (element instanceof UIContainer container) {
             boolean oldOldForegrundDraw = foregroundDraw;
             if (isScrollable) {
-                // uiMaster.pushScissor();
-                // uiMaster.scissor(position, size);
+                uiMaster.pushClipArea();
+                uiMaster.clipArea(position, size);
                 // foregroundDraw = false;
                 // layer++;
             }
@@ -171,7 +171,7 @@ public class AppRenderer<T extends App> {
 
             uiMaster.popMatrix();
             if (isScrollable) {
-                // uiMaster.popScissor();
+                uiMaster.popClipArea();
                 // layer--;
             }
             foregroundDraw = oldOldForegrundDraw;
@@ -211,9 +211,9 @@ public class AppRenderer<T extends App> {
             uiMaster.rect(position, size);
         }
 
-        // if (element instanceof UIFloatContainer) {
-        // uiMaster.popScissor();
-        // }
+        if (element instanceof UIFloatContainer) {
+            uiMaster.popClipArea();
+        }
 
         layer = oldLayer;
         foregroundDraw = oldForegroundDraw;
