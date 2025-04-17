@@ -8,7 +8,6 @@ import main.apps.MainApp;
 import main.tools.ImageTool;
 import main.tools.SelectionTool;
 import main.tools.TextTool;
-import sutil.math.SVector;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UIDropdown;
@@ -99,10 +98,7 @@ public class MainUI extends AppUI<MainApp> {
                 _ -> {
                 }, true));
         textFontContainer.add(textFontRow1);
-        UIText text = new UIText("Font");
-        text.setTextSize(100);
-        text.setColor(new SVector(0, 0, 1));
-        textFontContainer.add(text);
+        textFontContainer.add(new UIText("Font"));
         textTools.add(textFontContainer);
 
         for (int i = 0; i < 2; i++) {
@@ -183,11 +179,11 @@ public class MainUI extends AppUI<MainApp> {
                 UIContainer.VERTICAL);
         debugPanel.withBackground().noOutline();
         debugPanel.setVFillSize();
-        // debugPanel.add(new UIText("Tools"));
-        // for (ImageTool tool : ImageTool.INSTANCES) {
-        // debugPanel.add(new UIText(() -> String.format(" %s: state = %d",
-        // tool.getName(), tool.getState())));
-        // }
+        debugPanel.add(new UIText("Tools"));
+        for (ImageTool tool : ImageTool.INSTANCES) {
+            debugPanel.add(new UIText(() -> String.format(" %s: state = %d",
+                    tool.getName(), tool.getState())));
+        }
         debugPanel.add(new UIText(() -> String.format("Active tool: %s", app.getActiveTool().getName())));
         debugPanel.add(new UIText(() -> String.format("  State: %d", app.getActiveTool().getState())));
         debugPanel.add(new UIText(() -> String.format("TextTool.text: \"%s\"", ImageTool.TEXT.getText())));

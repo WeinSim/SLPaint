@@ -30,12 +30,13 @@ public class UIRenderMaster {
 
     private App app;
 
-    private ShaderProgram rectShader;
-    private ShaderProgram textShader;
-    private ShaderProgram imageShader;
-    private ShaderProgram hslShader;
-    private ShaderProgram ellipseShader;
-    private ShaderProgram activeShader;
+    private ShaderProgram rectFillShader,
+            rectOutlineShader,
+            textShader,
+            imageShader,
+            hslShader,
+            ellipseShader,
+            activeShader;
 
     private HashMap<TextFont, TextDrawCallList> textDrawCalls;
 
@@ -74,7 +75,8 @@ public class UIRenderMaster {
                 "text",
                 new String[] { "charIndex", "position", "textSize", "color" },
                 true);
-        rectShader = new ShaderProgram("rect", null, true);
+        rectOutlineShader = new ShaderProgram("rectOutline", null, true);
+        rectFillShader = new ShaderProgram("rectFill", null, true);
         ellipseShader = new ShaderProgram("ellipse", null, true);
         imageShader = new ShaderProgram("image", null, true);
         hslShader = new ShaderProgram("hsl", null, true);
@@ -176,25 +178,60 @@ public class UIRenderMaster {
     }
 
     public void rect(SVector position, SVector size) {
-        activateShader(rectShader);
+        if (fillMode > 0 || strokeMode > 0) {
+            GL30.glBindVertexArray(dummyVAO.vaoID());
+        }
 
-        rectShader.loadUniform("position", position);
-        rectShader.loadUniform("size", size);
-        rectShader.loadUniform("fill", fill);
-        rectShader.loadUniform("fillAlpha", fillAlpha);
-        rectShader.loadUniform("fillMode", fillMode);
-        rectShader.loadUniform("stroke", stroke);
-        rectShader.loadUniform("strokeMode", strokeMode);
-        rectShader.loadUniform("strokeWeight", strokeWeight);
-        rectShader.loadUniform("checkerboardColor1", checkerboardColors[0]);
-        rectShader.loadUniform("checkerboardColor2", checkerboardColors[1]);
-        rectShader.loadUniform("checkerboardSize", checkerboardSize);
-        rectShader.loadUniform("uiMatrix", uiMatrix);
-        rectShader.loadUniform("viewMatrix", createViewMatrix());
-        rectShader.loadUniform("depth", depth);
+        if (fillMode > 0) {
+            activateShader(rectFillShader);
 
-        GL30.glBindVertexArray(dummyVAO.vaoID());
-        GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
+            rectFillShader.loadUniform("position", position);
+            rectFillShader.loadUniform("size", size);
+            rectFillShader.loadUniform("uiMatrix", uiMatrix);
+            rectFillShader.loadUniform("viewMatrix", createViewMatrix());
+            rectFillShader.loadUniform("depth", depth);
+
+            rectFillShader.loadUniform("fillAlpha", fillAlpha);
+            rectFillShader.loadUniform("applyCheckerboard", fillMode == CHECKERBOARD ? 1 : 0);
+
+            if (fillMode == NORMAL) {
+                // normal fill
+                rectFillShader.loadUniform("color1", fill);
+            } else {
+                // checkerboard fill
+                rectFillShader.loadUniform("color1", checkerboardColors[0]);
+                rectFillShader.loadUniform("color2", checkerboardColors[1]);
+                rectFillShader.loadUniform("checkerboardSize", checkerboardSize);
+            }
+
+            GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
+        }
+
+        if (strokeMode > 0) {
+            activateShader(rectOutlineShader);
+
+            rectOutlineShader.loadUniform("position", position);
+            rectOutlineShader.loadUniform("size", size);
+            rectOutlineShader.loadUniform("uiMatrix", uiMatrix);
+            rectOutlineShader.loadUniform("viewMatrix", createViewMatrix());
+            rectOutlineShader.loadUniform("depth", depth);
+
+            rectOutlineShader.loadUniform("strokeWeight", strokeWeight);
+            rectOutlineShader.loadUniform("applyCheckerboard", strokeMode == CHECKERBOARD ? 1 : 0);
+
+            if (strokeMode == NORMAL) {
+                // normal stroke
+                rectOutlineShader.loadUniform("color1", stroke);
+            } else {
+                // checkerboard stroke
+                rectOutlineShader.loadUniform("color1", checkerboardColors[0]);
+                rectOutlineShader.loadUniform("color2", checkerboardColors[1]);
+                rectOutlineShader.loadUniform("checkerboardSize", checkerboardSize);
+            }
+
+            GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
+        }
+
         GL30.glBindVertexArray(0);
     }
 
@@ -659,7 +696,6 @@ public class UIRenderMaster {
         public void addDrawCall(String text, Matrix3f transformationMatrix, double depth, SVector color,
                 double textSize, ClipAreaInfo clipArea) {
 
-
             TextData textData = new TextData(color, textSize, clipArea);
 
             // Determine a TextVAO that already contains the correct text data.
@@ -736,7 +772,8 @@ public class UIRenderMaster {
 
         public void addDrawCall(String text, Matrix3f transformationMatrix, double depth, int textDataIndex) {
             // this method is slow af
-            // SUtil.addSorted(drawCalls, new TextDrawCall(text, transformationMatrix, depth, textDataIndex), true);
+            // SUtil.addSorted(drawCalls, new TextDrawCall(text, transformationMatrix,
+            // depth, textDataIndex), true);
             drawCalls.add(new TextDrawCall(text, transformationMatrix, depth, textDataIndex));
             totalLength += text.length();
         }

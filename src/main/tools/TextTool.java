@@ -1,7 +1,5 @@
 package main.tools;
 
-import java.awt.GraphicsEnvironment;
-
 import org.lwjgl.glfw.GLFW;
 
 public final class TextTool extends ImageTool implements XYWH {
@@ -18,11 +16,18 @@ public final class TextTool extends ImageTool implements XYWH {
     static {
         // this method takes ~300 milliseconds to run!
         // long startTime = System.nanoTime();
-        FONT_NAMES = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+        // FONT_NAMES =
+        // GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+        // Font[] fonts =
+        // GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts();
+        // FONT_NAMES = new String[fonts.length];
+        // for (int i = 0; i < fonts.length; i++) {
+        // FONT_NAMES[i] = fonts[i].getName();
+        // }
         // System.out.format("getFontFamilyNames: %.3fms\n", (System.nanoTime() -
         // startTime) * 1e-6);
 
-        // FONT_NAMES = new String[] { "Font 1", "Font 2", "Font 3" };
+        FONT_NAMES = new String[] { "Courier New Bold" };
 
         DEFAULT_FONT_NAME = "Courier New Bold";
         // DEFAULT_FONT_NAME = (new Font("Courier", Font.PLAIN, 1)).getFamily();

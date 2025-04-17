@@ -33,20 +33,21 @@ import ui.components.ImageCanvas;
 
 /**
  * <pre>
+ * Collapse all draw calls (rects, etc.) each into a single VAO?
  * Text tool:
  *   Text rendering:
- *     How to handle fonts?
- *       How to handle big font sizes?
- *         Generate texture atlas using fontbm on demand?
- *         Use SDFs (either in addition to or instead of regular bitmap fonts)?
  *     Text wrapping / new lines with ENTER (in combination with proper UI text
  *       input?)
  *     TextTool.MIN_TEXT_SIZE should be set to 1, not 0. However, currently the
  *       UI doesn't allow to input single-digit values if the minimum is not 0.
  *       Create an interface or similar for number UIInputs?
- * Collapse all draw calls (rects, etc.) each into a single VAO?
  * 
  * App:
+ *   Small problems:
+ *     Pressing 'r' should not reset the view if a text input is currently
+ *       active
+ *     ImageCanvas.mouseTrulyAbove() should return true even if the mouse is
+ *       above the text tool input
  *   Pencil
  *     Add different sizes
  *   Line tool
@@ -84,11 +85,13 @@ import ui.components.ImageCanvas;
  *   Tool icons & cursors
  *   Make side panel collapsable
  * Rendering:
- *   Use GL_LINES for rendering rect outlines?
  *   The outline of the text size input is sometimes cut off by the plus button
  *     next to it (depending on the horizontal scroll)
  *   Text rendering
- *     Use SDFs?
+ *     How to handle fonts?
+ *       How to handle big font sizes?
+ *         Generate texture atlas using fontbm on demand?
+ *         Use SDFs (either in addition to or instead of regular bitmap fonts)?
  *     Text renders inconsistently: some letters are blurry and other are not.
  *       For example, using Courier New Bold with a rasterized text size of 32,
  *       the letters 'e', 'r', 'i' and 'd' are blurry, whereas 'p', 'u', 'm'

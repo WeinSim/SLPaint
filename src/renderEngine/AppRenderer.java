@@ -29,9 +29,17 @@ public class AppRenderer<T extends App> {
     /**
      * Depth value usage: 1.0 - 0.0 is used for the base UI,
      * 0.0 - -1.0 is used for floating UI elements.
-     * Each regoin is subdivided into NUM_LAYER_SUBDIVISIONS divisions;
+     * 
+     * Each of the two regions (positive / negative depth value) is divided into
+     * NUM_DEPTH_SUBDIVISIONS divions. Every layer gets
+     * NUM_BACKGROUND_LAYER_SUBDIVISIONS starting from the backmost layer and
+     * NUM_FOREGROUND_LAYER_SUBDIVIONS starting from the foremost layer.
      */
-    private static final int NUM_LAYER_SUBDIVISIONS = 32;
+    private static final int NUM_DEPTH_SUBDIVISIONS = 1024;
+    private static final int NUM_BACKGROUND_LAYER_SUBDIVISIONS = 3;
+    private static final int NUM_FOREGROUND_LAYER_SUBVIDISIONS = 1;
+    private static final int NUM_LAYERS = NUM_DEPTH_SUBDIVISIONS
+            / (2 * (NUM_BACKGROUND_LAYER_SUBDIVISIONS + NUM_FOREGROUND_LAYER_SUBVIDISIONS));
 
     protected T app;
 
@@ -43,10 +51,6 @@ public class AppRenderer<T extends App> {
      * UI).
      */
     protected boolean foregroundDraw;
-    /**
-     * 0 = front
-     * NUM_LAYER_SUBDIVISION - 1 = back
-     */
     protected int layer;
 
     public AppRenderer(T app) {
@@ -70,7 +74,7 @@ public class AppRenderer<T extends App> {
         uiMaster.resetMatrix();
         AppUI<?> ui = app.getUI();
 
-        layer = 0;
+        layer = NUM_LAYERS / 2;
         foregroundDraw = false;
 
         renderUIElement(ui.getRoot());
@@ -83,47 +87,87 @@ public class AppRenderer<T extends App> {
         int oldLayer = layer;
         boolean oldForegroundDraw = foregroundDraw;
 
-        boolean isScrollable = false;
-        if (element instanceof UIContainer container) {
-            isScrollable = container.isHScroll() || container.isVScroll();
+        SVector position = element.getPosition();
+        SVector size = element.getSize();
 
+        if (element instanceof UIContainer) {
             if (element instanceof UIFloatContainer) {
                 // Not beautiful but it works for now.
                 // Without this check, the text inside of a TextFloatContainer would render
                 // above the rest of the UI.
                 if (element instanceof TextFloatContainer) {
                     foregroundDraw = false;
-                    layer = NUM_LAYER_SUBDIVISIONS - 1;
+                    layer = 0;
                 } else {
-                    // layer++;
                     foregroundDraw = true;
                 }
                 uiMaster.pushClipArea();
                 uiMaster.noClipArea();
             }
         }
-        uiMaster.depth(getDepth());
 
-        SVector position = element.getPosition();
-        SVector size = element.getSize();
-
+        // background
         SVector bgColor = element.getBackgroundColor();
-        if (bgColor != null) {
-            if (element instanceof UIColorElement e) {
+        if (element instanceof UIColorElement e) {
+            if (bgColor != null) {
+                uiMaster.depth(getDepth(0, false));
+
                 uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
                 uiMaster.noStroke();
                 uiMaster.rect(position, size);
 
                 uiMaster.fillAlpha(SUtil.alpha(e.getColor()) / 255.0);
             }
+        }
 
+        uiMaster.depth(getDepth(1, false));
+        if (bgColor != null) {
             uiMaster.fill(bgColor);
             uiMaster.noStroke();
             uiMaster.rect(position, size);
         }
-
         uiMaster.fillAlpha(1.0);
 
+        // outline
+        SVector olColor = element.getOutlineColor();
+        boolean doOutline = false;
+        if (App.showDebugOutline()) {
+            uiMaster.stroke(new SVector(1, 0.7, 0.1));
+            uiMaster.strokeWeight(Sizes.STROKE_WEIGHT.size);
+            doOutline = true;
+        } else if (olColor != null) {
+            uiMaster.stroke(olColor);
+            uiMaster.strokeWeight(element.getStrokeWeight());
+            doOutline = true;
+        }
+        if (doOutline) {
+            uiMaster.depth(getDepth(0, true));
+            uiMaster.noFill();
+            uiMaster.rect(position, size);
+        }
+
+        // content
+        uiMaster.depth(getDepth(2, false));
+        if (element instanceof UIContainer container) {
+            boolean isScrollable = container.isHScroll() || container.isVScroll();
+            if (isScrollable) {
+                uiMaster.pushClipArea();
+                uiMaster.clipArea(position, size);
+            }
+            uiMaster.pushMatrix();
+            uiMaster.translate(position);
+
+            layer++;
+            for (UIElement child : container.getChildren()) {
+                renderUIElement(child);
+            }
+            layer--;
+
+            uiMaster.popMatrix();
+            if (isScrollable) {
+                uiMaster.popClipArea();
+            }
+        }
         if (element instanceof HueSatField) {
             uiMaster.hueSatField(position, size, App.isCircularHueSatField(), App.isHSLColorSpace());
         }
@@ -154,28 +198,6 @@ public class AppRenderer<T extends App> {
             uiMaster.fill(text.getColor());
             uiMaster.text(text.getText(), position);
         }
-        if (element instanceof UIContainer container) {
-            boolean oldOldForegrundDraw = foregroundDraw;
-            if (isScrollable) {
-                uiMaster.pushClipArea();
-                uiMaster.clipArea(position, size);
-                // foregroundDraw = false;
-                // layer++;
-            }
-            uiMaster.pushMatrix();
-            uiMaster.translate(position);
-
-            for (UIElement child : container.getChildren()) {
-                renderUIElement(child);
-            }
-
-            uiMaster.popMatrix();
-            if (isScrollable) {
-                uiMaster.popClipArea();
-                // layer--;
-            }
-            foregroundDraw = oldOldForegrundDraw;
-        }
         if (element instanceof UIScale scale) {
             SVector pos = new SVector(position).add(scale.getScaleOffset());
             SVector siz = scale.getScaleSize();
@@ -195,22 +217,6 @@ public class AppRenderer<T extends App> {
             }
         }
 
-        SVector olColor = element.getOutlineColor();
-        boolean doOutline = false;
-        if (App.showDebugOutline()) {
-            uiMaster.stroke(new SVector(1, 0.7, 0.1));
-            uiMaster.strokeWeight(Sizes.STROKE_WEIGHT.size);
-            doOutline = true;
-        } else if (olColor != null) {
-            uiMaster.stroke(olColor);
-            uiMaster.strokeWeight(element.getStrokeWeight());
-            doOutline = true;
-        }
-        if (doOutline) {
-            uiMaster.noFill();
-            uiMaster.rect(position, size);
-        }
-
         if (element instanceof UIFloatContainer) {
             uiMaster.popClipArea();
         }
@@ -219,12 +225,11 @@ public class AppRenderer<T extends App> {
         foregroundDraw = oldForegroundDraw;
     }
 
-    private double getDepth() {
-        return getDepth(layer, foregroundDraw);
-    }
-
-    private double getDepth(int layer, boolean foregroundDraw) {
-        double depth = layer * 1.0 / NUM_LAYER_SUBDIVISIONS + (foregroundDraw ? -1 : 0);
+    private double getDepth(int division, boolean foreground) {
+        int actualLayer = foreground
+                ? NUM_FOREGROUND_LAYER_SUBVIDISIONS * layer + division
+                : NUM_DEPTH_SUBDIVISIONS - 1 - NUM_BACKGROUND_LAYER_SUBDIVISIONS * layer - division;
+        double depth = actualLayer * 1.0 / NUM_DEPTH_SUBDIVISIONS + (foregroundDraw ? -1 : 0);
         // System.out.format("getDepth(%d, %b) = %.3f\n", layer, foregroundDraw, depth);
         return depth;
     }

@@ -1,19 +1,19 @@
 #version 400 core
 
-in vec4 color;
-in vec4 color2;
-in float applyCheckerboard;
 in vec2 relativePos;
 
 out vec4 outColor;
 
-uniform float checkerboardSize;
+uniform vec3 color1;
+uniform vec3 color2;
 uniform vec2 size;
 uniform float strokeWeight;
+uniform int applyCheckerboard;
+uniform float checkerboardSize;
 
 void main(void) {
     if (applyCheckerboard == 0) {
-        outColor = color;
+        outColor = vec4(color1, 1.0);
     } else {
         float width = size.x - strokeWeight / 2;
         float height = size.y - strokeWeight / 2;
@@ -26,6 +26,6 @@ void main(void) {
         }
         int xComp = int(relPosClip.x / checkerboardSize);
         int yComp = int(relPosClip.y / checkerboardSize);
-        outColor = (xComp + yComp) % 2 == 0 ? color : color2;
+        outColor = vec4((xComp + yComp) % 2 == 0 ? color1 : color2, 1.0);
     }
 }
