@@ -27,18 +27,16 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
         uiMaster.scale(zoom);
 
         // render image
-        Image image = app.getImage();
-        int width = image.getWidth(), height = image.getHeight();
-        uiMaster.strokeWeight(0);
         uiMaster.noStroke();
         uiMaster.checkerboardFill(Colors.getTransparentColors(), 10);
+        layer = 0;
+        foregroundDraw = false;
+        uiMaster.depth(getDepth(0, false));
+        Image image = app.getImage();
+        int width = image.getWidth(), height = image.getHeight();
         SVector imageSize = new SVector(width, height);
         uiMaster.rect(new SVector(), imageSize);
         uiMaster.image(image.getTextureID(), new SVector(), imageSize);
-        // FrameBufferObject textFBO = uiMaster.getTextFBO();
-        // GL11.glDisable(GL11.GL_BLEND);
-        // uiMaster.image(textFBO.textureID(), new SVector(-textFBO.width(), 0), new SVector(textFBO.width(), textFBO.height()));
-        // GL11.glEnable(GL11.GL_BLEND);
 
         // render selection
         ImageTool activeTool = app.getActiveTool();

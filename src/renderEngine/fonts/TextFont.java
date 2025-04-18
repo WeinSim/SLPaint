@@ -8,7 +8,8 @@ import org.lwjglx.util.vector.Matrix3f;
 
 import renderEngine.Loader;
 import renderEngine.RawModel;
-import renderEngine.UIRenderMaster;
+import renderEngine.drawcalls.TextDrawCall;
+import renderEngine.drawcalls.TextVAO;
 
 public class TextFont {
 
@@ -68,16 +69,16 @@ public class TextFont {
         return chars;
     }
 
-    public RawModel createGiantVAO(UIRenderMaster.TextVAO textVAO, Loader loader) {
-        int totalTextLength = textVAO.totalLength;
+    public RawModel createGiantVAO(TextVAO textVAO, Loader loader) {
+        int totalTextLength = textVAO.getVertexCount();
         int[] charIDsArray = new int[totalTextLength];
         float[] vertices = new float[totalTextLength * 3];
         int[] textDataIDs = new int[totalTextLength];
 
         int index = 0;
-        for (UIRenderMaster.TextDrawCall drawCall : textVAO.drawCalls) {
-            String text = drawCall.text();
-            Matrix3f transformationMatrix = drawCall.transformationMatrix();
+        for (TextDrawCall drawCall : textVAO.getDrawCalls()) {
+            String text = drawCall.getText();
+            Matrix3f transformationMatrix = drawCall.getTransformationMatrix();
 
             double x = 0;
             for (FontChar fontChar : toChars(text)) {
@@ -102,9 +103,9 @@ public class TextFont {
 
                 vertices[3 * index] = vertexX;
                 vertices[3 * index + 1] = vertexY;
-                vertices[3 * index + 2] = (float) drawCall.depth();
+                vertices[3 * index + 2] = (float) drawCall.getDepth();
 
-                textDataIDs[index] = drawCall.textDataIndex();
+                textDataIDs[index] = drawCall.getDataIndex();
 
                 x += fontChar.xAdvance();
 
@@ -112,7 +113,7 @@ public class TextFont {
             }
         }
 
-        return loader.generateTextVAO(charIDsArray, vertices, textDataIDs);
+        return loader.loadTextVAO(charIDsArray, vertices, textDataIDs);
     }
 
     public double textWidth(String text) {

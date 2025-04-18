@@ -55,7 +55,7 @@ public class AppRenderer<T extends App> {
 
     public AppRenderer(T app) {
         this.app = app;
-        uiMaster = new UIRenderMaster(app);
+        uiMaster = new UIRenderMaster(app, app.getLoader());
     }
 
     public void render() {
@@ -97,7 +97,7 @@ public class AppRenderer<T extends App> {
                 // above the rest of the UI.
                 if (element instanceof TextFloatContainer) {
                     foregroundDraw = false;
-                    layer = 0;
+                    layer = 1;
                 } else {
                     foregroundDraw = true;
                 }
@@ -225,7 +225,7 @@ public class AppRenderer<T extends App> {
         foregroundDraw = oldForegroundDraw;
     }
 
-    private double getDepth(int division, boolean foreground) {
+    protected double getDepth(int division, boolean foreground) {
         int actualLayer = foreground
                 ? NUM_FOREGROUND_LAYER_SUBVIDISIONS * layer + division
                 : NUM_DEPTH_SUBDIVISIONS - 1 - NUM_BACKGROUND_LAYER_SUBDIVISIONS * layer - division;
@@ -235,7 +235,7 @@ public class AppRenderer<T extends App> {
     }
 
     public void reloadShaders() {
-        uiMaster = new UIRenderMaster(app);
+        uiMaster = new UIRenderMaster(app, app.getLoader());
     }
 
     public void renderTextToImage(String text, int x, int y, int size, SVector color, TextFont font, Image image) {

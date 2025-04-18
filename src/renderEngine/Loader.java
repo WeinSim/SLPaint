@@ -30,12 +30,9 @@ public class Loader {
 
     private ArrayList<Integer> vaos;
     private ArrayList<Integer> vbos;
+
     private ArrayList<Integer> textures;
     private ArrayList<Integer> fbos;
-
-    private boolean textMode;
-    private ArrayList<Integer> textVAOs;
-    private ArrayList<Integer> textVBOs;
 
     private HashMap<String, TextFont> loadedFonts;
 
@@ -45,20 +42,26 @@ public class Loader {
         textures = new ArrayList<>();
         fbos = new ArrayList<>();
 
-        textVAOs = new ArrayList<>();
-        textVBOs = new ArrayList<>();
-
         loadedFonts = new HashMap<>();
-
-        textMode = false;
     }
 
-    public RawModel loadToVAO(float[] positions) {
-        textMode = false;
+    public RawModel loadRectVAO(float[] positions, float[] sizes, float[] color1, int[] dataIndices) {
         int vaoID = createVAO();
-        storeDataInAttributeList(0, 2, positions);
+        storeDataInAttributeList(0, 3, positions);
+        storeDataInAttributeList(1, 2, sizes);
+        storeDataInAttributeList(2, 4, color1);
+        storeDataInAttributeList(3, 1, dataIndices);
         unbindVAO();
-        return new RawModel(vaoID, positions.length / 2);
+        return new RawModel(vaoID, dataIndices.length);
+    }
+
+    public RawModel loadTextVAO(int[] charIDs, float[] positions, int[] textDataIDs) {
+        int vaoID = createVAO();
+        storeDataInAttributeList(0, 1, charIDs);
+        storeDataInAttributeList(1, 3, positions);
+        storeDataInAttributeList(2, 1, textDataIDs);
+        unbindVAO();
+        return new RawModel(vaoID, textDataIDs.length);
     }
 
     public void loadToUBO(UniformBufferObject ubo, FloatBuffer data) {
@@ -74,16 +77,6 @@ public class Loader {
         GL15.glBindBuffer(GL31.GL_UNIFORM_BUFFER, 0);
 
         GL31.glBindBufferBase(GL31.GL_UNIFORM_BUFFER, ubo.getBinding(), bufferID);
-    }
-
-    public RawModel generateTextVAO(int[] charIDs, float[] positions, int[] textDataIDs) {
-        textMode = true;
-        int vaoID = createVAO();
-        storeDataInAttributeList(0, 1, charIDs);
-        storeDataInAttributeList(1, 3, positions);
-        storeDataInAttributeList(2, 1, textDataIDs);
-        unbindVAO();
-        return new RawModel(vaoID, positions.length);
     }
 
     // https://learnopengl.com/Advanced-OpenGL/Framebuffers
@@ -287,9 +280,6 @@ public class Loader {
     }
 
     public void cleanUp() {
-        cleanUp(vaos, vbos);
-        cleanUp(textVAOs, textVBOs);
-
         for (int textureID : textures) {
             GL11.glDeleteTextures(textureID);
         }
@@ -299,8 +289,8 @@ public class Loader {
         }
     }
 
-    public void textCleanUp() {
-        cleanUp(textVAOs, textVBOs);
+    public void tempCleanUp() {
+        cleanUp(vaos, vbos);
     }
 
     private void cleanUp(ArrayList<Integer> vaos, ArrayList<Integer> vbos) {
@@ -316,14 +306,14 @@ public class Loader {
 
     private int createVAO() {
         int vaoID = GL30.glGenVertexArrays();
-        (textMode ? textVAOs : vaos).add(vaoID);
+        vaos.add(vaoID);
         GL30.glBindVertexArray(vaoID);
         return vaoID;
     }
 
     private void storeDataInAttributeList(int attributeNumber, int coordinateSize, float[] data) {
         int vboID = GL15.glGenBuffers();
-        (textMode ? textVBOs : vbos).add(vboID);
+        vbos.add(vboID);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
         FloatBuffer buffer = storeDataInFloatBuffer(data);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
@@ -333,7 +323,7 @@ public class Loader {
 
     private void storeDataInAttributeList(int attributeNumber, int coordinateSize, int[] data) {
         int vboID = GL15.glGenBuffers();
-        (textMode ? textVBOs : vbos).add(vboID);
+        vbos.add(vboID);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
         IntBuffer buffer = storeDataInIntBuffer(data);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);

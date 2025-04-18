@@ -33,7 +33,12 @@ import ui.components.ImageCanvas;
 
 /**
  * <pre>
- * Collapse all draw calls (rects, etc.) each into a single VAO?
+ * TODO continue:
+ *   Turn all remaining draw calls (rect outlines, ellipse, hsl, image) into a
+ *     single VAO each.
+ *     Check if this absurd amount of classes and generics is really needed
+ *   Proper layer management in MainAppRenderer for non-ui stuff (image, tools,
+ *     selection, etc.)
  * Text tool:
  *   Text rendering:
  *     Text wrapping / new lines with ENTER (in combination with proper UI text

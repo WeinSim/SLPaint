@@ -5,7 +5,7 @@ layout (triangle_strip, max_vertices = 4) out;
 
 in int[] pass_charIndex;
 in vec3[] pass_position;
-in int[] pass_textDataIndex;
+in int[] pass_dataIndex;
 
 out vec2 position;
 out vec2 textureCoords;
@@ -20,10 +20,10 @@ uniform vec2 textureSize;
 
 layout(std140)
 uniform TextData {
-    // (r, g, b, size)
-    vec4[256] colorSize;
     // (x_min, y_min, x_max, y_max)
     vec4[256] boundingBox;
+    // (r, g, b, size)
+    vec4[256] colorSize;
 } textData;
 
 layout(std140)
@@ -44,12 +44,12 @@ void main(void) {
     vec2 baseTextureCoords = fontData.fontData[charIndex].xy;
     vec2 textureOffset = fontData.fontData[charIndex].zw;
 
-    int textDataIndex = pass_textDataIndex[0];
-    float textSize = textData.colorSize[textDataIndex].w;
-    color = textData.colorSize[textDataIndex].xyz;
+    int dataIndex = pass_dataIndex[0];
+    float textSize = textData.colorSize[dataIndex].w;
+    color = textData.colorSize[dataIndex].xyz;
 
-    boundingBoxMin = textData.boundingBox[textDataIndex].xy;
-    boundingBoxMax = textData.boundingBox[textDataIndex].zw;
+    boundingBoxMin = textData.boundingBox[dataIndex].xy;
+    boundingBoxMax = textData.boundingBox[dataIndex].zw;
 
     // first check if entire glyph is outside of the bounding box
     vec2 basePos = pass_position[0].xy;
