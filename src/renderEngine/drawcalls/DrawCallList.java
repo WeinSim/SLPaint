@@ -1,20 +1,25 @@
 package renderEngine.drawcalls;
 
 import java.util.ArrayList;
+import java.util.function.Function;
 
-public abstract class DrawCallList<C extends DrawCall, D extends DrawData, V extends DrawVAO<C, D>> {
+public class DrawCallList<C extends DrawCall, D extends DrawData> {
 
-    private ArrayList<V> vaos;
+    private ArrayList<DrawVAO<C, D>> vaos;
 
-    public DrawCallList() {
+    private final Function<C, Integer> vertexCountFunction;
+
+    public DrawCallList(Function<C, Integer> vertexCountFunction) {
+        this.vertexCountFunction = vertexCountFunction;
+
         vaos = new ArrayList<>();
     }
 
     public void addDrawCall(C call, D data) {
-        // Determine a TextVAO that already contains the correct text data.
-        V vao = null;
+        // Determine a DrawVAO that already contains the correct draw data.
+        DrawVAO<C, D> vao = null;
         int dataIndex = -1;
-        for (V v : vaos) {
+        for (DrawVAO<C, D> v : vaos) {
             dataIndex = v.getDataIndex(data);
             if (dataIndex != -1) {
                 vao = v;
@@ -22,29 +27,27 @@ public abstract class DrawCallList<C extends DrawCall, D extends DrawData, V ext
             }
         }
         if (vao == null) {
-            // No VAO has the correct text data. Create new one if neccessary.
+            // No VAO has the correct draw data. Create new one if neccessary.
             boolean createNewVAO = true;
             if (!vaos.isEmpty()) {
                 vao = vaos.getLast();
                 createNewVAO = !vao.hasRemainingCapacity();
             }
             if (createNewVAO) {
-                vao = createNewVAO();
+                vao = new DrawVAO<C, D>(vertexCountFunction);
                 vaos.add(vao);
             }
         }
         if (dataIndex == -1) {
-            // The text data already exists in some VAO.
+            // The draw data already exists in some VAO.
             vao.addDrawCall(call, data);
         } else {
-            // A new array index needs to be allocated for the text data.
+            // A new array index needs to be allocated for the draw data.
             vao.addDrawCall(call, dataIndex);
         }
     }
 
-    protected abstract V createNewVAO();
-
-    public ArrayList<V> getVAOs() {
+    public ArrayList<DrawVAO<C, D>> getVAOs() {
         return vaos;
     }
 }

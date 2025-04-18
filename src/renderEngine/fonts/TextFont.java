@@ -8,8 +8,9 @@ import org.lwjglx.util.vector.Matrix3f;
 
 import renderEngine.Loader;
 import renderEngine.RawModel;
+import renderEngine.drawcalls.DrawVAO;
+import renderEngine.drawcalls.TextData;
 import renderEngine.drawcalls.TextDrawCall;
-import renderEngine.drawcalls.TextVAO;
 
 public class TextFont {
 
@@ -69,11 +70,11 @@ public class TextFont {
         return chars;
     }
 
-    public RawModel createGiantVAO(TextVAO textVAO, Loader loader) {
+    public RawModel createGiantVAO(DrawVAO<TextDrawCall, TextData> textVAO, Loader loader) {
         int totalTextLength = textVAO.getVertexCount();
         int[] charIDsArray = new int[totalTextLength];
         float[] vertices = new float[totalTextLength * 3];
-        int[] textDataIDs = new int[totalTextLength];
+        int[] dataIndices = new int[totalTextLength];
 
         int index = 0;
         for (TextDrawCall drawCall : textVAO.getDrawCalls()) {
@@ -105,7 +106,7 @@ public class TextFont {
                 vertices[3 * index + 1] = vertexY;
                 vertices[3 * index + 2] = (float) drawCall.getDepth();
 
-                textDataIDs[index] = drawCall.getDataIndex();
+                dataIndices[index] = drawCall.getDataIndex();
 
                 x += fontChar.xAdvance();
 
@@ -113,7 +114,7 @@ public class TextFont {
             }
         }
 
-        return loader.loadTextVAO(charIDsArray, vertices, textDataIDs);
+        return loader.loadToVAO(charIDsArray, vertices, dataIndices);
     }
 
     public double textWidth(String text) {

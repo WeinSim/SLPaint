@@ -1,13 +1,8 @@
 package renderEngine.drawcalls;
 
-public class TextDrawCallList extends DrawCallList<TextDrawCall, TextData, TextVAO> {
+public class TextDrawCallList extends DrawCallList<TextDrawCall, TextData> {
 
     public TextDrawCallList() {
-        super();
-    }
-
-    @Override
-    protected TextVAO createNewVAO() {
-        return new TextVAO();
+        super(c -> c.getText().length());
     }
 }

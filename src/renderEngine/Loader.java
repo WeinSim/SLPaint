@@ -45,7 +45,7 @@ public class Loader {
         loadedFonts = new HashMap<>();
     }
 
-    public RawModel loadRectVAO(float[] positions, float[] sizes, float[] color1, int[] dataIndices) {
+    public RawModel laodToVAO(float[] positions, float[] sizes, float[] color1, int[] dataIndices) {
         int vaoID = createVAO();
         storeDataInAttributeList(0, 3, positions);
         storeDataInAttributeList(1, 2, sizes);
@@ -55,13 +55,13 @@ public class Loader {
         return new RawModel(vaoID, dataIndices.length);
     }
 
-    public RawModel loadTextVAO(int[] charIDs, float[] positions, int[] textDataIDs) {
+    public RawModel loadToVAO(int[] charIDs, float[] positions, int[] dataIndices) {
         int vaoID = createVAO();
         storeDataInAttributeList(0, 1, charIDs);
         storeDataInAttributeList(1, 3, positions);
-        storeDataInAttributeList(2, 1, textDataIDs);
+        storeDataInAttributeList(2, 1, dataIndices);
         unbindVAO();
-        return new RawModel(vaoID, textDataIDs.length);
+        return new RawModel(vaoID, dataIndices.length);
     }
 
     public void loadToUBO(UniformBufferObject ubo, FloatBuffer data) {

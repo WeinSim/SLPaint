@@ -4,12 +4,12 @@ layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
 layout(std140)
-uniform RectFillData {
+uniform RectData {
     // (x_min, y_min, x_max, y_max)
     vec4[256] boundingBox;
     // (r, g, b, size). if size == -1, then no checkerboard at all
     vec4[256] checkerboard;
-} rectFillData;
+} rectData;
 
 uniform mat3 viewMatrix;
 
@@ -47,8 +47,8 @@ void main(void) {
     vec2 size = pass_size[0];
 
     int dataIndex = pass_dataIndex[0];
-    relativeBoundingBoxMin = rectFillData.boundingBox[dataIndex].xy - position.xy;
-    relativeBoundingBoxMax = rectFillData.boundingBox[dataIndex].zw - position.xy;
+    relativeBoundingBoxMin = rectData.boundingBox[dataIndex].xy - position.xy;
+    relativeBoundingBoxMax = rectData.boundingBox[dataIndex].zw - position.xy;
 
     // first check if entire rect is outside of the bounding box
     if (relativeBoundingBoxMax.x  < 0) {
@@ -65,8 +65,8 @@ void main(void) {
     }
 
     color1 = pass_color1[0];
-    color2 = rectFillData.checkerboard[dataIndex].rgb;
-    checkerboardSize = rectFillData.checkerboard[dataIndex].a;
+    color2 = rectData.checkerboard[dataIndex].rgb;
+    checkerboardSize = rectData.checkerboard[dataIndex].a;
 
     for (int i = 0; i < 4; i++) {
         relativePos = cornerOffsets[i] * size;

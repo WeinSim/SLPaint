@@ -79,4 +79,9 @@ public class ClipAreaInfo implements DrawData {
         setUBOData(uboData);
         return uboData;
     }
+
+    @Override
+    public int getNumUBOArrays() {
+        return 1;
+    }
 }

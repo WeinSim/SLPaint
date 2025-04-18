@@ -16,4 +16,9 @@ public record TextData(ClipAreaInfo clipArea, SVector color, double textScale) i
 
         return uboData;
     }
+
+    @Override
+    public int getNumUBOArrays() {
+        return 2;
+    }
 }

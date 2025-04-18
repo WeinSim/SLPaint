@@ -2,7 +2,7 @@ package renderEngine.drawcalls;
 
 import sutil.math.SVector;
 
-public record RectFillData(ClipAreaInfo clipArea, boolean applyCheckerboard, SVector color2, double checkerboardSize)
+public record RectData(ClipAreaInfo clipArea, boolean applyCheckerboard, SVector color2, double checkerboardSize)
         implements DrawData {
 
     @Override
@@ -16,5 +16,10 @@ public record RectFillData(ClipAreaInfo clipArea, boolean applyCheckerboard, SVe
         uboData[7] = applyCheckerboard ? (float) checkerboardSize : -1;
 
         return uboData;
+    }
+
+    @Override
+    public int getNumUBOArrays() {
+        return 2;
     }
 }

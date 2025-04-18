@@ -1,13 +1,8 @@
 package renderEngine.drawcalls;
 
-public class RectFillDrawCallList extends DrawCallList<RectFillDrawCall, RectFillData, RectFillVAO> {
+public class RectFillDrawCallList extends DrawCallList<RectFillDrawCall, RectData> {
 
     public RectFillDrawCallList() {
-        super();
-    }
-
-    @Override
-    protected RectFillVAO createNewVAO() {
-        return new RectFillVAO();
+        super(_ -> 1);
     }
 }

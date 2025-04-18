@@ -1,18 +1,31 @@
 #version 400 core
 
 in vec2 relativePos;
+in vec2 size;
+in float strokeWeight;
+in vec3 color1;
+in vec3 color2;
+in float checkerboardSize;
+in vec2 relativeBoundingBoxMin;
+in vec2 relativeBoundingBoxMax;
 
 out vec4 outColor;
 
-uniform vec3 color1;
-uniform vec3 color2;
-uniform vec2 size;
-uniform float strokeWeight;
-uniform int applyCheckerboard;
-uniform float checkerboardSize;
-
 void main(void) {
-    if (applyCheckerboard == 0) {
+    if (relativePos.x < relativeBoundingBoxMin.x) {
+        discard;
+    }
+    if (relativePos.y < relativeBoundingBoxMin.y) {
+        discard;
+    }
+    if (relativePos.x > relativeBoundingBoxMax.x) {
+        discard;
+    }
+    if (relativePos.y > relativeBoundingBoxMax.y) {
+        discard;
+    }
+
+    if (checkerboardSize < 0) {
         outColor = vec4(color1, 1.0);
     } else {
         float width = size.x - strokeWeight / 2;

@@ -2,28 +2,32 @@ package renderEngine.drawcalls;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.function.Function;
 
 import org.lwjgl.BufferUtils;
 
-public abstract class DrawVAO<C extends DrawCall, D extends DrawData> {
+import renderEngine.shaders.UniformBufferObject;
 
-    private static final int MAX_DRAW_DATA = 256;
+public class DrawVAO<C extends DrawCall, D extends DrawData> {
 
     private ArrayList<C> drawCalls;
 
     private ArrayList<D> drawDataList;
 
+    private final Function<C, Integer> vertexCountFunction;
     private int vertexCount;
 
-    public DrawVAO() {
+    public DrawVAO(Function<C, Integer> vertexCountGetter) {
+        this.vertexCountFunction = vertexCountGetter;
+
         drawCalls = new ArrayList<>();
 
-        drawDataList = new ArrayList<>(MAX_DRAW_DATA);
+        drawDataList = new ArrayList<>(UniformBufferObject.UBO_ARRAY_LENGTH);
     }
 
-    public int getDataIndex(D textData) {
+    public int getDataIndex(D drawData) {
         for (int i = 0; i < drawDataList.size(); i++) {
-            if (drawDataList.get(i).equals(textData)) {
+            if (drawDataList.get(i).equals(drawData)) {
                 return i;
             }
         }
@@ -31,7 +35,7 @@ public abstract class DrawVAO<C extends DrawCall, D extends DrawData> {
     }
 
     public boolean hasRemainingCapacity() {
-        return drawDataList.size() < MAX_DRAW_DATA;
+        return drawDataList.size() < UniformBufferObject.UBO_ARRAY_LENGTH;
     }
 
     public void addDrawCall(C drawCall, D drawData) {
@@ -40,29 +44,31 @@ public abstract class DrawVAO<C extends DrawCall, D extends DrawData> {
     }
 
     public void addDrawCall(C drawCall, int dataIndex) {
-        vertexCount += getVertexCount(drawCall);
+        vertexCount += vertexCountFunction.apply(drawCall);
         drawCall.setDataIndex(dataIndex);
         drawCalls.add(drawCall);
     }
 
-    protected abstract int getVertexCount(C drawCall);
-
     public FloatBuffer getUBOData() {
         float[][] uboData = new float[drawDataList.size()][];
         int index = 0;
-        for (D textData : drawDataList) {
-            uboData[index++] = textData.getUBOData();
+        int numUBOArrays = 0;
+        for (D drawData : drawDataList) {
+            if (numUBOArrays == 0) {
+                numUBOArrays = drawData.getNumUBOArrays();
+            }
+            uboData[index++] = drawData.getUBOData();
         }
 
-        FloatBuffer buffer = BufferUtils.createFloatBuffer(8 * MAX_DRAW_DATA);
-        for (int j = 0; j < 2; j++) {
+        FloatBuffer buffer = BufferUtils.createFloatBuffer(numUBOArrays * 4 * UniformBufferObject.UBO_ARRAY_LENGTH);
+        for (int j = 0; j < numUBOArrays; j++) {
             for (int i = 0; i < uboData.length; i++) {
                 buffer.put(uboData[i][4 * j]);
                 buffer.put(uboData[i][4 * j + 1]);
                 buffer.put(uboData[i][4 * j + 2]);
                 buffer.put(uboData[i][4 * j + 3]);
             }
-            for (int i = 0; i < MAX_DRAW_DATA - drawDataList.size(); i++) {
+            for (int i = 0; i < UniformBufferObject.UBO_ARRAY_LENGTH - drawDataList.size(); i++) {
                 buffer.put(0f);
                 buffer.put(0f);
                 buffer.put(0f);

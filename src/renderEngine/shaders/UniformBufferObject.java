@@ -5,9 +5,14 @@ import java.nio.FloatBuffer;
 import renderEngine.Loader;
 
 /**
- * Represents both a uniform block as well as a uniform buffer object
+ * Represents both a uniform block as well as a uniform buffer object.
+ * 
+ * Each UBO is expected to contain some number of vec4 arrays, each of which is
+ * exactly {@code UBO_ARRAY_LENGTH} elements long.
  */
 public class UniformBufferObject {
+
+    public static final int UBO_ARRAY_LENGTH = 256;
 
     private final String name;
     private final int binding;
@@ -20,6 +25,7 @@ public class UniformBufferObject {
     public UniformBufferObject(String name, int binding) {
         this.name = name;
         this.binding = binding;
+
         synced = false;
     }
 

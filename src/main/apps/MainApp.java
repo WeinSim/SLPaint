@@ -34,9 +34,8 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Turn all remaining draw calls (rect outlines, ellipse, hsl, image) into a
- *     single VAO each.
- *     Check if this absurd amount of classes and generics is really needed
+ *   Turn all remaining draw calls (hsl, image) into a single VAO each
+ *   Reduce amount of repeated code in new draw infrastructure
  *   Proper layer management in MainAppRenderer for non-ui stuff (image, tools,
  *     selection, etc.)
  * Text tool:
@@ -118,6 +117,7 @@ import ui.components.ImageCanvas;
  *     transparency and text rendering)
  *     Premultiply view matrix and transformation matrix (for rect shader)
  *     Rename transformationMatrix to uiMatrix
+ *   Merge rect shaders? (95% of their code is identical)
  *   Remove magic numbers in {@link renderEngine.MainAppRenderer#render()}
  *   "Activate alpha blending" in
  *     {@link renderEngine.UIRenderMaster#image(int, SVector, SVector)}

@@ -14,14 +14,17 @@ import org.lwjglx.util.vector.Vector3f;
 import main.apps.App;
 import main.apps.MainApp;
 import renderEngine.drawcalls.ClipAreaInfo;
-import renderEngine.drawcalls.RectFillData;
+import renderEngine.drawcalls.DrawVAO;
+import renderEngine.drawcalls.EllipseDrawCall;
+import renderEngine.drawcalls.EllipseDrawCallList;
+import renderEngine.drawcalls.RectData;
 import renderEngine.drawcalls.RectFillDrawCall;
 import renderEngine.drawcalls.RectFillDrawCallList;
-import renderEngine.drawcalls.RectFillVAO;
+import renderEngine.drawcalls.RectOutlineDrawCall;
+import renderEngine.drawcalls.RectOutlineDrawCallList;
 import renderEngine.drawcalls.TextData;
 import renderEngine.drawcalls.TextDrawCall;
 import renderEngine.drawcalls.TextDrawCallList;
-import renderEngine.drawcalls.TextVAO;
 import renderEngine.fonts.TextFont;
 import renderEngine.shaders.ShaderProgram;
 import sutil.math.SVector;
@@ -47,6 +50,8 @@ public class UIRenderMaster {
 
     private HashMap<TextFont, TextDrawCallList> textDrawCalls;
     private RectFillDrawCallList rectFillDrawCalls;
+    private RectOutlineDrawCallList rectOutlineDrawCalls;
+    private EllipseDrawCallList ellipseDrawCalls;
 
     private RawModel dummyVAO;
 
@@ -80,10 +85,7 @@ public class UIRenderMaster {
         this.app = app;
         this.loader = loader;
 
-        textShader = new ShaderProgram(
-                "text",
-                new String[] { "charIndex", "position", "textSize", "color" },
-                true);
+        textShader = new ShaderProgram("text", new String[] { "charIndex", "position", "textSize", "color" }, true);
         rectOutlineShader = new ShaderProgram("rectOutline", null, true);
         rectFillShader = new ShaderProgram("rectFill", null, true);
         ellipseShader = new ShaderProgram("ellipse", null, true);
@@ -97,6 +99,8 @@ public class UIRenderMaster {
 
         textDrawCalls = new HashMap<>();
         rectFillDrawCalls = new RectFillDrawCallList();
+        rectOutlineDrawCalls = new RectOutlineDrawCallList();
+        ellipseDrawCalls = new EllipseDrawCallList();
 
         uiMatrixStack = new LinkedList<>();
         clipAreaStack = new LinkedList<>();
@@ -147,11 +151,15 @@ public class UIRenderMaster {
     public void stop() {
         // Rendering the rectangle first in order to allow (transparent) text to render
         // above the background rectangles
-        renderGiantRectVAO();
+        renderGiantRectFillVAO();
+        renderGiantRectOutlineVAO();
+        renderGiantEllipseVAO();
         renderGiantTextVAO();
 
         textDrawCalls.clear();
         rectFillDrawCalls = new RectFillDrawCallList();
+        rectOutlineDrawCalls = new RectOutlineDrawCallList();
+        ellipseDrawCalls = new EllipseDrawCallList();
 
         loader.tempCleanUp();
 
@@ -191,67 +199,44 @@ public class UIRenderMaster {
     }
 
     public void rect(SVector position, SVector size) {
-        if (fillMode > 0) {
+        if (fillMode > 0 || strokeMode > 0) {
             SVector transformedPosition = new SVector(
                     uiMatrix.m00 * position.x + uiMatrix.m10 * position.y + uiMatrix.m20,
                     uiMatrix.m01 * position.x + uiMatrix.m11 * position.y + uiMatrix.m21);
             SVector transformedSize = new SVector(uiMatrix.m00 * size.x + uiMatrix.m10 * size.y,
                     uiMatrix.m01 * size.x + uiMatrix.m11 * size.y);
 
-            rectFillDrawCalls.addDrawCall(
-                    new RectFillDrawCall(transformedPosition, transformedSize, depth,
-                            fillMode == NORMAL ? new SVector(fill) : checkerboardColors[0], fillAlpha),
-                    new RectFillData(new ClipAreaInfo(clipAreaInfo), fillMode == CHECKERBOARD, checkerboardColors[1],
-                            checkerboardSize));
-        }
-
-        if (strokeMode > 0) {
-            GL30.glBindVertexArray(dummyVAO.vaoID());
-
-            activateShader(rectOutlineShader);
-
-            rectOutlineShader.loadUniform("position", position);
-            rectOutlineShader.loadUniform("size", size);
-            rectOutlineShader.loadUniform("uiMatrix", uiMatrix);
-            rectOutlineShader.loadUniform("viewMatrix", createViewMatrix());
-            rectOutlineShader.loadUniform("depth", depth);
-
-            rectOutlineShader.loadUniform("strokeWeight", strokeWeight);
-            rectOutlineShader.loadUniform("applyCheckerboard", strokeMode == CHECKERBOARD ? 1 : 0);
-
-            if (strokeMode == NORMAL) {
-                // normal stroke
-                rectOutlineShader.loadUniform("color1", stroke);
-            } else {
-                // checkerboard stroke
-                rectOutlineShader.loadUniform("color1", checkerboardColors[0]);
-                rectOutlineShader.loadUniform("color2", checkerboardColors[1]);
-                rectOutlineShader.loadUniform("checkerboardSize", checkerboardSize);
+            if (fillMode > 0) {
+                rectFillDrawCalls.addDrawCall(
+                        new RectFillDrawCall(transformedPosition, transformedSize, depth,
+                                new SVector(fillMode == NORMAL ? fill : checkerboardColors[0]), fillAlpha),
+                        new RectData(new ClipAreaInfo(clipAreaInfo), fillMode == CHECKERBOARD,
+                                new SVector(checkerboardColors[1]), checkerboardSize));
             }
-
-            GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
+            if (strokeMode > 0) {
+                rectOutlineDrawCalls.addDrawCall(
+                        new RectOutlineDrawCall(transformedPosition, transformedSize, depth,
+                                new SVector(strokeMode == NORMAL ? stroke : checkerboardColors[0]), strokeWeight),
+                        new RectData(new ClipAreaInfo(clipAreaInfo), strokeMode == CHECKERBOARD,
+                                new SVector(checkerboardColors[1]), checkerboardSize));
+            }
         }
-
-        GL30.glBindVertexArray(0);
     }
 
     public void ellipse(SVector position, SVector size) {
-        activateShader(ellipseShader);
+        if (fillMode != NORMAL) {
+            return;
+        }
 
-        pushMatrix();
-        translate(position);
-        scale(size);
+        SVector transformedPosition = new SVector(
+                uiMatrix.m00 * position.x + uiMatrix.m10 * position.y + uiMatrix.m20,
+                uiMatrix.m01 * position.x + uiMatrix.m11 * position.y + uiMatrix.m21);
+        SVector transformedSize = new SVector(uiMatrix.m00 * size.x + uiMatrix.m10 * size.y,
+                uiMatrix.m01 * size.x + uiMatrix.m11 * size.y);
 
-        ellipseShader.loadUniform("fill", fill);
-        ellipseShader.loadUniform("uiMatrix", uiMatrix);
-        ellipseShader.loadUniform("viewMatrix", createViewMatrix());
-        ellipseShader.loadUniform("depth", depth);
-
-        GL30.glBindVertexArray(dummyVAO.vaoID());
-        GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
-        GL30.glBindVertexArray(0);
-
-        popMatrix();
+        ellipseDrawCalls.addDrawCall(
+                new EllipseDrawCall(transformedPosition, transformedSize, depth, new SVector(fill), fillAlpha),
+                new ClipAreaInfo(clipAreaInfo));
     }
 
     public void text(String text, SVector position) {
@@ -303,7 +288,7 @@ public class UIRenderMaster {
             textShader.syncUniformBlock("FontData", loader);
 
             TextDrawCallList drawCalls = entry.getValue();
-            for (TextVAO textVAO : drawCalls.getVAOs()) {
+            for (DrawVAO<TextDrawCall, TextData> textVAO : drawCalls.getVAOs()) {
                 RawModel model = font.createGiantVAO(textVAO, loader);
 
                 textShader.setUniformBlockData("TextData", textVAO.getUBOData());
@@ -323,14 +308,13 @@ public class UIRenderMaster {
         }
     }
 
-    private void renderGiantRectVAO() {
+    private void renderGiantRectFillVAO() {
         activateShader(rectFillShader);
         rectFillShader.loadUniform("viewMatrix", createViewMatrix());
 
-        for (RectFillVAO vao : rectFillDrawCalls.getVAOs()) {
-
-            rectFillShader.setUniformBlockData("RectFillData", vao.getUBOData());
-            rectFillShader.syncUniformBlock("RectFillData", loader);
+        for (DrawVAO<RectFillDrawCall, RectData> vao : rectFillDrawCalls.getVAOs()) {
+            rectFillShader.setUniformBlockData("RectData", vao.getUBOData());
+            rectFillShader.syncUniformBlock("RectData", loader);
 
             int vertexCount = vao.getVertexCount();
             float[] positions = new float[vertexCount * 3];
@@ -357,7 +341,106 @@ public class UIRenderMaster {
                 i++;
             }
 
-            RawModel model = loader.loadRectVAO(positions, sizes, color1, dataIndices);
+            RawModel model = loader.laodToVAO(positions, sizes, color1, dataIndices);
+            GL30.glBindVertexArray(model.vaoID());
+
+            GL20.glEnableVertexAttribArray(0);
+            GL20.glEnableVertexAttribArray(1);
+            GL20.glEnableVertexAttribArray(2);
+            GL20.glEnableVertexAttribArray(3);
+
+            GL11.glDrawArrays(GL11.GL_POINTS, 0, model.vertexCount());
+
+            GL20.glDisableVertexAttribArray(0);
+            GL20.glDisableVertexAttribArray(1);
+            GL20.glDisableVertexAttribArray(2);
+            GL20.glDisableVertexAttribArray(3);
+        }
+    }
+
+    private void renderGiantRectOutlineVAO() {
+        activateShader(rectOutlineShader);
+        rectOutlineShader.loadUniform("viewMatrix", createViewMatrix());
+
+        for (DrawVAO<RectOutlineDrawCall, RectData> vao : rectOutlineDrawCalls.getVAOs()) {
+            rectOutlineShader.setUniformBlockData("RectData", vao.getUBOData());
+            rectOutlineShader.syncUniformBlock("RectData", loader);
+
+            int vertexCount = vao.getVertexCount();
+            float[] positions = new float[vertexCount * 3];
+            float[] sizes = new float[vertexCount * 2];
+            float[] color1 = new float[vertexCount * 4];
+            int[] dataIndices = new int[vertexCount];
+            int i = 0;
+            for (RectOutlineDrawCall drawCall : vao.getDrawCalls()) {
+
+                positions[3 * i] = (float) drawCall.getPosition().x;
+                positions[3 * i + 1] = (float) drawCall.getPosition().y;
+                positions[3 * i + 2] = (float) drawCall.getDepth();
+
+                sizes[2 * i] = (float) drawCall.getSize().x;
+                sizes[2 * i + 1] = (float) drawCall.getSize().y;
+
+                color1[4 * i] = (float) drawCall.getColor1().x;
+                color1[4 * i + 1] = (float) drawCall.getColor1().y;
+                color1[4 * i + 2] = (float) drawCall.getColor1().z;
+                color1[4 * i + 3] = (float) drawCall.getStrokeWeight();
+
+                dataIndices[i] = drawCall.getDataIndex();
+
+                i++;
+            }
+
+            RawModel model = loader.laodToVAO(positions, sizes, color1, dataIndices);
+            GL30.glBindVertexArray(model.vaoID());
+
+            GL20.glEnableVertexAttribArray(0);
+            GL20.glEnableVertexAttribArray(1);
+            GL20.glEnableVertexAttribArray(2);
+            GL20.glEnableVertexAttribArray(3);
+
+            GL11.glDrawArrays(GL11.GL_POINTS, 0, model.vertexCount());
+
+            GL20.glDisableVertexAttribArray(0);
+            GL20.glDisableVertexAttribArray(1);
+            GL20.glDisableVertexAttribArray(2);
+            GL20.glDisableVertexAttribArray(3);
+        }
+    }
+
+    private void renderGiantEllipseVAO() {
+        activateShader(ellipseShader);
+        ellipseShader.loadUniform("viewMatrix", createViewMatrix());
+        for (DrawVAO<EllipseDrawCall, ClipAreaInfo> vao : ellipseDrawCalls.getVAOs()) {
+            ellipseShader.setUniformBlockData("EllipseData", vao.getUBOData());
+            ellipseShader.syncUniformBlock("EllipseData", loader);
+
+            int vertexCount = vao.getVertexCount();
+            float[] positions = new float[vertexCount * 3];
+            float[] sizes = new float[vertexCount * 2];
+            float[] colors = new float[vertexCount * 4];
+            int[] dataIndices = new int[vertexCount];
+            int i = 0;
+            for (EllipseDrawCall drawCall : vao.getDrawCalls()) {
+
+                positions[3 * i] = (float) drawCall.getPosition().x;
+                positions[3 * i + 1] = (float) drawCall.getPosition().y;
+                positions[3 * i + 2] = (float) drawCall.getDepth();
+
+                sizes[2 * i] = (float) drawCall.getSize().x;
+                sizes[2 * i + 1] = (float) drawCall.getSize().y;
+
+                colors[4 * i] = (float) drawCall.getColor().x;
+                colors[4 * i + 1] = (float) drawCall.getColor().y;
+                colors[4 * i + 2] = (float) drawCall.getColor().z;
+                colors[4 * i + 3] = (float) drawCall.getAlpha();
+
+                dataIndices[i] = drawCall.getDataIndex();
+
+                i++;
+            }
+
+            RawModel model = loader.laodToVAO(positions, sizes, colors, dataIndices);
             GL30.glBindVertexArray(model.vaoID());
 
             GL20.glEnableVertexAttribArray(0);
@@ -661,154 +744,4 @@ public class UIRenderMaster {
     public FrameBufferObject getTextFBO() {
         return textFBO;
     }
-
-    // public static record TextDrawCall(String text, Matrix3f transformationMatrix,
-    // double depth, int textDataIndex) {
-    // }
-
-    // public static record TextData(SVector color, double textSize, ClipAreaInfo
-    // clipArea) {
-    // }
-
-    // public static class TextDrawCallList {
-
-    // private TextFont font;
-
-    // private ArrayList<TextVAO> textVAOs;
-
-    // public long totalNanos;
-
-    // public TextDrawCallList(TextFont font) {
-    // this.font = font;
-
-    // textVAOs = new ArrayList<>();
-    // totalNanos = 0;
-    // }
-
-    // public void addDrawCall(String text, Matrix3f transformationMatrix, double
-    // depth, SVector color,
-    // double textSize, ClipAreaInfo clipArea) {
-
-    // TextData textData = new TextData(color, textSize, clipArea);
-
-    // // Determine a TextVAO that already contains the correct text data.
-    // TextVAO vao = null;
-    // int textDataIndex = -1;
-    // for (TextVAO textVAO : textVAOs) {
-    // textDataIndex = textVAO.getTextDataIndex(textData);
-    // if (textDataIndex != -1) {
-    // vao = textVAO;
-    // break;
-    // }
-    // }
-    // if (vao == null) {
-    // // No VAO has the correct text data. Create new one if neccessary.
-    // boolean createNewVAO = true;
-    // if (!textVAOs.isEmpty()) {
-    // vao = textVAOs.getLast();
-    // createNewVAO = !vao.hasRemainingCapacity();
-    // }
-    // if (createNewVAO) {
-    // vao = new TextVAO(font);
-    // textVAOs.add(vao);
-    // }
-    // }
-    // if (textDataIndex == -1) {
-    // // The text data already exists in some VAO.
-    // vao.addDrawCall(text, transformationMatrix, depth, textData);
-    // } else {
-    // // A new array index needs to be allocated for the text data.
-    // vao.addDrawCall(text, transformationMatrix, depth, textDataIndex);
-    // }
-    // }
-    // }
-
-    // public static class TextVAO {
-
-    // public LinkedList<TextDrawCall> drawCalls;
-    // public int totalLength;
-
-    // public TextData[] textDataArray;
-    // public int textDataLength;
-
-    // private TextFont font;
-
-    // public TextVAO(TextFont font) {
-    // this.font = font;
-
-    // drawCalls = new LinkedList<>();
-    // totalLength = 0;
-
-    // textDataArray = new TextData[MAX_TEXT_DATA];
-    // textDataLength = 0;
-    // }
-
-    // public int getTextDataIndex(TextData textData) {
-    // for (int i = 0; i < textDataLength; i++) {
-    // if (textDataArray[i].equals(textData)) {
-    // return i;
-    // }
-    // }
-    // return -1;
-    // }
-
-    // public boolean hasRemainingCapacity() {
-    // return textDataLength < MAX_TEXT_DATA;
-    // }
-
-    // public void addDrawCall(String text, Matrix3f transformationMatrix, double
-    // depth, TextData textData) {
-    // int textDataIndex = textDataLength;
-    // textDataArray[textDataLength++] = textData;
-    // addDrawCall(text, transformationMatrix, depth, textDataIndex);
-    // }
-
-    // public void addDrawCall(String text, Matrix3f transformationMatrix, double
-    // depth, int textDataIndex) {
-    // // this method is slow af
-    // // SUtil.addSorted(drawCalls, new TextDrawCall(text, transformationMatrix,
-    // // depth, textDataIndex), true);
-    // drawCalls.add(new TextDrawCall(text, transformationMatrix, depth,
-    // textDataIndex));
-    // totalLength += text.length();
-    // }
-
-    // public FloatBuffer getUBOData() {
-    // FloatBuffer buffer = BufferUtils.createFloatBuffer(8 * MAX_TEXT_DATA);
-    // for (int i = 0; i < textDataLength; i++) {
-    // SVector color = textDataArray[i].color();
-    // buffer.put((float) color.x);
-    // buffer.put((float) color.y);
-    // buffer.put((float) color.z);
-
-    // buffer.put((float) (textDataArray[i].textSize() / font.getSize()));
-    // }
-    // for (int i = 0; i < MAX_TEXT_DATA - textDataLength; i++) {
-    // buffer.put(0f);
-    // buffer.put(0f);
-    // buffer.put(0f);
-    // buffer.put(0f);
-    // }
-    // for (int i = 0; i < textDataLength; i++) {
-    // ClipAreaInfo clipArea = textDataArray[i].clipArea();
-
-    // SVector position = clipArea.enabled ? clipArea.position : new SVector(0, 0);
-    // buffer.put((float) position.x);
-    // buffer.put((float) position.y);
-
-    // SVector size = clipArea.enabled ? clipArea.size : new SVector(100000,
-    // 100000);
-    // buffer.put((float) (position.x + size.x));
-    // buffer.put((float) (position.y + size.y));
-    // }
-    // for (int i = 0; i < MAX_TEXT_DATA - textDataLength; i++) {
-    // buffer.put(0f);
-    // buffer.put(0f);
-    // buffer.put(0f);
-    // buffer.put(0f);
-    // }
-    // buffer.flip();
-    // return buffer;
-    // }
-    // }
 }
