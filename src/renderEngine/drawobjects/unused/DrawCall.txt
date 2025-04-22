@@ -1,0 +1,65 @@
+package renderEngine.drawobjects;
+
+import org.lwjglx.util.vector.Matrix3f;
+
+import sutil.math.SVector;
+
+public class DrawCall {
+
+    private final SVector position;
+    private final double depth;
+    private final SVector size;
+    private final SVector color;
+    private final double alpha;
+
+    private int dataIndex;
+
+    public DrawCall(SVector position, double depth, SVector size, SVector color, double alpha,
+            Matrix3f uiMatrix) {
+
+        this(
+                new SVector(uiMatrix.m00 * position.x + uiMatrix.m10 * position.y + uiMatrix.m20,
+                        uiMatrix.m01 * position.x + uiMatrix.m11 * position.y + uiMatrix.m21),
+                depth,
+                new SVector(uiMatrix.m00 * size.x + uiMatrix.m10 * size.y,
+                        uiMatrix.m01 * size.x + uiMatrix.m11 * size.y),
+                color,
+                alpha);
+    }
+
+    public DrawCall(SVector position, double depth, SVector size, SVector color, double alpha) {
+        this.position = position;
+        this.depth = depth;
+        this.size = size;
+        this.color = color;
+        this.alpha = alpha;
+    }
+
+    public SVector getPosition() {
+        return position;
+    }
+
+    public double getDepth() {
+        return depth;
+    }
+
+    public SVector getSize() {
+        return size;
+    }
+
+    public SVector getColor() {
+        return color;
+    }
+
+    public double getAlpha() {
+        return alpha;
+    }
+
+    public int getDataIndex() {
+        return dataIndex;
+    }
+
+    public void setDataIndex(int dataIndex) {
+        this.dataIndex = dataIndex;
+    }
+}

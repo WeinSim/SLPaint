@@ -34,10 +34,10 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Turn all remaining draw calls (hsl, image) into a single VAO each
- *   Reduce amount of repeated code in new draw infrastructure
+ *   Try to get this mess of a new rendering system to work
  *   Proper layer management in MainAppRenderer for non-ui stuff (image, tools,
  *     selection, etc.)
+ *   Turn all remaining draw calls (hsl, image) into a single VAO each
  * Text tool:
  *   Text rendering:
  *     Text wrapping / new lines with ENTER (in combination with proper UI text

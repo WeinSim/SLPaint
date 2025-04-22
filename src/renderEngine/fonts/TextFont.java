@@ -8,9 +8,9 @@ import org.lwjglx.util.vector.Matrix3f;
 
 import renderEngine.Loader;
 import renderEngine.RawModel;
-import renderEngine.drawcalls.DrawVAO;
-import renderEngine.drawcalls.TextData;
-import renderEngine.drawcalls.TextDrawCall;
+// import renderEngine.drawcalls.DrawVAO;
+// import renderEngine.drawcalls.TextData;
+// import renderEngine.drawcalls.TextDrawCall;
 
 public class TextFont {
 
@@ -70,52 +70,57 @@ public class TextFont {
         return chars;
     }
 
-    public RawModel createGiantVAO(DrawVAO<TextDrawCall, TextData> textVAO, Loader loader) {
-        int totalTextLength = textVAO.getVertexCount();
-        int[] charIDsArray = new int[totalTextLength];
-        float[] vertices = new float[totalTextLength * 3];
-        int[] dataIndices = new int[totalTextLength];
+    // public RawModel createGiantVAO(DrawVAO<TextDrawCall, TextData> textVAO,
+    // Loader loader) {
 
-        int index = 0;
-        for (TextDrawCall drawCall : textVAO.getDrawCalls()) {
-            String text = drawCall.getText();
-            Matrix3f transformationMatrix = drawCall.getTransformationMatrix();
+    // int totalTextLength = textVAO.getVertexCount();
+    // int[] charIDsArray = new int[totalTextLength];
+    // float[] vertices = new float[totalTextLength * 3];
+    // int[] dataIndices = new int[totalTextLength];
 
-            double x = 0;
-            for (FontChar fontChar : toChars(text)) {
-                charIDsArray[index] = charIDs.get((char) fontChar.id());
+    // int index = 0;
+    // for (TextDrawCall drawCall : textVAO.getDrawCalls()) {
+    // String text = drawCall.getText();
+    // Matrix3f transformationMatrix = drawCall.getTransformationMatrix();
 
-                // this could be offloaded to the shader by creating a UBO for transformation
-                // matrices (similar to the UBO for color, size and bounding box)
-                float baseX = (float) x + fontChar.xOffset(),
-                        baseY = fontChar.yOffset() - base + 0.8f * size;
-                float vertexX = transformationMatrix.m00 * baseX
-                        + transformationMatrix.m10 * baseY
-                        + transformationMatrix.m20;
-                float vertexY = transformationMatrix.m01 * baseX
-                        + transformationMatrix.m11 * baseY
-                        + transformationMatrix.m21;
-                // SVector vertexPos = new SVector(x + fontChar.xOffset(), fontChar.yOffset() -
-                // base + 0.8 * size);
-                // Vector3f vertexPos3f = new Vector3f((float) vertexPos.x, (float) vertexPos.y,
-                // 1.0f);
-                // Matrix3f.transform(transformationMatrix, vertexPos3f, vertexPos3f);
-                // vertexPos.set(vertexPos3f.x, vertexPos3f.y, drawCall.depth());
+    // double x = 0;
+    // for (FontChar fontChar : toChars(text)) {
+    // charIDsArray[index] = charIDs.get((char) fontChar.id());
 
-                vertices[3 * index] = vertexX;
-                vertices[3 * index + 1] = vertexY;
-                vertices[3 * index + 2] = (float) drawCall.getDepth();
+    // // this could be offloaded to the shader by creating a UBO for transformation
+    // // matrices (similar to the UBO for color, size and bounding box)
+    // float baseX = (float) x + fontChar.xOffset(),
+    // baseY = fontChar.yOffset() - base + 0.8f * size;
+    // float vertexX = transformationMatrix.m00 * baseX
+    // + transformationMatrix.m10 * baseY
+    // + transformationMatrix.m20;
+    // float vertexY = transformationMatrix.m01 * baseX
+    // + transformationMatrix.m11 * baseY
+    // + transformationMatrix.m21;
+    // // SVector vertexPos = new SVector(x + fontChar.xOffset(), fontChar.yOffset()
+    // -
+    // // base + 0.8 * size);
+    // // Vector3f vertexPos3f = new Vector3f((float) vertexPos.x, (float)
+    // vertexPos.y,
+    // // 1.0f);
+    // // Matrix3f.transform(transformationMatrix, vertexPos3f, vertexPos3f);
+    // // vertexPos.set(vertexPos3f.x, vertexPos3f.y, drawCall.depth());
 
-                dataIndices[index] = drawCall.getDataIndex();
+    // vertices[3 * index] = vertexX;
+    // vertices[3 * index + 1] = vertexY;
+    // vertices[3 * index + 2] = (float) drawCall.getDepth();
 
-                x += fontChar.xAdvance();
+    // dataIndices[index] = drawCall.getDataIndex();
 
-                index++;
-            }
-        }
+    // x += fontChar.xAdvance();
 
-        return loader.loadToVAO(charIDsArray, vertices, dataIndices);
-    }
+    // index++;
+    // }
+    // }
+
+    // return loader.loadToVAO(charIDsArray,vertices,dataIndices);
+
+    // }
 
     public double textWidth(String text) {
         FontChar[] chars = toChars(text);

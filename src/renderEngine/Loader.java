@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
 import main.apps.MainApp;
+import renderEngine.drawobjects.Attribute;
 import renderEngine.fonts.FontChar;
 import renderEngine.fonts.TextFont;
 import renderEngine.shaders.UniformBufferObject;
@@ -45,23 +47,14 @@ public class Loader {
         loadedFonts = new HashMap<>();
     }
 
-    public RawModel laodToVAO(float[] positions, float[] sizes, float[] color1, int[] dataIndices) {
+    public RawModel loadToVAO(VBOData<?>[] vboData, int vertexCount) {
         int vaoID = createVAO();
-        storeDataInAttributeList(0, 3, positions);
-        storeDataInAttributeList(1, 2, sizes);
-        storeDataInAttributeList(2, 4, color1);
-        storeDataInAttributeList(3, 1, dataIndices);
+        int attributeNumber = 0;
+        for (VBOData<?> vbo : vboData) {
+            vbo.storeDataInAttributeList(attributeNumber++);
+        }
         unbindVAO();
-        return new RawModel(vaoID, dataIndices.length);
-    }
-
-    public RawModel loadToVAO(int[] charIDs, float[] positions, int[] dataIndices) {
-        int vaoID = createVAO();
-        storeDataInAttributeList(0, 1, charIDs);
-        storeDataInAttributeList(1, 3, positions);
-        storeDataInAttributeList(2, 1, dataIndices);
-        unbindVAO();
-        return new RawModel(vaoID, dataIndices.length);
+        return new RawModel(vaoID, vertexCount);
     }
 
     public void loadToUBO(UniformBufferObject ubo, FloatBuffer data) {
@@ -311,26 +304,6 @@ public class Loader {
         return vaoID;
     }
 
-    private void storeDataInAttributeList(int attributeNumber, int coordinateSize, float[] data) {
-        int vboID = GL15.glGenBuffers();
-        vbos.add(vboID);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
-        FloatBuffer buffer = storeDataInFloatBuffer(data);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
-        GL20.glVertexAttribPointer(attributeNumber, coordinateSize, GL11.GL_FLOAT, false, 0, 0);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-    }
-
-    private void storeDataInAttributeList(int attributeNumber, int coordinateSize, int[] data) {
-        int vboID = GL15.glGenBuffers();
-        vbos.add(vboID);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
-        IntBuffer buffer = storeDataInIntBuffer(data);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
-        GL30.glVertexAttribIPointer(attributeNumber, coordinateSize, GL11.GL_INT, 0, 0);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-    }
-
     private void unbindVAO() {
         GL30.glBindVertexArray(0);
     }
@@ -343,21 +316,61 @@ public class Loader {
     // GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
     // }
 
-    private IntBuffer storeDataInIntBuffer(int[] data) {
-        IntBuffer buffer = BufferUtils.createIntBuffer(data.length);
-        buffer.put(data);
-        buffer.flip();
-        return buffer;
+    private abstract sealed class VBOData<B extends Buffer> permits VBOFloatData, VBOIntData {
+
+        protected Attribute<?, B> attribute;
+        protected B buffer;
+
+        public VBOData(Attribute<?, B> attribute) {
+            this.attribute = attribute;
+        }
+
+        public abstract void storeDataInAttributeList(int attributeNumber);
+
+        public Attribute<?, B> getAttribute() {
+            return attribute;
+        }
     }
 
-    private FloatBuffer storeDataInFloatBuffer(float[] data) {
-        FloatBuffer buffer = BufferUtils.createFloatBuffer(data.length);
-        float[] floatData = new float[data.length];
-        for (int i = 0; i < floatData.length; i++) {
-            floatData[i] = (float) data[i];
+    public final class VBOFloatData extends VBOData<FloatBuffer> {
+
+        public VBOFloatData(Attribute<?, FloatBuffer> attribute, float[] data) {
+            super(attribute);
+
+            buffer = BufferUtils.createFloatBuffer(data.length);
+            buffer.put(data);
+            buffer.flip();
         }
-        buffer.put(floatData);
-        buffer.flip();
-        return buffer;
+
+        @Override
+        public void storeDataInAttributeList(int attributeNumber) {
+            int vboID = GL15.glGenBuffers();
+            vbos.add(vboID);
+            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
+            GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
+            GL20.glVertexAttribPointer(attributeNumber, attribute.coordinateSize(), GL11.GL_FLOAT, false, 0, 0);
+            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        }
+    }
+
+    private final class VBOIntData extends VBOData<IntBuffer> {
+
+        public VBOIntData(Attribute<?, IntBuffer> attribute, int[] data) {
+            super(attribute);
+
+            buffer = BufferUtils.createIntBuffer(data.length);
+            buffer.put(data);
+            buffer.flip();
+        }
+
+        @Override
+        public void storeDataInAttributeList(int attributeNumber) {
+            int vboID = GL15.glGenBuffers();
+            vbos.add(vboID);
+            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
+            GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
+            GL30.glVertexAttribIPointer(attributeNumber, attribute.coordinateSize(), GL11.GL_INT, 0, 0);
+            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        }
     }
 }
