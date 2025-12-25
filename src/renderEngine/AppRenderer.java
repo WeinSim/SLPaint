@@ -7,6 +7,7 @@ import main.Image;
 import main.apps.App;
 import main.apps.MainApp;
 import renderEngine.fonts.TextFont;
+import renderEngine.shaders.FrameBufferObject;
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
@@ -141,6 +142,7 @@ public class AppRenderer<T extends App> {
             doOutline = true;
         }
         if (doOutline) {
+            // why is the outline on division 0?
             uiMaster.depth(getDepth(0, true));
             uiMaster.noFill();
             uiMaster.rect(position, size);

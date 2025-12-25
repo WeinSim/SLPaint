@@ -12,6 +12,8 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
 
     private static final SVector[] SELECTION_BORDER_COLORS = new SVector[] { new SVector(), new SVector(1, 1, 1) };
 
+    private static final boolean DEBUG_RENDERING = false;
+
     public MainAppRenderer(MainApp app) {
         super(app);
     }
@@ -19,70 +21,103 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
     @Override
     public void render() {
         uiMaster.start();
-        uiMaster.setBGColor(Colors.getCanvasColor());
+        if (DEBUG_RENDERING) {
+            uiMaster.setBGColor(new SVector(1, 1, 1));
 
-        SVector translation = app.getImageTranslation();
-        double zoom = app.getImageZoom();
-        uiMaster.translate(translation);
-        uiMaster.scale(zoom);
+            SVector p1 = new SVector(100, 100),
+                    p2 = new SVector(300, 700),
+                    p3 = new SVector(1000, 800);
+            SVector s1 = new SVector(200, 100),
+                    s2 = new SVector(150, 150),
+                    s3 = new SVector(100, 200);
+            SVector c1 = new SVector(0.8, 0.2, 0.2),
+                    c2 = new SVector(0.2, 0.8, 0.2),
+                    c3 = new SVector(0.2, 0.2, 0.8);
 
-        // render image
-        uiMaster.noStroke();
-        uiMaster.checkerboardFill(Colors.getTransparentColors(), 10);
-        layer = 0;
-        foregroundDraw = false;
-        uiMaster.depth(getDepth(0, false));
-        Image image = app.getImage();
-        int width = image.getWidth(), height = image.getHeight();
-        SVector imageSize = new SVector(width, height);
-        uiMaster.rect(new SVector(), imageSize);
-        uiMaster.image(image.getTextureID(), new SVector(), imageSize);
+            uiMaster.noStroke();
 
-        // render selection
-        ImageTool activeTool = app.getActiveTool();
-        if (activeTool == ImageTool.SELECTION) {
-            SelectionTool selection = ImageTool.SELECTION;
-            Image selectionImg = selection.getSelection();
-            if (selectionImg != null) {
-                SVector position = new SVector(selection.getX(), selection.getY());
-                SVector size = new SVector(selection.getWidth(),
-                        selection.getHeight());
-                uiMaster.image(selectionImg.getTextureID(), position, size);
-            }
-        }
+            uiMaster.fill(c1);
+            uiMaster.rect(p1, s1);
 
-        if (activeTool == ImageTool.SELECTION || activeTool == ImageTool.TEXT) {
-            XYWH selection = (XYWH) activeTool;
-            uiMaster.resetMatrix();
+            uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
+            uiMaster.depth(getDepth(0, false));
+            uiMaster.rect(p2, s2);
+
+            // p2.x += 50;
+
+            // uiMaster.fill(c2);
+            // uiMaster.fillAlpha(0.5);
+            // uiMaster.depth(getDepth(1, false));
+            // uiMaster.rect(p2, s2);
+
+            // uiMaster.fillAlpha(1.0);
+
+            // uiMaster.fill(c3);
+            // uiMaster.rect(p3, s3);
+        } else {
+            uiMaster.setBGColor(Colors.getCanvasColor());
+
+            SVector translation = app.getImageTranslation();
+            double zoom = app.getImageZoom();
             uiMaster.translate(translation);
-            int selectionPhase = activeTool.getState();
-            if (selectionPhase != SelectionTool.NONE) {
-                int x, y, w, h;
-                if (selectionPhase == ImageTool.INITIAL_DRAG) {
-                    int startX = selection.getStartX();
-                    int startY = selection.getStartY();
-                    int endX = selection.getEndX();
-                    int endY = selection.getEndY();
-                    x = Math.min(startX, endX);
-                    y = Math.min(startY, endY);
-                    w = Math.abs(endX - startX);
-                    h = Math.abs(endY - startY);
-                } else {
-                    x = selection.getX();
-                    y = selection.getY();
-                    w = selection.getWidth();
-                    h = selection.getHeight();
+            uiMaster.scale(zoom);
+
+            // render image
+            uiMaster.noStroke();
+            uiMaster.checkerboardFill(Colors.getTransparentColors(), 10);
+            layer = 0;
+            foregroundDraw = false;
+            uiMaster.depth(getDepth(0, false));
+            Image image = app.getImage();
+            int width = image.getWidth(), height = image.getHeight();
+            SVector imageSize = new SVector(width, height);
+            uiMaster.rect(new SVector(), imageSize);
+            uiMaster.image(image.getTextureID(), new SVector(), imageSize);
+
+            // render selection
+            ImageTool activeTool = app.getActiveTool();
+            if (activeTool == ImageTool.SELECTION) {
+                SelectionTool selection = ImageTool.SELECTION;
+                Image selectionImg = selection.getSelection();
+                if (selectionImg != null) {
+                    SVector position = new SVector(selection.getX(), selection.getY());
+                    SVector size = new SVector(selection.getWidth(),
+                            selection.getHeight());
+                    uiMaster.image(selectionImg.getTextureID(), position, size);
                 }
-                uiMaster.checkerboardStroke(SELECTION_BORDER_COLORS, 15);
-                uiMaster.strokeWeight(2);
-                uiMaster.noFill();
-                uiMaster.rect(new SVector(x, y).scale(zoom), new SVector(w, h).scale(app.getImageZoom()));
             }
+
+            if (activeTool == ImageTool.SELECTION || activeTool == ImageTool.TEXT) {
+                XYWH selection = (XYWH) activeTool;
+                uiMaster.resetMatrix();
+                uiMaster.translate(translation);
+                int selectionPhase = activeTool.getState();
+                if (selectionPhase != SelectionTool.NONE) {
+                    int x, y, w, h;
+                    if (selectionPhase == ImageTool.INITIAL_DRAG) {
+                        int startX = selection.getStartX();
+                        int startY = selection.getStartY();
+                        int endX = selection.getEndX();
+                        int endY = selection.getEndY();
+                        x = Math.min(startX, endX);
+                        y = Math.min(startY, endY);
+                        w = Math.abs(endX - startX);
+                        h = Math.abs(endY - startY);
+                    } else {
+                        x = selection.getX();
+                        y = selection.getY();
+                        w = selection.getWidth();
+                        h = selection.getHeight();
+                    }
+                    uiMaster.checkerboardStroke(SELECTION_BORDER_COLORS, 15);
+                    uiMaster.strokeWeight(2);
+                    uiMaster.noFill();
+                    uiMaster.rect(new SVector(x, y).scale(zoom), new SVector(w, h).scale(app.getImageZoom()));
+                }
+            }
+
+            renderUI();
         }
-
-        // render ui
-        renderUI();
-
         uiMaster.stop();
     }
 }

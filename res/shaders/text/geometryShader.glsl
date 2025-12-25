@@ -3,21 +3,6 @@
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
-in int[] pass_charIndex;
-in vec3[] pass_position;
-in int[] pass_dataIndex;
-
-out vec2 position;
-out vec2 textureCoords;
-out vec3 color;
-out vec2 boundingBoxMin;
-out vec2 boundingBoxMax;
-
-// converts from "normal" screen coordinates (0, 0) to (w, h)
-// to OpenGL coordinates (-1, 1) to (1, -1)
-uniform mat3 viewMatrix;
-uniform vec2 textureSize;
-
 layout(std140)
 uniform TextData {
     // (x_min, y_min, x_max, y_max)
@@ -38,6 +23,22 @@ const vec2 offsets[4] = vec2[4](
     vec2(0, 1),
     vec2(1, 1)
 );
+
+// converts from "normal" screen coordinates (0, 0) to (w, h)
+// to OpenGL coordinates (-1, 1) to (1, -1)
+uniform mat3 viewMatrix;
+uniform vec2 textureSize;
+
+in int[] pass_dataIndex;
+in vec2[] pass_position;
+in float[] pass_depth;
+in int[] pass_charIndex;
+
+out vec2 position;
+out vec2 textureCoords;
+out vec3 color;
+out vec2 boundingBoxMin;
+out vec2 boundingBoxMax;
 
 void main(void) {
     int charIndex = pass_charIndex[0];

@@ -1,18 +1,24 @@
 #version 400 core
 
-in vec2 passUVCoords;
+in vec2 relativePos;
+in vec2 relativeBoundingBoxMin;
+in vec2 relativeBoundingBoxMax;
+
+in vec2 uvCoords;
+
+in vec2 hueSaturation;
+
+in float hue;
+in float saturation;
+// 0 = lightness (1-dim), 1 = hue-sat (2-dim), 2 = alpha (1-dim)
+flat in int hueSatAlpha;
+// 0 = hsl, 1 = hsv
+flat in int hsv;
+// 0 = vertical gradient, 1 = horizontal gradient
+flat in int orientation;
+in vec3 fill;
 
 out vec4 outColor;
-
-uniform float hue;
-uniform float saturation;
-// 0 = lightness (1-dim), 1 = hue-sat (2-dim), 2 = alpha (1-dim)
-uniform int hueSatAlpha;
-// 0 = hsl, 1 = hsv
-uniform int hsv;
-// 0 = vertical gradient, 1 = horizontal gradient
-uniform int orientation;
-uniform vec3 fill;
 
 vec3 hsvToRGB(float h, float s, float v);
 
@@ -25,31 +31,44 @@ float atan2(float y, float x);
 const float PI = 3.1415926535;
 
 void main(void) {
+    if (relativePos.x < relativeBoundingBoxMin.x) {
+        discard;
+    }
+    if (relativePos.y < relativeBoundingBoxMin.y) {
+        discard;
+    }
+    if (relativePos.x > relativeBoundingBoxMax.x) {
+        discard;
+    }
+    if (relativePos.y > relativeBoundingBoxMax.y) {
+        discard;
+    }
+
     if (hueSatAlpha == 0) {
         if (orientation == 0) {
             outColor = vec4(hsv == 1
-                    ? hsvToRGB(hue, saturation, 1 - passUVCoords.y)
-                    : hslToRGB(hue, saturation, 1 - passUVCoords.y),
+                    ? hsvToRGB(hue, saturation, 1 - uvCoords.y)
+                    : hslToRGB(hue, saturation, 1 - uvCoords.y),
                 1.0);
         } else {
             outColor = vec4(hsv == 1
-                    ? hsvToRGB(hue, saturation, passUVCoords.x)
-                    : hslToRGB(hue, saturation, passUVCoords.x),
+                    ? hsvToRGB(hue, saturation, uvCoords.x)
+                    : hslToRGB(hue, saturation, uvCoords.x),
                 1.0);
         }
     } else if (hueSatAlpha == 1) {
         outColor = vec4(hsv == 1
-                ? hsvToRGB(passUVCoords.x * 360, 1 - passUVCoords.y, 1.0)
-                : hslToRGB(passUVCoords.x * 360, 1 - passUVCoords.y, 0.5),
+                ? hsvToRGB(uvCoords.x * 360, 1 - uvCoords.y, 1.0)
+                : hslToRGB(uvCoords.x * 360, 1 - uvCoords.y, 0.5),
             1.0);
     } else if (hueSatAlpha == 2) {
         if (orientation == 0) {
-            outColor = vec4(fill, 1 - passUVCoords.y);
+            outColor = vec4(fill, 1 - uvCoords.y);
         } else {
-            outColor = vec4(fill, passUVCoords.x);
+            outColor = vec4(fill, uvCoords.x);
         }
     } else {
-        vec2 transformedUVCoords = 2 * passUVCoords - 1;
+        vec2 transformedUVCoords = 2 * uvCoords - 1;
         float mag = mag(transformedUVCoords);
         if (mag > 1) {
             discard;

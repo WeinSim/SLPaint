@@ -1,0 +1,78 @@
+Render system
+
+
+All rendering (except for clearing the background) happens through draw calls.
+A rendered instance coming from a single draw call is called a shape.
+
+There are different kinds of shapes: rectFill, rectOutline, ellipse, text,
+image, hueSatField, lightnessScale and alphaScale. Every draw call creates
+exactly one shape, with the exception text, which creates one shape for each
+character, and rect, which can create a rectFill and a rectOutline shape.
+
+Every shape has a set of attributes. These are either set before the draw call
+(e.g. fill color) or directly through arguments in the call method (e.g.
+position).
+
+Shapes are collected during the duration of one frame and then all sent to the
+GPU at once, using as few VAOs as possible.
+
+Some attributes of a shape ("individual attributes") are given through VAOs
+(e.g. position). These are the attributes that usually vary from one call to
+another. Other attributes ("group attributes") are given through UBOs (e.g.
+bounding box). These are the attributes that are often shared between multiple
+draw calls.
+
+Because of the std140 memory layout used in the UBOs, all data in the UBOs is
+stored as arrays of vec4.
+
+Every UBO has space for 256 sets of group attributes. Because there may be
+more than 256 combinations of group attributes for the shapes of a specific
+kind during a single frame, there is a whole list of UBOs available during each
+frame. The shapes are grouped in batches according to their group attributes.
+
+In order to link a shape to its group attributes it is given a special VBO
+entry called groupAttributeIndex. This is the index into the 256-element array
+of group attributes of the UBO of the batch that this shape belongs to.
+
+One VAO is created per batch of shapes.
+
+Draw calls must be order-independent, i.e. there is no guarantee that calls
+that arrive first will be executed first.
+
+Some attributes are common to all shapes. They are:
+    bounding box (4, g)
+    /*
+     * not for text (position data is premultiplied with transformation matrix)
+     */
+    transformation matrix (9)
+    position (2, i)
+    depth (1, i)
+    /*
+     * not for text
+     */
+    size (2, i)
+
+The remaining attributes for each shape are:
+rectFill:
+    color 1 (4, i)
+    color 2 (4, g)
+    checkerboard size (1, g)
+rectOutline:
+    color 1 (4, i)
+    color 2 (4, g)
+    checkerboard size (1, g)
+    stroke weight (1, i)
+ellipse:
+    color (4, i)
+hsl:
+    hue (1, i)
+    saturation (1, i)
+    hueSatAlpha (type of hsl shape) (1, i)
+    hsv (hsl or hsv) (1, i)
+    orientation (1, i)
+    fill (3, i)
+image:
+    texture ID (1, i)
+text:
+    char index (1, i)
+    color (4, g)

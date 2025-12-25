@@ -1,5 +1,6 @@
 package renderEngine;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 import org.lwjgl.opengl.GL11;
@@ -11,11 +12,12 @@ import org.lwjglx.util.vector.Vector3f;
 
 import main.apps.App;
 import main.apps.MainApp;
-import renderEngine.drawobjects.DrawCall;
-import renderEngine.drawobjects.RectFill;
-import renderEngine.drawobjects.Renderable;
 import renderEngine.fonts.TextFont;
+import renderEngine.shaders.FrameBufferObject;
+import renderEngine.shaders.RectFillCollector;
+import renderEngine.shaders.RectFillDrawCall;
 import renderEngine.shaders.ShaderProgram;
+import renderEngine.shaders.ShapeCollector;
 import sutil.math.SVector;
 
 public class UIRenderMaster {
@@ -29,10 +31,9 @@ public class UIRenderMaster {
     private App app;
     private Loader loader;
 
-    private ShaderProgram imageShader,
-            hslShader;
-
-    // private ShaderProgram rectFillShader,
+    // private ShaderProgram imageShader,
+    // hslShader,
+    // rectFillShader,
     // rectOutlineShader,
     // textShader,
     // imageShader,
@@ -40,8 +41,8 @@ public class UIRenderMaster {
     // ellipseShader,
     // activeShader;
 
-    private Renderable<?>[] renderables;
-    private RectFill rectFill;
+    private ArrayList<ShapeCollector<?>> shapeCollectors;
+    private RectFillCollector rectFillCollector;
 
     private ShaderProgram activeShader;
 
@@ -77,18 +78,19 @@ public class UIRenderMaster {
         this.app = app;
         this.loader = loader;
 
-        renderables = new Renderable[1];
-        renderables[0] = (rectFill = new RectFill());
+        shapeCollectors = new ArrayList<>();
+        rectFillCollector = new RectFillCollector();
+        shapeCollectors.add(rectFillCollector);
 
         // textShader = new ShaderProgram("text", new String[] { "charIndex",
         // "position", "textSize", "color" }, true);
         // rectOutlineShader = new ShaderProgram("rectOutline", null, true);
         // rectFillShader = new ShaderProgram("rectFill", null, true);
         // ellipseShader = new ShaderProgram("ellipse", null, true);
-        imageShader = new ShaderProgram("image", null, true);
-        hslShader = new ShaderProgram("hsl", null, true);
+        // imageShader = new ShaderProgram("image", null, true);
+        // hslShader = new ShaderProgram("hsl", null, true);
 
-        dummyVAO = new RawModel(0, 1);
+        dummyVAO = new RawModel(0, 1, 0);
         if (app instanceof MainApp mainApp) {
             textFBO = loader.createFBO(mainApp.getImage().getWidth(), mainApp.getImage().getHeight());
         }
@@ -140,9 +142,24 @@ public class UIRenderMaster {
     }
 
     public void stop() {
-        for (Renderable<?> renderable : renderables) {
-            render(renderable);
-            renderable.clear();
+        Matrix3f viewMatrix = createViewMatrix();
+        for (ShapeCollector<?> shapeCollector : shapeCollectors) {
+            ShaderProgram shader = shapeCollector.getShaderProgram();
+            activateShader(shader);
+            shader.loadUniform("viewMatrix", viewMatrix);
+
+            RawModel model;
+            while ((model = shapeCollector.getNextRawModel(loader)) != null) {
+                GL30.glBindVertexArray(model.vaoID());
+
+                for (int i = 0; i < model.numAttributes(); i++)
+                    GL20.glEnableVertexAttribArray(i);
+
+                GL11.glDrawArrays(GL11.GL_POINTS, 0, model.vertexCount());
+
+                for (int i = 0; i < model.numAttributes(); i++)
+                    GL20.glDisableVertexAttribArray(i);
+            }
         }
 
         loader.tempCleanUp();
@@ -185,8 +202,10 @@ public class UIRenderMaster {
     public void rect(SVector position, SVector size) {
         if (fillMode > 0 || strokeMode > 0) {
             if (fillMode > 0) {
-                rectFill.addDrawCall(
-                        new RectFill.RectDrawCall(position, depth, size, uiMatrix,
+                rectFillCollector.addShape(
+                        new RectFillDrawCall(position, depth, size,
+                                new Matrix3f().load(uiMatrix),
+                                // uiMatrix,
                                 new ClipAreaInfo(clipAreaInfo),
                                 new SVector(fillMode == NORMAL ? fill : checkerboardColors[0]), fillAlpha,
                                 new SVector(checkerboardColors[1]), checkerboardSize, fillMode == CHECKERBOARD));
@@ -246,113 +265,92 @@ public class UIRenderMaster {
         // popMatrix();
     }
 
-    private <C extends DrawCall> void render(Renderable<C> renderable) {
-        ShaderProgram shader = renderable.getShaderProgram();
-        activateShader(shader);
-        shader.loadUniform("viewMatrix", createViewMatrix());
-
-        int numVBOs = renderable.getNumVBOs();
-
-        RawModel model;
-        while ((model = renderable.getNextRawModel(loader)) != null) {
-            GL30.glBindVertexArray(model.vaoID());
-
-            for (int i = 0; i < numVBOs; i++) {
-                GL20.glEnableVertexAttribArray(i);
-            }
-
-            GL11.glDrawArrays(GL11.GL_POINTS, 0, model.vertexCount());
-
-            for (int i = 0; i < numVBOs; i++) {
-                GL20.glDisableVertexAttribArray(i);
-            }
-        }
-    }
-
     public void image(int textureID, SVector position, SVector size) {
-        activateShader(imageShader);
+        // activateShader(imageShader);
 
-        // activate alpha blending
+        // // activate alpha blending
 
-        pushMatrix();
-        translate(position);
-        scale(size);
+        // pushMatrix();
+        // translate(position);
+        // scale(size);
 
-        imageShader.loadUniform("viewMatrix", createViewMatrix());
-        imageShader.loadUniform("transformationMatrix", uiMatrix);
+        // imageShader.loadUniform("viewMatrix", createViewMatrix());
+        // imageShader.loadUniform("transformationMatrix", uiMatrix);
 
-        GL13.glActiveTexture(GL13.GL_TEXTURE0);
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+        // GL13.glActiveTexture(GL13.GL_TEXTURE0);
+        // GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+        // GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER,
+        // GL11.GL_LINEAR);
+        // GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER,
+        // GL11.GL_NEAREST);
 
-        GL30.glBindVertexArray(dummyVAO.vaoID());
-        GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
-        GL30.glBindVertexArray(0);
+        // GL30.glBindVertexArray(dummyVAO.vaoID());
+        // GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
+        // GL30.glBindVertexArray(0);
 
-        popMatrix();
+        // popMatrix();
     }
 
     public void hueSatField(SVector position, SVector size, boolean circular, boolean hsl) {
-        pushMatrix();
-        translate(position);
-        scale(size);
+        // pushMatrix();
+        // translate(position);
+        // scale(size);
 
-        activateShader(hslShader);
-        hslShader.loadUniform("hueSatAlpha", circular ? 3 : 1);
-        hslShader.loadUniform("hsv", hsl ? 0 : 1);
-        hslShader.loadUniform("viewMatrix", createViewMatrix());
-        hslShader.loadUniform("transformationMatrix", uiMatrix);
-        hslShader.loadUniform("depth", depth);
+        // activateShader(hslShader);
+        // hslShader.loadUniform("hueSatAlpha", circular ? 3 : 1);
+        // hslShader.loadUniform("hsv", hsl ? 0 : 1);
+        // hslShader.loadUniform("viewMatrix", createViewMatrix());
+        // hslShader.loadUniform("transformationMatrix", uiMatrix);
+        // hslShader.loadUniform("depth", depth);
 
-        GL30.glBindVertexArray(dummyVAO.vaoID());
-        GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
-        GL30.glBindVertexArray(0);
+        // GL30.glBindVertexArray(dummyVAO.vaoID());
+        // GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
+        // GL30.glBindVertexArray(0);
 
-        popMatrix();
+        // popMatrix();
     }
 
     public void lightnessScale(SVector position, SVector size, double hue, double saturation, int orientation,
             boolean hsl) {
-        pushMatrix();
-        translate(position);
-        scale(size);
+        // pushMatrix();
+        // translate(position);
+        // scale(size);
 
-        activateShader(hslShader);
-        hslShader.loadUniform("hueSatAlpha", 0);
-        hslShader.loadUniform("hsv", hsl ? 0 : 1);
-        hslShader.loadUniform("orientation", orientation);
-        hslShader.loadUniform("hue", hue);
-        hslShader.loadUniform("saturation", saturation);
-        hslShader.loadUniform("viewMatrix", createViewMatrix());
-        hslShader.loadUniform("transformationMatrix", uiMatrix);
-        hslShader.loadUniform("depth", depth);
+        // activateShader(hslShader);
+        // hslShader.loadUniform("hueSatAlpha", 0);
+        // hslShader.loadUniform("hsv", hsl ? 0 : 1);
+        // hslShader.loadUniform("orientation", orientation);
+        // hslShader.loadUniform("hue", hue);
+        // hslShader.loadUniform("saturation", saturation);
+        // hslShader.loadUniform("viewMatrix", createViewMatrix());
+        // hslShader.loadUniform("transformationMatrix", uiMatrix);
+        // hslShader.loadUniform("depth", depth);
 
-        GL30.glBindVertexArray(dummyVAO.vaoID());
-        GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
-        GL30.glBindVertexArray(0);
+        // GL30.glBindVertexArray(dummyVAO.vaoID());
+        // GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
+        // GL30.glBindVertexArray(0);
 
-        popMatrix();
+        // popMatrix();
     }
 
     public void alphaScale(SVector position, SVector size, int orientation) {
-        pushMatrix();
-        translate(position);
-        scale(size);
+        // pushMatrix();
+        // translate(position);
+        // scale(size);
 
-        activateShader(hslShader);
-        hslShader.loadUniform("hueSatAlpha", 2);
-        hslShader.loadUniform("orientation", orientation);
-        hslShader.loadUniform("viewMatrix", createViewMatrix());
-        hslShader.loadUniform("transformationMatrix", uiMatrix);
-        hslShader.loadUniform("depth", depth);
-        hslShader.loadUniform("fill", fill);
+        // activateShader(hslShader);
+        // hslShader.loadUniform("hueSatAlpha", 2);
+        // hslShader.loadUniform("orientation", orientation);
+        // hslShader.loadUniform("viewMatrix", createViewMatrix());
+        // hslShader.loadUniform("transformationMatrix", uiMatrix);
+        // hslShader.loadUniform("depth", depth);
+        // hslShader.loadUniform("fill", fill);
 
-        GL30.glBindVertexArray(dummyVAO.vaoID());
-        GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
-        GL30.glBindVertexArray(0);
+        // GL30.glBindVertexArray(dummyVAO.vaoID());
+        // GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
+        // GL30.glBindVertexArray(0);
 
-        popMatrix();
+        // popMatrix();
     }
 
     private void activateShader(ShaderProgram shader) {

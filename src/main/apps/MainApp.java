@@ -35,9 +35,10 @@ import ui.components.ImageCanvas;
  * <pre>
  * TODO continue:
  *   Try to get this mess of a new rendering system to work
+ *   Have shaders automatically recognize attribute names (and sizes)
+ *   Turn all remaining draw calls (hsl, image) into a single VAO each
  *   Proper layer management in MainAppRenderer for non-ui stuff (image, tools,
  *     selection, etc.)
- *   Turn all remaining draw calls (hsl, image) into a single VAO each
  * Text tool:
  *   Text rendering:
  *     Text wrapping / new lines with ENTER (in combination with proper UI text
@@ -123,6 +124,7 @@ import ui.components.ImageCanvas;
  *     {@link renderEngine.UIRenderMaster#image(int, SVector, SVector)}
  *     (whatever that means??)
  * Maximized windows don't show up correctly on Windows 11
+ * Proper package names / structure
  * Error handling
  * UI extras: (optional)
  *   3D view

@@ -25,7 +25,7 @@ public class ShaderProgram {
     private HashMap<String, UniformVariable> uniformVariables;
     private HashMap<String, UniformBufferObject> uniformBufferObjects;
 
-    public ShaderProgram(String name, String[] attributeNames, boolean hasGemoetryShader) {
+    public ShaderProgram(String name, String[] attributeNames, int[] attributeSizes, boolean hasGemoetryShader) {
         this.hasGemoetryShader = hasGemoetryShader;
 
         uniformVariables = new HashMap<>();
@@ -46,13 +46,20 @@ public class ShaderProgram {
         GL20.glAttachShader(programID, fragmentShaderID);
 
         if (attributeNames != null) {
+            int attributeNumber = 0;
             for (int i = 0; i < attributeNames.length; i++) {
-                bindAttribute(i, attributeNames[i]);
+                bindAttribute(attributeNumber, attributeNames[i]);
+                attributeNumber += attributeSizes[i];
             }
         }
 
         GL20.glLinkProgram(programID);
         GL20.glValidateProgram(programID);
+        if (GL20.glGetProgrami(programID, GL20.GL_LINK_STATUS) == GL11.GL_FALSE) {
+            System.out.format("Could not link shader \"%s\"!\n", name);
+            System.out.println(GL20.glGetProgramInfoLog(programID));
+            System.exit(-1);
+        }
 
         for (UniformVariable uniform : uniformVariables.values()) {
             uniform.setLocation(GL20.glGetUniformLocation(programID, uniform.getName()));

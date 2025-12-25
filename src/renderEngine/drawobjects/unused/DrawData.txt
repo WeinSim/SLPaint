@@ -1,6 +1,0 @@
-package renderEngine.drawobjects;
-
-public interface DrawData {
-
-    public float[] getUBOData();
-}

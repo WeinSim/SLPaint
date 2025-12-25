@@ -7,23 +7,26 @@ layout(std140)
 uniform RectData {
     // (x_min, y_min, x_max, y_max)
     vec4[256] boundingBox;
-    // (r, g, b, size). if size == -1, then no checkerboard at all
-    vec4[256] checkerboard;
+    vec4[256] color2;
+    // (size, 0, 0, 0). if size == -1, then no checkerboard at all
+    vec4[256] checkerboardSize;
 } rectData;
 
 uniform mat3 viewMatrix;
 
-in vec3[] pass_position;
+in int[] pass_dataIndex;
+in mat3[] pass_transformationMatrix;
+in vec2[] pass_position;
+in float[] pass_depth;
 in vec2[] pass_size;
 in vec4[] pass_color1;
-in int[] pass_dataIndex;
 
 out vec2 relativePos;
-out vec4 color1;
-out vec3 color2;
-out float checkerboardSize;
 out vec2 relativeBoundingBoxMin;
 out vec2 relativeBoundingBoxMax;
+out vec4 color1;
+out vec4 color2;
+out float checkerboardSize;
 
 const vec2[4] cornerOffsets = vec2[4](
     vec2(0, 0),
@@ -39,12 +42,13 @@ const vec2[4] cornerOffsets = vec2[4](
  * rounding).
  */
 vec3 vecToInt(vec3 v) {
-    return vec3(floor(v.x), floor(v.y), floor(v.z));
+    return vec3(floor(v.x), floor(v.y), v.z);
 }
 
 void main(void) {
-    vec3 position = pass_position[0];
-    vec2 size = pass_size[0];
+
+    vec3 position = pass_transformationMatrix[0] * vec3(pass_position[0], 1.0);
+    vec2 size = (pass_transformationMatrix[0] * vec3(pass_size[0], 0.0)).xy;
 
     int dataIndex = pass_dataIndex[0];
     relativeBoundingBoxMin = rectData.boundingBox[dataIndex].xy - position.xy;
@@ -65,14 +69,18 @@ void main(void) {
     }
 
     color1 = pass_color1[0];
-    color2 = rectData.checkerboard[dataIndex].rgb;
-    checkerboardSize = rectData.checkerboard[dataIndex].a;
+    color2 = rectData.color2[dataIndex];
+    checkerboardSize = rectData.checkerboardSize[dataIndex].x;
+
+    // float c1 = pass_dataIndex[0] * 0.2;
+    // color1 = vec4(c1, c1, c1, 1.0);
 
     for (int i = 0; i < 4; i++) {
         relativePos = cornerOffsets[i] * size;
-        vec3 screenPos = viewMatrix * vecToInt(vec3(position.xy + cornerOffsets[i] * size, 1.0));
-        gl_Position = vec4(screenPos.xy, position.z, 1.0);
+        vec3 screenPos = viewMatrix * vecToInt(position + vec3(relativePos, 0.0));
+        gl_Position = vec4(screenPos.xy, pass_depth[0], 1.0);
         EmitVertex();
     }
+
     EndPrimitive();
 }

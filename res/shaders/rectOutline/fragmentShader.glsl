@@ -3,8 +3,8 @@
 in vec2 relativePos;
 in vec2 size;
 in float strokeWeight;
-in vec3 color1;
-in vec3 color2;
+in vec4 color1;
+in vec4 color2;
 in float checkerboardSize;
 in vec2 relativeBoundingBoxMin;
 in vec2 relativeBoundingBoxMax;
@@ -26,7 +26,7 @@ void main(void) {
     }
 
     if (checkerboardSize < 0) {
-        outColor = vec4(color1, 1.0);
+        outColor = color1;
     } else {
         float width = size.x - strokeWeight / 2;
         float height = size.y - strokeWeight / 2;
@@ -39,6 +39,6 @@ void main(void) {
         }
         int xComp = int(relPosClip.x / checkerboardSize);
         int yComp = int(relPosClip.y / checkerboardSize);
-        outColor = vec4((xComp + yComp) % 2 == 0 ? color1 : color2, 1.0);
+        outColor = (xComp + yComp) % 2 == 0 ? color1 : color2;
     }
 }

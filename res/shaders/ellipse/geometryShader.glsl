@@ -9,19 +9,6 @@ uniform EllipseData {
     vec4[256] boundingBox;
 } ellipseData;
 
-uniform mat3 viewMatrix;
-
-in vec3[] pass_position;
-in vec2[] pass_size;
-in vec4[] pass_color;
-in int[] pass_dataIndex;
-
-out vec2 relativePos;
-out vec2 uvCoords;
-out vec4 color;
-out vec2 relativeBoundingBoxMin;
-out vec2 relativeBoundingBoxMax;
-
 const vec2[4] cornerOffsets = vec2[4](
     vec2(0, 0),
     vec2(0, 1),
@@ -29,9 +16,24 @@ const vec2[4] cornerOffsets = vec2[4](
     vec2(1, 1)
 );
 
+uniform mat3 viewMatrix;
+
+in int[] pass_dataIndex;
+in mat3[] pass_transformationMatrix;
+in vec2[] pass_position;
+in float[] pass_depth;
+in vec2[] pass_size;
+in vec4[] pass_color;
+
+out vec2 relativePos;
+out vec2 uvCoords;
+out vec4 color;
+out vec2 relativeBoundingBoxMin;
+out vec2 relativeBoundingBoxMax;
+
 void main(void) {
-    vec3 position = pass_position[0];
-    vec2 size = pass_size[0];
+    vec3 position = pass_transformationMatrix[0] * vec3(pass_position[0], 1.0);
+    vec2 size = (pass_transformationMatrix[0] * vec3(pass_size[0], 0.0)).xy;
 
     int dataIndex = pass_dataIndex[0];
     relativeBoundingBoxMin = ellipseData.boundingBox[dataIndex].xy - position.xy;
@@ -57,7 +59,7 @@ void main(void) {
         vec2 offset = cornerOffsets[i];
         relativePos = offset * size;
         vec3 screenPos = viewMatrix * vec3(position.xy + relativePos, 1.0);
-        gl_Position = vec4(screenPos.xy, position.z, 1.0);
+        gl_Position = vec4(screenPos.xy, pass_depth[0], 1.0);
 
         uvCoords = 2 * offset - 1;
         EmitVertex();
