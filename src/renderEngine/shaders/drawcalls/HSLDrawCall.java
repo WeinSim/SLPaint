@@ -6,32 +6,32 @@ import renderEngine.ClipAreaInfo;
 import renderEngine.shaders.bufferobjects.UBOEntry;
 import sutil.math.SVector;
 
-public abstract sealed class RectDrawCall extends DrawCall permits RectFillDrawCall, RectOutlineDrawCall {
-    
+public final class HSLDrawCall extends DrawCall {
+
     public final SVector position;
     public final double depth;
     public final SVector size;
     public final Matrix3f uiMatrix;
     public final ClipAreaInfo clipAreaInfo;
-    public final SVector color1;
-    public final double alpha;
-    public final SVector color2;
-    public final double checkerboardSize;
-    public final boolean applyCheckerboard;
 
-    public RectDrawCall(SVector position, double depth, SVector size, Matrix3f uiMatrix, ClipAreaInfo clipAreaInfo,
-            SVector color1, double alpha, SVector color2, double checkerboardSize, boolean applyCheckerboard) {
+    public final SVector color;
+    public final int hueSatAlpha;
+    public final int hsv;
+    public final int orientation;
+
+    public HSLDrawCall(SVector position, double depth, SVector size, Matrix3f uiMatrix, ClipAreaInfo clipAreaInfo,
+            SVector color, int hueSatAlpha, int hsv, int orientation) {
 
         this.position = position;
         this.depth = depth;
         this.size = size;
         this.uiMatrix = uiMatrix;
         this.clipAreaInfo = clipAreaInfo;
-        this.color1 = color1;
-        this.alpha = alpha;
-        this.color2 = color2;
-        this.checkerboardSize = checkerboardSize;
-        this.applyCheckerboard = applyCheckerboard;
+
+        this.color = color;
+        this.hueSatAlpha = hueSatAlpha;
+        this.hsv = hsv;
+        this.orientation = orientation;
     }
 
     @Override
@@ -44,14 +44,6 @@ public abstract sealed class RectDrawCall extends DrawCall permits RectFillDrawC
                 clip ? (float) boundingBoxPos.y : -Float.MAX_VALUE,
                 clip ? (float) (boundingBoxPos.x + boundingBoxSize.x) : Float.MAX_VALUE,
                 clip ? (float) (boundingBoxPos.y + boundingBoxSize.y) : Float.MAX_VALUE,
-                (float) color2.x,
-                (float) color2.y,
-                (float) color2.z,
-                (float) alpha, // TODO: alpha for color2
-                applyCheckerboard ? (float) checkerboardSize : -1,
-                0.0f,
-                0.0f,
-                0.0f
         });
     }
 }

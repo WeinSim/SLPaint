@@ -24,24 +24,26 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
         if (DEBUG_RENDERING) {
             uiMaster.setBGColor(new SVector(1, 1, 1));
 
-            SVector p1 = new SVector(100, 100),
-                    p2 = new SVector(300, 700),
-                    p3 = new SVector(1000, 800);
-            SVector s1 = new SVector(200, 100),
-                    s2 = new SVector(150, 150),
-                    s3 = new SVector(100, 200);
-            SVector c1 = new SVector(0.8, 0.2, 0.2),
-                    c2 = new SVector(0.2, 0.8, 0.2),
-                    c3 = new SVector(0.2, 0.2, 0.8);
+            uiMaster.hueSatField(new SVector(300, 300), new SVector(200, 200), true, true);
 
-            uiMaster.noStroke();
+            // SVector p1 = new SVector(100, 100),
+            //         p2 = new SVector(300, 700),
+            //         p3 = new SVector(1000, 800);
+            // SVector s1 = new SVector(200, 100),
+            //         s2 = new SVector(150, 150),
+            //         s3 = new SVector(100, 200);
+            // SVector c1 = new SVector(0.8, 0.2, 0.2),
+            //         c2 = new SVector(0.2, 0.8, 0.2),
+            //         c3 = new SVector(0.2, 0.2, 0.8);
 
-            uiMaster.fill(c1);
-            uiMaster.rect(p1, s1);
+            // uiMaster.noStroke();
 
-            uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
-            uiMaster.depth(getDepth(0, false));
-            uiMaster.rect(p2, s2);
+            // uiMaster.fill(c1);
+            // uiMaster.rect(p1, s1);
+
+            // uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
+            // uiMaster.depth(getDepth(0, false));
+            // uiMaster.rect(p2, s2);
 
             // p2.x += 50;
 

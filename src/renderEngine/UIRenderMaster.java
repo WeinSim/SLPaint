@@ -15,6 +15,10 @@ import main.apps.MainApp;
 import renderEngine.fonts.TextFont;
 import renderEngine.shaders.ShaderProgram;
 import renderEngine.shaders.bufferobjects.FrameBufferObject;
+import renderEngine.shaders.drawcalls.EllipseCollector;
+import renderEngine.shaders.drawcalls.EllipseDrawCall;
+import renderEngine.shaders.drawcalls.HSLCollector;
+import renderEngine.shaders.drawcalls.HSLDrawCall;
 import renderEngine.shaders.drawcalls.RectFillCollector;
 import renderEngine.shaders.drawcalls.RectFillDrawCall;
 import renderEngine.shaders.drawcalls.RectOutlineCollector;
@@ -46,6 +50,8 @@ public class UIRenderMaster {
     private ArrayList<ShapeCollector<?>> shapeCollectors;
     private RectFillCollector rectFillCollector;
     private RectOutlineCollector rectOutlineCollector;
+    private HSLCollector hslCollector;
+    private EllipseCollector ellipseCollector;
 
     private ShaderProgram activeShader;
 
@@ -90,13 +96,16 @@ public class UIRenderMaster {
         rectOutlineCollector = new RectOutlineCollector();
         shapeCollectors.add(rectOutlineCollector);
 
+        hslCollector = new HSLCollector();
+        shapeCollectors.add(hslCollector);
+
+        ellipseCollector = new EllipseCollector();
+        shapeCollectors.add(ellipseCollector);
+
         // textShader = new ShaderProgram("text", new String[] { "charIndex",
         // "position", "textSize", "color" }, true);
-        // rectOutlineShader = new ShaderProgram("rectOutline", null, true);
-        // rectFillShader = new ShaderProgram("rectFill", null, true);
         // ellipseShader = new ShaderProgram("ellipse", null, true);
         // imageShader = new ShaderProgram("image", null, true);
-        // hslShader = new ShaderProgram("hsl", null, true);
 
         dummyVAO = new RawModel(0, 1, 0);
         if (app instanceof MainApp mainApp) {
@@ -228,32 +237,15 @@ public class UIRenderMaster {
                             new SVector(strokeMode == NORMAL ? stroke : checkerboardColors[0]), strokeAlpha,
                             strokeWeight, new SVector(checkerboardColors[1]), checkerboardSize,
                             fillMode == CHECKERBOARD));
-
-            // rectOutlineDrawCalls.addDrawCall(
-            //         new RectOutlineDrawCall(transformedPosition, transformedSize, depth,
-            //                 new SVector(strokeMode == NORMAL ? stroke : checkerboardColors[0]),
-            //                 strokeWeight),
-            //         new RectData(new ClipAreaInfo(clipAreaInfo), strokeMode == CHECKERBOARD,
-            //                 new SVector(checkerboardColors[1]), checkerboardSize));
         }
     }
 
     public void ellipse(SVector position, SVector size) {
-        if (fillMode != NORMAL) {
+        if (fillMode != NORMAL)
             return;
-        }
 
-        // SVector transformedPosition = new SVector(
-        // uiMatrix.m00 * position.x + uiMatrix.m10 * position.y + uiMatrix.m20,
-        // uiMatrix.m01 * position.x + uiMatrix.m11 * position.y + uiMatrix.m21);
-        // SVector transformedSize = new SVector(uiMatrix.m00 * size.x + uiMatrix.m10 *
-        // size.y,
-        // uiMatrix.m01 * size.x + uiMatrix.m11 * size.y);
-
-        // ellipseDrawCalls.addDrawCall(
-        // new EllipseDrawCall(transformedPosition, transformedSize, depth, new
-        // SVector(fill), fillAlpha),
-        // new ClipAreaInfo(clipAreaInfo));
+        ellipseCollector.addShape(new EllipseDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
+                new ClipAreaInfo(clipAreaInfo), new SVector(fill), fillAlpha));
     }
 
     public void text(String text, SVector position) {
@@ -309,65 +301,21 @@ public class UIRenderMaster {
     }
 
     public void hueSatField(SVector position, SVector size, boolean circular, boolean hsl) {
-        // pushMatrix();
-        // translate(position);
-        // scale(size);
-
-        // activateShader(hslShader);
-        // hslShader.loadUniform("hueSatAlpha", circular ? 3 : 1);
-        // hslShader.loadUniform("hsv", hsl ? 0 : 1);
-        // hslShader.loadUniform("viewMatrix", createViewMatrix());
-        // hslShader.loadUniform("transformationMatrix", uiMatrix);
-        // hslShader.loadUniform("depth", depth);
-
-        // GL30.glBindVertexArray(dummyVAO.vaoID());
-        // GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
-        // GL30.glBindVertexArray(0);
-
-        // popMatrix();
+        // TODO: these three ints could be collapsed into a single int
+        hslCollector.addShape(new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
+                new ClipAreaInfo(clipAreaInfo), new SVector(), circular ? 3 : 1, 0, 0));
     }
 
     public void lightnessScale(SVector position, SVector size, double hue, double saturation, int orientation,
             boolean hsl) {
-        // pushMatrix();
-        // translate(position);
-        // scale(size);
 
-        // activateShader(hslShader);
-        // hslShader.loadUniform("hueSatAlpha", 0);
-        // hslShader.loadUniform("hsv", hsl ? 0 : 1);
-        // hslShader.loadUniform("orientation", orientation);
-        // hslShader.loadUniform("hue", hue);
-        // hslShader.loadUniform("saturation", saturation);
-        // hslShader.loadUniform("viewMatrix", createViewMatrix());
-        // hslShader.loadUniform("transformationMatrix", uiMatrix);
-        // hslShader.loadUniform("depth", depth);
-
-        // GL30.glBindVertexArray(dummyVAO.vaoID());
-        // GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
-        // GL30.glBindVertexArray(0);
-
-        // popMatrix();
+        hslCollector.addShape(new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
+                new ClipAreaInfo(clipAreaInfo), new SVector(hue, saturation, 0), 0, hsl ? 0 : 1, orientation));
     }
 
     public void alphaScale(SVector position, SVector size, int orientation) {
-        // pushMatrix();
-        // translate(position);
-        // scale(size);
-
-        // activateShader(hslShader);
-        // hslShader.loadUniform("hueSatAlpha", 2);
-        // hslShader.loadUniform("orientation", orientation);
-        // hslShader.loadUniform("viewMatrix", createViewMatrix());
-        // hslShader.loadUniform("transformationMatrix", uiMatrix);
-        // hslShader.loadUniform("depth", depth);
-        // hslShader.loadUniform("fill", fill);
-
-        // GL30.glBindVertexArray(dummyVAO.vaoID());
-        // GL11.glDrawArrays(GL11.GL_POINTS, 0, 1);
-        // GL30.glBindVertexArray(0);
-
-        // popMatrix();
+        hslCollector.addShape(new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
+                new ClipAreaInfo(clipAreaInfo), new SVector(fill), 2, 0, orientation));
     }
 
     private void activateShader(ShaderProgram shader) {

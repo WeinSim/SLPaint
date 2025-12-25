@@ -55,12 +55,12 @@ public class ShaderProgram {
         }
 
         GL20.glLinkProgram(programID);
-        GL20.glValidateProgram(programID);
         if (GL20.glGetProgrami(programID, GL20.GL_LINK_STATUS) == GL11.GL_FALSE) {
             System.out.format("Could not link shader \"%s\"!\n", name);
             System.out.println(GL20.glGetProgramInfoLog(programID));
             System.exit(-1);
         }
+        GL20.glValidateProgram(programID);
 
         for (UniformVariable uniform : uniformVariables.values()) {
             uniform.setLocation(GL20.glGetUniformLocation(programID, uniform.getName()));

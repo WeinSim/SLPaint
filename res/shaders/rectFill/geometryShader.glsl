@@ -72,9 +72,6 @@ void main(void) {
     color2 = rectData.color2[dataIndex];
     checkerboardSize = rectData.checkerboardSize[dataIndex].x;
 
-    // float c1 = pass_dataIndex[0] * 0.2;
-    // color1 = vec4(c1, c1, c1, 1.0);
-
     for (int i = 0; i < 4; i++) {
         relativePos = cornerOffsets[i] * size;
         vec3 screenPos = viewMatrix * vecToInt(position + vec3(relativePos, 0.0));

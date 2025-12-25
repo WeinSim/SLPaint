@@ -26,10 +26,10 @@ in vec2[] pass_size;
 in vec4[] pass_color;
 
 out vec2 relativePos;
-out vec2 uvCoords;
-out vec4 color;
 out vec2 relativeBoundingBoxMin;
 out vec2 relativeBoundingBoxMax;
+out vec2 uvCoords;
+out vec4 color;
 
 void main(void) {
     vec3 position = pass_transformationMatrix[0] * vec3(pass_position[0], 1.0);
@@ -64,5 +64,6 @@ void main(void) {
         uvCoords = 2 * offset - 1;
         EmitVertex();
     }
+
     EndPrimitive();
 }

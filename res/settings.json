@@ -1,14 +1,14 @@
 {
-    "transparentSelection" : false,
+    "transparentSelection" : true,
     "customUIColors" : {
         "capacity" : 10,
         "values" : []
     },
-    "darkMode" : true,
+    "darkMode" : false,
     "baseColor" : [
-        76,
-        76,
-        76
+        255,
+        255,
+        255
     ],
     "hslColorSpace" : true,
     "hueSatCircle" : true

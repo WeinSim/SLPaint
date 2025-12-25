@@ -6,17 +6,13 @@ in vec2 relativeBoundingBoxMax;
 
 in vec2 uvCoords;
 
-in vec2 hueSaturation;
-
-in float hue;
-in float saturation;
-// 0 = lightness (1-dim), 1 = hue-sat (2-dim), 2 = alpha (1-dim)
+in vec3 color; // (hue, saturation, 0) for lightness scale
+// 0 = lightness (1-dim), 1 = hue-sat rect (2-dim), 2 = alpha (1-dim), 3 = hue-sat circ (2-dim)
 flat in int hueSatAlpha;
 // 0 = hsl, 1 = hsv
 flat in int hsv;
 // 0 = vertical gradient, 1 = horizontal gradient
 flat in int orientation;
-in vec3 fill;
 
 out vec4 outColor;
 
@@ -31,6 +27,7 @@ float atan2(float y, float x);
 const float PI = 3.1415926535;
 
 void main(void) {
+
     if (relativePos.x < relativeBoundingBoxMin.x) {
         discard;
     }
@@ -47,13 +44,13 @@ void main(void) {
     if (hueSatAlpha == 0) {
         if (orientation == 0) {
             outColor = vec4(hsv == 1
-                    ? hsvToRGB(hue, saturation, 1 - uvCoords.y)
-                    : hslToRGB(hue, saturation, 1 - uvCoords.y),
+                    ? hsvToRGB(color.x, color.y, 1 - uvCoords.y)
+                    : hslToRGB(color.x, color.y, 1 - uvCoords.y),
                 1.0);
         } else {
             outColor = vec4(hsv == 1
-                    ? hsvToRGB(hue, saturation, uvCoords.x)
-                    : hslToRGB(hue, saturation, uvCoords.x),
+                    ? hsvToRGB(color.x, color.y, uvCoords.x)
+                    : hslToRGB(color.x, color.y, uvCoords.x),
                 1.0);
         }
     } else if (hueSatAlpha == 1) {
@@ -63,11 +60,11 @@ void main(void) {
             1.0);
     } else if (hueSatAlpha == 2) {
         if (orientation == 0) {
-            outColor = vec4(fill, 1 - uvCoords.y);
+            outColor = vec4(color, 1 - uvCoords.y);
         } else {
-            outColor = vec4(fill, uvCoords.x);
+            outColor = vec4(color, uvCoords.x);
         }
-    } else {
+    } else if (hueSatAlpha == 3) {
         vec2 transformedUVCoords = 2 * uvCoords - 1;
         float mag = mag(transformedUVCoords);
         if (mag > 1) {
