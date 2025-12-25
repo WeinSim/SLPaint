@@ -16,12 +16,22 @@ public abstract class ShapeCollector<C extends DrawCall> {
 
     private final int numUBOArrays;
     private final String uboName;
-    private final ShaderProgram shaderProgram;
+    protected final ShaderProgram shaderProgram;
 
     private ArrayList<Batch> batches;
 
+    /**
+     * Used (in a bit of an ugly way) to let the TextCollector know the font that is
+     * being worked with.
+     * 
+     * This approach will not work for multiple fonts, but this is not the only
+     * place in the code where introducing multiple fonts would cause a problem.
+     */
+    protected Batch lastRemovedBatch;
+
     public ShapeCollector(int numUBOArrays, String uboName, String shaderName, String[] attributeNames,
             int[] attributeSizes) {
+
         this.numUBOArrays = numUBOArrays;
         this.uboName = uboName;
 
@@ -73,7 +83,8 @@ public abstract class ShapeCollector<C extends DrawCall> {
         for (int i = 0; i < numBatches; i++) {
             Batch batch = batches.removeLast();
             nextBatches.add(batch);
-            vertexCount += batch.getDrawCalls().size();
+            lastRemovedBatch = batch;
+            vertexCount += getNumVertices(batch);
         }
         VBOData[] vbos = getVBOs(nextBatches, vertexCount);
 
@@ -81,6 +92,18 @@ public abstract class ShapeCollector<C extends DrawCall> {
     }
 
     protected abstract VBOData[] getVBOs(ArrayList<Batch> batches, int vertexCount);
+
+    protected int getNumVertices(Batch batch) {
+        return batch.getDrawCalls().size();
+    }
+
+    /**
+     * This method is used e.g. by the text shader to load the texture data and font
+     * data to the shader.
+     */
+    public void prepare() {
+
+    }
 
     public ShaderProgram getShaderProgram() {
         return shaderProgram;

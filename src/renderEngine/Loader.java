@@ -206,7 +206,6 @@ public class Loader {
             uboData.put(fontChars[i].width());
             uboData.put(fontChars[i].height());
         }
-        uboData.flip();
         font.setUBOData(uboData);
 
         return font;

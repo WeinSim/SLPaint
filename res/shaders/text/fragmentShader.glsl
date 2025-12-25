@@ -2,7 +2,7 @@
 
 in vec2 position;
 in vec2 textureCoords;
-in vec3 color;
+in vec4 color;
 in vec2 boundingBoxMin;
 in vec2 boundingBoxMax;
 
@@ -29,7 +29,7 @@ void main(void) {
     vec2 actualTextureCoords = vec2(textureCoords.x - page, textureCoords.y);
 
     vec4 textureColor = texture(textureSamplers[page], actualTextureCoords);
-    float alpha = textureColor.r;
+    float alpha = color.a * textureColor.r;
 
-    outColor = vec4(color, alpha);
+    outColor = vec4(color.xyz, alpha);
 }

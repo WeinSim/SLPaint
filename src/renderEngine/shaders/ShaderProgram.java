@@ -27,6 +27,7 @@ public class ShaderProgram {
     private HashMap<String, UniformBufferObject> uniformBufferObjects;
 
     public ShaderProgram(String name, String[] attributeNames, int[] attributeSizes, boolean hasGemoetryShader) {
+
         this.hasGemoetryShader = hasGemoetryShader;
 
         uniformVariables = new HashMap<>();

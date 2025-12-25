@@ -24,6 +24,8 @@ import renderEngine.shaders.drawcalls.RectFillDrawCall;
 import renderEngine.shaders.drawcalls.RectOutlineCollector;
 import renderEngine.shaders.drawcalls.RectOutlineDrawCall;
 import renderEngine.shaders.drawcalls.ShapeCollector;
+import renderEngine.shaders.drawcalls.TextCollector;
+import renderEngine.shaders.drawcalls.TextDrawCall;
 import sutil.math.SVector;
 
 public class UIRenderMaster {
@@ -37,21 +39,12 @@ public class UIRenderMaster {
     private App app;
     private Loader loader;
 
-    // private ShaderProgram imageShader,
-    // hslShader,
-    // rectFillShader,
-    // rectOutlineShader,
-    // textShader,
-    // imageShader,
-    // hslShader,
-    // ellipseShader,
-    // activeShader;
-
     private ArrayList<ShapeCollector<?>> shapeCollectors;
     private RectFillCollector rectFillCollector;
     private RectOutlineCollector rectOutlineCollector;
     private HSLCollector hslCollector;
     private EllipseCollector ellipseCollector;
+    private TextCollector textCollector;
 
     private ShaderProgram activeShader;
 
@@ -101,6 +94,9 @@ public class UIRenderMaster {
 
         ellipseCollector = new EllipseCollector();
         shapeCollectors.add(ellipseCollector);
+
+        textCollector = new TextCollector(loader);
+        shapeCollectors.add(textCollector);
 
         // textShader = new ShaderProgram("text", new String[] { "charIndex",
         // "position", "textSize", "color" }, true);
@@ -172,6 +168,8 @@ public class UIRenderMaster {
 
                 for (int i = 0; i < model.numAttributes(); i++)
                     GL20.glEnableVertexAttribArray(i);
+
+                shapeCollector.prepare();
 
                 GL11.glDrawArrays(GL11.GL_POINTS, 0, model.vertexCount());
 
@@ -249,29 +247,15 @@ public class UIRenderMaster {
     }
 
     public void text(String text, SVector position) {
-        if (textFont == null) {
+        if (textFont == null)
             return;
-        }
-        if (fillMode == NONE) {
+
+        if (fillMode != NORMAL)
             return;
-        }
 
-        // TextDrawCallList drawCalls = textDrawCalls.get(textFont);
-        // if (drawCalls == null) {
-        // drawCalls = new TextDrawCallList();
-        // textDrawCalls.put(textFont, drawCalls);
-        // }
-
-        // pushMatrix();
-        // translate(position);
-        // scale(textSize / textFont.getSize());
-
-        // drawCalls.addDrawCall(
-        // new TextDrawCall(text, Matrix3f.load(uiMatrix, null), depth),
-        // new TextData(new ClipAreaInfo(clipAreaInfo), fill.copy(), textSize /
-        // textFont.getSize()));
-
-        // popMatrix();
+        textCollector.addShape(
+                new TextDrawCall(position, depth, textSize / textFont.getSize(), new Matrix3f().load(uiMatrix),
+                        new ClipAreaInfo(clipAreaInfo), new SVector(fill), fillAlpha, text, textFont));
     }
 
     public void image(int textureID, SVector position, SVector size) {

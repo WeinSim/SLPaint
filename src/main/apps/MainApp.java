@@ -35,13 +35,12 @@ import ui.components.ImageCanvas;
  * <pre>
  * TODO continue:
  *   New rendering system
- *     Get the other shaders (rectOutline, ellipse, hsl, text and image) to work
+ *     Image shader
  *     Allow switching between old and new rendering infrastructure for each
  *       shader individually? (Would fix rectangle transparency bug)
  *     HueSatField curcor doesn't render correctly:
  *       It renders behind the HueSatField and it doesn't respect its clip area
  *   Have shaders automatically recognize attribute names (and sizes)
- *   Turn all remaining draw calls (hsl, image) into a single VAO each
  *   Proper layer management in MainAppRenderer for non-ui stuff (image, tools,
  *     selection, etc.)
  * Text tool:

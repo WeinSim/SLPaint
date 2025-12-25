@@ -4,13 +4,10 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.lwjglx.util.vector.Matrix3f;
-
-import renderEngine.Loader;
-import renderEngine.RawModel;
-// import renderEngine.drawcalls.DrawVAO;
-// import renderEngine.drawcalls.TextData;
-// import renderEngine.drawcalls.TextDrawCall;
+import renderEngine.shaders.bufferobjects.VBOFloatData;
+import renderEngine.shaders.bufferobjects.VBOIntData;
+import renderEngine.shaders.drawcalls.TextDrawCall;
+import sutil.math.SVector;
 
 public class TextFont {
 
@@ -32,6 +29,7 @@ public class TextFont {
 
     public TextFont(String name, int size, int lineHeight, int base, int[] textureIDs, int textureWidth,
             int textureHeight) {
+
         this.name = name;
         this.size = size;
         this.lineHeight = lineHeight;
@@ -70,57 +68,25 @@ public class TextFont {
         return chars;
     }
 
-    // public RawModel createGiantVAO(DrawVAO<TextDrawCall, TextData> textVAO,
-    // Loader loader) {
+    public void putCharsIntoVBOs(TextDrawCall drawCall, VBOIntData dataIndex, VBOFloatData position, VBOFloatData depth,
+            VBOIntData charIndex, int batchIndex) {
 
-    // int totalTextLength = textVAO.getVertexCount();
-    // int[] charIDsArray = new int[totalTextLength];
-    // float[] vertices = new float[totalTextLength * 3];
-    // int[] dataIndices = new int[totalTextLength];
+        double x = drawCall.position.x,
+                y = drawCall.position.y;
+        for (FontChar fontChar : toChars(drawCall.text)) {
+            dataIndex.putData(batchIndex);
 
-    // int index = 0;
-    // for (TextDrawCall drawCall : textVAO.getDrawCalls()) {
-    // String text = drawCall.getText();
-    // Matrix3f transformationMatrix = drawCall.getTransformationMatrix();
+            charIndex.putData(charIDs.get((char) fontChar.id()));
 
-    // double x = 0;
-    // for (FontChar fontChar : toChars(text)) {
-    // charIDsArray[index] = charIDs.get((char) fontChar.id());
+            SVector vertexPos = new SVector(x + fontChar.xOffset() * drawCall.relativeSize,
+                    y + fontChar.yOffset() + (-base + 0.8 * size) * drawCall.relativeSize);
+            position.putData(vertexPos);
 
-    // // this could be offloaded to the shader by creating a UBO for transformation
-    // // matrices (similar to the UBO for color, size and bounding box)
-    // float baseX = (float) x + fontChar.xOffset(),
-    // baseY = fontChar.yOffset() - base + 0.8f * size;
-    // float vertexX = transformationMatrix.m00 * baseX
-    // + transformationMatrix.m10 * baseY
-    // + transformationMatrix.m20;
-    // float vertexY = transformationMatrix.m01 * baseX
-    // + transformationMatrix.m11 * baseY
-    // + transformationMatrix.m21;
-    // // SVector vertexPos = new SVector(x + fontChar.xOffset(), fontChar.yOffset()
-    // -
-    // // base + 0.8 * size);
-    // // Vector3f vertexPos3f = new Vector3f((float) vertexPos.x, (float)
-    // vertexPos.y,
-    // // 1.0f);
-    // // Matrix3f.transform(transformationMatrix, vertexPos3f, vertexPos3f);
-    // // vertexPos.set(vertexPos3f.x, vertexPos3f.y, drawCall.depth());
+            depth.putData(drawCall.depth);
 
-    // vertices[3 * index] = vertexX;
-    // vertices[3 * index + 1] = vertexY;
-    // vertices[3 * index + 2] = (float) drawCall.getDepth();
-
-    // dataIndices[index] = drawCall.getDataIndex();
-
-    // x += fontChar.xAdvance();
-
-    // index++;
-    // }
-    // }
-
-    // return loader.loadToVAO(charIDsArray,vertices,dataIndices);
-
-    // }
+            x += fontChar.xAdvance() * drawCall.relativeSize;
+        }
+    }
 
     public double textWidth(String text) {
         FontChar[] chars = toChars(text);
