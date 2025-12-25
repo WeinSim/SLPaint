@@ -1,12 +1,13 @@
-package renderEngine.shaders;
+package renderEngine.shaders.drawcalls;
 
 import org.lwjglx.util.vector.Matrix3f;
 
 import renderEngine.ClipAreaInfo;
+import renderEngine.shaders.bufferobjects.UBOEntry;
 import sutil.math.SVector;
 
-public class RectFillDrawCall extends DrawCall {
-
+public sealed class RectDrawCall extends DrawCall permits RectFillDrawCall, RectOutlineDrawCall {
+    
     public final SVector position;
     public final double depth;
     public final SVector size;
@@ -18,7 +19,7 @@ public class RectFillDrawCall extends DrawCall {
     public final double checkerboardSize;
     public final boolean applyCheckerboard;
 
-    public RectFillDrawCall(SVector position, double depth, SVector size, Matrix3f uiMatrix, ClipAreaInfo clipAreaInfo,
+    public RectDrawCall(SVector position, double depth, SVector size, Matrix3f uiMatrix, ClipAreaInfo clipAreaInfo,
             SVector color1, double alpha, SVector color2, double checkerboardSize, boolean applyCheckerboard) {
 
         this.position = position;

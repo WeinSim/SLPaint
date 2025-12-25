@@ -1,4 +1,4 @@
-package renderEngine.shaders;
+package renderEngine.shaders.bufferobjects;
 
 import java.nio.FloatBuffer;
 

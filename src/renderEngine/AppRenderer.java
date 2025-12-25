@@ -7,7 +7,7 @@ import main.Image;
 import main.apps.App;
 import main.apps.MainApp;
 import renderEngine.fonts.TextFont;
-import renderEngine.shaders.FrameBufferObject;
+import renderEngine.shaders.bufferobjects.FrameBufferObject;
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;

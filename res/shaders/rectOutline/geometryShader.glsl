@@ -12,13 +12,6 @@ uniform RectData {
     vec4[256] checkerboardSize;
 } rectData;
 
-const vec2[4] cornerOffsets = vec2[4](
-    vec2(0, 0),
-    vec2(0, 1),
-    vec2(1, 0),
-    vec2(1, 1)
-);
-
 uniform mat3 viewMatrix;
 
 in int[] pass_dataIndex;
@@ -30,13 +23,20 @@ in vec4[] pass_color1;
 in float[] pass_strokeWeight;
 
 out vec2 relativePos;
-out vec2 size;
-out float strokeWeight;
+out vec2 relativeBoundingBoxMin;
+out vec2 relativeBoundingBoxMax;
 out vec4 color1;
 out vec4 color2;
 out float checkerboardSize;
-out vec2 relativeBoundingBoxMin;
-out vec2 relativeBoundingBoxMax;
+out vec2 size;
+out float strokeWeight;
+
+const vec2[4] cornerOffsets = vec2[4](
+    vec2(0, 0),
+    vec2(0, 1),
+    vec2(1, 0),
+    vec2(1, 1)
+);
 
 /* Before screen space coordinates ([0, 1920] x [0, 1080]) are converted
  * to OpenGL coordinates ([-1, 1] x [-1, 1]), they are rounded to integer
@@ -73,7 +73,7 @@ void main(void) {
     strokeWeight = pass_strokeWeight[0];
     color1 = pass_color1[0];
     color2 = rectData.color2[dataIndex];
-    checkerboardSize = rectData.checkerboardSize[dataIndex];
+    checkerboardSize = rectData.checkerboardSize[dataIndex].x;
 
     for (int i = 0; i < 5; i++) {
         int offsetIndex = i % 4;

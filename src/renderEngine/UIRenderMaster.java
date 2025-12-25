@@ -13,11 +13,13 @@ import org.lwjglx.util.vector.Vector3f;
 import main.apps.App;
 import main.apps.MainApp;
 import renderEngine.fonts.TextFont;
-import renderEngine.shaders.FrameBufferObject;
-import renderEngine.shaders.RectFillCollector;
-import renderEngine.shaders.RectFillDrawCall;
 import renderEngine.shaders.ShaderProgram;
-import renderEngine.shaders.ShapeCollector;
+import renderEngine.shaders.bufferobjects.FrameBufferObject;
+import renderEngine.shaders.drawcalls.RectFillCollector;
+import renderEngine.shaders.drawcalls.RectFillDrawCall;
+import renderEngine.shaders.drawcalls.RectOutlineCollector;
+import renderEngine.shaders.drawcalls.RectOutlineDrawCall;
+import renderEngine.shaders.drawcalls.ShapeCollector;
 import sutil.math.SVector;
 
 public class UIRenderMaster {
@@ -43,6 +45,7 @@ public class UIRenderMaster {
 
     private ArrayList<ShapeCollector<?>> shapeCollectors;
     private RectFillCollector rectFillCollector;
+    private RectOutlineCollector rectOutlineCollector;
 
     private ShaderProgram activeShader;
 
@@ -68,6 +71,7 @@ public class UIRenderMaster {
     private SVector[] checkerboardColors;
 
     private SVector stroke;
+    private double strokeAlpha;
     private int strokeMode;
     private double strokeWeight;
 
@@ -79,8 +83,12 @@ public class UIRenderMaster {
         this.loader = loader;
 
         shapeCollectors = new ArrayList<>();
+
         rectFillCollector = new RectFillCollector();
         shapeCollectors.add(rectFillCollector);
+
+        rectOutlineCollector = new RectOutlineCollector();
+        shapeCollectors.add(rectOutlineCollector);
 
         // textShader = new ShaderProgram("text", new String[] { "charIndex",
         // "position", "textSize", "color" }, true);
@@ -133,6 +141,7 @@ public class UIRenderMaster {
         fillAlpha(1.0);
 
         stroke(new SVector());
+        strokeAlpha(1.0);
         strokeWeight(1);
 
         textFont = null;
@@ -200,24 +209,32 @@ public class UIRenderMaster {
     }
 
     public void rect(SVector position, SVector size) {
-        if (fillMode > 0 || strokeMode > 0) {
-            if (fillMode > 0) {
-                rectFillCollector.addShape(
-                        new RectFillDrawCall(position, depth, size,
-                                new Matrix3f().load(uiMatrix),
-                                // uiMatrix,
-                                new ClipAreaInfo(clipAreaInfo),
-                                new SVector(fillMode == NORMAL ? fill : checkerboardColors[0]), fillAlpha,
-                                new SVector(checkerboardColors[1]), checkerboardSize, fillMode == CHECKERBOARD));
-            }
-            // if (strokeMode > 0) {
+        if (fillMode > 0) {
+            rectFillCollector.addShape(
+                    new RectFillDrawCall(position, depth, size,
+                            new Matrix3f().load(uiMatrix),
+                            // uiMatrix,
+                            new ClipAreaInfo(clipAreaInfo),
+                            new SVector(fillMode == NORMAL ? fill : checkerboardColors[0]), fillAlpha,
+                            new SVector(checkerboardColors[1]), checkerboardSize, fillMode == CHECKERBOARD));
+        }
+
+        if (strokeMode > 0) {
+            rectOutlineCollector.addShape(
+                    new RectOutlineDrawCall(position, depth, size,
+                            new Matrix3f().load(uiMatrix),
+                            // uiMatrix,
+                            new ClipAreaInfo(clipAreaInfo),
+                            new SVector(strokeMode == NORMAL ? stroke : checkerboardColors[0]), strokeAlpha,
+                            strokeWeight, new SVector(checkerboardColors[1]), checkerboardSize,
+                            fillMode == CHECKERBOARD));
+
             // rectOutlineDrawCalls.addDrawCall(
-            // new RectOutlineDrawCall(transformedPosition, transformedSize, depth,
-            // new SVector(strokeMode == NORMAL ? stroke : checkerboardColors[0]),
-            // strokeWeight),
-            // new RectData(new ClipAreaInfo(clipAreaInfo), strokeMode == CHECKERBOARD,
-            // new SVector(checkerboardColors[1]), checkerboardSize));
-            // }
+            //         new RectOutlineDrawCall(transformedPosition, transformedSize, depth,
+            //                 new SVector(strokeMode == NORMAL ? stroke : checkerboardColors[0]),
+            //                 strokeWeight),
+            //         new RectData(new ClipAreaInfo(clipAreaInfo), strokeMode == CHECKERBOARD,
+            //                 new SVector(checkerboardColors[1]), checkerboardSize));
         }
     }
 
@@ -483,10 +500,6 @@ public class UIRenderMaster {
         uiMatrix = uiMatrixStack.pop();
     }
 
-    public void fillAlpha(double alpha) {
-        this.fillAlpha = alpha;
-    }
-
     public void fill(SVector fill) {
         this.fill.set(fill);
         fillMode = NORMAL;
@@ -503,6 +516,10 @@ public class UIRenderMaster {
         checkerboardSize = size;
     }
 
+    public void fillAlpha(double alpha) {
+        this.fillAlpha = alpha;
+    }
+
     public void stroke(SVector stroke) {
         this.stroke.set(stroke);
         strokeMode = NORMAL;
@@ -512,15 +529,19 @@ public class UIRenderMaster {
         strokeMode = NONE;
     }
 
-    public void strokeWeight(double strokeWeight) {
-        this.strokeWeight = strokeWeight;
-    }
-
     public void checkerboardStroke(SVector[] colors, double size) {
         strokeMode = CHECKERBOARD;
         checkerboardColors[0].set(colors[0]);
         checkerboardColors[1].set(colors[1]);
         checkerboardSize = size;
+    }
+
+    public void strokeAlpha(double strokeAlpha) {
+        this.strokeAlpha = strokeAlpha;
+    }
+
+    public void strokeWeight(double strokeWeight) {
+        this.strokeWeight = strokeWeight;
     }
 
     public void textFont(TextFont font) {

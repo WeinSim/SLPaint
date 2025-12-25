@@ -19,9 +19,9 @@ import org.newdawn.slick.opengl.TextureLoader;
 import main.apps.MainApp;
 import renderEngine.fonts.FontChar;
 import renderEngine.fonts.TextFont;
-import renderEngine.shaders.FrameBufferObject;
-import renderEngine.shaders.UniformBufferObject;
-import renderEngine.shaders.VBOData;
+import renderEngine.shaders.bufferobjects.FrameBufferObject;
+import renderEngine.shaders.bufferobjects.UniformBufferObject;
+import renderEngine.shaders.bufferobjects.VBOData;
 import sutil.SUtil;
 
 public class Loader {

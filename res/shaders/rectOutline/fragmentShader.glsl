@@ -1,13 +1,13 @@
 #version 400 core
 
 in vec2 relativePos;
-in vec2 size;
-in float strokeWeight;
+in vec2 relativeBoundingBoxMin;
+in vec2 relativeBoundingBoxMax;
 in vec4 color1;
 in vec4 color2;
 in float checkerboardSize;
-in vec2 relativeBoundingBoxMin;
-in vec2 relativeBoundingBoxMax;
+in vec2 size;
+in float strokeWeight;
 
 out vec4 outColor;
 

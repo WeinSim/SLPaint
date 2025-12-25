@@ -1,4 +1,4 @@
-package renderEngine.shaders;
+package renderEngine.shaders.bufferobjects;
 
 public class UBOEntry {
 

@@ -12,6 +12,7 @@ import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL32;
 
 import renderEngine.Loader;
+import renderEngine.shaders.bufferobjects.UniformBufferObject;
 
 public class ShaderProgram {
 

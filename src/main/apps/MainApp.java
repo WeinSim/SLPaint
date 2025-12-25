@@ -34,7 +34,10 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Try to get this mess of a new rendering system to work
+ *   New rendering system
+ *     Get the other shaders (rectOutline, ellipse, hsl, text and image) to work
+ *     Allow switching between old and new rendering infrastructure for each
+ *       shader individually? (Would fix rectangle transparency bug)
  *   Have shaders automatically recognize attribute names (and sizes)
  *   Turn all remaining draw calls (hsl, image) into a single VAO each
  *   Proper layer management in MainAppRenderer for non-ui stuff (image, tools,

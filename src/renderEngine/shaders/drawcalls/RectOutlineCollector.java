@@ -1,15 +1,21 @@
-package renderEngine.shaders;
+package renderEngine.shaders.drawcalls;
 
 import java.util.ArrayList;
 
 import org.lwjglx.util.vector.Vector4f;
 
-public class RectFillCollector extends ShapeCollector<RectFillDrawCall> {
+import renderEngine.shaders.bufferobjects.VBOData;
+import renderEngine.shaders.bufferobjects.VBOFloatData;
+import renderEngine.shaders.bufferobjects.VBOIntData;
+import renderEngine.shaders.bufferobjects.VBOMatrixData;
 
-    public RectFillCollector() {
-        super(3, "RectData", "rectFill",
-                new String[] { "dataIndex", "transformationMatrix", "position", "depth", "size", "color1" },
-                new int[] { 1, 3, 1, 1, 1, 1 });
+public class RectOutlineCollector extends ShapeCollector<RectOutlineDrawCall> {
+
+    public RectOutlineCollector() {
+        super(3, "RectData", "rectOutline",
+                new String[] { "dataIndex", "transformationMatrix", "position", "depth", "size", "color1",
+                        "strokeWeight" },
+                new int[] { 1, 3, 1, 1, 1, 1, 1 });
     }
 
     @Override
@@ -20,10 +26,11 @@ public class RectFillCollector extends ShapeCollector<RectFillDrawCall> {
         VBOFloatData depth = new VBOFloatData(vertexCount, 1);
         VBOFloatData size = new VBOFloatData(vertexCount, 2);
         VBOFloatData color1 = new VBOFloatData(vertexCount, 4);
+        VBOFloatData strokeWeight = new VBOFloatData(vertexCount, 1);
 
         int batchIndex = 0;
         for (Batch batch : batches) {
-            for (RectFillDrawCall drawCall : batch.getDrawCalls()) {
+            for (RectOutlineDrawCall drawCall : batch.getDrawCalls()) {
                 dataIndex.putData(batchIndex);
                 transformationMatrix.putData(drawCall.uiMatrix);
                 position.putData(drawCall.position);
@@ -34,12 +41,13 @@ public class RectFillCollector extends ShapeCollector<RectFillDrawCall> {
                         (float) drawCall.color1.y,
                         (float) drawCall.color1.z,
                         (float) drawCall.alpha));
+                strokeWeight.putData(drawCall.strokeWeight);
             }
             batchIndex++;
         }
 
         return new VBOData[] {
-                dataIndex, transformationMatrix, position, depth, size, color1
+                dataIndex, transformationMatrix, position, depth, size, color1, strokeWeight
         };
     }
 }

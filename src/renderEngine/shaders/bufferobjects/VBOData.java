@@ -1,4 +1,4 @@
-package renderEngine.shaders;
+package renderEngine.shaders.bufferobjects;
 
 public abstract sealed class VBOData permits VBOIntData, VBOFloatData, VBOMatrixData {
 

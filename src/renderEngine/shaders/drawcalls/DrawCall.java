@@ -1,4 +1,6 @@
-package renderEngine.shaders;
+package renderEngine.shaders.drawcalls;
+
+import renderEngine.shaders.bufferobjects.UBOEntry;
 
 public abstract class DrawCall {
 

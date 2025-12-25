@@ -1,4 +1,4 @@
-package renderEngine.shaders;
+package renderEngine.shaders.drawcalls;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
@@ -7,6 +7,10 @@ import org.lwjgl.BufferUtils;
 
 import renderEngine.Loader;
 import renderEngine.RawModel;
+import renderEngine.shaders.ShaderProgram;
+import renderEngine.shaders.bufferobjects.UBOEntry;
+import renderEngine.shaders.bufferobjects.UniformBufferObject;
+import renderEngine.shaders.bufferobjects.VBOData;
 
 public abstract class ShapeCollector<C extends DrawCall> {
 
