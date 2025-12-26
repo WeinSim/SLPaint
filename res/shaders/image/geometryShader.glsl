@@ -7,6 +7,8 @@ layout(std140)
 uniform ImageData {
     // (x_min, y_min, x_max, y_max)
     vec4[256] boundingBox;
+    // (samplerID, 0, 0, 0)
+    vec4[256] samplerID;
 } imageData;
 
 uniform mat3 viewMatrix;
@@ -18,9 +20,10 @@ in float[] pass_depth;
 in vec2[] pass_size;
 
 out vec2 relativePos;
-out vec2 uvCoords;
 out vec2 relativeBoundingBoxMin;
 out vec2 relativeBoundingBoxMax;
+out vec2 uvCoords;
+flat out int samplerID;
 
 const vec2[4] cornerOffsets = vec2[4](
     vec2(0, 0),
@@ -61,12 +64,15 @@ void main(void) {
         return;
     }
 
+    samplerID = int(imageData.samplerID[dataIndex]);
+
     for (int i = 0; i < 4; i++) {
         relativePos = cornerOffsets[i] * size;
-        vec3 screenPos = viewMatrix * vecToInt(position);
+        vec3 screenPos = viewMatrix * vecToInt(position + vec3(relativePos, 0.0));
         gl_Position = vec4(screenPos.xy, pass_depth[0], 1.0);
         uvCoords = cornerOffsets[i];
         EmitVertex();
     }
+
     EndPrimitive();
 }

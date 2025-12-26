@@ -188,12 +188,12 @@ public class MainUI extends AppUI<MainApp> {
         debugPanel.add(new UIText(() -> String.format("  State: %d", app.getActiveTool().getState())));
         debugPanel.add(new UIText(() -> String.format("TextTool.text: \"%s\"", ImageTool.TEXT.getText())));
         debugPanel.add(new UIText(() -> String.format("TextTool.font: \"%s\"", ImageTool.TEXT.getFont())));
-        debugPanel.add(new UIText("                           "));
+        // debugPanel.add(new UIText("                           "));
         // String[] lipsum = lipsum(Integer.MAX_VALUE, 3);
         // for (int i = 0; i < 20; i++) {
         // debugPanel.add(new UILabel(lipsum));
         // }
-        canvas.add(debugPanel.addScrollbars());
+        // canvas.add(debugPanel.addScrollbars());
 
         canvas.add(new TextFloatContainer(app));
 

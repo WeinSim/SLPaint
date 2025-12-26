@@ -7,9 +7,7 @@ in float depth;
 in vec2 size;
 
 in vec3 color;
-in int hueSatAlpha;
-in int hsv;
-in int orientation;
+in int flags;
 
 out int pass_dataIndex;
 out mat3 pass_transformationMatrix;
@@ -18,9 +16,7 @@ out float pass_depth;
 out vec2 pass_size;
 
 out vec3 pass_color;
-out int pass_hueSatAlpha;
-out int pass_hsv;
-out int pass_orientation;
+out int pass_flags;
 
 void main(void) {
     pass_dataIndex = dataIndex;
@@ -30,7 +26,5 @@ void main(void) {
     pass_size = size;
 
     pass_color = color;
-    pass_hueSatAlpha = hueSatAlpha;
-    pass_hsv = hsv;
-    pass_orientation = orientation;
+    pass_flags = flags;
 }

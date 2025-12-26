@@ -6,39 +6,25 @@ import renderEngine.ClipAreaInfo;
 import renderEngine.shaders.bufferobjects.UBOEntry;
 import sutil.math.SVector;
 
-public final class HSLDrawCall extends DrawCall {
-
-    public static final int HUE_SAT_FIELD_CIRC = 0,
-            HUE_SAT_FIELD_RECT = 1,
-            LIGHTNESS_SCALE = 2,
-            ALPHA_SCALE = 3;
-
-    public static final int HSL = 0,
-            HSV = 4;
-
-    public static final int VERTICAL = 0,
-            HORIZONTAL = 8;
+public final class ImageDrawCall extends DrawCall {
 
     public final SVector position;
     public final double depth;
     public final SVector size;
     public final Matrix3f uiMatrix;
     public final ClipAreaInfo clipAreaInfo;
+    public final int textureID;
+    public int samplerID;
 
-    public final SVector color;
-    public final int flags;
-
-    public HSLDrawCall(SVector position, double depth, SVector size, Matrix3f uiMatrix, ClipAreaInfo clipAreaInfo,
-            SVector color, int flags) {
+    public ImageDrawCall(SVector position, double depth, SVector size, Matrix3f uiMatrix, ClipAreaInfo clipAreaInfo,
+            int textureID) {
 
         this.position = position;
         this.depth = depth;
         this.size = size;
         this.uiMatrix = uiMatrix;
         this.clipAreaInfo = clipAreaInfo;
-
-        this.color = color;
-        this.flags = flags;
+        this.textureID = textureID;
     }
 
     @Override
@@ -51,6 +37,10 @@ public final class HSLDrawCall extends DrawCall {
                 clip ? (float) boundingBoxPos.y : -Float.MAX_VALUE,
                 clip ? (float) (boundingBoxPos.x + boundingBoxSize.x) : Float.MAX_VALUE,
                 clip ? (float) (boundingBoxPos.y + boundingBoxSize.y) : Float.MAX_VALUE,
+                samplerID,
+                0.0f,
+                0.0f,
+                0.0f
         });
     }
 }

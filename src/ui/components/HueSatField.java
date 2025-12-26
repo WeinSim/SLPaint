@@ -6,7 +6,7 @@ import sutil.math.SVector;
 import sutil.ui.Draggable;
 import sutil.ui.UIContainer;
 import sutil.ui.UIDragContainer;
-import sutil.ui.UIFloatContainer;
+import sutil.ui.UIElement;
 import sutil.ui.UIStyle;
 import ui.Colors;
 import ui.Sizes;
@@ -58,25 +58,31 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
             this.colorPicker = colorPicker;
             noOutline();
 
+            for (int i = 0; i < 4; i++) {
+                add(new CursorLine(i % 2 == 0));
+            }
+
+            setFixedSize(new SVector(0, 0));
+
+            nextX = 0;
+        }
+
+        @Override
+        public void positionChildren() {
             final double a = CURSOR_LINE_WIDTH / 2;
             final double b = CURSOR_LINE_LENGTH + CURSOR_CENTER_GAP / 2;
             final double c = CURSOR_CENTER_GAP / 2;
-            for (int i = 0; i < 4; i++) {
-                CursorLine line = new CursorLine(i % 2 == 0);
-                line.addAttachPoint(UIFloatContainer.TOP_LEFT, switch (i) {
+
+            int i = 0;
+            for (UIElement child: getChildren()) {
+                child.getPosition().set(switch (i++) {
                     case 0 -> new SVector(-a, -b);
                     case 1 -> new SVector(c, -a);
                     case 2 -> new SVector(-a, c);
                     case 3 -> new SVector(-b, -a);
                     default -> null;
                 });
-
-                add(line);
             }
-
-            setFixedSize(new SVector(0, 0));
-
-            nextX = 0;
         }
 
         @Override
@@ -141,12 +147,12 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
         }
     }
 
-    private static class CursorLine extends UIFloatContainer {
+    private static class CursorLine extends UIContainer {
 
         public CursorLine(boolean vertical) {
             super(0, 0);
 
-            clipToRoot = false;
+            // clipToRoot = false;
 
             setStyle(new UIStyle(Colors::getTextColor, () -> null, () -> Sizes.STROKE_WEIGHT.size));
 

@@ -45,6 +45,13 @@ public class Loader {
         loadedFonts = new HashMap<>();
     }
 
+    private int createVAO() {
+        int vaoID = GL30.glGenVertexArrays();
+        vaos.add(vaoID);
+        GL30.glBindVertexArray(vaoID);
+        return vaoID;
+    }
+
     public RawModel loadToVAO(VBOData[] vboData, int vertexCount) {
         int vaoID = createVAO();
         int attributeNumber = 0;
@@ -282,10 +289,6 @@ public class Loader {
     }
 
     public void tempCleanUp() {
-        cleanUp(vaos, vbos);
-    }
-
-    private void cleanUp(ArrayList<Integer> vaos, ArrayList<Integer> vbos) {
         for (int vaoID : vaos) {
             GL30.glDeleteVertexArrays(vaoID);
         }
@@ -295,19 +298,4 @@ public class Loader {
         vaos.clear();
         vbos.clear();
     }
-
-    private int createVAO() {
-        int vaoID = GL30.glGenVertexArrays();
-        vaos.add(vaoID);
-        GL30.glBindVertexArray(vaoID);
-        return vaoID;
-    }
-
-    // private void bindIndicesBuffer(int[] indices) {
-    // int vboID = GL15.glGenBuffers();
-    // (textMode ? textVBOs : vbos).add(vboID);
-    // GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboID);
-    // IntBuffer buffer = storeDataInIntBuffer(indices);
-    // GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
-    // }
 }

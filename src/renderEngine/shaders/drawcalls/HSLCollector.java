@@ -11,9 +11,8 @@ public class HSLCollector extends ShapeCollector<HSLDrawCall> {
 
     public HSLCollector() {
         super(1, "HSLData", "hsl",
-                new String[] { "dataIndex", "transformationMatrix", "position", "depth", "size", "color", "hueSatAlpha",
-                        "hsv", "orientation" },
-                new int[] { 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+                new String[] { "dataIndex", "transformationMatrix", "position", "depth", "size", "color", "flags" },
+                new int[] { 1, 3, 1, 1, 1, 1, 1 });
     }
 
     @Override
@@ -25,9 +24,7 @@ public class HSLCollector extends ShapeCollector<HSLDrawCall> {
         VBOFloatData size = new VBOFloatData(vertexCount, 2);
 
         VBOFloatData color = new VBOFloatData(vertexCount, 3);
-        VBOIntData hueSatAlpha = new VBOIntData(vertexCount, 1);
-        VBOIntData hsv = new VBOIntData(vertexCount, 1);
-        VBOIntData orientation = new VBOIntData(vertexCount, 1);
+        VBOIntData flags = new VBOIntData(vertexCount, 1);
 
         int batchIndex = 0;
         for (Batch batch : batches) {
@@ -36,18 +33,17 @@ public class HSLCollector extends ShapeCollector<HSLDrawCall> {
                 transformationMatrix.putData(drawCall.uiMatrix);
                 position.putData(drawCall.position);
                 depth.putData(drawCall.depth);
+                // depth.putData(0.8f);
                 size.putData(drawCall.size);
 
                 color.putData(drawCall.color);
-                hueSatAlpha.putData(drawCall.hueSatAlpha);
-                hsv.putData(drawCall.hsv);
-                orientation.putData(drawCall.orientation);
+                flags.putData(drawCall.flags);
             }
             batchIndex++;
         }
 
         return new VBOData[] {
-                dataIndex, transformationMatrix, position, depth, size, color, hueSatAlpha, hsv, orientation
+                dataIndex, transformationMatrix, position, depth, size, color, flags
         };
     }
 }

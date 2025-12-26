@@ -18,18 +18,15 @@ in float[] pass_depth;
 in vec2[] pass_size;
 
 in vec3[] pass_color;
-in int[] pass_hueSatAlpha;
-in int[] pass_hsv;
-in int[] pass_orientation;
+in int[] pass_flags;
 
 out vec2 relativePos;
 out vec2 relativeBoundingBoxMin;
 out vec2 relativeBoundingBoxMax;
 out vec2 uvCoords;
+out vec2 size;
 out vec3 color;
-flat out int hueSatAlpha;
-flat out int hsv;
-flat out int orientation;
+flat out int flags;
 
 const vec2[4] cornerOffsets = vec2[4](
     vec2(0, 0),
@@ -50,7 +47,7 @@ vec3 vecToInt(vec3 v) {
 
 void main(void) {
     vec3 position = pass_transformationMatrix[0] * vec3(pass_position[0], 1.0);
-    vec2 size = (pass_transformationMatrix[0] * vec3(pass_size[0], 0.0)).xy;
+    size = (pass_transformationMatrix[0] * vec3(pass_size[0], 0.0)).xy;
 
     int dataIndex = pass_dataIndex[0];
     relativeBoundingBoxMin = hslData.boundingBox[dataIndex].xy - position.xy;
@@ -70,10 +67,9 @@ void main(void) {
         return;
     }
 
+    size = pass_size[0];
     color = pass_color[0];
-    hueSatAlpha = pass_hueSatAlpha[0];
-    hsv = pass_hsv[0];
-    orientation = pass_orientation[0];
+    flags = pass_flags[0];
 
     for (int i = 0; i < 4; i++) {
         relativePos = cornerOffsets[i] * size;

@@ -35,14 +35,14 @@ import ui.components.ImageCanvas;
  * <pre>
  * TODO continue:
  *   New rendering system
- *     Image shader
  *     Allow switching between old and new rendering infrastructure for each
  *       shader individually? (Would fix rectangle transparency bug)
- *     HueSatField curcor doesn't render correctly:
- *       It renders behind the HueSatField and it doesn't respect its clip area
  *   Have shaders automatically recognize attribute names (and sizes)
- *   Proper layer management in MainAppRenderer for non-ui stuff (image, tools,
- *     selection, etc.)
+ *   Proper layer management
+ *     In MainAppRenderer for non-ui stuff (image, tools, selection, etc.)
+ *     In UIRenderMaster for ui-stuff (the layer variable etc.)
+ *       AlphaScale and LightnessScale should render above their respective
+ *         cursors
  * Text tool:
  *   Text rendering:
  *     Text wrapping / new lines with ENTER (in combination with proper UI text
@@ -106,8 +106,6 @@ import ui.components.ImageCanvas;
  *       the letters 'e', 'r', 'i' and 'd' are blurry, whereas 'p', 'u', 'm'
  *       and 'b' are sharp. (it seems like most blurry letters are on page 2.)
  *     Potential speedups for text rendering:
- *       Offload matrix transforms of vertex data in text VAO to shader (see
- *         comment in TextFont.createGiantVAO())
  *       Cache conversion from String to FontChar[] in TextFont
  *       Only override the parts of the text VAOs that actually change from one
  *         frame to the next

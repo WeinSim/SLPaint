@@ -1,16 +1,17 @@
 #version 400 core
 
-// TODO: unify relativePos and uvCoords
 in vec2 relativePos;
-in vec2 uvCoords;
 in vec2 relativeBoundingBoxMin;
 in vec2 relativeBoundingBoxMax;
+in vec2 uvCoords;
+flat in int samplerID;
 
 out vec4 outColor;
 
-uniform sampler2D textureSampler;
+uniform sampler2D textureSamplers[16];
 
 void main(void) {
+
     if (relativePos.x < relativeBoundingBoxMin.x) {
         discard;
     }
@@ -24,9 +25,10 @@ void main(void) {
         discard;
     }
 
-    vec4 sampleColor = texture(textureSampler, uvCoords);
+    vec4 sampleColor = texture(textureSamplers[samplerID], uvCoords);
 
-    float alpha = sampleColor.a;
+    // float alpha = sampleColor.a;
     // outColor = vec4(alpha, alpha, alpha, 1.0);
+
     outColor = sampleColor;
 }

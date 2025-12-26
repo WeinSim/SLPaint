@@ -91,33 +91,38 @@ public class AppRenderer<T extends App> {
         SVector position = element.getPosition();
         SVector size = element.getSize();
 
-        if (element instanceof UIContainer) {
-            if (element instanceof UIFloatContainer) {
-                // Not beautiful but it works for now.
-                // Without this check, the text inside of a TextFloatContainer would render
-                // above the rest of the UI.
-                if (element instanceof TextFloatContainer) {
-                    foregroundDraw = false;
-                    layer = 1;
-                } else {
-                    foregroundDraw = true;
-                }
-                uiMaster.pushClipArea();
-                uiMaster.noClipArea();
+        if (element instanceof UIFloatContainer) {
+            // Not beautiful but it works for now.
+            // Without this check, the text inside of a TextFloatContainer would render
+            // above the rest of the UI.
+            if (element instanceof TextFloatContainer) {
+                foregroundDraw = false;
+                layer = 1;
+            } else {
+                foregroundDraw = true;
             }
+            uiMaster.pushClipArea();
+            uiMaster.noClipArea();
         }
 
         // background
         SVector bgColor = element.getBackgroundColor();
         if (element instanceof UIColorElement e) {
             if (bgColor != null) {
+                // this is just a hack for now because we cannot guarantee the "color"-rect to
+                // render above the checkered background rect
                 uiMaster.depth(getDepth(0, false));
 
-                uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
+                double alpha = SUtil.alpha(e.getColor()) / 255.0;
+                SVector[] checkerboardColors = Colors.getTransparentColors();
+                SVector c0 = new SVector(checkerboardColors[0]).lerp(bgColor, alpha),
+                        c1 = new SVector(checkerboardColors[1]).lerp(bgColor, alpha);
+
+                uiMaster.checkerboardFill(new SVector[] { c0, c1 }, 15);
                 uiMaster.noStroke();
                 uiMaster.rect(position, size);
 
-                uiMaster.fillAlpha(SUtil.alpha(e.getColor()) / 255.0);
+                bgColor = null;
             }
         }
 
@@ -164,6 +169,7 @@ public class AppRenderer<T extends App> {
                 renderUIElement(child);
             }
             layer--;
+            uiMaster.depth(getDepth(2, false));
 
             uiMaster.popMatrix();
             if (isScrollable) {
@@ -204,8 +210,8 @@ public class AppRenderer<T extends App> {
             SVector pos = new SVector(position).add(scale.getScaleOffset());
             SVector siz = scale.getScaleSize();
             if (scale instanceof LightnessScale l) {
-                uiMaster.lightnessScale(pos, siz, l.getHue(), l.getSaturation(), l.getOrientation(),
-                        App.isHSLColorSpace());
+                uiMaster.lightnessScale(pos, siz, l.getHue(), l.getSaturation(),
+                        l.getOrientation() == UIContainer.VERTICAL, App.isHSLColorSpace());
             }
             if (scale instanceof AlphaScale a) {
                 // checkerboard background
@@ -215,7 +221,7 @@ public class AppRenderer<T extends App> {
 
                 // color gradient
                 uiMaster.fill(MainApp.toSVector(a.getRGB()));
-                uiMaster.alphaScale(pos, siz, a.getOrientation());
+                uiMaster.alphaScale(pos, siz, a.getOrientation() == UIContainer.VERTICAL);
             }
         }
 
