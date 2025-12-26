@@ -79,7 +79,7 @@ public class TextFont {
             charIndex.putData(charIDs.get((char) fontChar.id()));
 
             SVector vertexPos = new SVector(x + fontChar.xOffset() * drawCall.relativeSize,
-                    y + fontChar.yOffset() + (-base + 0.8 * size) * drawCall.relativeSize);
+                    y + (fontChar.yOffset() -base + 0.8 * size) * drawCall.relativeSize);
             position.putData(vertexPos);
 
             depth.putData(drawCall.depth);

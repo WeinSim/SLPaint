@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjglx.util.vector.Matrix3f;
 import org.lwjglx.util.vector.Vector3f;
+import org.lwjglx.util.vector.Vector4f;
 
 import main.apps.App;
 import main.apps.MainApp;
@@ -61,15 +62,13 @@ public class UIRenderMaster {
 
     private double depth;
 
-    private SVector fill;
-    private double fillAlpha;
+    private Vector4f fill;
     private int fillMode;
 
+    private Vector4f[] checkerboardColors;
     private double checkerboardSize;
-    private SVector[] checkerboardColors;
 
-    private SVector stroke;
-    private double strokeAlpha;
+    private Vector4f stroke;
     private int strokeMode;
     private double strokeWeight;
 
@@ -107,10 +106,10 @@ public class UIRenderMaster {
         uiMatrixStack = new LinkedList<>();
         clipAreaStack = new LinkedList<>();
 
-        fill = new SVector();
-        stroke = new SVector();
+        fill = new Vector4f(0, 0, 0, 1);
+        stroke = new Vector4f(0, 0, 0, 1);
 
-        checkerboardColors = new SVector[] { new SVector(), new SVector() };
+        checkerboardColors = new Vector4f[] { new Vector4f(0, 0, 0, 1), new Vector4f(0, 0, 0, 1) };
     }
 
     public void start() {
@@ -123,7 +122,7 @@ public class UIRenderMaster {
 
         GL11.glDisable(GL11.GL_CULL_FACE);
 
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glDepthFunc(GL11.GL_LEQUAL);
         GL11.glDepthMask(true);
 
@@ -138,20 +137,19 @@ public class UIRenderMaster {
         depth = 0;
 
         checkerboardFill(new SVector[] { new SVector(), new SVector() }, 1);
-        fill(new SVector(0.5, 0.5, 0.5));
-        fillAlpha(1.0);
+        fill(0.5, 0.5, 0.5, 1.0);
 
-        stroke(new SVector());
-        strokeAlpha(1.0);
+        stroke(0.0, 0.0, 0.0, 1.0);
         strokeWeight(1);
 
         textFont = null;
         textSize = 1;
     }
 
-    public void stop() {
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-
+    /**
+     * Renders all currently stored shapes.
+     */
+    public void render() {
         Matrix3f viewMatrix = createViewMatrix();
         for (ShapeCollector<?> shapeCollector : shapeCollectors) {
             ShaderProgram shader = shapeCollector.getShaderProgram();
@@ -172,6 +170,8 @@ public class UIRenderMaster {
                 for (int i = 0; i < model.numAttributes(); i++)
                     GL20.glDisableVertexAttribArray(i);
             }
+
+            shapeCollector.finish();
 
             shader.stop();
         }
@@ -214,20 +214,17 @@ public class UIRenderMaster {
             rectFillCollector.addShape(
                     new RectFillDrawCall(position, depth, size,
                             new Matrix3f().load(uiMatrix),
-                            // uiMatrix,
                             new ClipAreaInfo(clipAreaInfo),
-                            new SVector(fillMode == NORMAL ? fill : checkerboardColors[0]), fillAlpha,
-                            new SVector(checkerboardColors[1]), checkerboardSize, fillMode == CHECKERBOARD));
+                            new Vector4f(fillMode == NORMAL ? fill : checkerboardColors[0]),
+                            new Vector4f(checkerboardColors[1]), checkerboardSize, fillMode == CHECKERBOARD));
 
         if (strokeMode > 0)
             rectOutlineCollector.addShape(
                     new RectOutlineDrawCall(position, depth, size,
                             new Matrix3f().load(uiMatrix),
-                            // uiMatrix,
                             new ClipAreaInfo(clipAreaInfo),
-                            new SVector(strokeMode == NORMAL ? stroke : checkerboardColors[0]), strokeAlpha,
-                            strokeWeight, new SVector(checkerboardColors[1]), checkerboardSize,
-                            fillMode == CHECKERBOARD));
+                            new Vector4f(strokeMode == NORMAL ? stroke : checkerboardColors[0]), strokeWeight,
+                            new Vector4f(checkerboardColors[1]), checkerboardSize, fillMode == CHECKERBOARD));
     }
 
     public void ellipse(SVector position, SVector size) {
@@ -235,7 +232,7 @@ public class UIRenderMaster {
             return;
 
         ellipseCollector.addShape(new EllipseDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
-                new ClipAreaInfo(clipAreaInfo), new SVector(fill), fillAlpha));
+                new ClipAreaInfo(clipAreaInfo), new Vector4f(fill)));
     }
 
     public void text(String text, SVector position) {
@@ -247,7 +244,7 @@ public class UIRenderMaster {
 
         textCollector.addShape(
                 new TextDrawCall(position, depth, textSize / textFont.getSize(), new Matrix3f().load(uiMatrix),
-                        new ClipAreaInfo(clipAreaInfo), new SVector(fill), fillAlpha, text, textFont));
+                        new ClipAreaInfo(clipAreaInfo), new Vector4f(fill), text, textFont));
     }
 
     public void image(int textureID, SVector position, SVector size) {
@@ -258,7 +255,7 @@ public class UIRenderMaster {
     public void hueSatField(SVector position, SVector size, boolean circular, boolean hsl) {
         int flags = (circular ? HSLDrawCall.HUE_SAT_FIELD_CIRC : HSLDrawCall.HUE_SAT_FIELD_RECT)
                 | (hsl ? HSLDrawCall.HSL : HSLDrawCall.HSV);
-                // System.out.println(depth);
+        // System.out.println(depth);
         hslCollector.addShape(new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
                 new ClipAreaInfo(clipAreaInfo), new SVector(), flags));
     }
@@ -277,7 +274,7 @@ public class UIRenderMaster {
         int flags = HSLDrawCall.ALPHA_SCALE
                 | (vertical ? HSLDrawCall.VERTICAL : HSLDrawCall.HORIZONTAL);
         hslCollector.addShape(new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
-                new ClipAreaInfo(clipAreaInfo), new SVector(fill), flags));
+                new ClipAreaInfo(clipAreaInfo), new SVector(fill.x, fill.y, fill.z), flags));
     }
 
     public void clipArea(SVector position, SVector size) {
@@ -394,7 +391,24 @@ public class UIRenderMaster {
         uiMatrix = uiMatrixStack.pop();
     }
 
+    public void fill(double r, double g, double b) {
+        fill(r, g, b, 1.0);
+    }
+
     public void fill(SVector fill) {
+        fill(fill, 1.0);
+    }
+
+    public void fill(SVector fill, double a) {
+        fill(fill.x, fill.y, fill.z, a);
+    }
+
+    public void fill(double r, double g, double b, double a) {
+        this.fill.set((float) r, (float) g, (float) b, (float) a);
+        fillMode = NORMAL;
+    }
+
+    public void fill(Vector4f fill) {
         this.fill.set(fill);
         fillMode = NORMAL;
     }
@@ -404,17 +418,43 @@ public class UIRenderMaster {
     }
 
     public void checkerboardFill(SVector[] colors, double size) {
+        checkerboardFill(new Vector4f[] {
+                new Vector4f((float) colors[0].x,
+                        (float) colors[0].y,
+                        (float) colors[0].z,
+                        1.0f),
+                new Vector4f((float) colors[1].x,
+                        (float) colors[1].y,
+                        (float) colors[1].z,
+                        1.0f)
+        }, size);
+    }
+
+    public void checkerboardFill(Vector4f[] colors, double size) {
         fillMode = CHECKERBOARD;
         checkerboardColors[0].set(colors[0]);
         checkerboardColors[1].set(colors[1]);
         checkerboardSize = size;
     }
 
-    public void fillAlpha(double alpha) {
-        this.fillAlpha = alpha;
+    public void stroke(double r, double g, double b) {
+        stroke(r, g, b, 1.0);
     }
 
     public void stroke(SVector stroke) {
+        stroke(stroke, 1.0);
+    }
+
+    public void stroke(SVector stroke, double a) {
+        stroke(stroke.x, stroke.y, stroke.z, a);
+    }
+
+    public void stroke(double r, double g, double b, double a) {
+        this.stroke.set((float) r, (float) g, (float) b, (float) a);
+        strokeMode = NORMAL;
+    }
+
+    public void stroke(Vector4f stroke) {
         this.stroke.set(stroke);
         strokeMode = NORMAL;
     }
@@ -424,14 +464,23 @@ public class UIRenderMaster {
     }
 
     public void checkerboardStroke(SVector[] colors, double size) {
+        checkerboardStroke(new Vector4f[] {
+                new Vector4f((float) colors[0].x,
+                        (float) colors[0].y,
+                        (float) colors[0].z,
+                        1.0f),
+                new Vector4f((float) colors[1].x,
+                        (float) colors[1].y,
+                        (float) colors[1].z,
+                        1.0f)
+        }, size);
+    }
+
+    public void checkerboardStroke(Vector4f[] colors, double size) {
         strokeMode = CHECKERBOARD;
         checkerboardColors[0].set(colors[0]);
         checkerboardColors[1].set(colors[1]);
         checkerboardSize = size;
-    }
-
-    public void strokeAlpha(double strokeAlpha) {
-        this.strokeAlpha = strokeAlpha;
     }
 
     public void strokeWeight(double strokeWeight) {

@@ -1,26 +1,26 @@
 package renderEngine.shaders.drawcalls;
 
 import org.lwjglx.util.vector.Matrix3f;
+import org.lwjglx.util.vector.Vector4f;
 
 import renderEngine.ClipAreaInfo;
 import renderEngine.shaders.bufferobjects.UBOEntry;
 import sutil.math.SVector;
 
 public abstract sealed class RectDrawCall extends DrawCall permits RectFillDrawCall, RectOutlineDrawCall {
-    
+
     public final SVector position;
     public final double depth;
     public final SVector size;
     public final Matrix3f uiMatrix;
     public final ClipAreaInfo clipAreaInfo;
-    public final SVector color1;
-    public final double alpha;
-    public final SVector color2;
+    public final Vector4f color1;
+    public final Vector4f color2;
     public final double checkerboardSize;
     public final boolean applyCheckerboard;
 
     public RectDrawCall(SVector position, double depth, SVector size, Matrix3f uiMatrix, ClipAreaInfo clipAreaInfo,
-            SVector color1, double alpha, SVector color2, double checkerboardSize, boolean applyCheckerboard) {
+            Vector4f color1, Vector4f color2, double checkerboardSize, boolean applyCheckerboard) {
 
         this.position = position;
         this.depth = depth;
@@ -28,7 +28,6 @@ public abstract sealed class RectDrawCall extends DrawCall permits RectFillDrawC
         this.uiMatrix = uiMatrix;
         this.clipAreaInfo = clipAreaInfo;
         this.color1 = color1;
-        this.alpha = alpha;
         this.color2 = color2;
         this.checkerboardSize = checkerboardSize;
         this.applyCheckerboard = applyCheckerboard;
@@ -44,10 +43,10 @@ public abstract sealed class RectDrawCall extends DrawCall permits RectFillDrawC
                 clip ? (float) boundingBoxPos.y : -Float.MAX_VALUE,
                 clip ? (float) (boundingBoxPos.x + boundingBoxSize.x) : Float.MAX_VALUE,
                 clip ? (float) (boundingBoxPos.y + boundingBoxSize.y) : Float.MAX_VALUE,
-                (float) color2.x,
-                (float) color2.y,
-                (float) color2.z,
-                (float) alpha, // TODO: alpha for color2
+                color2.x,
+                color2.y,
+                color2.z,
+                color2.w,
                 applyCheckerboard ? (float) checkerboardSize : -1,
                 0.0f,
                 0.0f,

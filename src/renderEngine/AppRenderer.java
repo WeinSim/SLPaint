@@ -32,15 +32,11 @@ public class AppRenderer<T extends App> {
      * 0.0 - -1.0 is used for floating UI elements.
      * 
      * Each of the two regions (positive / negative depth value) is divided into
-     * NUM_DEPTH_SUBDIVISIONS divions. Every layer gets
-     * NUM_BACKGROUND_LAYER_SUBDIVISIONS starting from the backmost layer and
-     * NUM_FOREGROUND_LAYER_SUBDIVIONS starting from the foremost layer.
+     * NUM_LAYERS layers. Every layer is further divided into NUM_SUBDIVISIONS
+     * subdivisions.
      */
-    private static final int NUM_DEPTH_SUBDIVISIONS = 1024;
-    private static final int NUM_BACKGROUND_LAYER_SUBDIVISIONS = 3;
-    private static final int NUM_FOREGROUND_LAYER_SUBVIDISIONS = 1;
-    private static final int NUM_LAYERS = NUM_DEPTH_SUBDIVISIONS
-            / (2 * (NUM_BACKGROUND_LAYER_SUBDIVISIONS + NUM_FOREGROUND_LAYER_SUBVIDISIONS));
+    private static final int NUM_SUBDIVISIONS = 4;
+    private static final int NUM_LAYERS = 1024;
 
     protected T app;
 
@@ -63,8 +59,12 @@ public class AppRenderer<T extends App> {
         setDefaultBGColor();
 
         uiMaster.start();
+
+        layer = 1;
+        foregroundDraw = false;
         renderUI();
-        uiMaster.stop();
+
+        uiMaster.render();
     }
 
     protected void setDefaultBGColor() {
@@ -75,12 +75,16 @@ public class AppRenderer<T extends App> {
         uiMaster.resetMatrix();
         AppUI<?> ui = app.getUI();
 
-        layer = NUM_LAYERS / 2;
-        foregroundDraw = false;
-
         renderUIElement(ui.getRoot());
     }
 
+    /**
+     * Subdivisions:
+     * 0: checkerboard background
+     * 1: background color
+     * 2: main content (text, toggle, hueSat etc.)
+     * 3: stroke
+     */
     private void renderUIElement(UIElement element) {
         // System.out.format("Rendering UIElement \"%s\", position = %s, size = %s\n",
         // element.getClass().getName(), element.getPosition().toString(),
@@ -111,7 +115,7 @@ public class AppRenderer<T extends App> {
             if (bgColor != null) {
                 // this is just a hack for now because we cannot guarantee the "color"-rect to
                 // render above the checkered background rect
-                uiMaster.depth(getDepth(0, false));
+                uiMaster.depth(getDepth(0));
 
                 double alpha = SUtil.alpha(e.getColor()) / 255.0;
                 SVector[] checkerboardColors = Colors.getTransparentColors();
@@ -126,13 +130,12 @@ public class AppRenderer<T extends App> {
             }
         }
 
-        uiMaster.depth(getDepth(1, false));
+        uiMaster.depth(getDepth(1));
         if (bgColor != null) {
             uiMaster.fill(bgColor);
             uiMaster.noStroke();
             uiMaster.rect(position, size);
         }
-        uiMaster.fillAlpha(1.0);
 
         // outline
         SVector olColor = element.getOutlineColor();
@@ -147,14 +150,12 @@ public class AppRenderer<T extends App> {
             doOutline = true;
         }
         if (doOutline) {
-            // why is the outline on division 0?
-            uiMaster.depth(getDepth(0, true));
+            uiMaster.depth(getDepth(3));
             uiMaster.noFill();
             uiMaster.rect(position, size);
         }
 
-        // content
-        uiMaster.depth(getDepth(2, false));
+        // children
         if (element instanceof UIContainer container) {
             boolean isScrollable = container.isHScroll() || container.isVScroll();
             if (isScrollable) {
@@ -169,13 +170,15 @@ public class AppRenderer<T extends App> {
                 renderUIElement(child);
             }
             layer--;
-            uiMaster.depth(getDepth(2, false));
 
             uiMaster.popMatrix();
             if (isScrollable) {
                 uiMaster.popClipArea();
             }
         }
+
+        // content
+        uiMaster.depth(getDepth(2));
         if (element instanceof HueSatField) {
             uiMaster.hueSatField(position, size, App.isCircularHueSatField(), App.isHSLColorSpace());
         }
@@ -233,12 +236,13 @@ public class AppRenderer<T extends App> {
         foregroundDraw = oldForegroundDraw;
     }
 
-    protected double getDepth(int division, boolean foreground) {
-        int actualLayer = foreground
-                ? NUM_FOREGROUND_LAYER_SUBVIDISIONS * layer + division
-                : NUM_DEPTH_SUBDIVISIONS - 1 - NUM_BACKGROUND_LAYER_SUBDIVISIONS * layer - division;
-        double depth = actualLayer * 1.0 / NUM_DEPTH_SUBDIVISIONS + (foregroundDraw ? -1 : 0);
-        // System.out.format("getDepth(%d, %b) = %.3f\n", layer, foregroundDraw, depth);
+    protected double getDepth(int subdivision) {
+        double depth = -((double) layer * NUM_SUBDIVISIONS + subdivision) / (NUM_LAYERS * NUM_SUBDIVISIONS)
+                + (foregroundDraw ? 0 : 1);
+
+        // System.out.format("l = %3d, s = %d, f = %c => d = %.3f\n",
+        // layer, subdivision, foregroundDraw ? 't' : 'f', depth);
+
         return depth;
     }
 
@@ -262,7 +266,7 @@ public class AppRenderer<T extends App> {
         uiMaster.textSize(size);
         uiMaster.text(text, new SVector());
 
-        uiMaster.stop();
+        uiMaster.render();
 
         FrameBufferObject fbo = uiMaster.getTextFBO();
         int width = fbo.width(), height = fbo.height();

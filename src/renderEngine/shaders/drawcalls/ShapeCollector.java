@@ -105,6 +105,13 @@ public abstract class ShapeCollector<C extends DrawCall> {
 
     }
 
+    /**
+     * This method is used e.g. by the image shader to clear its list of textureIDs.
+     */
+    public void finish() {
+
+    }
+
     public ShaderProgram getShaderProgram() {
         return shaderProgram;
     }

@@ -35,10 +35,10 @@ public class EllipseCollector extends ShapeCollector<EllipseDrawCall> {
                 depth.putData(drawCall.depth);
                 size.putData(drawCall.size);
                 color.putData(new Vector4f(
-                        (float) drawCall.color.x,
-                        (float) drawCall.color.y,
-                        (float) drawCall.color.z,
-                        (float) drawCall.alpha));
+                        drawCall.color.x,
+                        drawCall.color.y,
+                        drawCall.color.z,
+                        drawCall.color.w));
             }
             batchIndex++;
         }

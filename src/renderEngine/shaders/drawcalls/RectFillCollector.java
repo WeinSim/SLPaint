@@ -2,8 +2,6 @@ package renderEngine.shaders.drawcalls;
 
 import java.util.ArrayList;
 
-import org.lwjglx.util.vector.Vector4f;
-
 import renderEngine.shaders.bufferobjects.VBOData;
 import renderEngine.shaders.bufferobjects.VBOFloatData;
 import renderEngine.shaders.bufferobjects.VBOIntData;
@@ -34,11 +32,7 @@ public class RectFillCollector extends ShapeCollector<RectFillDrawCall> {
                 position.putData(drawCall.position);
                 depth.putData(drawCall.depth);
                 size.putData(drawCall.size);
-                color1.putData(new Vector4f(
-                        (float) drawCall.color1.x,
-                        (float) drawCall.color1.y,
-                        (float) drawCall.color1.z,
-                        (float) drawCall.alpha));
+                color1.putData(drawCall.color1);
             }
             batchIndex++;
         }

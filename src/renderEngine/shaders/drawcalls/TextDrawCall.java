@@ -1,6 +1,7 @@
 package renderEngine.shaders.drawcalls;
 
 import org.lwjglx.util.vector.Matrix3f;
+import org.lwjglx.util.vector.Vector4f;
 
 import renderEngine.ClipAreaInfo;
 import renderEngine.fonts.TextFont;
@@ -14,14 +15,13 @@ public final class TextDrawCall extends DrawCall {
     public final double relativeSize;
     public final Matrix3f uiMatrix;
     public final ClipAreaInfo clipAreaInfo;
-    public final SVector color;
-    public final double alpha;
+    public final Vector4f color;
 
     public final String text;
     public final TextFont font;
 
     public TextDrawCall(SVector position, double depth, double relativeSize, Matrix3f uiMatrix,
-            ClipAreaInfo clipAreaInfo, SVector color, double alpha, String text, TextFont font) {
+            ClipAreaInfo clipAreaInfo, Vector4f color, String text, TextFont font) {
 
         this.position = position;
         this.relativeSize = relativeSize;
@@ -29,7 +29,6 @@ public final class TextDrawCall extends DrawCall {
         this.uiMatrix = uiMatrix;
         this.clipAreaInfo = clipAreaInfo;
         this.color = color;
-        this.alpha = alpha;
         this.text = text;
         this.font = font;
     }
@@ -44,10 +43,10 @@ public final class TextDrawCall extends DrawCall {
                 clip ? (float) boundingBoxPos.y : -Float.MAX_VALUE,
                 clip ? (float) (boundingBoxPos.x + boundingBoxSize.x) : Float.MAX_VALUE,
                 clip ? (float) (boundingBoxPos.y + boundingBoxSize.y) : Float.MAX_VALUE,
-                (float) color.x,
-                (float) color.y,
-                (float) color.z,
-                (float) alpha,
+                color.x,
+                color.y,
+                color.z,
+                color.w,
                 uiMatrix.m00,
                 uiMatrix.m01,
                 uiMatrix.m02,

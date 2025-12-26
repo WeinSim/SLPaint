@@ -34,15 +34,9 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   New rendering system
- *     Allow switching between old and new rendering infrastructure for each
- *       shader individually? (Would fix rectangle transparency bug)
  *   Have shaders automatically recognize attribute names (and sizes)
- *   Proper layer management
- *     In MainAppRenderer for non-ui stuff (image, tools, selection, etc.)
- *     In UIRenderMaster for ui-stuff (the layer variable etc.)
- *       AlphaScale and LightnessScale should render above their respective
- *         cursors
+ *   Allow switching between old and new rendering infrastructure for each
+ *     shader individually? (Would fix rectangle transparency bug)
  * Text tool:
  *   Text rendering:
  *     Text wrapping / new lines with ENTER (in combination with proper UI text
@@ -53,6 +47,7 @@ import ui.components.ImageCanvas;
  * 
  * App:
  *   Small problems:
+ *     Selection shouold include the bottom and right edge of the selection
  *     Pressing 'r' should not reset the view if a text input is currently
  *       active
  *     ImageCanvas.mouseTrulyAbove() should return true even if the mouse is
@@ -88,19 +83,18 @@ import ui.components.ImageCanvas;
  *   Pixels with an alpha value of 0 lose color information when saving and
  *     reopening
  * UI:
- *   Shift + mouse wheel should scroll horizontally
  *   Fix bug in UILabel: when the textUpdater returns text containig newline
  *     characters, the text is not properly split across multiple lines
  *   Tool icons & cursors
  *   Make side panel collapsable
  * Rendering:
- *   The outline of the text size input is sometimes cut off by the plus button
- *     next to it (depending on the horizontal scroll)
  *   Text rendering
  *     How to handle fonts?
  *       How to handle big font sizes?
  *         Generate texture atlas using fontbm on demand?
  *         Use SDFs (either in addition to or instead of regular bitmap fonts)?
+ *     Reloading the shaders with Shift+S breaks text rendering
+ *       Likely reason: the textData UBO isn't being updated
  *     Text renders inconsistently: some letters are blurry and other are not.
  *       For example, using Courier New Bold with a rasterized text size of 32,
  *       the letters 'e', 'r', 'i' and 'd' are blurry, whereas 'p', 'u', 'm'
@@ -109,22 +103,14 @@ import ui.components.ImageCanvas;
  *       Cache conversion from String to FontChar[] in TextFont
  *       Only override the parts of the text VAOs that actually change from one
  *         frame to the next
+ *   Items in dropdown menues overlap their parent's stroke with their fill
+ *   AlphaScale and LightnessScale should render above their respective cursors
  *   Anti aliasing doesn't work despite being enabled
  *     (glfwWindowHint(GLFW_SAMPLES, 4) and glEnable(GL_MULTISAMPLE))
- *   Selection border sometimes has artifacts on bottom and right inner edges
- *   AlphaScale has artifacts on bottom edge (whose size depends on wether a
- *     text cursor is currently visible?!?)
  *   Fix stuttering artifact when resizing windows on Linux
  *     (see https://www.glfw.org/docs/latest/window.html#window_refresh)
- *   Clean up UIRenderMaster API and UI shaders (especially with regards to
- *     transparency and text rendering)
- *     Premultiply view matrix and transformation matrix (for rect shader)
  *     Rename transformationMatrix to uiMatrix
- *   Merge rect shaders? (95% of their code is identical)
  *   Remove magic numbers in {@link renderEngine.MainAppRenderer#render()}
- *   "Activate alpha blending" in
- *     {@link renderEngine.UIRenderMaster#image(int, SVector, SVector)}
- *     (whatever that means??)
  * Maximized windows don't show up correctly on Windows 11
  * Proper package names / structure
  * Error handling

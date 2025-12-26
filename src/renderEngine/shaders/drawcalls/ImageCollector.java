@@ -65,6 +65,11 @@ public class ImageCollector extends ShapeCollector<ImageDrawCall> {
     }
 
     @Override
+    public void finish() {
+        textureIDs.clear();
+    }
+
+    @Override
     protected VBOData[] getVBOs(ArrayList<Batch> batches, int vertexCount) {
         VBOIntData dataIndex = new VBOIntData(vertexCount, 1);
         VBOMatrixData transformationMatrix = new VBOMatrixData(vertexCount, 3);
@@ -93,7 +98,11 @@ public class ImageCollector extends ShapeCollector<ImageDrawCall> {
     public void prepare() {
         for (int i = 0; i < textureIDs.size(); i++) {
             GL13.glActiveTexture(TEXTURE_BINDING_POINTS[i]);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureIDs.get(i));
+            int textureID = textureIDs.get(i);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+
+            String name = String.format("textureSamplers[%d]", i);
+            shaderProgram.loadUniform(name, i);
         }
 
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);

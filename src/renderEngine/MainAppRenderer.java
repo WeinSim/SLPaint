@@ -21,43 +21,17 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
     @Override
     public void render() {
         uiMaster.start();
+
         if (DEBUG_RENDERING) {
-            uiMaster.setBGColor(new SVector(1, 1, 1));
-
-            uiMaster.hueSatField(new SVector(300, 300), new SVector(200, 200), true, true);
-
-            // SVector p1 = new SVector(100, 100),
-            //         p2 = new SVector(300, 700),
-            //         p3 = new SVector(1000, 800);
-            // SVector s1 = new SVector(200, 100),
-            //         s2 = new SVector(150, 150),
-            //         s3 = new SVector(100, 200);
-            // SVector c1 = new SVector(0.8, 0.2, 0.2),
-            //         c2 = new SVector(0.2, 0.8, 0.2),
-            //         c3 = new SVector(0.2, 0.2, 0.8);
-
-            // uiMaster.noStroke();
-
-            // uiMaster.fill(c1);
-            // uiMaster.rect(p1, s1);
-
-            // uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
-            // uiMaster.depth(getDepth(0, false));
-            // uiMaster.rect(p2, s2);
-
-            // p2.x += 50;
-
-            // uiMaster.fill(c2);
-            // uiMaster.fillAlpha(0.5);
-            // uiMaster.depth(getDepth(1, false));
-            // uiMaster.rect(p2, s2);
-
-            // uiMaster.fillAlpha(1.0);
-
-            // uiMaster.fill(c3);
-            // uiMaster.rect(p3, s3);
+            renderDebug();
         } else {
             uiMaster.setBGColor(Colors.getCanvasColor());
+
+            // layer 0:
+            // subdiv 0: checkerboard background
+            // subdiv 1: image
+            // subdiv 2: selection content
+            // subdiv 3: selection border
 
             SVector translation = app.getImageTranslation();
             double zoom = app.getImageZoom();
@@ -65,16 +39,21 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
             uiMaster.scale(zoom);
 
             // render image
-            uiMaster.noStroke();
-            uiMaster.checkerboardFill(Colors.getTransparentColors(), 10);
             layer = 0;
             foregroundDraw = false;
-            uiMaster.depth(getDepth(0, false));
             Image image = app.getImage();
             int width = image.getWidth(), height = image.getHeight();
             SVector imageSize = new SVector(width, height);
+            uiMaster.noStroke();
+            uiMaster.checkerboardFill(Colors.getTransparentColors(), 10);
+            uiMaster.depth(getDepth(0));
             uiMaster.rect(new SVector(), imageSize);
+            uiMaster.depth(getDepth(1));
             uiMaster.image(image.getTextureID(), new SVector(), imageSize);
+
+            // calling render() here to ensure that following transparent draw calls render
+            // correctly (e.g. selection, text tool)
+            uiMaster.render();
 
             // render selection
             ImageTool activeTool = app.getActiveTool();
@@ -85,6 +64,7 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
                     SVector position = new SVector(selection.getX(), selection.getY());
                     SVector size = new SVector(selection.getWidth(),
                             selection.getHeight());
+                    uiMaster.depth(getDepth(2));
                     uiMaster.image(selectionImg.getTextureID(), position, size);
                 }
             }
@@ -114,12 +94,53 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
                     uiMaster.checkerboardStroke(SELECTION_BORDER_COLORS, 15);
                     uiMaster.strokeWeight(2);
                     uiMaster.noFill();
+                    uiMaster.depth(getDepth(3));
                     uiMaster.rect(new SVector(x, y).scale(zoom), new SVector(w, h).scale(app.getImageZoom()));
                 }
             }
 
+            layer = 10;
+
             renderUI();
         }
-        uiMaster.stop();
+
+        uiMaster.render();
+    }
+
+    private void renderDebug() {
+        uiMaster.setBGColor(new SVector(1, 1, 1));
+
+        uiMaster.hueSatField(new SVector(300, 300), new SVector(200, 200), true, true);
+
+        // SVector p1 = new SVector(100, 100),
+        // p2 = new SVector(300, 700),
+        // p3 = new SVector(1000, 800);
+        // SVector s1 = new SVector(200, 100),
+        // s2 = new SVector(150, 150),
+        // s3 = new SVector(100, 200);
+        // SVector c1 = new SVector(0.8, 0.2, 0.2),
+        // c2 = new SVector(0.2, 0.8, 0.2),
+        // c3 = new SVector(0.2, 0.2, 0.8);
+
+        // uiMaster.noStroke();
+
+        // uiMaster.fill(c1);
+        // uiMaster.rect(p1, s1);
+
+        // uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
+        // uiMaster.depth(getDepth(0, false));
+        // uiMaster.rect(p2, s2);
+
+        // p2.x += 50;
+
+        // uiMaster.fill(c2);
+        // uiMaster.fillAlpha(0.5);
+        // uiMaster.depth(getDepth(1, false));
+        // uiMaster.rect(p2, s2);
+
+        // uiMaster.fillAlpha(1.0);
+
+        // uiMaster.fill(c3);
+        // uiMaster.rect(p3, s3);
     }
 }

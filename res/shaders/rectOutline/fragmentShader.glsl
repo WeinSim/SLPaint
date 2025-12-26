@@ -12,6 +12,7 @@ in float strokeWeight;
 out vec4 outColor;
 
 void main(void) {
+
     if (relativePos.x < relativeBoundingBoxMin.x) {
         discard;
     }

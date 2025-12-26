@@ -1,6 +1,7 @@
 package renderEngine.shaders.drawcalls;
 
 import org.lwjglx.util.vector.Matrix3f;
+import org.lwjglx.util.vector.Vector4f;
 
 import renderEngine.ClipAreaInfo;
 import renderEngine.shaders.bufferobjects.UBOEntry;
@@ -13,11 +14,10 @@ public final class EllipseDrawCall extends DrawCall {
     public final SVector size;
     public final Matrix3f uiMatrix;
     public final ClipAreaInfo clipAreaInfo;
-    public final SVector color;
-    public final double alpha;
+    public final Vector4f color;
 
     public EllipseDrawCall(SVector position, double depth, SVector size, Matrix3f uiMatrix, ClipAreaInfo clipAreaInfo,
-            SVector color, double alpha) {
+            Vector4f color) {
 
         this.position = position;
         this.depth = depth;
@@ -25,7 +25,6 @@ public final class EllipseDrawCall extends DrawCall {
         this.uiMatrix = uiMatrix;
         this.clipAreaInfo = clipAreaInfo;
         this.color = color;
-        this.alpha = alpha;
     }
 
     @Override
