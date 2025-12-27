@@ -7,11 +7,20 @@ import sutil.math.SVector;
 
 public class UIScale extends UIDragContainer<UIScale.Slider> {
 
+    protected boolean narrow;
+
     public UIScale(int orientation, Supplier<Double> getter, Consumer<Double> setter) {
         super(new Slider(orientation, getter, setter));
         this.orientation = orientation;
 
         noOutline();
+        if (orientation == VERTICAL) {
+            setVFillSize();
+        } else {
+            setHFillSize();
+        }
+
+        narrow = true;
     }
 
     @Override
@@ -30,9 +39,7 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
     }
 
     public SVector getScaleOffset() {
-        return orientation == VERTICAL
-                ? new SVector(getHMargin(), 0)
-                : new SVector(0, getVMargin());
+        return orientation == VERTICAL ? new SVector(getHMargin(), 0) : new SVector(0, getVMargin());
     }
 
     @Override
@@ -43,7 +50,8 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
     }
 
     protected double getScaleWidth() {
-        return 2 * (orientation == VERTICAL ? super.getHMargin() : super.getVMargin());
+        double margin = orientation == VERTICAL ? getHMargin() : getVMargin();
+        return narrow ? 2 : 2 * margin;
     }
 
     /**
@@ -53,13 +61,13 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
 
         private int orientation;
 
-        private Supplier<Double> Supplier;
+        private Supplier<Double> getter;
         private Consumer<Double> setter;
 
         public Slider(int orientation, Supplier<Double> Supplier, Consumer<Double> setter) {
             this.orientation = orientation;
 
-            this.Supplier = Supplier;
+            this.getter = Supplier;
             this.setter = setter;
 
             setStyle(new UIStyle(
@@ -87,12 +95,12 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
 
         @Override
         public double getRelativeX() {
-            return orientation == VERTICAL ? 0 : Supplier.get();
+            return orientation == VERTICAL ? 0 : getter.get();
         }
 
         @Override
         public double getRelativeY() {
-            return orientation == VERTICAL ? Supplier.get() : 0;
+            return orientation == VERTICAL ? getter.get() : 0;
         }
 
         @Override

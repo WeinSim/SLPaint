@@ -4,11 +4,11 @@
         "capacity" : 10,
         "values" : []
     },
-    "darkMode" : false,
+    "darkMode" : true,
     "baseColor" : [
-        255,
-        255,
-        255
+        76,
+        76,
+        76
     ],
     "hslColorSpace" : true,
     "hueSatCircle" : true

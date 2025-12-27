@@ -14,6 +14,8 @@ public final class SelectionTool extends ImageTool implements XYWH {
     public static final SelectionTool INSTANCE = new SelectionTool();
 
     private Image selection;
+
+    // TODO: combine some of these variables with TextTool
     // INITIAL_DRAG
     private int startX, startY;
     private int endX, endY;
@@ -54,32 +56,30 @@ public final class SelectionTool extends ImageTool implements XYWH {
 
     @Override
     public boolean startInitialDrag(int x, int y, int mouseButton) {
-        if (mouseButton != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (mouseButton != GLFW.GLFW_MOUSE_BUTTON_LEFT)
             return false;
-        }
 
-        startX = Math.min(Math.max(0, x), app.getImage().getWidth());
-        startY = Math.min(Math.max(0, y), app.getImage().getHeight());
+        startX = Math.min(Math.max(0, x), app.getImage().getWidth() - 1);
+        startY = Math.min(Math.max(0, y), app.getImage().getHeight() - 1);
 
         return true;
     }
 
     @Override
     protected void handleInitialDrag(int x, int y, int px, int py) {
-        endX = Math.min(Math.max(0, x), app.getImage().getWidth());
-        endY = Math.min(Math.max(0, y), app.getImage().getHeight());
+        endX = Math.min(Math.max(0, x), app.getImage().getWidth() - 1);
+        endY = Math.min(Math.max(0, y), app.getImage().getHeight() - 1);
     }
 
     @Override
     protected boolean finishInitialDrag() {
         x = Math.min(startX, endX);
         y = Math.min(startY, endY);
-        width = Math.abs(startX - endX);
-        height = Math.abs(startY - endY);
+        width = Math.abs(startX - endX) + 1;
+        height = Math.abs(startY - endY) + 1;
 
-        if (width == 0 || height == 0) {
+        if (width == 1 || height == 1)
             return false;
-        }
 
         createSubImage();
 
@@ -169,8 +169,9 @@ public final class SelectionTool extends ImageTool implements XYWH {
             flattenSelection();
         }
 
-        x = 0;
-        y = 0;
+        SVector spawnPos = app.getImagePosition(app.getCanvas().getAbsolutePosition());
+        x = Math.min(Math.max((int) spawnPos.x, 0), app.getImage().getWidth() - paste.getWidth());
+        y = Math.min(Math.max((int) spawnPos.y, 0), app.getImage().getHeight() - paste.getHeight());
         width = paste.getWidth();
         height = paste.getHeight();
 
@@ -196,14 +197,14 @@ public final class SelectionTool extends ImageTool implements XYWH {
 
     public int getWidth() {
         return switch (getState()) {
-            case INITIAL_DRAG -> Math.abs(startX - endX);
+            case INITIAL_DRAG -> Math.abs(startX - endX) + 1;
             default -> width;
         };
     }
 
     public int getHeight() {
         return switch (getState()) {
-            case INITIAL_DRAG -> Math.abs(startY - endY);
+            case INITIAL_DRAG -> Math.abs(startY - endY) + 1;
             default -> height;
         };
     }

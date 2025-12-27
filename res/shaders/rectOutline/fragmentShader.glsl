@@ -41,5 +41,8 @@ void main(void) {
         int xComp = int(relPosClip.x / checkerboardSize);
         int yComp = int(relPosClip.y / checkerboardSize);
         outColor = (xComp + yComp) % 2 == 0 ? color1 : color2;
+
+        // float red = min(max(checkerboardSize * 100, 0), 1);
+        // outColor.xyz = vec3(red, 0, 0);
     }
 }

@@ -30,6 +30,8 @@ public class LightnessScale extends UIScale {
                     }
                 });
         this.colorPicker = colorPicker;
+
+        narrow = false;
     }
 
     public double getHue() {

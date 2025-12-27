@@ -224,7 +224,7 @@ public class UIRenderMaster {
                             new Matrix3f().load(uiMatrix),
                             new ClipAreaInfo(clipAreaInfo),
                             new Vector4f(strokeMode == NORMAL ? stroke : checkerboardColors[0]), strokeWeight,
-                            new Vector4f(checkerboardColors[1]), checkerboardSize, fillMode == CHECKERBOARD));
+                            new Vector4f(checkerboardColors[1]), checkerboardSize, strokeMode == CHECKERBOARD));
     }
 
     public void ellipse(SVector position, SVector size) {

@@ -48,15 +48,6 @@ public class UITextInput extends UIContainer {
     }
 
     @Override
-    public void select(SVector mouse) {
-        if (mouse == null) {
-            cursorPosition = uiText.getText().length();
-        } else {
-            cursorPosition = uiText.getCharIndex(mouse.x - position.x - getHMargin());
-        }
-    }
-
-    @Override
     public void keyPressed(int key) {
         if (active()) {
             String text = uiText.getText();
@@ -130,7 +121,7 @@ public class UITextInput extends UIContainer {
     private void boundCursorPosition() {
         boundCursorPosition(uiText.getText());
     }
-    
+
     private void boundCursorPosition(String text) {
         cursorPosition = Math.min(Math.max(cursorPosition, 0), text.length());
     }
@@ -140,11 +131,21 @@ public class UITextInput extends UIContainer {
         uiText.syncText();
     }
 
+    @Override
+    public void select(SVector mouse) {
+        if (mouse == null) {
+            cursorPosition = uiText.getText().length();
+        } else {
+            cursorPosition = uiText.getCharIndex(mouse.x - position.x - uiText.getPosition().x);
+        }
+    }
+
     public SVector getCursorPosition() {
         boundCursorPosition();
-        double x = position.x + getHMargin() + uiText.textWidth(cursorPosition);
-        double y = position.y + getVMargin();
-        return new SVector(x, y);
+        SVector pos = new SVector(uiText.getPosition());
+        pos.add(position);
+        pos.x += uiText.textWidth(cursorPosition);
+        return pos;
     }
 
     public SVector getCursorSize() {

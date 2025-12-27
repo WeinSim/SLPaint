@@ -6,6 +6,10 @@ public final class PencilTool extends ImageTool {
 
     public static final PencilTool INSTANCE = new PencilTool();
 
+    public static final int MIN_SIZE = 1, MAX_SIZE = 16;
+
+    private int size = 1;
+
     private PencilTool() {
     }
 
@@ -17,7 +21,7 @@ public final class PencilTool extends ImageTool {
 
     @Override
     protected void handleInitialDrag(int x, int y, int px, int py) {
-        app.drawLine(x, y, px, py, getMouseDragButton() == 0 ? app.getPrimaryColor() : app.getSecondaryColor());
+        app.drawLine(x, y, px, py, size, getMouseDragButton() == 0 ? app.getPrimaryColor() : app.getSecondaryColor());
     }
 
     @Override
@@ -43,6 +47,14 @@ public final class PencilTool extends ImageTool {
 
     private void invalidState() {
         throw new UnsupportedOperationException("IDLE and IDLE_DRAG states undefined for Pencil tool");
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public void setSize(int size) {
+        this.size = Math.min(Math.max(size, MIN_SIZE), MAX_SIZE);
     }
 
     @Override

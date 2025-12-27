@@ -189,9 +189,9 @@ public class Image {
     }
 
     public void setPixel(int x, int y, int color) {
-        if (!isInside(x, y)) {
+        if (!isInside(x, y))
             return;
-        }
+
         int[] colorArray = {
                 SUtil.red(color),
                 SUtil.green(color),

@@ -10,6 +10,8 @@ public class AlphaScale extends UIScale {
     public AlphaScale(int orientation, ColorPicker colorPicker) {
         super(orientation, () -> colorPicker.getAlpha() / 255.0, d -> colorPicker.setAlpha((int) (d * 255)));
         this.colorPicker = colorPicker;
+
+        narrow = false;
     }
 
     public int getRGB() {

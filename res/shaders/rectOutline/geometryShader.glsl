@@ -50,7 +50,7 @@ vec3 vecToInt(vec3 v) {
 
 void main(void) {
     vec3 position = pass_transformationMatrix[0] * vec3(pass_position[0], 1.0);
-    vec2 size = (pass_transformationMatrix[0] * vec3(pass_size[0], 0.0)).xy;
+    size = (pass_transformationMatrix[0] * vec3(pass_size[0], 0.0)).xy;
 
     int dataIndex = pass_dataIndex[0];
     relativeBoundingBoxMin = rectData.boundingBox[dataIndex].xy - position.xy;

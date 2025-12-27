@@ -37,13 +37,10 @@ import ui.components.ImageCanvas;
  * 
  * App:
  *   Small problems:
- *     Selection should include the bottom and right edge of the selection
  *     Pressing 'r' should not reset the view if a text input is currently
  *       active
  *     ImageCanvas.mouseTrulyAbove() should return true even if the mouse is
  *       above the text tool input
- *   Pencil
- *     Add different sizes
  *   Line tool
  *   Selection tool
  *     Add ability to move selection with arrow keys (keyboard shortcuts)
@@ -100,6 +97,7 @@ import ui.components.ImageCanvas;
  *   Make side panel collapsable
  * Rendering:
  *   Text rendering
+ *     Orange text on image has yellow edges (on the left)
  *     How to handle fonts?
  *       How to handle big font sizes?
  *         Generate texture atlas using fontbm on demand?
@@ -221,8 +219,8 @@ public final class MainApp extends App {
 
         ImageTool.init(this);
 
-        setActiveTool(ImageTool.SELECTION);
-        prevTool = ImageTool.SELECTION;
+        setActiveTool(ImageTool.PENCIL);
+        prevTool = ImageTool.PENCIL;
     }
 
     @Override
@@ -387,38 +385,53 @@ public final class MainApp extends App {
         customColorButtonArray.addColor(color);
     }
 
-    public void drawLine(int x, int y, int x0, int y0, int color) {
+    public void drawLine(int x0, int y0, int x1, int y1, int size, int color) {
         Image image = imageFileManager.getImage();
 
-        int dx = Math.abs(x - x0);
-        int dy = Math.abs(y - y0);
-        if (dx > dy) {
-            if (x0 > x) {
-                int temp = x0;
-                x0 = x;
-                x = temp;
+        final int maxOffset = (size - 1) / 2;
 
-                temp = y0;
-                y0 = y;
-                y = temp;
-            }
-            for (int t = x0; t <= x; t++) {
-                int py = x0 == x ? y0 : (int) Math.round(SUtil.map(t, x0, x, y0, y));
-                image.setPixel(t, py, color);
+        // https://iquilezles.org/articles/distfunctions2d/
+        SVector ba = new SVector(x1 - x0, y1 - y0);
+        double invBaSq = 1.0 / ba.magSq();
+
+        double maxDistSq = ((double) size * size) / 4;
+        int dx = Math.abs(x0 - x1);
+        int dy = Math.abs(y0 - y1);
+        if (dx > dy) {
+            int minx = Math.min(x0, x1),
+                    maxx = Math.max(x0, x1);
+            for (int x = minx - maxOffset; x <= maxx + maxOffset; x++) {
+                int py = x1 == x0 ? y0 : (int) Math.round(SUtil.map(x, x0, x1, y0, y1));
+                for (int yoff = -2 * maxOffset; yoff <= 2 * maxOffset; yoff++) {
+                    int y = py + yoff;
+                    SVector pa = new SVector(x - x0, y - y0);
+                    double h = Math.min(Math.max(pa.dot(ba) * invBaSq, 0), 1);
+                    if (Double.isFinite(h)) {
+                        pa.x -= ba.x * h;
+                        pa.y -= ba.y * h;
+                    }
+                    double distSq = pa.magSq();
+                    if (distSq < maxDistSq)
+                        image.setPixel(x, y, color);
+                }
             }
         } else {
-            if (y0 > y) {
-                int temp = y0;
-                y0 = y;
-                y = temp;
-
-                temp = x0;
-                x0 = x;
-                x = temp;
-            }
-            for (int t = y0; t <= y; t++) {
-                int px = y0 == y ? x0 : (int) Math.round(SUtil.map(t, y0, y, x0, x));
-                image.setPixel(px, t, color);
+            int miny = Math.min(y0, y1),
+                    maxy = Math.max(y0, y1);
+            for (int y = miny - maxOffset; y <= maxy + maxOffset; y++) {
+                int px = y1 == y0 ? x0 : (int) Math.round(SUtil.map(y, y0, y1, x0, x1));
+                for (int xoff = -2 * maxOffset; xoff <= 2 * maxOffset; xoff++) {
+                    int x = px + xoff;
+                    SVector pa = new SVector(x - x0, y - y0);
+                    double h = Math.min(Math.max(pa.dot(ba) * invBaSq, 0), 1);
+                    if (Double.isFinite(h)) {
+                        pa.x -= ba.x * h;
+                        pa.y -= ba.y * h;
+                    }
+                    double distSq = pa.magSq();
+                    if (distSq < maxDistSq)
+                        image.setPixel(x, y, color);
+                }
             }
         }
     }

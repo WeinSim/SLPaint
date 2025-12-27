@@ -74,7 +74,6 @@ public class ColorPickContainer extends UIContainer {
         HueSatField hueSatField = new HueSatField(colorPicker, size);
         row1.add(hueSatField);
         UIScale lightnessScale = new LightnessScale(UIContainer.VERTICAL, colorPicker);
-        lightnessScale.setVFillSize();
         row1.add(lightnessScale);
         return row1;
     }
@@ -92,7 +91,6 @@ public class ColorPickContainer extends UIContainer {
         row2.add(alphaInput);
 
         UIScale alphaScale = new AlphaScale(UIContainer.HORIZONTAL, colorPicker);
-        alphaScale.setHFillSize();
         row2.add(alphaScale);
         return row2;
     }

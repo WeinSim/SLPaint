@@ -223,8 +223,7 @@ public class AppRenderer<T extends App> {
             if (scale instanceof LightnessScale l) {
                 uiMaster.lightnessScale(pos, siz, l.getHue(), l.getSaturation(),
                         l.getOrientation() == UIContainer.VERTICAL, App.isHSLColorSpace());
-            }
-            if (scale instanceof AlphaScale a) {
+            } else if (scale instanceof AlphaScale a) {
                 // checkerboard background
                 uiMaster.noStroke();
                 uiMaster.checkerboardFill(Colors.getTransparentColors(), siz.y / 2);
@@ -233,6 +232,10 @@ public class AppRenderer<T extends App> {
                 // color gradient
                 uiMaster.fill(MainApp.toSVector(a.getRGB()));
                 uiMaster.alphaScale(pos, siz, a.getOrientation() == UIContainer.VERTICAL);
+            } else {
+                uiMaster.noStroke();
+                uiMaster.fill(Colors.getOutlineNormalColor());
+                uiMaster.rect(pos, siz);
             }
         }
 

@@ -74,7 +74,7 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
                 uiMaster.resetMatrix();
                 uiMaster.translate(translation);
                 int selectionPhase = activeTool.getState();
-                if (selectionPhase != SelectionTool.NONE) {
+                if (selectionPhase != ImageTool.NONE) {
                     int x, y, w, h;
                     if (selectionPhase == ImageTool.INITIAL_DRAG) {
                         int startX = selection.getStartX();
@@ -83,15 +83,15 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
                         int endY = selection.getEndY();
                         x = Math.min(startX, endX);
                         y = Math.min(startY, endY);
-                        w = Math.abs(endX - startX);
-                        h = Math.abs(endY - startY);
+                        w = Math.abs(endX - startX) + 1;
+                        h = Math.abs(endY - startY) + 1;
                     } else {
                         x = selection.getX();
                         y = selection.getY();
                         w = selection.getWidth();
                         h = selection.getHeight();
                     }
-                    uiMaster.checkerboardStroke(SELECTION_BORDER_COLORS, 15);
+                    uiMaster.checkerboardStroke(SELECTION_BORDER_COLORS, 10);
                     uiMaster.strokeWeight(2);
                     uiMaster.noFill();
                     uiMaster.depth(getDepth(3));

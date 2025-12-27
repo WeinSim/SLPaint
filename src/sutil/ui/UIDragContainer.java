@@ -66,7 +66,7 @@ public abstract class UIDragContainer<D extends UIElement & Draggable> extends U
 
     @Override
     public void add(UIElement child) {
-        throw new UnsupportedOperationException("A DragContainer must contain exactly one element.");
+        throw new UnsupportedOperationException("A UIDragContainer must contain exactly one element.");
     }
 
     @Override

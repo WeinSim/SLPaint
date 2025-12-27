@@ -1,21 +1,24 @@
 package ui;
 
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import main.Image;
 import main.ImageFormat;
 import main.apps.MainApp;
 import main.tools.ImageTool;
+import main.tools.PencilTool;
 import main.tools.SelectionTool;
 import main.tools.TextTool;
+import sutil.SUtil;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UIDropdown;
 import sutil.ui.UILabel;
 import sutil.ui.UINumberInput;
+import sutil.ui.UIScale;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
-import sutil.ui.UITextInput;
 import sutil.ui.UIToggle;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
@@ -48,39 +51,58 @@ public class MainUI extends AppUI<MainApp> {
         settings.add(new UIButton("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG)));
 
         UIContainer fileOptions = addTopRowSection(topRow, "File");
-        fileOptions.add(new UIButton("New", app::newImage));
-        fileOptions.add(new UIButton("Open", app::openImage));
-        fileOptions.add(new UIButton("Save", app::saveImage));
+        fileOptions.add(new UIText("..."));
+        // fileOptions.add(new UIButton("New", app::newImage));
+        // fileOptions.add(new UIButton("Open", app::openImage));
+        // fileOptions.add(new UIButton("Save", app::saveImage));
 
         UIContainer imageOptions = addTopRowSection(topRow, "Image");
-        imageOptions.add(new UIButton("Change Size", () -> app.showDialog(MainApp.CHANGE_SIZE_DIALOG)));
-        imageOptions.add(new UIButton("Rotate", () -> app.showDialog(MainApp.ROTATE_DIALOG)));
-        imageOptions.add(new UIButton("Flip", () -> app.showDialog(MainApp.FLIP_DIALOG)));
+        imageOptions.add(new UIText("..."));
+        // imageOptions.add(new UIButton("Change Size", () ->
+        // app.showDialog(MainApp.CHANGE_SIZE_DIALOG)));
+        // imageOptions.add(new UIButton("Rotate", () ->
+        // app.showDialog(MainApp.ROTATE_DIALOG)));
+        // imageOptions.add(new UIButton("Flip", () ->
+        // app.showDialog(MainApp.FLIP_DIALOG)));
 
         UIContainer toolbox = addTopRowSection(topRow, "Tools");
         for (ImageTool tool : ImageTool.INSTANCES) {
             toolbox.add(new ToolButton(app, tool));
         }
 
-        Supplier<Boolean> textToolsVisibility = () -> app.getActiveTool() == ImageTool.TEXT;
-        UIContainer textTools = addTopRowSection(topRow, "Text", textToolsVisibility);
+        UIContainer pencilTools = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+        pencilTools.zeroMargin().noOutline();
+        pencilTools.setVisibilitySupplier(() -> this.app.getActiveTool() == ImageTool.PENCIL);
+
+        final double min = PencilTool.MIN_SIZE,
+                max = PencilTool.MAX_SIZE;
+        UIScale pencilSizeScale = new UIScale(UIContainer.HORIZONTAL,
+                () -> SUtil.map(ImageTool.PENCIL.getSize(), min, max, 0, 1),
+                x -> ImageTool.PENCIL.setSize((int) Math.round(SUtil.map(x, 0, 1, min, max))));
+        pencilTools.add(pencilSizeScale);
+
+        UIContainer pencilSizeBottomRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        pencilSizeBottomRow.zeroMargin().noOutline();
+        pencilSizeBottomRow.add(new UIText("Size:"));
+        pencilSizeBottomRow.add(new UIContainer(0, 0).setHFillSize().noOutline());
+        pencilSizeBottomRow.add(createIntPicker(ImageTool.PENCIL::getSize, ImageTool.PENCIL::setSize));
+
+        pencilTools.add(pencilSizeBottomRow);
+        topRow.add(pencilTools);
+
+        UIContainer textTools = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        textTools.zeroMargin().setVFillSize().noOutline();
+        textTools.setVisibilitySupplier(() -> app.getActiveTool() == ImageTool.TEXT);
         textTools.setPaddingScale(2);
 
         UIContainer textSizeContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
-        textSizeContainer.zeroMargin().noOutline();
-        UIContainer textSizeRow1 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
-        textSizeRow1.zeroMargin().zeroPadding().noOutline();
-        textSizeRow1.add(new UIButton("-", () -> ImageTool.TEXT.setSize(ImageTool.TEXT.getSize() - 1)));
-        UINumberInput textSizeInput = new UINumberInput(ImageTool.TEXT::getSize, ImageTool.TEXT::setSize);
-        textSizeInput.setVFillSize();
-        textSizeRow1.add(textSizeInput);
-        textSizeRow1.add(new UIButton("+", () -> ImageTool.TEXT.setSize(ImageTool.TEXT.getSize() + 1)));
-        textSizeContainer.add(textSizeRow1);
+        textSizeContainer.zeroMargin().setPaddingScale(2).setVFillSize().noOutline();
+        textSizeContainer.add(createIntPicker(ImageTool.TEXT::getSize, ImageTool.TEXT::setSize));
         textSizeContainer.add(new UIText("Size"));
         textTools.add(textSizeContainer);
 
         UIContainer textFontContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
-        textFontContainer.zeroMargin().noOutline();
+        textFontContainer.zeroMargin().setPaddingScale(2).setVFillSize().noOutline();
         UIContainer textFontRow1 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         textFontRow1.zeroMargin().noOutline();
         textFontRow1.add(new UIDropdown(
@@ -91,6 +113,8 @@ public class MainUI extends AppUI<MainApp> {
         textFontContainer.add(textFontRow1);
         textFontContainer.add(new UIText("Font"));
         textTools.add(textFontContainer);
+
+        topRow.add(textTools);
 
         for (int i = 0; i < 2; i++) {
             final int index = i;
@@ -192,9 +216,10 @@ public class MainUI extends AppUI<MainApp> {
         // debugPanel.add(new UILabel(lipsum));
         // }
 
-        debugPanel.add(new UITextInput(this::getDebugString, this::setDebugString, true));
+        // debugPanel.add(new UITextInput(this::getDebugString, this::setDebugString,
+        // true));
 
-        canvas.add(debugPanel.addScrollbars());
+        // canvas.add(debugPanel.addScrollbars());
 
         canvas.add(new TextFloatContainer(app));
 
@@ -280,6 +305,19 @@ public class MainUI extends AppUI<MainApp> {
 
         topRow.add(options);
         return optionButtons;
+    }
+
+    private UIContainer createIntPicker(Supplier<Integer> sizeGetter, Consumer<Integer> sizeSetter) {
+
+        UIContainer container = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        container.zeroMargin().zeroPadding().noOutline();
+        container.add(new UIButton("-", () -> sizeSetter.accept(sizeGetter.get() - 1)));
+        UINumberInput textSizeInput = new UINumberInput(sizeGetter, sizeSetter);
+        textSizeInput.setVFillSize();
+        textSizeInput.setHAlignment(UIContainer.CENTER);
+        container.add(textSizeInput);
+        container.add(new UIButton("+", () -> sizeSetter.accept(sizeGetter.get() + 1)));
+        return container;
     }
 
     public String getDebugString() {

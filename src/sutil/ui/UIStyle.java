@@ -12,6 +12,7 @@ public class UIStyle {
 
     public UIStyle(Supplier<SVector> backgroundColorSupplier, Supplier<SVector> outlineColorSupplier,
             Supplier<Double> strokeWeightSupplier) {
+
         this.backgroundColorSupplier = backgroundColorSupplier;
         this.outlineColorSupplier = outlineColorSupplier;
         this.strokeWeightSupplier = strokeWeightSupplier;
