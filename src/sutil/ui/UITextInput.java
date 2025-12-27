@@ -5,120 +5,161 @@ import java.util.function.Supplier;
 
 import org.lwjgl.glfw.GLFW;
 
+import sutil.math.SVector;
+
 public class UITextInput extends UIContainer {
 
-    private boolean numberInput;
+    private static final double BLINK_INTERVAL = 0.6;
 
     protected UIText uiText;
 
-    private Cursor cursor;
-
     private Consumer<String> valueUpdater;
 
+    private boolean multiline;
+    private int cursorPosition;
+
+    private double blinkStart;
+
     public UITextInput(Supplier<String> textUpdater, Consumer<String> valueUpdater) {
+        this(textUpdater, valueUpdater, false);
+    }
+
+    public UITextInput(Supplier<String> textUpdater, Consumer<String> valueUpdater, boolean multiline) {
         super(HORIZONTAL, LEFT, CENTER);
+
         this.valueUpdater = valueUpdater;
+        this.multiline = multiline;
 
         hMarginScale = 0.5;
         vMarginScale = 0.5;
-        paddingScale = 0.33;
-
-        uiText = new UIText(textUpdater);
-        add(uiText);
-
         outlineNormal = true;
-        cursor = new Cursor();
-        add(cursor);
+
+        setHFillSize();
 
         selectable = true;
         selectOnClick = true;
 
-        setLeftClickAction(cursor::resetTimer);
+        uiText = new UIText(textUpdater);
+        add(uiText);
+
+        setLeftClickAction(this::resetTimer);
+
+        cursorPosition = 0;
     }
 
     @Override
-    public void update() {
-        super.update();
-        setHFixedSize(uiText.getTextSize() * 3.3333);
+    public void select(SVector mouse) {
+        if (mouse == null) {
+            cursorPosition = uiText.getText().length();
+        } else {
+            cursorPosition = uiText.getCharIndex(mouse.x - position.x - getHMargin());
+        }
     }
 
     @Override
     public void keyPressed(int key) {
         if (active()) {
             String text = uiText.getText();
-            String newText = text;
-            if (key == GLFW.GLFW_KEY_BACKSPACE) {
-                int len = text.length();
-                if (len > 0) {
-                    newText = text.substring(0, len - 1);
-                }
-            } else if (key == GLFW.GLFW_KEY_ENTER) {
-                panel.setSelectedElement(null);
-            } else {
-                return;
-            }
+            boundCursorPosition(text);
+            switch (key) {
+                case GLFW.GLFW_KEY_BACKSPACE -> {
+                    if (cursorPosition > 0) {
+                        String newText = text.substring(0, cursorPosition - 1)
+                                + text.substring(cursorPosition);
+                        cursorPosition--;
 
-            valueUpdater.accept(newText);
-            cursor.resetTimer();
+                        updateText(newText);
+                        resetTimer();
+                    }
+                }
+                case GLFW.GLFW_KEY_DELETE -> {
+                    if (cursorPosition < text.length()) {
+                        String newText = text.substring(0, cursorPosition)
+                                + text.substring(cursorPosition + 1);
+
+                        updateText(newText);
+                        resetTimer();
+                    }
+                }
+                case GLFW.GLFW_KEY_LEFT -> {
+                    cursorPosition--;
+                    resetTimer();
+                }
+                case GLFW.GLFW_KEY_RIGHT -> {
+                    cursorPosition++;
+                    resetTimer();
+                }
+                case GLFW.GLFW_KEY_ENTER -> {
+                    if (multiline) {
+                        charInput('\n');
+                    } else {
+                        panel.select(null);
+                    }
+                }
+            }
         }
     }
 
     public void charInput(char c) {
         if (active()) {
             String text = uiText.getText();
+            boundCursorPosition();
+
             String newText = text;
-            boolean validKey = false;
-            if (numberInput) {
-                validKey = c >= '0' && c <= '9';
-            } else {
-                if (c >= 32 && c <= 126)
-                    validKey = true;
-                if (c >= 160 && c < 255)
-                    validKey = true;
-            }
+            boolean validKey = isValidChar(c);
             if (!validKey)
                 return;
 
-            newText = text + c;
-            valueUpdater.accept(newText);
-            cursor.resetTimer();
+            newText = text.substring(0, cursorPosition) + c + text.substring(cursorPosition);
+            cursorPosition++;
+            updateText(newText);
+            resetTimer();
         }
+    }
+
+    protected boolean isValidChar(char c) {
+        return (c >= 32 && c <= 126) || (c >= 160 && c < 255) || (c == '\n' && multiline);
+    }
+
+    /**
+     * This method needs be called every time the {@code cursorPosition} variable is
+     * used. The reason is that the value represented byy this UITextInput (and thus
+     * the String it displays) might have changed since the last time the bounds
+     * have been checked.
+     */
+    private void boundCursorPosition() {
+        boundCursorPosition(uiText.getText());
+    }
+    
+    private void boundCursorPosition(String text) {
+        cursorPosition = Math.min(Math.max(cursorPosition, 0), text.length());
+    }
+
+    private void updateText(String newText) {
+        valueUpdater.accept(newText);
+        uiText.syncText();
+    }
+
+    public SVector getCursorPosition() {
+        boundCursorPosition();
+        double x = position.x + getHMargin() + uiText.textWidth(cursorPosition);
+        double y = position.y + getVMargin();
+        return new SVector(x, y);
+    }
+
+    public SVector getCursorSize() {
+        return new SVector(1, uiText.getTextSize());
+    }
+
+    public boolean isCursorVisible() {
+        return active() && ((System.nanoTime() * 1e-9 - blinkStart) / BLINK_INTERVAL) % 2 < 1;
+    }
+
+    public void resetTimer() {
+        blinkStart = System.nanoTime() * 1e-9;
     }
 
     private boolean active() {
         return panel.getSelectedElement() == this;
-    }
-
-    public String getText() {
-        return uiText.getText();
-    }
-
-    public void setNumberInput(boolean numberInput) {
-        this.numberInput = numberInput;
-    }
-
-    private class Cursor extends UIContainer {
-
-        private static final double BLINK_INTERVAL = 0.6;
-
-        private double blinkStart;
-
-        public Cursor() {
-            super(VERTICAL, 0);
-
-            zeroMargin();
-            setVFillSize();
-        }
-
-        public void resetTimer() {
-            blinkStart = System.nanoTime() * 1e-9;
-        }
-
-        @Override
-        public void update() {
-            super.update();
-
-            outlineNormal = active() && ((System.nanoTime() * 1e-9 - blinkStart) / BLINK_INTERVAL) % 2 < 1;
-        }
     }
 }

@@ -15,6 +15,7 @@ import sutil.ui.UIElement;
 import sutil.ui.UIFloatContainer;
 import sutil.ui.UIScale;
 import sutil.ui.UIText;
+import sutil.ui.UITextInput;
 import sutil.ui.UIToggle;
 import ui.AppUI;
 import ui.Colors;
@@ -209,6 +210,13 @@ public class AppRenderer<T extends App> {
             uiMaster.fill(text.getColor());
             uiMaster.text(text.getText(), position);
         }
+        if (element instanceof UITextInput textInput) {
+            if (textInput.isCursorVisible()) {
+                uiMaster.noStroke();
+                uiMaster.fill(textInput.getOutlineColor());
+                uiMaster.rect(textInput.getCursorPosition(), textInput.getCursorSize());
+            }
+        }
         if (element instanceof UIScale scale) {
             SVector pos = new SVector(position).add(scale.getScaleOffset());
             SVector siz = scale.getScaleSize();
@@ -250,7 +258,7 @@ public class AppRenderer<T extends App> {
         uiMaster = new UIRenderMaster(app, app.getLoader());
     }
 
-    public void renderTextToImage(String text, int x, int y, int size, SVector color, TextFont font, Image image) {
+    public void renderTextToImage(String text, double x, double y, double size, SVector color, TextFont font, Image image) {
         uiMaster.start();
         uiMaster.textFramebuffer();
 
@@ -264,7 +272,7 @@ public class AppRenderer<T extends App> {
         uiMaster.fill(color);
         uiMaster.textFont(font);
         uiMaster.textSize(size);
-        uiMaster.text(text, new SVector());
+        uiMaster.text(text, new SVector(x, y));
 
         uiMaster.render();
 
@@ -280,6 +288,6 @@ public class AppRenderer<T extends App> {
         for (int i = 0; i < array.length; i++) {
             array[i] /= divisor;
         }
-        image.drawSubImage(x, y, width, height, array);
+        image.drawSubImage(0, 0, width, height, array);
     }
 }

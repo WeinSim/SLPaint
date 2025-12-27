@@ -60,10 +60,14 @@ public class TextFont {
     }
 
     private FontChar[] toChars(String text) {
-        FontChar[] chars = new FontChar[text.length()];
-        int i = 0;
-        for (Character c : text.toCharArray()) {
-            chars[i++] = fontChars[charIDs.getOrDefault(c, unknownCharIndex)];
+        return toChars(text, text.length());
+    }
+
+    private FontChar[] toChars(String text, int len) {
+        FontChar[] chars = new FontChar[len];
+        char[] charArray = text.toCharArray();
+        for (int i = 0; i < len; i++) {
+            chars[i] = fontChars[charIDs.getOrDefault(charArray[i], unknownCharIndex)];
         }
         return chars;
     }
@@ -79,7 +83,7 @@ public class TextFont {
             charIndex.putData(charIDs.get((char) fontChar.id()));
 
             SVector vertexPos = new SVector(x + fontChar.xOffset() * drawCall.relativeSize,
-                    y + (fontChar.yOffset() -base + 0.8 * size) * drawCall.relativeSize);
+                    y + (fontChar.yOffset() - base + 0.8 * size) * drawCall.relativeSize);
             position.putData(vertexPos);
 
             depth.putData(drawCall.depth);
@@ -89,12 +93,39 @@ public class TextFont {
     }
 
     public double textWidth(String text) {
-        FontChar[] chars = toChars(text);
+        return textWidth(text, text.length());
+    }
+
+    public double textWidth(String text, int len) {
+        FontChar[] chars = toChars(text, len);
         double sum = 0;
         for (FontChar fontChar : chars) {
             sum += fontChar.xAdvance();
         }
         return sum;
+    }
+
+    public int getCharIndex(String text, double x) {
+        FontChar[] chars = toChars(text);
+
+        if (chars.length == 0)
+            return 0;
+
+        double sum = 0;
+        int index = chars.length;
+        for (int i = 0; i < chars.length; i++) {
+            double current = sum,
+                    next = sum + chars[i].xAdvance();
+            double middle = (current + next) / 2;
+            if (middle > x) {
+                index = i;
+                break;
+            }
+
+            sum = next;
+        }
+
+        return index;
     }
 
     public int[] getTextureIDs() {

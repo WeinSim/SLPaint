@@ -63,7 +63,7 @@ public abstract class UIPanel {
         selectedElementVisible = false;
         root.updateVisibility();
         if (!selectedElementVisible) {
-            selectedElement = null;
+            select(null);
         }
 
         root.updateMousePosition(mousePos, valid && !dragging);
@@ -93,7 +93,7 @@ public abstract class UIPanel {
             if (mouseButton == LEFT) {
                 mousePressed = true;
             }
-            selectedElement = null;
+            select(null);
             root.mousePressed(mouseButton);
         });
     }
@@ -112,13 +112,15 @@ public abstract class UIPanel {
 
     public void keyPressed(int key, int mods) {
         queueEvent(() -> {
-            if (key == GLFW.GLFW_KEY_TAB) {
-                cycleSelectedElement((mods & GLFW.GLFW_MOD_SHIFT) != 0);
-            } else if (key == GLFW.GLFW_KEY_ENTER) {
-                if (selectedElement != null) {
-                    UIAction clickAction = selectedElement.getLeftClickAction();
-                    if (clickAction != null) {
-                        clickAction.run();
+            switch (key) {
+                case GLFW.GLFW_KEY_TAB -> cycleSelectedElement((mods & GLFW.GLFW_MOD_SHIFT) != 0);
+                case GLFW.GLFW_KEY_CAPS_LOCK -> select(null);
+                case GLFW.GLFW_KEY_ENTER -> {
+                    if (selectedElement != null) {
+                        UIAction clickAction = selectedElement.getLeftClickAction();
+                        if (clickAction != null) {
+                            clickAction.run();
+                        }
                     }
                 }
             }
@@ -140,11 +142,22 @@ public abstract class UIPanel {
             return;
         }
         if (selectedElement == null) {
-            selectedElement = backwards ? elements.getLast() : elements.getFirst();
+            select(backwards ? elements.getLast() : elements.getFirst());
         } else {
             int oldIndex = elements.indexOf(selectedElement);
             int newIndex = (oldIndex + (backwards ? -1 : 1) + elements.size()) % elements.size();
-            selectedElement = elements.get(newIndex);
+            select(elements.get(newIndex));
+        }
+    }
+
+    public void select(UIElement element) {
+        select(element, null);
+    }
+
+    public void select(UIElement element, SVector mouse) {
+        selectedElement = element;
+        if (element != null) {
+            element.select(mouse);
         }
     }
 
@@ -168,7 +181,13 @@ public abstract class UIPanel {
         return root;
     }
 
-    public abstract double textWidth(String text, double textSize, String fontName);
+    public double textWidth(String text, double textSize, String fontName) {
+        return textWidth(text, textSize, fontName, text.length());
+    }
+
+    public abstract double textWidth(String text, double textSize, String fontName, int len);
+
+    public abstract int getCharIndex(String text, double textSize, String fontName, double x);
 
     public double getMargin() {
         return margin;
@@ -212,10 +231,6 @@ public abstract class UIPanel {
 
     public String getDefaultFontName() {
         return defaultFontName;
-    }
-
-    public void setSelectedElement(UIElement element) {
-        selectedElement = element;
     }
 
     public UIElement getSelectedElement() {

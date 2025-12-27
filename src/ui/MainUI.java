@@ -12,6 +12,7 @@ import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UIDropdown;
 import sutil.ui.UILabel;
+import sutil.ui.UINumberInput;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
 import sutil.ui.UITextInput;
@@ -26,6 +27,8 @@ import ui.components.UIColorElement;
 public class MainUI extends AppUI<MainApp> {
 
     public static final int NUM_COLOR_BUTTONS_PER_ROW = 10;
+
+    private String debugString = "";
 
     public MainUI(MainApp app) {
         super(app);
@@ -68,19 +71,7 @@ public class MainUI extends AppUI<MainApp> {
         UIContainer textSizeRow1 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         textSizeRow1.zeroMargin().zeroPadding().noOutline();
         textSizeRow1.add(new UIButton("-", () -> ImageTool.TEXT.setSize(ImageTool.TEXT.getSize() - 1)));
-        UITextInput textSizeInput = new UITextInput(
-                () -> Integer.toString(ImageTool.TEXT.getSize()),
-                s -> {
-                    int intValue = 0;
-                    if (s.length() > 0) {
-                        try {
-                            intValue = Integer.parseInt(s);
-                        } catch (NumberFormatException e) {
-                            return;
-                        }
-                    }
-                    ImageTool.TEXT.setSize(intValue);
-                });
+        UINumberInput textSizeInput = new UINumberInput(ImageTool.TEXT::getSize, ImageTool.TEXT::setSize);
         textSizeInput.setVFillSize();
         textSizeRow1.add(textSizeInput);
         textSizeRow1.add(new UIButton("+", () -> ImageTool.TEXT.setSize(ImageTool.TEXT.getSize() + 1)));
@@ -179,21 +170,31 @@ public class MainUI extends AppUI<MainApp> {
                 UIContainer.VERTICAL);
         debugPanel.withBackground().noOutline();
         debugPanel.setVFillSize();
-        debugPanel.add(new UIText("Tools"));
-        for (ImageTool tool : ImageTool.INSTANCES) {
-            debugPanel.add(new UIText(() -> String.format(" %s: state = %d",
-                    tool.getName(), tool.getState())));
-        }
-        debugPanel.add(new UIText(() -> String.format("Active tool: %s", app.getActiveTool().getName())));
-        debugPanel.add(new UIText(() -> String.format("  State: %d", app.getActiveTool().getState())));
-        debugPanel.add(new UIText(() -> String.format("TextTool.text: \"%s\"", ImageTool.TEXT.getText())));
-        debugPanel.add(new UIText(() -> String.format("TextTool.font: \"%s\"", ImageTool.TEXT.getFont())));
-        // debugPanel.add(new UIText("                           "));
+        debugPanel.setHFixedSize(300);
+
+        // debugPanel.add(new UIText("Tools"));
+        // for (ImageTool tool : ImageTool.INSTANCES) {
+        // debugPanel.add(new UIText(() -> String.format(" %s: state = %d",
+        // tool.getName(), tool.getState())));
+        // }
+        // debugPanel.add(new UIText(() -> String.format("Active tool: %s",
+        // app.getActiveTool().getName())));
+        // debugPanel.add(new UIText(() -> String.format(" State: %d",
+        // app.getActiveTool().getState())));
+        // debugPanel.add(new UIText(() -> String.format("TextTool.text: \"%s\"",
+        // ImageTool.TEXT.getText())));
+        // debugPanel.add(new UIText(() -> String.format("TextTool.font: \"%s\"",
+        // ImageTool.TEXT.getFont())));
+
+        // debugPanel.add(new UIText(" "));
         // String[] lipsum = lipsum(Integer.MAX_VALUE, 3);
         // for (int i = 0; i < 20; i++) {
         // debugPanel.add(new UILabel(lipsum));
         // }
-        // canvas.add(debugPanel.addScrollbars());
+
+        debugPanel.add(new UITextInput(this::getDebugString, this::setDebugString, true));
+
+        canvas.add(debugPanel.addScrollbars());
 
         canvas.add(new TextFloatContainer(app));
 
@@ -279,5 +280,13 @@ public class MainUI extends AppUI<MainApp> {
 
         topRow.add(options);
         return optionButtons;
+    }
+
+    public String getDebugString() {
+        return debugString;
+    }
+
+    public void setDebugString(String debugString) {
+        this.debugString = debugString;
     }
 }

@@ -60,9 +60,8 @@ public abstract class UIElement {
     }
 
     public void mousePressed(int mouseButton) {
-        if (!mouseAbove) {
+        if (!mouseAbove)
             return;
-        }
 
         switch (mouseButton) {
             case UIPanel.LEFT -> {
@@ -71,7 +70,7 @@ public abstract class UIElement {
                 }
 
                 if (selectOnClick) {
-                    panel.setSelectedElement(this);
+                    panel.select(this, mousePosition);
                 }
             }
             case UIPanel.RIGHT -> {
@@ -96,6 +95,15 @@ public abstract class UIElement {
     }
 
     public void charInput(char c) {
+    }
+
+    /**
+     * 
+     * @param mouse the relative mouse position of the mouse press that caused this
+     *              element to be selected, or {@code null} if this selection didn't
+     *              come from a mouse press
+     */
+    public void select(SVector mouse) {
     }
 
     public boolean isSelectable() {

@@ -2,6 +2,8 @@ package main.tools;
 
 import org.lwjgl.glfw.GLFW;
 
+import sutil.math.SVector;
+
 public final class TextTool extends ImageTool implements XYWH {
 
     public static final TextTool INSTANCE;
@@ -55,9 +57,8 @@ public final class TextTool extends ImageTool implements XYWH {
 
     @Override
     public boolean startInitialDrag(int x, int y, int mouseButton) {
-        if (mouseButton != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (mouseButton != GLFW.GLFW_MOUSE_BUTTON_LEFT)
             return false;
-        }
 
         startX = Math.min(Math.max(0, x), app.getImage().getWidth());
         startY = Math.min(Math.max(0, y), app.getImage().getHeight());
@@ -80,11 +81,10 @@ public final class TextTool extends ImageTool implements XYWH {
         width = Math.abs(startX - endX);
         height = Math.abs(startY - endY);
 
-        if (width == 0 || height == 0) {
-            return false;
-        }
+        // if (width == 0 || height == 0)
+        // return false;
 
-        app.getUI().setSelectedElement(app.getTextToolInput());
+        app.getUI().select(app.getTextToolInput());
 
         return true;
     }
@@ -125,7 +125,8 @@ public final class TextTool extends ImageTool implements XYWH {
     }
 
     private void flattenText() {
-        app.renderTextToImage(text, x, y, size, app.getLoader().loadFont(font));
+        SVector position = app.getImagePosition(app.getTextToolInput().getAbsolutePosition());
+        app.renderTextToImage(text, position.x, position.y, size, app.getLoader().loadFont(font));
         text = "";
     }
 

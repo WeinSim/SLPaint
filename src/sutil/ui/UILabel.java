@@ -8,17 +8,14 @@ public class UILabel extends UIContainer {
 
     private UIText firstChild;
 
-    private UILabel() {
+    public UILabel(String[] text) {
         super(VERTICAL, LEFT);
-        outlineNormal = false;
 
+        outlineNormal = false;
         zeroPadding();
 
         textUpdater = null;
-    }
 
-    public UILabel(String[] text) {
-        this();
         if (text.length == 0) {
             firstChild = new UIText("");
             add(firstChild);

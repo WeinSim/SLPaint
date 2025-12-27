@@ -26,21 +26,36 @@ public class UIText extends UIElement {
         this.textUpdater = textUpdater;
     }
 
+    public double textWidth(int len) {
+        return panel.textWidth(text, textSize, fontName, len);
+    }
+
+    public int getCharIndex(double x) {
+        return panel.getCharIndex(text, textSize, fontName, x);
+    }
+
     @Override
     public void setPreferredSize() {
-        double tw = panel.textWidth(text, textSize, fontName);
-        size = new SVector(tw, textSize);
+        size = new SVector(textWidth(text.length()), textSize);
     }
 
     @Override
     public void update() {
-        text = textUpdater.get();
+        syncText();
         textSize = textSizeUpdater.get();
         fontName = fontUpdater.get();
         color.set(colorUpdater.get());
     }
 
+    public void syncText() {
+        text = textUpdater.get();
+    }
+
     public String getText() {
+        if (text == null) {
+            syncText();
+        }
+
         return text;
     }
 

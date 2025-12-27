@@ -116,7 +116,8 @@ public class UIContainer extends UIElement {
         addActual(child);
     }
 
-    protected final void addActual(UIElement child) {
+    private final void addActual(UIElement child) {
+        // why are floating elements added first?
         if (child instanceof UIFloatContainer) {
             children.addFirst(child);
         } else {
@@ -845,7 +846,7 @@ public class UIContainer extends UIElement {
 
         @Override
         public void setPreferredSize() {
-            double min = 2 * panel.getMargin();
+            double min = 1.5 * panel.getMargin();
             size.set(min, min);
         }
 
@@ -908,7 +909,7 @@ public class UIContainer extends UIElement {
 
         void checkNotLocked() {
             if (locked) {
-                throw new IllegalStateException("Cannot add children to UIContaienr after it has been locked.");
+                throw new IllegalStateException("Cannot add children to UIContainer after it has been locked.");
             }
         }
 

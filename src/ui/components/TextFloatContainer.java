@@ -17,7 +17,7 @@ public class TextFloatContainer extends UIFloatContainer {
 
         this.app = app;
 
-        zeroMargin();
+        // zeroMargin();
         noBackground();
         noOutline();
 
@@ -27,7 +27,6 @@ public class TextFloatContainer extends UIFloatContainer {
                 && ImageTool.TEXT.getState() == ImageTool.IDLE);
 
         textInput = new TextInput();
-        textInput.setFillSize();
         add(textInput);
     }
 

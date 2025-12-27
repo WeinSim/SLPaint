@@ -198,9 +198,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         SVector mousePos = window.getMousePosition();
         ui.update(mousePos, focus);
 
-        window.setArrowCursor();
         if (ui.mouseAboveTextInput()) {
             window.setIBeamCursor();
+        } else {
+            window.setArrowCursor();
         }
     }
 
@@ -208,7 +209,8 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
     }
 
     protected void keyPressed(int key, int mods) {
-        // System.out.format("Key pressed: key = %d, mods = %d, time = %d\n", key, mods, System.nanoTime());
+        // System.out.format("Key pressed: key = %d, mods = %d, time = %d\n", key, mods,
+        // System.nanoTime());
 
         switch (key) {
             // Comma -> toggle debug outline

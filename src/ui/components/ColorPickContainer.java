@@ -10,10 +10,10 @@ import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
+import sutil.ui.UINumberInput;
 import sutil.ui.UIScale;
 import sutil.ui.UIStyle;
 import sutil.ui.UIText;
-import sutil.ui.UITextInput;
 import ui.Colors;
 import ui.Sizes;
 
@@ -34,6 +34,7 @@ public class ColorPickContainer extends UIContainer {
 
     public ColorPickContainer(ColorPicker colorPicker, Consumer<Integer> buttonAction, double size, int orientation,
             boolean addAlpha, boolean addPreview) {
+
         super(orientation, orientation == VERTICAL ? CENTER : TOP);
         this.colorPicker = colorPicker;
         this.size = size;
@@ -85,20 +86,9 @@ public class ColorPickContainer extends UIContainer {
 
         row2.add(new UIText("Alpha:"));
 
-        Supplier<String> textUpdater = () -> Integer.toString(SUtil.alpha(colorPicker.getRGB()));
-        Consumer<String> valueUpdater = s -> {
-            int alpha = 0;
-            if (s.length() > 0) {
-                try {
-                    alpha = Integer.parseInt(s);
-                } catch (NumberFormatException e) {
-                    return;
-                }
-            }
-            alpha = Math.min(Math.max(0, alpha), 255);
-            colorPicker.setAlpha(alpha);
-        };
-        UITextInput alphaInput = new UITextInput(textUpdater, valueUpdater);
+        Supplier<Integer> getter = () -> SUtil.alpha(colorPicker.getRGB());
+        Consumer<Integer> setter = alpha -> colorPicker.setAlpha(alpha);
+        UINumberInput alphaInput = new UINumberInput(getter, setter);
         row2.add(alphaInput);
 
         UIScale alphaScale = new AlphaScale(UIContainer.HORIZONTAL, colorPicker);
@@ -109,7 +99,6 @@ public class ColorPickContainer extends UIContainer {
 
     private UIContainer createRow3(boolean addPreview) {
         UIContainer row3 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
-        row3.setPaddingScale(2);
         row3.zeroMargin().noOutline();
         row3.setHFillSize();
 
@@ -140,36 +129,24 @@ public class ColorPickContainer extends UIContainer {
 
         UIContainer hslInput = new UIContainer(UIContainer.VERTICAL, UIContainer.RIGHT);
         hslInput.zeroMargin().noOutline();
-        hslInput.setVisibilitySupplier(() -> App.isHSLColorSpace());
+        hslInput.setVisibilitySupplier(App::isHSLColorSpace);
         for (int i = 0; i < HSL_NAMES.length; i++) {
             UIContainer colorRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
             colorRow.zeroMargin().noOutline();
             colorRow.add(new UIText(HSL_NAMES[i] + ":"));
-            Supplier<String> textUpdater = switch (i) {
-                case 0 -> () -> Integer.toString((int) colorPicker.getHue());
-                case 1 -> () -> Integer.toString((int) (colorPicker.getHSLSaturation() * 100));
-                case 2 -> () -> Integer.toString((int) (colorPicker.getLightness() * 100));
+            Supplier<Integer> getter = switch (i) {
+                case 0 -> () -> (int) colorPicker.getHue();
+                case 1 -> () -> (int) (colorPicker.getHSLSaturation() * 100);
+                case 2 -> () -> (int) (colorPicker.getLightness() * 100);
                 default -> null;
             };
-            final int j = i;
-            Consumer<String> valueUpdater = (String s) -> {
-                int component = 0;
-                if (s.length() > 0) {
-                    try {
-                        component = Integer.parseInt(s);
-                    } catch (NumberFormatException e) {
-                        return;
-                    }
-                }
-                int max = j == 0 ? 360 : 100;
-                component = Math.min(Math.max(0, component), max);
-                switch (j) {
-                    case 0 -> colorPicker.setHSLHue(component);
-                    case 1 -> colorPicker.setHSLSaturation(component / 100.0);
-                    case 2 -> colorPicker.setLightness(component / 100.0);
-                }
+            Consumer<Integer> setter = switch (i) {
+                case 0 -> hue -> colorPicker.setHSLHue(Math.min(Math.max(hue, 0), 359));
+                case 1 -> saturation -> colorPicker.setHSLSaturation(saturation / 100.0);
+                case 2 -> lightness -> colorPicker.setLightness(lightness / 100.0);
+                default -> null;
             };
-            UITextInput colorInput = new UITextInput(textUpdater, valueUpdater);
+            UINumberInput colorInput = new UINumberInput(getter, setter);
             colorRow.add(colorInput);
             hslInput.add(colorRow);
         }
@@ -182,31 +159,19 @@ public class ColorPickContainer extends UIContainer {
             UIContainer colorRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
             colorRow.zeroMargin().noOutline();
             colorRow.add(new UIText(HSV_NAMES[i] + ":"));
-            Supplier<String> textUpdater = switch (i) {
-                case 0 -> () -> Integer.toString((int) colorPicker.getHue());
-                case 1 -> () -> Integer.toString((int) (colorPicker.getHSVSaturation() * 100));
-                case 2 -> () -> Integer.toString((int) (colorPicker.getValue() * 100));
+            Supplier<Integer> getter = switch (i) {
+                case 0 -> () -> (int) colorPicker.getHue();
+                case 1 -> () -> (int) (colorPicker.getHSVSaturation() * 100);
+                case 2 -> () -> (int) (colorPicker.getValue() * 100);
                 default -> null;
             };
-            final int j = i;
-            Consumer<String> valueUpdater = s -> {
-                int component = 0;
-                if (s.length() > 0) {
-                    try {
-                        component = Integer.parseInt(s);
-                    } catch (NumberFormatException e) {
-                        return;
-                    }
-                }
-                int max = j == 0 ? 360 : 100;
-                component = Math.min(Math.max(0, component), max);
-                switch (j) {
-                    case 0 -> colorPicker.setHSVHue(component);
-                    case 1 -> colorPicker.setHSVSaturation(component / 100.0);
-                    case 2 -> colorPicker.setValue(component / 100.0);
-                }
+            Consumer<Integer> setter = switch (i) {
+                case 0 -> hue -> colorPicker.setHSVHue(Math.min(Math.max(hue, 0), 360));
+                case 1 -> saturation -> colorPicker.setHSVSaturation(saturation / 100.0);
+                case 2 -> value -> colorPicker.setValue(value / 100.0);
+                default -> null;
             };
-            UITextInput colorInput = new UITextInput(textUpdater, valueUpdater);
+            UINumberInput colorInput = new UINumberInput(getter, setter);
             colorRow.add(colorInput);
             hsvInput.add(colorRow);
         }
@@ -218,23 +183,15 @@ public class ColorPickContainer extends UIContainer {
             UIContainer colorRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
             colorRow.zeroMargin().noOutline();
             colorRow.add(new UIText(RGB_NAMES[i] + ":"));
-            Supplier<String> textUpdater = switch (i) {
-                case 0 -> () -> Integer.toString(SUtil.red(colorPicker.getRGB()));
-                case 1 -> () -> Integer.toString(SUtil.green(colorPicker.getRGB()));
-                case 2 -> () -> Integer.toString(SUtil.blue(colorPicker.getRGB()));
+            Supplier<Integer> getter = switch (i) {
+                case 0 -> () -> SUtil.red(colorPicker.getRGB());
+                case 1 -> () -> SUtil.green(colorPicker.getRGB());
+                case 2 -> () -> SUtil.blue(colorPicker.getRGB());
                 default -> null;
             };
             final int j = i;
-            Consumer<String> valueUpdater = (String s) -> {
-                int component = 0;
-                if (s.length() > 0) {
-                    try {
-                        component = Integer.parseInt(s);
-                    } catch (NumberFormatException e) {
-                        return;
-                    }
-                }
-                component = Math.min(Math.max(0, component), 255);
+            Consumer<Integer> setter = component -> {
+                component = Math.min(Math.max(component, 0), 255);
                 int color = colorPicker.getRGB();
                 int shiftAmount = 8 * (2 - j);
                 int mask = 0xFF << shiftAmount;
@@ -242,7 +199,7 @@ public class ColorPickContainer extends UIContainer {
                 color |= component << shiftAmount;
                 colorPicker.setRGB(color);
             };
-            UITextInput colorInput = new UITextInput(textUpdater, valueUpdater);
+            UINumberInput colorInput = new UINumberInput(getter, setter);
             colorRow.add(colorInput);
             rgbInput.add(colorRow);
         }

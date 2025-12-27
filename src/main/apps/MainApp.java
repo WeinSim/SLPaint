@@ -34,20 +34,10 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Have shaders automatically recognize attribute names (and sizes)
- *   Allow switching between old and new rendering infrastructure for each
- *     shader individually? (Would fix rectangle transparency bug)
- * Text tool:
- *   Text rendering:
- *     Text wrapping / new lines with ENTER (in combination with proper UI text
- *       input?)
- *     TextTool.MIN_TEXT_SIZE should be set to 1, not 0. However, currently the
- *       UI doesn't allow to input single-digit values if the minimum is not 0.
- *       Create an interface or similar for number UIInputs?
  * 
  * App:
  *   Small problems:
- *     Selection shouold include the bottom and right edge of the selection
+ *     Selection should include the bottom and right edge of the selection
  *     Pressing 'r' should not reset the view if a text input is currently
  *       active
  *     ImageCanvas.mouseTrulyAbove() should return true even if the mouse is
@@ -55,14 +45,16 @@ import ui.components.ImageCanvas;
  *   Pencil
  *     Add different sizes
  *   Line tool
- *   Text tool
- *     When the size of the image changes, the FBO's texture should also
- *       update its size.
- *   Seelction tool
+ *   Selection tool
  *     Add ability to move selection with arrow keys (keyboard shortcuts)
  *     Selection resizing
  *     Selection Ctrl+Shift+X
  *   Image resizing
+ *     When the size of the image changes, the text tool's FBO's texture should
+ *       also update its size.
+ *   Text tool
+ *     Text area resizing
+ *     Everything regarding text input
  *   Undo / redo
  *   Transparency
  *     Grey-white squares should always appear the same size
@@ -71,6 +63,15 @@ import ui.components.ImageCanvas;
  *       of the image with the secondary color. Placing the transparent
  *       selection back onto the opaque background leaves the background
  *       unaffected. What is the expected behavior here?
+ *   Text input
+ *     TextTool.MIN_TEXT_SIZE should be set to 1, not 0. However, currently the
+ *       UI doesn't allow to input single-digit values if the minimum is not 0.
+ *     Selection (with mouse / arrow keys / Ctrl+A)
+ *     Copy / cut / paste
+ *     Shift + cursor movement
+ *     Multi-line text input
+ *       Would require a variable number of UITexts as children (which is
+ *         currently not possible. Why?)
  *   Dialogs
  *     Save dialog
  *       Keep track of unsaved changes, ask user to save before quitting if
@@ -78,11 +79,21 @@ import ui.components.ImageCanvas;
  *     Only one at a time
  *     Keep track of all file locks in one centralized place to avoid leaking
  *   Recognize remapping from CAPS_LOCK to ESCAPE
- *   (When parent app closes, shouldren should also close)
- *   ColorPicker: hue values still sometimes show up negative
+ *   (When parent app closes, children should also close)
  *   Pixels with an alpha value of 0 lose color information when saving and
  *     reopening
+ *     (this is a property of the .png file format that can be changed I think
+ *       (?))
+ * 
+ * Backend:
+ *   Have shaders automatically recognize attribute names (and sizes)?
+ *   Allow switching between old and new rendering infrastructure for each
+ *     shader individually? (Would fix rectangle transparency bug)
+ *   Proper package names / structure
+ *   Error handling
+ * 
  * UI:
+ *   Text wrapping (see "Text input")
  *   Fix bug in UILabel: when the textUpdater returns text containig newline
  *     characters, the text is not properly split across multiple lines
  *   Tool icons & cursors
@@ -111,12 +122,10 @@ import ui.components.ImageCanvas;
  *     (see https://www.glfw.org/docs/latest/window.html#window_refresh)
  *     Rename transformationMatrix to uiMatrix
  *   Remove magic numbers in {@link renderEngine.MainAppRenderer#render()}
- * Maximized windows don't show up correctly on Windows 11
- * Proper package names / structure
- * Error handling
- * UI extras: (optional)
- *   3D view
- *   Debug view
+ *   Maximized windows don't show up correctly on Windows 11
+ *   Extras (optional):
+ *     3D view
+ *     Debug view
  * </pre>
  */
 public final class MainApp extends App {
@@ -361,7 +370,7 @@ public final class MainApp extends App {
         Settings.finish();
     }
 
-    public void renderTextToImage(String text, int x, int y, int size, TextFont font) {
+    public void renderTextToImage(String text, double x, double y, double size, TextFont font) {
         renderer.renderTextToImage(text, x, y, size, toSVector(primaryColor), font, getImage());
     }
 
@@ -590,8 +599,12 @@ public final class MainApp extends App {
     }
 
     private int[] getMouseImagePosition(SVector mouse) {
-        SVector mouseImagePos = mouse.copy().sub(imageTranslation).div(getImageZoom());
+        SVector mouseImagePos = getImagePosition(mouse);
         return new int[] { (int) Math.floor(mouseImagePos.x), (int) Math.floor(mouseImagePos.y) };
+    }
+
+    public SVector getImagePosition(SVector screenSpacePos) {
+        return screenSpacePos.copy().sub(imageTranslation).div(getImageZoom());
     }
 
     public SVector getMouseImagePosVec() {

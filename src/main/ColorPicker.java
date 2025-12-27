@@ -29,48 +29,52 @@ public class ColorPicker {
     }
 
     public void setHSLHue(double hue) {
-        this.hue = hue;
+        this.hue = ((hue % 360) + 360) % 360;
         updateRGBFromHSL();
         updateHSVFromHSL();
     }
 
     public void setHSVHue(double hue) {
-        this.hue = hue;
+        this.hue = ((hue % 360) + 360) % 360;
         updateRGBFromHSV();
         updateHSLFromHSV();
     }
 
     public void setHSLSaturation(double hslSaturation) {
-        this.hslSaturation = hslSaturation;
+        this.hslSaturation = Math.min(Math.max(hslSaturation, 0), 1);
         updateRGBFromHSL();
         updateHSVFromHSL();
     }
 
     public void setHSVSaturation(double hsvSaturation) {
-        this.hsvSaturation = hsvSaturation;
+        this.hsvSaturation = Math.min(Math.max(hsvSaturation, 0), 1);
         updateRGBFromHSV();
         updateHSLFromHSV();
     }
 
     public void setLightness(double lightness) {
-        this.lightness = lightness;
+        this.lightness = Math.min(Math.max(lightness, 0), 1);
         updateRGBFromHSL();
         updateHSVFromHSL();
     }
 
     public void setValue(double value) {
-        this.value = value;
+        this.value = Math.min(Math.max(value, 0), 1);
         updateRGBFromHSV();
         updateHSLFromHSV();
     }
 
     public void setAlpha(int alpha) {
-        setComponent(24, alpha);
-        this.alpha = alpha;
+        this.alpha = Math.min(Math.max(alpha, 0), 255);
+        setComponent(24, this.alpha);
     }
 
     public int getAlpha() {
         return alpha;
+    }
+
+    public int getInitialColor() {
+        return initialColor;
     }
 
     private void setComponent(int shiftAmount, int component) {
@@ -141,9 +145,5 @@ public class ColorPicker {
         hue = hsv.x;
         hsvSaturation = hsv.y;
         value = hsv.z;
-    }
-
-    public int getInitialColor() {
-        return initialColor;
     }
 }
