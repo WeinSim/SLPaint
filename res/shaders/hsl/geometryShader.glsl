@@ -24,7 +24,7 @@ out vec2 relativePos;
 out vec2 relativeBoundingBoxMin;
 out vec2 relativeBoundingBoxMax;
 out vec2 uvCoords;
-out vec2 size;
+out float radius;
 out vec3 color;
 flat out int flags;
 
@@ -47,7 +47,8 @@ vec3 vecToInt(vec3 v) {
 
 void main(void) {
     vec3 position = pass_transformationMatrix[0] * vec3(pass_position[0], 1.0);
-    size = (pass_transformationMatrix[0] * vec3(pass_size[0], 0.0)).xy;
+    vec2 size = (pass_transformationMatrix[0] * vec3(pass_size[0], 0.0)).xy;
+    radius = sqrt(size.x * size.y) / 2;
 
     int dataIndex = pass_dataIndex[0];
     relativeBoundingBoxMin = hslData.boundingBox[dataIndex].xy - position.xy;

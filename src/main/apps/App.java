@@ -1,5 +1,6 @@
 package main.apps;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -13,6 +14,7 @@ import renderEngine.Window;
 import sutil.math.SVector;
 import sutil.ui.UIAction;
 import sutil.ui.UIRoot;
+import sutil.ui.UITextInput;
 import ui.AppUI;
 import ui.ColorEditorUI;
 import ui.MainUI;
@@ -22,7 +24,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
 
     private static final double FRAME_TIME_GAMMA = 0.05;
 
-    private static boolean showDebugOutline = false;
+    /**
+     * 0 = normal 1 = mouse above, 2 = always
+     */
+    private static int debugOutline = 0;
     private static BooleanSetting circularHueSatField = new BooleanSetting("hueSatCircle");
     private static BooleanSetting hslColorSpace = new BooleanSetting("hslColorSpace");
 
@@ -32,12 +37,14 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
     protected boolean[] mouseButtons;
     protected SVector mousePos, prevMousePos;
 
-    protected boolean closeOnEscape = true;
+    // protected boolean closeOnEscape = true;
 
     protected double avgFrameTime = -1;
     protected int frameCount = 0;
 
     private LinkedList<UIAction> eventQueue;
+
+    protected ArrayList<KeyboardShortcut> keyboardShortcuts;
 
     protected AppUI<?> ui;
     protected boolean adjustSizeOnInit = false;
@@ -74,6 +81,29 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         mouseButtons = new boolean[2];
         mousePos = new SVector();
         prevMousePos = null;
+
+        keyboardShortcuts = new ArrayList<>();
+
+        // Comma -> toggle debug outline
+        keyboardShortcuts.add(new KeyboardShortcut(
+                GLFW.GLFW_KEY_COMMA,
+                0,
+                App::cycleDebugOutline,
+                false));
+
+        // Shift + S -> reload shaders
+        keyboardShortcuts.add(new KeyboardShortcut(
+                GLFW.GLFW_KEY_S,
+                GLFW.GLFW_MOD_SHIFT,
+                () -> renderer.reloadShaders(),
+                true));
+
+        // Shift + R -> reload UI
+        keyboardShortcuts.add(new KeyboardShortcut(
+                GLFW.GLFW_KEY_R,
+                GLFW.GLFW_MOD_SHIFT,
+                this::createUI,
+                true));
     }
 
     protected void createUI() {
@@ -81,6 +111,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
             case MainApp m -> new MainUI(m);
             case ColorEditorApp c -> new ColorEditorUI(c);
             case SettingsApp s -> new SettingsUI(s);
+            default -> throw new RuntimeException(String.format("No UI for class %s!", getClass().getName()));
         };
 
         if (adjustSizeOnInit) {
@@ -92,7 +123,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         }
     }
 
-    public void update(double deltaT) {
+    public final void update(double deltaT) {
         if (avgFrameTime < 0) {
             avgFrameTime = deltaT;
         } else {
@@ -126,10 +157,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
             int mods = keyPressInfo.mods();
             switch (keyPressInfo.action()) {
                 case GLFW.GLFW_PRESS, GLFW.GLFW_REPEAT -> {
-                    if (key == GLFW.GLFW_KEY_CAPS_LOCK && closeOnEscape) {
-                        window.requestClose();
-                    }
-
                     if (0 <= key && key < keys.length) {
                         keys[key] = true;
                     }
@@ -156,23 +183,21 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
             int mods = mouseButtonInfo.mods();
             switch (mouseButtonInfo.action()) {
                 case GLFW.GLFW_PRESS -> {
-                    if (0 <= button && button < mouseButtons.length) {
+                    if (0 <= button && button < mouseButtons.length)
                         mouseButtons[button] = true;
-                    }
 
-                    if (focus) {
+                    if (focus)
                         ui.mousePressed(button, mods);
-                    }
+
                     mousePressed(button, mods);
                 }
                 case GLFW.GLFW_RELEASE -> {
-                    if (0 <= button && button < mouseButtons.length) {
+                    if (0 <= button && button < mouseButtons.length)
                         mouseButtons[button] = false;
-                    }
 
-                    if (focus) {
+                    if (focus)
                         ui.mouseReleased(button, mods);
-                    }
+
                     mouseReleased(button, mods);
                 }
             }
@@ -181,11 +206,13 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         // process scroll input
         Window.ScrollInfo scrollInfo;
         while ((scrollInfo = window.getNextScrollInfo()) != null) {
-            if (focus) {
+            if (focus)
                 ui.mouseWheel(new SVector(scrollInfo.xoffset(), scrollInfo.yoffset()), mousePos);
-            }
+
             mouseScroll(scrollInfo.xoffset(), scrollInfo.yoffset());
         }
+
+        childUpdate();
 
         // empty event queue
         while (!eventQueue.isEmpty()) {
@@ -205,29 +232,25 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         }
     }
 
+    /**
+     * This is the method that subclass of App can override. The rason they cannot
+     * override the update() method (and call super.update() from there) is that
+     * parts of App.update() need to come first (e.g. setting the mousePosition and
+     * focus fields) and others need to come last (most importantly ui.update()).
+     */
+    protected void childUpdate() {
+
+    }
+
     protected void charInput(char c) {
     }
 
     protected void keyPressed(int key, int mods) {
-        // System.out.format("Key pressed: key = %d, mods = %d, time = %d\n", key, mods,
-        // System.nanoTime());
-
-        switch (key) {
-            // Comma -> toggle debug outline
-            case GLFW.GLFW_KEY_COMMA -> toggleDebugOutline();
-
-            // Shift + S -> reload shaders
-            case GLFW.GLFW_KEY_S -> {
-                if ((mods & GLFW.GLFW_MOD_SHIFT) != 0) {
-                    renderer.reloadShaders();
-                }
-            }
-
-            // Shift + R -> reload UI
-            case GLFW.GLFW_KEY_R -> {
-                if ((mods & GLFW.GLFW_MOD_SHIFT) != 0) {
-                    createUI();
-                }
+        for (KeyboardShortcut shortcut : keyboardShortcuts) {
+            if (key == shortcut.key() && mods == shortcut.modifiers()) {
+                if (!shortcut.text() && ui.getSelectedElement() instanceof UITextInput)
+                    continue;
+                shortcut.action().run();
             }
         }
     }
@@ -299,12 +322,12 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         return ui;
     }
 
-    public static void toggleDebugOutline() {
-        showDebugOutline = !showDebugOutline;
+    public static void cycleDebugOutline() {
+        debugOutline = (debugOutline + 1) % 3;
     }
 
-    public static boolean showDebugOutline() {
-        return showDebugOutline;
+    public static int getDebugOutline() {
+        return debugOutline;
     }
 
     public static boolean isCircularHueSatField() {
@@ -329,5 +352,12 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
 
     public void setDialogType(int dialogType) {
         this.dialogType = dialogType;
+    }
+
+    /**
+     * When text is set to false, the shortcut will not run if a text input is
+     * currently active.
+     */
+    protected record KeyboardShortcut(int key, int modifiers, Runnable action, boolean text) {
     }
 }

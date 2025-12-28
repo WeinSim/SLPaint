@@ -17,6 +17,10 @@ public final class FillBucketTool extends ClickTool {
     @Override
     protected void click(int x, int y, int mouseButton) {
         Image image = app.getImage();
+
+        if (!image.isInside(x, y))
+            return;
+
         int baseColor = image.getPixel(x, y);
         int replaceColor = mouseButton == 0 ? app.getPrimaryColor() : app.getSecondaryColor();
         LinkedList<Long> boundary = new LinkedList<>();
@@ -35,9 +39,9 @@ public final class FillBucketTool extends ClickTool {
                 int newX = pointX + FILL_XOFF[i];
                 int newY = pointY + FILL_YOFF[i];
                 if (image.isInside(newX, newY)) {
-                    if (discovered[newX][newY]) {
+                    if (discovered[newX][newY])
                         continue;
-                    }
+
                     if (image.getPixel(newX, newY) == baseColor) {
                         boundary.add((newX & 0xFFFFFFFFL) << 32 | (newY & 0xFFFFFFFFL));
                     }

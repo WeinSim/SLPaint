@@ -118,11 +118,11 @@ public class UIContainer extends UIElement {
 
     private final void addActual(UIElement child) {
         // why are floating elements added first?
-        if (child instanceof UIFloatContainer) {
-            children.addFirst(child);
-        } else {
-            children.add(child);
-        }
+        // if (child instanceof UIFloatContainer) {
+        // children.addFirst(child);
+        // } else {
+        children.add(child);
+        // }
         child.parent = this;
 
         child.setPanel(panel);
@@ -151,17 +151,29 @@ public class UIContainer extends UIElement {
     }
 
     @Override
-    public void updateMousePosition(SVector mouse, boolean valid) {
-        super.updateMousePosition(mouse, valid);
+    public void updateMousePosition(SVector mouse) {
+        super.updateMousePosition(mouse);
 
-        boolean childMouseAbove = false;
         SVector relativeMouse = new SVector(mouse).sub(position);
         for (UIElement child : getChildren()) {
-            if (!(child instanceof UIFloatContainer)) {
-                child.updateMousePosition(relativeMouse, valid && mouseAbove() && !childMouseAbove);
-                childMouseAbove |= child.mouseAbove();
-            }
+            child.updateMousePosition(relativeMouse);
         }
+    }
+
+    @Override
+    public boolean updateMouseAbove(boolean valid, boolean insideParent, int currentLayer, final int targetLayer) {
+        boolean ret = super.updateMouseAbove(valid, insideParent, currentLayer, targetLayer);
+
+        currentLayer += relativeLayer;
+        // This is a bit ugly. But it is neccessary because a scroll container's
+        // children should not have mouseAbove set if the mouse is not above the scroll
+        // container, regardles of the layers.
+        insideParent &= calculateMouseAbove(mousePosition);
+        for (UIElement child : getChildren()) {
+            ret |= child.updateMouseAbove(valid, insideParent, currentLayer, targetLayer);
+        }
+
+        return ret;
     }
 
     @Override
@@ -902,10 +914,10 @@ public class UIContainer extends UIElement {
             children.add(child);
         }
 
-        void addFirst(UIElement child) {
-            checkNotLocked();
-            children.addFirst(child);
-        }
+        // void addFirst(UIElement child) {
+        // checkNotLocked();
+        // children.addFirst(child);
+        // }
 
         void checkNotLocked() {
             if (locked) {

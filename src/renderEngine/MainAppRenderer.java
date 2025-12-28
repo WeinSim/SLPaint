@@ -4,7 +4,8 @@ import main.Image;
 import main.apps.MainApp;
 import main.tools.ImageTool;
 import main.tools.SelectionTool;
-import main.tools.XYWH;
+import main.tools.TextTool;
+import main.tools.DragTool;
 import sutil.math.SVector;
 import ui.Colors;
 
@@ -27,7 +28,7 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
         } else {
             uiMaster.setBGColor(Colors.getCanvasColor());
 
-            // layer 0:
+            // layer0, division 0:
             // subdiv 0: checkerboard background
             // subdiv 1: image
             // subdiv 2: selection content
@@ -39,8 +40,8 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
             uiMaster.scale(zoom);
 
             // render image
+            division = 0;
             layer = 0;
-            foregroundDraw = false;
             Image image = app.getImage();
             int width = image.getWidth(), height = image.getHeight();
             SVector imageSize = new SVector(width, height);
@@ -69,27 +70,28 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
                 }
             }
 
-            if (activeTool == ImageTool.SELECTION || activeTool == ImageTool.TEXT) {
-                XYWH selection = (XYWH) activeTool;
+            if (activeTool instanceof DragTool dragTool) {
+                // DragTool selection = (DragTool) activeTool;
                 uiMaster.resetMatrix();
                 uiMaster.translate(translation);
                 int selectionPhase = activeTool.getState();
+                int margin = activeTool == ImageTool.TEXT && selectionPhase == ImageTool.IDLE ? TextTool.MARGIN : 0;
                 if (selectionPhase != ImageTool.NONE) {
                     int x, y, w, h;
                     if (selectionPhase == ImageTool.INITIAL_DRAG) {
-                        int startX = selection.getStartX();
-                        int startY = selection.getStartY();
-                        int endX = selection.getEndX();
-                        int endY = selection.getEndY();
+                        int startX = dragTool.getStartX();
+                        int startY = dragTool.getStartY();
+                        int endX = dragTool.getEndX();
+                        int endY = dragTool.getEndY();
                         x = Math.min(startX, endX);
                         y = Math.min(startY, endY);
                         w = Math.abs(endX - startX) + 1;
                         h = Math.abs(endY - startY) + 1;
                     } else {
-                        x = selection.getX();
-                        y = selection.getY();
-                        w = selection.getWidth();
-                        h = selection.getHeight();
+                        x = dragTool.getX() - margin;
+                        y = dragTool.getY() - margin;
+                        w = dragTool.getWidth() + 2 * margin;
+                        h = dragTool.getHeight() + 2 * margin;
                     }
                     uiMaster.checkerboardStroke(SELECTION_BORDER_COLORS, 10);
                     uiMaster.strokeWeight(2);
@@ -98,8 +100,6 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
                     uiMaster.rect(new SVector(x, y).scale(zoom), new SVector(w, h).scale(app.getImageZoom()));
                 }
             }
-
-            layer = 10;
 
             renderUI();
         }
@@ -110,17 +110,23 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
     private void renderDebug() {
         uiMaster.setBGColor(new SVector(1, 1, 1));
 
-        uiMaster.hueSatField(new SVector(300, 300), new SVector(200, 200), true, true);
-
-        // SVector p1 = new SVector(100, 100),
+        // SVector p1 = new SVector(500, 100),
         // p2 = new SVector(300, 700),
-        // p3 = new SVector(1000, 800);
-        // SVector s1 = new SVector(200, 100),
-        // s2 = new SVector(150, 150),
+        // p3 = new SVector(1000, 500);
+        // SVector s1 = new SVector(800, 100),
+        // s2 = new SVector(250, 250),
         // s3 = new SVector(100, 200);
         // SVector c1 = new SVector(0.8, 0.2, 0.2),
         // c2 = new SVector(0.2, 0.8, 0.2),
         // c3 = new SVector(0.2, 0.2, 0.8);
+
+        // uiMaster.fill(c1);
+        // uiMaster.ellipse(p1, s1);
+
+        // uiMaster.fill(c2);
+        // uiMaster.ellipse(p2, s2);
+
+        // uiMaster.hueSatField(p3, new SVector(200, 200), true, true);
 
         // uiMaster.noStroke();
 

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import main.apps.MainApp;
 import sutil.ui.UIAction;
 
-public abstract sealed class ImageTool permits ClickTool, PencilTool, SelectionTool, TextTool {
+public abstract sealed class ImageTool permits ClickTool, DragTool, PencilTool {
 
     public static final PencilTool PENCIL = PencilTool.INSTANCE;
     public static final FillBucketTool FILL_BUCKET = FillBucketTool.INSTANCE;

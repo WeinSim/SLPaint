@@ -9,19 +9,12 @@ import main.Image;
 import main.apps.MainApp;
 import sutil.math.SVector;
 
-public final class SelectionTool extends ImageTool implements XYWH {
+public final class SelectionTool extends DragTool {
 
     public static final SelectionTool INSTANCE = new SelectionTool();
 
     private Image selection;
 
-    // TODO: combine some of these variables with TextTool
-    // INITIAL_DRAG
-    private int startX, startY;
-    private int endX, endY;
-    // IDLE, IDLE_DRAG
-    private int x, y;
-    private int width, height;
     // IDLE_DRAG
     private int dragStartX, dragStartY; // where the image started out before it was dragged
     private SVector dragStartMouseCoords; // where the mouse was when it started dragging (world coords)
@@ -55,35 +48,18 @@ public final class SelectionTool extends ImageTool implements XYWH {
     }
 
     @Override
-    public boolean startInitialDrag(int x, int y, int mouseButton) {
-        if (mouseButton != GLFW.GLFW_MOUSE_BUTTON_LEFT)
-            return false;
-
-        startX = Math.min(Math.max(0, x), app.getImage().getWidth() - 1);
-        startY = Math.min(Math.max(0, y), app.getImage().getHeight() - 1);
-
-        return true;
-    }
-
-    @Override
-    protected void handleInitialDrag(int x, int y, int px, int py) {
-        endX = Math.min(Math.max(0, x), app.getImage().getWidth() - 1);
-        endY = Math.min(Math.max(0, y), app.getImage().getHeight() - 1);
+    protected int getMargin() {
+        return 0;
     }
 
     @Override
     protected boolean finishInitialDrag() {
-        x = Math.min(startX, endX);
-        y = Math.min(startY, endY);
-        width = Math.abs(startX - endX) + 1;
-        height = Math.abs(startY - endY) + 1;
+        if (super.finishInitialDrag()) {
+            createSubImage();
+            return true;
+        }
 
-        if (width == 1 || height == 1)
-            return false;
-
-        createSubImage();
-
-        return true;
+        return false;
     }
 
     @Override
@@ -113,11 +89,11 @@ public final class SelectionTool extends ImageTool implements XYWH {
 
     @Override
     public void forceQuit() {
-        super.forceQuit();
-
         if (selection != null) {
             flattenSelection();
         }
+
+        super.forceQuit();
     }
 
     private void createSubImage() {
@@ -161,9 +137,8 @@ public final class SelectionTool extends ImageTool implements XYWH {
 
     private void pasteFromClipboard() {
         BufferedImage paste = ClipboardManager.getImage();
-        if (paste == null) {
+        if (paste == null)
             return;
-        }
 
         if (selection != null) {
             flattenSelection();
@@ -185,44 +160,6 @@ public final class SelectionTool extends ImageTool implements XYWH {
 
     public Image getSelection() {
         return selection;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public int getWidth() {
-        return switch (getState()) {
-            case INITIAL_DRAG -> Math.abs(startX - endX) + 1;
-            default -> width;
-        };
-    }
-
-    public int getHeight() {
-        return switch (getState()) {
-            case INITIAL_DRAG -> Math.abs(startY - endY) + 1;
-            default -> height;
-        };
-    }
-
-    public int getStartX() {
-        return startX;
-    }
-
-    public int getStartY() {
-        return startY;
-    }
-
-    public int getEndX() {
-        return endX;
-    }
-
-    public int getEndY() {
-        return endY;
     }
 
     @Override

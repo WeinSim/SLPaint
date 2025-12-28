@@ -10,6 +10,7 @@ public abstract class UIElement {
     protected SVector position;
     protected SVector size;
     protected UIContainer parent;
+    protected int relativeLayer;
 
     protected UIPanel panel;
 
@@ -33,6 +34,7 @@ public abstract class UIElement {
     public UIElement() {
         position = new SVector();
         size = new SVector();
+        relativeLayer = 0;
 
         mousePosition = new SVector();
 
@@ -43,17 +45,27 @@ public abstract class UIElement {
         visible = visibilitySupplier.get();
 
         if (this == panel.getSelectedElement()) {
+            // shouldn't this only happen when visible == true?
             panel.confirmSelectedElement();
         }
     }
 
-    public void updateMousePosition(SVector mouse, boolean valid) {
-        updateMouseAboveReference(mouse, valid);
+    public void updateMousePosition(SVector mouse) {
         mousePosition.set(mouse);
     }
 
-    protected void updateMouseAboveReference(SVector mouse, boolean valid) {
-        mouseAbove = valid ? SUtil.pointInsideRect(mouse, position, size) : false;
+    public boolean updateMouseAbove(boolean valid, boolean insideParent, int currentLayer, final int targetLayer) {
+        currentLayer += relativeLayer;
+        if (currentLayer != targetLayer)
+            return false;
+
+        mouseAbove = valid && insideParent ? calculateMouseAbove(mousePosition) : false;
+
+        return mouseAbove;
+    }
+
+    protected boolean calculateMouseAbove(SVector mouse) {
+        return SUtil.pointInsideRect(mouse, position, size);
     }
 
     public void update() {
@@ -97,6 +109,8 @@ public abstract class UIElement {
     public void charInput(char c) {
     }
 
+    public abstract void setPreferredSize();
+
     /**
      * 
      * @param mouse the relative mouse position of the mouse press that caused this
@@ -114,7 +128,22 @@ public abstract class UIElement {
         this.selectable = selectable;
     }
 
-    public abstract void setPreferredSize();
+    public SVector getPosition() {
+        return position;
+    }
+
+    public SVector getSize() {
+        return size;
+    }
+
+    public int getRelativeLayer() {
+        return relativeLayer;
+    }
+
+    public UIElement setRelativeLayer(int relativeLayer) {
+        this.relativeLayer = relativeLayer;
+        return this;
+    }
 
     public final boolean isVisible() {
         return visible;
@@ -125,16 +154,8 @@ public abstract class UIElement {
         return this;
     }
 
-    public SVector getSize() {
-        return size;
-    }
-
     protected void setPanel(UIPanel panel) {
         this.panel = panel;
-    }
-
-    public SVector getPosition() {
-        return position;
     }
 
     public boolean mouseAbove() {

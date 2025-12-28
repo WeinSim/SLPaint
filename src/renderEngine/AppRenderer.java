@@ -23,33 +23,35 @@ import ui.Sizes;
 import ui.components.AlphaScale;
 import ui.components.HueSatField;
 import ui.components.LightnessScale;
-import ui.components.TextFloatContainer;
 import ui.components.UIColorElement;
 
 public class AppRenderer<T extends App> {
 
     /**
-     * Depth value usage: 1.0 - 0.0 is used for the base UI,
-     * 0.0 - -1.0 is used for floating UI elements.
      * 
-     * Each of the two regions (positive / negative depth value) is divided into
-     * NUM_LAYERS layers. Every layer is further divided into NUM_SUBDIVISIONS
-     * subdivisions.
+     * <p>
+     * The entire depth range ([-1.0, 1.0]) is divided into NUM_LAYERS layers. These
+     * correspond to the ui layers.
+     * </p>
+     * <p>
+     * Each layer is divided into NUM_DIVISIONS divisions. These correspond to
+     * different nesting depths of the ui.
+     * </p>
+     * <p>
+     * Each division is divided into NUM_SUBDIVISIONS subdivisions. These correspond
+     * to different parts of one ui element, e.g. background and outline.
+     * </p>
      */
     private static final int NUM_SUBDIVISIONS = 4;
-    private static final int NUM_LAYERS = 1024;
+    private static final int NUM_DIVISIONS = 1024;
+    private static final int NUM_LAYERS = 16;
 
     protected T app;
 
     protected UIRenderMaster uiMaster;
 
-    /**
-     * When this is set to true, the depth value will be negative (foreground UI,
-     * see above). When it is set to false, the depth value will be positive (base
-     * UI).
-     */
-    protected boolean foregroundDraw;
     protected int layer;
+    protected int division;
 
     public AppRenderer(T app) {
         this.app = app;
@@ -61,8 +63,6 @@ public class AppRenderer<T extends App> {
 
         uiMaster.start();
 
-        layer = 1;
-        foregroundDraw = false;
         renderUI();
 
         uiMaster.render();
@@ -75,6 +75,9 @@ public class AppRenderer<T extends App> {
     protected void renderUI() {
         uiMaster.resetMatrix();
         AppUI<?> ui = app.getUI();
+
+        layer = 1;
+        division = 0;
 
         renderUIElement(ui.getRoot());
     }
@@ -90,25 +93,19 @@ public class AppRenderer<T extends App> {
         // System.out.format("Rendering UIElement \"%s\", position = %s, size = %s\n",
         // element.getClass().getName(), element.getPosition().toString(),
         // element.getSize().toString());
+
         int oldLayer = layer;
-        boolean oldForegroundDraw = foregroundDraw;
+        int oldDivision = division;
 
         SVector position = element.getPosition();
         SVector size = element.getSize();
 
         if (element instanceof UIFloatContainer) {
-            // Not beautiful but it works for now.
-            // Without this check, the text inside of a TextFloatContainer would render
-            // above the rest of the UI.
-            if (element instanceof TextFloatContainer) {
-                foregroundDraw = false;
-                layer = 1;
-            } else {
-                foregroundDraw = true;
-            }
             uiMaster.pushClipArea();
             uiMaster.noClipArea();
         }
+
+        layer += element.getRelativeLayer();
 
         // background
         SVector bgColor = element.getBackgroundColor();
@@ -141,7 +138,8 @@ public class AppRenderer<T extends App> {
         // outline
         SVector olColor = element.getOutlineColor();
         boolean doOutline = false;
-        if (App.showDebugOutline()) {
+        int debugOutline = App.getDebugOutline();
+        if ((debugOutline == 1 && element.mouseAbove()) || debugOutline == 2) {
             uiMaster.stroke(new SVector(1, 0.7, 0.1));
             uiMaster.strokeWeight(Sizes.STROKE_WEIGHT.size);
             doOutline = true;
@@ -166,11 +164,11 @@ public class AppRenderer<T extends App> {
             uiMaster.pushMatrix();
             uiMaster.translate(position);
 
-            layer++;
+            division++;
             for (UIElement child : container.getChildren()) {
                 renderUIElement(child);
             }
-            layer--;
+            division--;
 
             uiMaster.popMatrix();
             if (isScrollable) {
@@ -244,12 +242,12 @@ public class AppRenderer<T extends App> {
         }
 
         layer = oldLayer;
-        foregroundDraw = oldForegroundDraw;
+        division = oldDivision;
     }
 
     protected double getDepth(int subdivision) {
-        double depth = -((double) layer * NUM_SUBDIVISIONS + subdivision) / (NUM_LAYERS * NUM_SUBDIVISIONS)
-                + (foregroundDraw ? 0 : 1);
+        int totalSubdiv = NUM_SUBDIVISIONS * (NUM_DIVISIONS * layer + division) + subdivision;
+        double depth = -2 * (double) totalSubdiv / (NUM_LAYERS * NUM_DIVISIONS * NUM_SUBDIVISIONS) + 1;
 
         // System.out.format("l = %3d, s = %d, f = %c => d = %.3f\n",
         // layer, subdivision, foregroundDraw ? 't' : 'f', depth);
@@ -261,7 +259,8 @@ public class AppRenderer<T extends App> {
         uiMaster = new UIRenderMaster(app, app.getLoader());
     }
 
-    public void renderTextToImage(String text, double x, double y, double size, SVector color, TextFont font, Image image) {
+    public void renderTextToImage(String text, double x, double y, double size, SVector color, TextFont font,
+            Image image) {
         uiMaster.start();
         uiMaster.textFramebuffer();
 

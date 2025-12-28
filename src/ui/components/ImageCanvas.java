@@ -2,7 +2,6 @@ package ui.components;
 
 import main.apps.MainApp;
 import sutil.ui.UIContainer;
-import sutil.ui.UIElement;
 
 public class ImageCanvas extends UIContainer {
 
@@ -15,19 +14,5 @@ public class ImageCanvas extends UIContainer {
 
         app.setCanvas(this);
         setFillSize();
-    }
-
-    public boolean mouseTrulyAbove() {
-        if (!mouseAbove) {
-            return false;
-        }
-
-        for (UIElement child : getChildren()) {
-            if (child.mouseAbove()) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }

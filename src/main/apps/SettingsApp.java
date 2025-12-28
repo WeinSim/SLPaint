@@ -1,5 +1,7 @@
 package main.apps;
 
+import org.lwjgl.glfw.GLFW;
+
 import main.ColorPicker;
 import renderEngine.Window;
 import sutil.math.SVector;
@@ -17,6 +19,16 @@ public final class SettingsApp extends App {
         colorPicker = Colors.getBaseColorPicker();
 
         createUI();
+    }
+
+    @Override
+    protected void keyPressed(int key, int mods) {
+        super.keyPressed(key, mods);
+
+        switch (key) {
+            // Esc -> close window
+            case GLFW.GLFW_KEY_CAPS_LOCK -> window.requestClose();
+        }
     }
 
     public void setUIColor(int color) {

@@ -32,17 +32,13 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
     }
 
     @Override
-    protected void updateMouseAboveReference(SVector mouse, boolean valid) {
+    protected boolean calculateMouseAbove(SVector mouse) {
         if (App.isCircularHueSatField()) {
-            if (!valid) {
-                mouseAbove = false;
-                return;
-            }
             double x = (mouse.x - position.x) / size.x - 0.5,
                     y = (mouse.y - position.y) / size.y - 0.5;
-            mouseAbove = x * x + y * y < 0.25;
+            return x * x + y * y < 0.25;
         } else {
-            super.updateMouseAboveReference(mouse, valid);
+            return super.calculateMouseAbove(mouse);
         }
     }
 
@@ -74,7 +70,7 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
             final double c = CURSOR_CENTER_GAP / 2;
 
             int i = 0;
-            for (UIElement child: getChildren()) {
+            for (UIElement child : getChildren()) {
                 child.getPosition().set(switch (i++) {
                     case 0 -> new SVector(-a, -b);
                     case 1 -> new SVector(c, -a);

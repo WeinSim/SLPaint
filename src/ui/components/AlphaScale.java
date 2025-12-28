@@ -12,6 +12,11 @@ public class AlphaScale extends UIScale {
         this.colorPicker = colorPicker;
 
         narrow = false;
+
+        // This approach is very ugly but it works. It makes the slider appear behind
+        // the scale.
+        relativeLayer = 1;
+        draggable.setRelativeLayer(-1);
     }
 
     public int getRGB() {

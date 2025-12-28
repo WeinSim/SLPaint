@@ -32,6 +32,9 @@ public class LightnessScale extends UIScale {
         this.colorPicker = colorPicker;
 
         narrow = false;
+
+        relativeLayer = 1;
+        draggable.setRelativeLayer(-1);
     }
 
     public double getHue() {

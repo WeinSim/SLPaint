@@ -33,16 +33,16 @@ import ui.components.ImageCanvas;
 
 /**
  * <pre>
- * TODO continue:
+ * TODO
  * 
  * App:
- *   Small problems:
- *     Pressing 'r' should not reset the view if a text input is currently
- *       active
- *     ImageCanvas.mouseTrulyAbove() should return true even if the mouse is
- *       above the text tool input
  *   Line tool
  *   Selection tool
+ *     Fix bug: when pressing Ctrl+V with an empty clipboard and then trying to
+ *       select something, the program crashes. Reason: the selection tool's
+ *         state gets set to idle (ImageTool.keyPressed()) even though the
+ *         paste action failed. Then, the next SelectionTool.flattenSelection()
+ *         call crashes because there is nothing to be flattened.
  *     Add ability to move selection with arrow keys (keyboard shortcuts)
  *     Selection resizing
  *     Selection Ctrl+Shift+X
@@ -90,6 +90,7 @@ import ui.components.ImageCanvas;
  *   Error handling
  * 
  * UI:
+ *   Make the pencil size UI prettier
  *   Text wrapping (see "Text input")
  *   Fix bug in UILabel: when the textUpdater returns text containig newline
  *     characters, the text is not properly split across multiple lines
@@ -113,7 +114,6 @@ import ui.components.ImageCanvas;
  *       Only override the parts of the text VAOs that actually change from one
  *         frame to the next
  *   Items in dropdown menues overlap their parent's stroke with their fill
- *   AlphaScale and LightnessScale should render above their respective cursors
  *   Anti aliasing doesn't work despite being enabled
  *     (glfwWindowHint(GLFW_SAMPLES, 4) and glEnable(GL_MULTISAMPLE))
  *   Fix stuttering artifact when resizing windows on Linux
@@ -200,8 +200,6 @@ public final class MainApp extends App {
     public MainApp() {
         super((int) Sizes.MAIN_APP.width, (int) Sizes.MAIN_APP.height, Window.MAXIMIZED, "SLPaint");
 
-        closeOnEscape = false;
-
         customColorButtonArray = new ColorArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
 
         imageFileManager = new ImageFileManager(this, "test.png");
@@ -221,13 +219,32 @@ public final class MainApp extends App {
 
         setActiveTool(ImageTool.PENCIL);
         prevTool = ImageTool.PENCIL;
+
+        // R -> reset image transform
+        keyboardShortcuts.add(new KeyboardShortcut(
+                GLFW.GLFW_KEY_R,
+                0,
+                this::resetImageTransform,
+                false));
+
+        // Ctrl + S -> save
+        keyboardShortcuts.add(new KeyboardShortcut(
+                GLFW.GLFW_KEY_S,
+                GLFW.GLFW_MOD_CONTROL,
+                this::saveImage,
+                true));
+
+        // Ctrl + Shift + S -> save
+        keyboardShortcuts.add(new KeyboardShortcut(
+                GLFW.GLFW_KEY_S,
+                GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SHIFT,
+                this::saveImageAs,
+                true));
     }
 
     @Override
-    public void update(double deltaT) {
-        super.update(deltaT);
-
-        if (frameCount == 1) {
+    public void childUpdate() {
+        if (frameCount == 2) {
             // Calling this in setup() does not work because the UI has not been updated
             // yet, so the absolute position of the image canvas it still (0, 0).
             resetImageTransform();
@@ -266,6 +283,8 @@ public final class MainApp extends App {
 
         // update image texture
         getImage().updateOpenGLTexture();
+
+        // System.out.println(getFrameRate());
     }
 
     @Override
@@ -276,33 +295,13 @@ public final class MainApp extends App {
         for (ImageTool tool : ImageTool.INSTANCES) {
             tool.keyPressed(key, mods);
         }
-
-        switch (key) {
-            // R -> reset image transform
-            case GLFW.GLFW_KEY_R -> {
-                if ((mods & GLFW.GLFW_MOD_SHIFT) == 0) {
-                    resetImageTransform();
-                }
-            }
-
-            // Ctrl + (Shift +) S -> save (as)
-            case GLFW.GLFW_KEY_S -> {
-                if ((mods & GLFW.GLFW_MOD_CONTROL) != 0) {
-                    if ((mods & GLFW.GLFW_MOD_SHIFT) == 0) {
-                        saveImage();
-                    } else {
-                        saveImageAs();
-                    }
-                }
-            }
-        }
     }
 
     @Override
     protected void mousePressed(int button, int mods) {
         super.mousePressed(button, mods);
 
-        if (canvas.mouseTrulyAbove()) {
+        if (canDoToolClick()) {
             int[] mousePos = getMouseImagePosition();
             int mouseX = mousePos[0],
                     mouseY = mousePos[1];
@@ -311,7 +310,9 @@ public final class MainApp extends App {
             if ((mods & GLFW.GLFW_MOD_CONTROL) == 0) {
                 activeTool.mousePressed(mouseX, mouseY, button);
             }
+        }
 
+        if (canDoScrollZoomPan()) {
             switch (button) {
                 // start dragging image
                 case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> {
@@ -337,7 +338,7 @@ public final class MainApp extends App {
         SVector mousePos = window.getMousePosition();
 
         // canvas actions
-        if (canvas.mouseTrulyAbove()) {
+        if (canDoScrollZoomPan()) {
             SVector scrollAmount = new SVector(xoff, yoff).scale(MOUSE_WHEEL_SENSITIVITY);
             boolean ctrlPressed = keys[GLFW.GLFW_KEY_LEFT_CONTROL];
             if (ctrlPressed) {
@@ -359,6 +360,18 @@ public final class MainApp extends App {
                 imageTranslation.add(scrollAmount);
             }
         }
+    }
+
+    private boolean canDoToolClick() {
+        return canvas.mouseAbove();
+    }
+
+    private boolean canDoScrollZoomPan() {
+        boolean ret = canvas.mouseAbove();
+        if (textToolInput.isVisible()) {
+            ret |= textToolInput.mouseAbove();
+        }
+        return ret;
     }
 
     @Override

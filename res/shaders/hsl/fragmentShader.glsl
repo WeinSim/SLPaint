@@ -4,7 +4,7 @@ in vec2 relativePos;
 in vec2 relativeBoundingBoxMin;
 in vec2 relativeBoundingBoxMax;
 in vec2 uvCoords;
-in vec2 size;
+in float radius;
 in vec3 color; // (hue, saturation, 0) for lightness scale
 flat in int flags;
 
@@ -54,7 +54,7 @@ void main(void) {
                     ? hsvToRGB(angle * 180 / PI, mag, 1.0)
                     : hslToRGB(angle * 180 / PI, mag, 0.5),
                 // this makes the edges softer than just discarding the fragment for mag > 1
-                min(max((1 - mag) * size.x / 2, 0), 1));
+                clamp((1 - mag) * radius, 0, 1));
             break;
         case 1:
             outColor = vec4(colorSpace == 1

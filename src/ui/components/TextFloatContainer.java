@@ -17,7 +17,7 @@ public class TextFloatContainer extends UIFloatContainer {
 
         this.app = app;
 
-        // zeroMargin();
+        zeroMargin();
         noBackground();
         noOutline();
 

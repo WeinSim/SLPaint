@@ -1,5 +1,7 @@
 package main.tools;
 
+import main.Image;
+
 public final class PipetteTool extends ClickTool {
 
     public static final PipetteTool INSTANCE = new PipetteTool();
@@ -9,13 +11,18 @@ public final class PipetteTool extends ClickTool {
 
     @Override
     protected void click(int x, int y, int mouseButton) {
+        Image image = app.getImage();
+        if (!image.isInside(x, y))
+            return;
+
         switch (mouseButton) {
-            case 0 -> app.setPrimaryColor(app.getImage().getPixel(x, y));
-            case 1 -> app.setSecondaryColor(app.getImage().getPixel(x, y));
+            case 0 -> app.setPrimaryColor(image.getPixel(x, y));
+            case 1 -> app.setSecondaryColor(image.getPixel(x, y));
             default -> {
                 return;
             }
         }
+
         app.switchBackToPreviousTool();
     }
 

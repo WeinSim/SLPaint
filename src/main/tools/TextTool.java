@@ -4,7 +4,7 @@ import org.lwjgl.glfw.GLFW;
 
 import sutil.math.SVector;
 
-public final class TextTool extends ImageTool implements XYWH {
+public final class TextTool extends DragTool {
 
     public static final TextTool INSTANCE;
 
@@ -14,6 +14,8 @@ public final class TextTool extends ImageTool implements XYWH {
     private static final int MIN_TEXT_SIZE = 0,
             MAX_TEXT_SIZE = 128,
             DEFAULT_TEXT_SIZE = 32;
+
+    public static final int MARGIN = 5;
 
     static {
         // this method takes ~300 milliseconds to run!
@@ -41,13 +43,6 @@ public final class TextTool extends ImageTool implements XYWH {
     private int size;
     private String font = DEFAULT_FONT_NAME;
 
-    // INITIAL_DRAG
-    private int startX, startY;
-    private int endX, endY;
-    // IDLE, IDLE_DRAG
-    private int x, y;
-    private int width, height;
-
     private TextTool() {
         size = DEFAULT_TEXT_SIZE;
         text = "";
@@ -57,36 +52,27 @@ public final class TextTool extends ImageTool implements XYWH {
 
     @Override
     public boolean startInitialDrag(int x, int y, int mouseButton) {
-        if (mouseButton != GLFW.GLFW_MOUSE_BUTTON_LEFT)
-            return false;
+        if (super.startInitialDrag(x, y, mouseButton)) {
+            text = "";
+            return true;
+        }
 
-        startX = Math.min(Math.max(0, x), app.getImage().getWidth());
-        startY = Math.min(Math.max(0, y), app.getImage().getHeight());
-
-        text = "";
-
-        return true;
+        return false;
     }
 
     @Override
-    protected void handleInitialDrag(int x, int y, int px, int py) {
-        endX = Math.min(Math.max(0, x), app.getImage().getWidth());
-        endY = Math.min(Math.max(0, y), app.getImage().getHeight());
+    protected int getMargin() {
+        return MARGIN;
     }
 
     @Override
     protected boolean finishInitialDrag() {
-        x = Math.min(startX, endX);
-        y = Math.min(startY, endY);
-        width = Math.abs(startX - endX);
-        height = Math.abs(startY - endY);
+        if (super.finishInitialDrag()) {
+            app.getUI().select(app.getTextToolInput());
+            return true;
+        }
 
-        // if (width == 0 || height == 0)
-        // return false;
-
-        app.getUI().select(app.getTextToolInput());
-
-        return true;
+        return false;
     }
 
     @Override
@@ -128,44 +114,6 @@ public final class TextTool extends ImageTool implements XYWH {
         SVector position = app.getImagePosition(app.getTextToolInput().getAbsolutePosition());
         app.renderTextToImage(text, position.x, position.y, size, app.getLoader().loadFont(font));
         text = "";
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public int getWidth() {
-        return switch (getState()) {
-            case INITIAL_DRAG -> Math.abs(startX - endX);
-            default -> width;
-        };
-    }
-
-    public int getHeight() {
-        return switch (getState()) {
-            case INITIAL_DRAG -> Math.abs(startY - endY);
-            default -> height;
-        };
-    }
-
-    public int getStartX() {
-        return startX;
-    }
-
-    public int getStartY() {
-        return startY;
-    }
-
-    public int getEndX() {
-        return endX;
-    }
-
-    public int getEndY() {
-        return endY;
     }
 
     public int getSize() {

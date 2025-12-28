@@ -17,9 +17,17 @@ public class UIFloatContainer extends UIContainer {
 
         withBackground();
 
+        relativeLayer = 1;
+
         clipToRoot = true;
 
         positionSuppliers = new ArrayList<>();
+    }
+
+    @Override
+    public boolean updateMouseAbove(boolean valid, boolean insideParent, int currentLayer, int targetLayer) {
+        // A FloatContainer does not need to be inside its parent.
+        return super.updateMouseAbove(valid, true, currentLayer, targetLayer);
     }
 
     public void clipToRoot(boolean clipToRoot) {

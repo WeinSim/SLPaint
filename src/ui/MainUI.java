@@ -159,6 +159,7 @@ public class MainUI extends AppUI<MainApp> {
         topRow.add(allColors);
 
         UIContainer topRowScrollbars = topRow.addScrollbars().setHFillSize();
+        topRowScrollbars.setRelativeLayer(2);
         root.add(topRowScrollbars);
 
         ImageCanvas canvas = new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, UIContainer.TOP, app);
@@ -188,7 +189,7 @@ public class MainUI extends AppUI<MainApp> {
                 UIContainer.VERTICAL,
                 true,
                 false));
-        canvas.add(sidePanel.addScrollbars());
+        canvas.add(sidePanel.addScrollbars().setRelativeLayer(2));
 
         UIContainer debugPanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
                 UIContainer.VERTICAL);
@@ -226,7 +227,7 @@ public class MainUI extends AppUI<MainApp> {
         root.add(canvas);
 
         UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
-        statusBar.withBackground().noOutline();
+        statusBar.withBackground().noOutline().setRelativeLayer(2);
         statusBar.setHFillSize();
         statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate())));
         statusBar.add(new UISeparator());

@@ -66,7 +66,8 @@ public abstract class UIPanel {
             select(null);
         }
 
-        root.updateMousePosition(mousePos, valid && !dragging);
+        root.updateMousePosition(mousePos);
+        root.updateMouseAbove(valid && !dragging);
 
         // The dragging variable lags one frame behind (because it is being used before
         // it is being set)

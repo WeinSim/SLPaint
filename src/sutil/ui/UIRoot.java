@@ -1,12 +1,10 @@
 package sutil.ui;
 
-import java.util.ArrayList;
-
 import sutil.math.SVector;
 
 public class UIRoot extends UIContainer {
 
-    private ArrayList<UIFloatContainer> floatContainers;
+    private int minLayer, maxLayer;
 
     public UIRoot(UIPanel panel, int orientation, int alignment) {
         super(orientation, alignment);
@@ -17,42 +15,40 @@ public class UIRoot extends UIContainer {
         backgroundNormal = true;
         outlineNormal = false;
 
-        floatContainers = new ArrayList<>();
     }
 
     @Override
     public void updateVisibility() {
         super.updateVisibility();
 
-        floatContainers.clear();
-        addFloatContainers(this);
+        minLayer = relativeLayer;
+        maxLayer = relativeLayer;
+
+        setMinMaxLayer(this, relativeLayer);
     }
 
-    private void addFloatContainers(UIContainer parent) {
+    private void setMinMaxLayer(UIContainer parent, int currentLayer) {
         for (UIElement child : parent.getChildren()) {
-            if (child instanceof UIFloatContainer floatContainer) {
-                floatContainers.add(floatContainer);
-            }
+            int childLayer = currentLayer + child.getRelativeLayer();
+            minLayer = Math.min(minLayer, childLayer);
+            maxLayer = Math.max(maxLayer, childLayer);
 
             if (child instanceof UIContainer container) {
-                addFloatContainers(container);
+                setMinMaxLayer(container, childLayer);
             }
         }
     }
 
-    @Override
-    public void updateMousePosition(SVector mouse, boolean valid) {
-        updateMouseAboveReference(mouse, valid);
-        mousePosition.set(mouse);
+    public void updateMouseAbove(boolean valid) {
+        int currentLayer = relativeLayer;
+        // System.out.format("min = %d, max = %d\n", minLayer, maxLayer);
+        valid = true;
+        for (int targetLayer = maxLayer; targetLayer >= minLayer; targetLayer--) {
+            valid &= !super.updateMouseAbove(valid, true, currentLayer, targetLayer);
 
-        boolean floatMouseAbove = false;
-        for (UIFloatContainer floatContainer : floatContainers) {
-            SVector relativeMouse = floatContainer.parent.getAbsolutePosition().scale(-1).add(mouse);
-            floatContainer.updateMousePosition(relativeMouse, valid && !floatMouseAbove);
-            floatMouseAbove |= floatContainer.mouseAbove();
+            // SVector relativeMouse =
+            // floatContainer.parent.getAbsolutePosition().scale(-1).add(mouse);
         }
-
-        super.updateMousePosition(mouse, valid && !floatMouseAbove);
     }
 
     public void updateSize() {
