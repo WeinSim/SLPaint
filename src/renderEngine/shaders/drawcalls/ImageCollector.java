@@ -30,9 +30,7 @@ public class ImageCollector extends ShapeCollector<ImageDrawCall> {
     private ArrayList<Integer> textureIDs;
 
     public ImageCollector() {
-        super(2, "ImageData", "image",
-                new String[] { "dataIndex", "transformationMatrix", "position", "depth", "size" },
-                new int[] { 1, 3, 1, 1, 1 });
+        super("image");
 
         textureIDs = new ArrayList<>();
     }

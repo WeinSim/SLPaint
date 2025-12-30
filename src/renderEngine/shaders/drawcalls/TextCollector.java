@@ -17,9 +17,7 @@ public class TextCollector extends ShapeCollector<TextDrawCall> {
     private Loader loader;
 
     public TextCollector(Loader loader) {
-        super(5, "TextData", "text",
-                new String[] { "dataIndex", "position", "depth", "charIndex" },
-                new int[] { 1, 1, 1, 1 });
+        super("text");
 
         this.loader = loader;
     }

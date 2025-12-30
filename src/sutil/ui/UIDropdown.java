@@ -61,8 +61,8 @@ public class UIDropdown extends UIContainer {
     }
 
     @Override
-    public void mousePressed(int mouseButton) {
-        super.mousePressed(mouseButton);
+    public void mousePressed(int mouseButton, int mods) {
+        super.mousePressed(mouseButton, mods);
 
         if (!mouseAbove() && !dropdown.mouseAbove()) {
             expanded = false;

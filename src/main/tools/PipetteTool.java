@@ -2,7 +2,7 @@ package main.tools;
 
 import main.Image;
 
-public final class PipetteTool extends ClickTool {
+public final class PipetteTool extends ImageTool {
 
     public static final PipetteTool INSTANCE = new PipetteTool();
 
@@ -10,7 +10,7 @@ public final class PipetteTool extends ClickTool {
     }
 
     @Override
-    protected void click(int x, int y, int mouseButton) {
+    public void click(int x, int y, int mouseButton) {
         Image image = app.getImage();
         if (!image.isInside(x, y))
             return;

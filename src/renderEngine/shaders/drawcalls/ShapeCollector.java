@@ -29,13 +29,10 @@ public abstract class ShapeCollector<C extends DrawCall> {
      */
     protected Batch lastRemovedBatch;
 
-    public ShapeCollector(int numUBOArrays, String uboName, String shaderName, String[] attributeNames,
-            int[] attributeSizes) {
-
-        this.numUBOArrays = numUBOArrays;
-        this.uboName = uboName;
-
-        shaderProgram = new ShaderProgram(shaderName, attributeNames, attributeSizes, true);
+    public ShapeCollector(String shaderName) {
+        shaderProgram = new ShaderProgram(shaderName);
+        numUBOArrays = shaderProgram.getNumUBOArrays();
+        uboName = shaderProgram.getUBOName();
 
         batches = new ArrayList<>();
     }

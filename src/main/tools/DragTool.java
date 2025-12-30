@@ -1,85 +1,62 @@
 package main.tools;
 
-import org.lwjgl.glfw.GLFW;
-
 public abstract sealed class DragTool extends ImageTool permits SelectionTool, TextTool {
 
-    // INITIAL_DRAG
-    protected int startX, startY;
-    protected int endX, endY;
-    // IDLE, IDLE_DRAG
     protected int x, y;
     protected int width, height;
 
-    @Override
-    public boolean startInitialDrag(int x, int y, int mouseButton) {
-        if (mouseButton != GLFW.GLFW_MOUSE_BUTTON_LEFT)
-            return false;
-
-        startX = Math.min(Math.max(0, x), app.getImage().getWidth() - 1);
-        startY = Math.min(Math.max(0, y), app.getImage().getHeight() - 1);
-
-        return true;
+    public DragTool() {
+        x = 0;
+        y = 0;
+        width = 0;
+        height = 0;
     }
 
     @Override
-    protected void handleInitialDrag(int x, int y, int px, int py) {
-        endX = Math.min(Math.max(0, x), app.getImage().getWidth() - 1);
-        endY = Math.min(Math.max(0, y), app.getImage().getHeight() - 1);
+    public void click(int x, int y, int mouseButton) {
+        // TODO: have the startInitialDrag start here?
     }
 
-    @Override
-    protected boolean finishInitialDrag() {
-        int margin = getMargin();
+    /**
+     * 
+     * @return Wether the {@code IDLE} state should be entered after the initial
+     *         drag
+     */
+    public abstract boolean enterIdle();
 
-        x = Math.min(startX, endX) + margin;
-        y = Math.min(startY, endY) + margin;
-        width = Math.abs(startX - endX) + 1 - 2 * margin;
-        height = Math.abs(startY - endY) + 1 - 2 * margin;
+    public abstract void init();
 
-        if (width == 1 || height == 1)
-            return false;
-
-        return true;
-    }
-
-    protected abstract int getMargin();
+    public abstract int getMargin();
 
     public int getX() {
         return x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
     }
 
     public int getY() {
         return y;
     }
 
+    public void setY(int y) {
+        this.y = y;
+    }
+
     public int getWidth() {
-        return switch (getState()) {
-            case INITIAL_DRAG -> Math.abs(startX - endX) + 1;
-            default -> width;
-        };
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
     }
 
     public int getHeight() {
-        return switch (getState()) {
-            case INITIAL_DRAG -> Math.abs(startY - endY) + 1;
-            default -> height;
-        };
+        return height;
     }
 
-    public int getStartX() {
-        return startX;
-    }
-
-    public int getStartY() {
-        return startY;
-    }
-
-    public int getEndX() {
-        return endX;
-    }
-
-    public int getEndY() {
-        return endY;
+    public void setHeight(int height) {
+        this.height = height;
     }
 }

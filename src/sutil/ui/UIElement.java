@@ -2,6 +2,8 @@ package sutil.ui;
 
 import java.util.function.Supplier;
 
+import org.lwjgl.glfw.GLFW;
+
 import sutil.SUtil;
 import sutil.math.SVector;
 
@@ -71,8 +73,11 @@ public abstract class UIElement {
     public void update() {
     }
 
-    public void mousePressed(int mouseButton) {
+    public void mousePressed(int mouseButton, int mods) {
         if (!mouseAbove)
+            return;
+
+        if ((mods & (GLFW.GLFW_MOD_SHIFT | GLFW.GLFW_MOD_CONTROL)) != 0)
             return;
 
         switch (mouseButton) {
@@ -93,6 +98,10 @@ public abstract class UIElement {
         }
     }
 
+    public void mouseReleased(int mouseButton, int mods) {
+
+    }
+
     /**
      * @param scroll
      * @param mousePos
@@ -103,7 +112,7 @@ public abstract class UIElement {
         return false;
     }
 
-    public void keyPressed(int key) {
+    public void keyPressed(int key, int mods) {
     }
 
     public void charInput(char c) {

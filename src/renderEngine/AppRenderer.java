@@ -120,7 +120,7 @@ public class AppRenderer<T extends App> {
                 SVector c0 = new SVector(checkerboardColors[0]).lerp(bgColor, alpha),
                         c1 = new SVector(checkerboardColors[1]).lerp(bgColor, alpha);
 
-                uiMaster.checkerboardFill(new SVector[] { c0, c1 }, 15);
+                uiMaster.checkerboardFill(new SVector[] { c0, c1 }, Sizes.CHECKERBOARD_SIZE.size);
                 uiMaster.noStroke();
                 uiMaster.rect(position, size);
 
@@ -261,6 +261,10 @@ public class AppRenderer<T extends App> {
 
     public void renderTextToImage(String text, double x, double y, double size, SVector color, TextFont font,
             Image image) {
+
+        if (text.isEmpty())
+            return;
+
         uiMaster.start();
         uiMaster.textFramebuffer();
 

@@ -108,7 +108,7 @@ public class Loader {
         try {
             texture = TextureLoader.getTexture("PNG", new FileInputStream(path));
         } catch (Exception e) {
-            System.out.format("Could not load texture \"%s\"!\n", path);
+            System.err.format("Could not load texture \"%s\"!\n", path);
             e.printStackTrace();
             System.exit(-1);
         }

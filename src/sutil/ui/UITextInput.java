@@ -48,7 +48,7 @@ public class UITextInput extends UIContainer {
     }
 
     @Override
-    public void keyPressed(int key) {
+    public void keyPressed(int key, int mods) {
         if (active()) {
             String text = uiText.getText();
             boundCursorPosition(text);

@@ -186,11 +186,20 @@ public class UIContainer extends UIElement {
     }
 
     @Override
-    public void mousePressed(int mouseButton) {
-        super.mousePressed(mouseButton);
+    public void mousePressed(int mouseButton, int mods) {
+        super.mousePressed(mouseButton, mods);
 
         for (UIElement child : getChildren()) {
-            child.mousePressed(mouseButton);
+            child.mousePressed(mouseButton, mods);
+        }
+    }
+
+    @Override
+    public void mouseReleased(int mouseButton, int mods) {
+        super.mouseReleased(mouseButton, mods);
+
+        for (UIElement child : getChildren()) {
+            child.mouseReleased(mouseButton, mods);
         }
     }
 
@@ -222,11 +231,11 @@ public class UIContainer extends UIElement {
     }
 
     @Override
-    public void keyPressed(int key) {
-        super.keyPressed(key);
+    public void keyPressed(int key, int mods) {
+        super.keyPressed(key, mods);
 
         for (UIElement child : getChildren()) {
-            child.keyPressed(key);
+            child.keyPressed(key, mods);
         }
     }
 

@@ -1,11 +1,6 @@
 package renderEngine;
 
-import main.Image;
 import main.apps.MainApp;
-import main.tools.ImageTool;
-import main.tools.SelectionTool;
-import main.tools.TextTool;
-import main.tools.DragTool;
 import sutil.math.SVector;
 import ui.Colors;
 
@@ -28,78 +23,83 @@ public class MainAppRenderer extends AppRenderer<MainApp> {
         } else {
             uiMaster.setBGColor(Colors.getCanvasColor());
 
-            // layer0, division 0:
-            // subdiv 0: checkerboard background
-            // subdiv 1: image
-            // subdiv 2: selection content
-            // subdiv 3: selection border
+            // // layer0, division 0:
+            // // subdiv 0: checkerboard background
+            // // subdiv 1: image
+            // // subdiv 2: selection content
+            // // subdiv 3: selection border
 
-            SVector translation = app.getImageTranslation();
-            double zoom = app.getImageZoom();
-            uiMaster.translate(translation);
-            uiMaster.scale(zoom);
+            // SVector translation = app.getImageTranslation();
+            // double zoom = app.getImageZoom();
+            // uiMaster.translate(translation);
+            // uiMaster.scale(zoom);
 
-            // render image
-            division = 0;
-            layer = 0;
-            Image image = app.getImage();
-            int width = image.getWidth(), height = image.getHeight();
-            SVector imageSize = new SVector(width, height);
-            uiMaster.noStroke();
-            uiMaster.checkerboardFill(Colors.getTransparentColors(), 10);
-            uiMaster.depth(getDepth(0));
-            uiMaster.rect(new SVector(), imageSize);
-            uiMaster.depth(getDepth(1));
-            uiMaster.image(image.getTextureID(), new SVector(), imageSize);
+            // // render image
+            // division = 0;
+            // layer = 0;
+            // Image image = app.getImage();
+            // int width = image.getWidth(), height = image.getHeight();
+            // SVector imageSize = new SVector(width, height);
+            // uiMaster.noStroke();
+            // uiMaster.checkerboardFill(Colors.getTransparentColors(),
+            // Sizes.CHECKERBOARD_SIZE.size);
+            // uiMaster.depth(getDepth(0));
+            // uiMaster.rect(new SVector(), imageSize);
+            // uiMaster.depth(getDepth(1));
+            // uiMaster.image(image.getTextureID(), new SVector(), imageSize);
 
-            // calling render() here to ensure that following transparent draw calls render
-            // correctly (e.g. selection, text tool)
-            uiMaster.render();
+            // // calling render() here to ensure that following transparent draw calls
+            // render
+            // // correctly (e.g. selection, text tool)
+            // uiMaster.render();
 
-            // render selection
-            ImageTool activeTool = app.getActiveTool();
-            if (activeTool == ImageTool.SELECTION) {
-                SelectionTool selection = ImageTool.SELECTION;
-                Image selectionImg = selection.getSelection();
-                if (selectionImg != null) {
-                    SVector position = new SVector(selection.getX(), selection.getY());
-                    SVector size = new SVector(selection.getWidth(),
-                            selection.getHeight());
-                    uiMaster.depth(getDepth(2));
-                    uiMaster.image(selectionImg.getTextureID(), position, size);
-                }
-            }
+            // // render selection
+            // ImageTool activeTool = app.getActiveTool();
+            // if (activeTool == ImageTool.SELECTION) {
+            // SelectionTool selection = ImageTool.SELECTION;
+            // Image selectionImg = selection.getSelection();
+            // if (selectionImg != null) {
+            // SVector position = new SVector(selection.getX(), selection.getY());
+            // SVector size = new SVector(selection.getWidth(),
+            // selection.getHeight());
+            // uiMaster.depth(getDepth(2));
+            // uiMaster.image(selectionImg.getTextureID(), position, size);
+            // }
+            // }
 
-            if (activeTool instanceof DragTool dragTool) {
-                // DragTool selection = (DragTool) activeTool;
-                uiMaster.resetMatrix();
-                uiMaster.translate(translation);
-                int selectionPhase = activeTool.getState();
-                int margin = activeTool == ImageTool.TEXT && selectionPhase == ImageTool.IDLE ? TextTool.MARGIN : 0;
-                if (selectionPhase != ImageTool.NONE) {
-                    int x, y, w, h;
-                    if (selectionPhase == ImageTool.INITIAL_DRAG) {
-                        int startX = dragTool.getStartX();
-                        int startY = dragTool.getStartY();
-                        int endX = dragTool.getEndX();
-                        int endY = dragTool.getEndY();
-                        x = Math.min(startX, endX);
-                        y = Math.min(startY, endY);
-                        w = Math.abs(endX - startX) + 1;
-                        h = Math.abs(endY - startY) + 1;
-                    } else {
-                        x = dragTool.getX() - margin;
-                        y = dragTool.getY() - margin;
-                        w = dragTool.getWidth() + 2 * margin;
-                        h = dragTool.getHeight() + 2 * margin;
-                    }
-                    uiMaster.checkerboardStroke(SELECTION_BORDER_COLORS, 10);
-                    uiMaster.strokeWeight(2);
-                    uiMaster.noFill();
-                    uiMaster.depth(getDepth(3));
-                    uiMaster.rect(new SVector(x, y).scale(zoom), new SVector(w, h).scale(app.getImageZoom()));
-                }
-            }
+            // if (activeTool instanceof DragTool dragTool) {
+            // // DragTool selection = (DragTool) activeTool;
+            // uiMaster.resetMatrix();
+            // uiMaster.translate(translation);
+            // int selectionPhase = activeTool.getState();
+            // int margin = activeTool == ImageTool.TEXT && selectionPhase == ImageTool.IDLE
+            // ? TextTool.MARGIN : 0;
+            // if (selectionPhase != ImageTool.NONE) {
+            // int x, y, w, h;
+            // if (selectionPhase == ImageTool.INITIAL_DRAG) {
+            // int startX = dragTool.getStartX();
+            // int startY = dragTool.getStartY();
+            // int endX = dragTool.getEndX();
+            // int endY = dragTool.getEndY();
+            // x = Math.min(startX, endX);
+            // y = Math.min(startY, endY);
+            // w = Math.abs(endX - startX) + 1;
+            // h = Math.abs(endY - startY) + 1;
+            // } else {
+            // x = dragTool.getX() - margin;
+            // y = dragTool.getY() - margin;
+            // w = dragTool.getWidth() + 2 * margin;
+            // h = dragTool.getHeight() + 2 * margin;
+            // }
+            // uiMaster.checkerboardStroke(SELECTION_BORDER_COLORS,
+            // Sizes.CHECKERBOARD_SIZE.size);
+            // uiMaster.strokeWeight(2);
+            // uiMaster.noFill();
+            // uiMaster.depth(getDepth(3));
+            // uiMaster.rect(new SVector(x, y).scale(zoom), new SVector(w,
+            // h).scale(app.getImageZoom()));
+            // }
+            // }
 
             renderUI();
         }

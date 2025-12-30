@@ -10,9 +10,7 @@ import renderEngine.shaders.bufferobjects.VBOMatrixData;
 public class RectFillCollector extends ShapeCollector<RectFillDrawCall> {
 
     public RectFillCollector() {
-        super(3, "RectData", "rectFill",
-                new String[] { "dataIndex", "transformationMatrix", "position", "depth", "size", "color1" },
-                new int[] { 1, 3, 1, 1, 1, 1 });
+        super("rectFill");
     }
 
     @Override

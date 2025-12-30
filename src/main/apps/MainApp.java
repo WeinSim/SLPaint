@@ -33,7 +33,11 @@ import ui.components.ImageCanvas;
 
 /**
  * <pre>
- * TODO
+ * TODO continue:
+ * Make DragTool functionality part of UI
+ *   Make sure that only left mouse button presses can trigger actions
+ *     Currently there are some checks for mouseButton == LEFT, but they are
+ *       not everywhere
  * 
  * App:
  *   Line tool
@@ -43,7 +47,6 @@ import ui.components.ImageCanvas;
  *         state gets set to idle (ImageTool.keyPressed()) even though the
  *         paste action failed. Then, the next SelectionTool.flattenSelection()
  *         call crashes because there is nothing to be flattened.
- *     Add ability to move selection with arrow keys (keyboard shortcuts)
  *     Selection resizing
  *     Selection Ctrl+Shift+X
  *   Image resizing
@@ -54,7 +57,6 @@ import ui.components.ImageCanvas;
  *     Everything regarding text input
  *   Undo / redo
  *   Transparency
- *     Grey-white squares should always appear the same size
  *     Simply selecting a transparent area and unselecting it causes the
  *       transparency to go away. Reason: selecting the area replaces that part
  *       of the image with the secondary color. Placing the transparent
@@ -83,7 +85,6 @@ import ui.components.ImageCanvas;
  *       (?))
  * 
  * Backend:
- *   Have shaders automatically recognize attribute names (and sizes)?
  *   Allow switching between old and new rendering infrastructure for each
  *     shader individually? (Would fix rectangle transparency bug)
  *   Proper package names / structure
@@ -97,6 +98,7 @@ import ui.components.ImageCanvas;
  *   Tool icons & cursors
  *   Make side panel collapsable
  * Rendering:
+ *   Improve UITextInput cursor visibility
  *   Text rendering
  *     Orange text on image has yellow edges (on the left)
  *     How to handle fonts?
@@ -130,6 +132,9 @@ public final class MainApp extends App {
 
     public static final int RGB_BITMASK = 0x00FFFFFF;
 
+    /**
+     * https://images.minitool.com/de.minitool.com/images/uploads/news/2022/02/microsoft-paint-herunterladen-installieren/microsoft-paint-herunterladen-installieren-1.png
+     */
     public static final int[] DEFAULT_COLORS = {
             SUtil.toARGB(0),
             SUtil.toARGB(63),
@@ -250,20 +255,20 @@ public final class MainApp extends App {
             resetImageTransform();
         }
 
-        int[] mouseImagePos = getMouseImagePosition();
-        int mouseX = mouseImagePos[0];
-        int mouseY = mouseImagePos[1];
+        // int[] mouseImagePos = getMouseImagePosition();
+        // int mouseX = mouseImagePos[0];
+        // int mouseY = mouseImagePos[1];
 
-        // tool update / release
-        for (int i = 0; i < mouseButtons.length; i++) {
-            if (mouseButtons[i]) {
-                if (!keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
-                    // tool update
-                    int[] pMouse = getMouseImagePosition(prevMousePos);
-                    activeTool.mouseDragged(mouseX, mouseY, pMouse[0], pMouse[1], i);
-                }
-            }
-        }
+        // // tool update / release
+        // for (int i = 0; i < mouseButtons.length; i++) {
+        // if (mouseButtons[i]) {
+        // if (!keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
+        // // tool update
+        // int[] pMouse = getMouseImagePosition(prevMousePos);
+        // activeTool.mouseDragged(mouseX, mouseY, pMouse[0], pMouse[1], i);
+        // }
+        // }
+        // }
 
         // stop dragging image
         if (!mouseButtons[1] || !keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
@@ -288,29 +293,8 @@ public final class MainApp extends App {
     }
 
     @Override
-    protected void keyPressed(int key, int mods) {
-        super.keyPressed(key, mods);
-
-        // tool keyboard shortcuts
-        for (ImageTool tool : ImageTool.INSTANCES) {
-            tool.keyPressed(key, mods);
-        }
-    }
-
-    @Override
     protected void mousePressed(int button, int mods) {
         super.mousePressed(button, mods);
-
-        if (canDoToolClick()) {
-            int[] mousePos = getMouseImagePosition();
-            int mouseX = mousePos[0],
-                    mouseY = mousePos[1];
-
-            // tool click
-            if ((mods & GLFW.GLFW_MOD_CONTROL) == 0) {
-                activeTool.mousePressed(mouseX, mouseY, button);
-            }
-        }
 
         if (canDoScrollZoomPan()) {
             switch (button) {
@@ -324,11 +308,13 @@ public final class MainApp extends App {
         }
     }
 
-    @Override
-    protected void mouseReleased(int button, int mods) {
-        super.mouseReleased(button, mods);
+    public void toolClick(int mouseButton) {
+        int[] mousePos = getMouseImagePosition();
+        int mouseX = mousePos[0],
+                mouseY = mousePos[1];
 
-        activeTool.mouseReleased(button);
+        // tool click
+        activeTool.click(mouseX, mouseY, mouseButton);
     }
 
     @Override
@@ -360,10 +346,6 @@ public final class MainApp extends App {
                 imageTranslation.add(scrollAmount);
             }
         }
-    }
-
-    private boolean canDoToolClick() {
-        return canvas.mouseAbove();
     }
 
     private boolean canDoScrollZoomPan() {
@@ -591,13 +573,12 @@ public final class MainApp extends App {
     }
 
     public void setActiveTool(ImageTool tool) {
-        if (activeTool == tool) {
+        if (activeTool == tool)
             return;
-        }
 
         // quit old tool
         if (activeTool != null) {
-            activeTool.forceQuit();
+            activeTool.finish();
             if (tool == ImageTool.PIPETTE) {
                 prevTool = activeTool;
             }
@@ -631,6 +612,12 @@ public final class MainApp extends App {
 
     public SVector getImagePosition(SVector screenSpacePos) {
         return screenSpacePos.copy().sub(imageTranslation).div(getImageZoom());
+    }
+
+    // TODO: check if there are places in the code that do the same calculation but
+    // don't call this method
+    public SVector getScreenPosition(SVector imagePos) {
+        return imagePos.copy().scale(getImageZoom()).add(imageTranslation);
     }
 
     public SVector getMouseImagePosVec() {

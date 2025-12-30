@@ -10,9 +10,7 @@ import renderEngine.shaders.bufferobjects.VBOMatrixData;
 public class HSLCollector extends ShapeCollector<HSLDrawCall> {
 
     public HSLCollector() {
-        super(1, "HSLData", "hsl",
-                new String[] { "dataIndex", "transformationMatrix", "position", "depth", "size", "color", "flags" },
-                new int[] { 1, 3, 1, 1, 1, 1, 1 });
+        super("hsl");
     }
 
     @Override

@@ -12,9 +12,7 @@ import renderEngine.shaders.bufferobjects.VBOMatrixData;
 public class EllipseCollector extends ShapeCollector<EllipseDrawCall> {
 
     public EllipseCollector() {
-        super(1, "EllipseData", "ellipse",
-                new String[] { "dataIndex", "transformationMatrix", "position", "depth", "size", "color" },
-                new int[] { 1, 3, 1, 1, 1, 1 });
+        super("ellipse");
     }
 
     @Override

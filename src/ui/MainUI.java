@@ -23,8 +23,9 @@ import sutil.ui.UIToggle;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.ImageCanvas;
-import ui.components.TextFloatContainer;
+import ui.components.TextToolContainer;
 import ui.components.ToolButton;
+import ui.components.ToolContainer;
 import ui.components.UIColorElement;
 
 public class MainUI extends AppUI<MainApp> {
@@ -222,7 +223,7 @@ public class MainUI extends AppUI<MainApp> {
 
         // canvas.add(debugPanel.addScrollbars());
 
-        canvas.add(new TextFloatContainer(app));
+        canvas.add(new TextToolContainer(app));
 
         root.add(canvas);
 
@@ -268,8 +269,8 @@ public class MainUI extends AppUI<MainApp> {
             String ret = "Selection size:";
             SelectionTool selectionManager = ImageTool.SELECTION;
             if (app.getActiveTool() == selectionManager
-                    && selectionManager.getState() != ImageTool.NONE) {
-                ret += " %d x %d px".formatted(selectionManager.getWidth(), selectionManager.getHeight());
+                    && selectionManager.getState() != ToolContainer.NONE) {
+                ret += " %d x %d px".formatted(ImageTool.SELECTION.getWidth(), ImageTool.SELECTION.getHeight());
             }
             return ret;
         }));

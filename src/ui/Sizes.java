@@ -11,12 +11,13 @@ public enum Sizes {
     MARGIN(10),
     PADDING(10),
     STROKE_WEIGHT(1.5, true),
-    COLOR_BUTTON(28),
-    BIG_COLOR_BUTTON(36),
+    COLOR_BUTTON(30),
+    BIG_COLOR_BUTTON(45),
+    CHECKERBOARD_SIZE(15),
     UI_SCALE_MARGIN(13),
     COLOR_PICKER_SIDE_PANEL(200),
     COLOR_PICKER_EXTRA_WINDOW(300),
-    COLOR_PICKER_PREVIEW(120, 80);
+    COLOR_PICKER_PREVIEW(120, 75);
 
     public final double size;
     public final double width;
@@ -39,9 +40,9 @@ public enum Sizes {
     }
 
     private Sizes(double size, double width, double height, boolean forceInteger) {
-        size = size * Inner.uiScale;
-        width = width * Inner.uiScale;
-        height = height * Inner.uiScale;
+        size = size * Inner.UI_SCALE;
+        width = width * Inner.UI_SCALE;
+        height = height * Inner.UI_SCALE;
         if (forceInteger) {
             size = (int) size;
             width = (int) width;
@@ -53,7 +54,7 @@ public enum Sizes {
     }
 
     public static double getUIScale() {
-        return Inner.uiScale;
+        return Inner.UI_SCALE;
     }
 
     /**
@@ -63,7 +64,7 @@ public enum Sizes {
      */
     private static class Inner {
 
-        private static final double uiScale;
+        private static final double UI_SCALE;
 
         static {
             // This returns the virtual screenSize (width=1440 on my surface, which is
@@ -76,7 +77,7 @@ public enum Sizes {
             GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
             int width = gd.getDisplayMode().getWidth();
 
-            uiScale = width / 1920.0;
+            UI_SCALE = width / 1920.0;
         }
     }
 }

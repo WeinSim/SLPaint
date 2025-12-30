@@ -38,17 +38,16 @@ public abstract class UIPanel {
     private boolean selectedElementVisible;
     private boolean dragging;
 
-    /**
-     * Indicates wether the left mouse button is currently being pressed.
-     */
-    private boolean mousePressed;
+    private boolean leftMousePressed;
+    private boolean rightMousePressed;
 
     private LinkedList<UIAction> eventQueue;
 
     public UIPanel() {
         selectedElement = null;
         dragging = false;
-        mousePressed = false;
+        leftMousePressed = false;
+        rightMousePressed = false;
 
         eventQueue = new LinkedList<>();
     }
@@ -91,18 +90,23 @@ public abstract class UIPanel {
 
     public void mousePressed(int mouseButton, int mods) {
         queueEvent(() -> {
-            if (mouseButton == LEFT) {
-                mousePressed = true;
+            switch (mouseButton) {
+                case GLFW.GLFW_MOUSE_BUTTON_LEFT -> leftMousePressed = true;
+                case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> rightMousePressed = true;
             }
             select(null);
-            root.mousePressed(mouseButton);
+            root.mousePressed(mouseButton, mods);
         });
     }
 
     public void mouseReleased(int mouseButton, int mods) {
-        if (mouseButton == LEFT) {
-            queueEvent(() -> mousePressed = false);
-        }
+        queueEvent(() -> {
+            switch (mouseButton) {
+                case GLFW.GLFW_MOUSE_BUTTON_LEFT -> leftMousePressed = false;
+                case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> rightMousePressed = false;
+            }
+            root.mouseReleased(mouseButton, mods);
+        });
     }
 
     public void charInput(char c) {
@@ -125,7 +129,7 @@ public abstract class UIPanel {
                     }
                 }
             }
-            root.keyPressed(key);
+            root.keyPressed(key, mods);
         });
     }
 
@@ -238,8 +242,12 @@ public abstract class UIPanel {
         return selectedElement;
     }
 
-    public boolean isMousePressed() {
-        return mousePressed;
+    public boolean isLeftMousePressed() {
+        return leftMousePressed;
+    }
+
+    public boolean isRightMousePressed() {
+        return rightMousePressed;
     }
 
     public void setRoot(UIRoot root) {

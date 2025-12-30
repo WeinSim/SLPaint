@@ -3,6 +3,9 @@
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
+// IMPORTANT: this uniform block (TextData) has to come before the other uniform
+// block (FontData) in order for the shader to automatically recognize its name
+// and size.
 layout(std140)
 uniform TextData {
     // (x_min, y_min, x_max, y_max)

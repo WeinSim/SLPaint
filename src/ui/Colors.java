@@ -22,9 +22,6 @@ public class Colors {
             new SVector(0.84, 0.51, 0.51)
     };
 
-    /**
-     * https://images.minitool.com/de.minitool.com/images/uploads/news/2022/02/microsoft-paint-herunterladen-installieren/microsoft-paint-herunterladen-installieren-1.png
-     */
     private static enum UIColor {
         BACKGROUND_NORMAL(0.24, 0.95),
         BACKGROUND_HIGHLIGHT(0.5, 0.9),

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.lwjgl.opengl.GL11;
@@ -26,14 +27,27 @@ public class ShaderProgram {
     private HashMap<String, UniformVariable> uniformVariables;
     private HashMap<String, UniformBufferObject> uniformBufferObjects;
 
-    public ShaderProgram(String name, String[] attributeNames, int[] attributeSizes, boolean hasGemoetryShader) {
+    private String uboName;
+    private int numUBOArrays;
 
+    public ShaderProgram(String name) {
+        this(name, true);
+    }
+
+    public ShaderProgram(String name, boolean hasGemoetryShader) {
         this.hasGemoetryShader = hasGemoetryShader;
 
         uniformVariables = new HashMap<>();
         uniformBufferObjects = new HashMap<>();
 
-        vertexShaderID = loadShader("res/shaders/" + name + "/vertexShader.glsl", GL20.GL_VERTEX_SHADER);
+        uboName = null;
+        numUBOArrays = 0;
+
+        ArrayList<String> attributeNames = new ArrayList<>();
+        ArrayList<Integer> attributeSizes = new ArrayList<>();
+
+        vertexShaderID = loadShader("res/shaders/" + name + "/vertexShader.glsl", GL20.GL_VERTEX_SHADER, attributeNames,
+                attributeSizes);
         if (hasGemoetryShader) {
             geometryShaderID = loadShader("res/shaders/" + name + "/geometryShader.glsl", GL32.GL_GEOMETRY_SHADER);
         }
@@ -49,9 +63,9 @@ public class ShaderProgram {
 
         if (attributeNames != null) {
             int attributeNumber = 0;
-            for (int i = 0; i < attributeNames.length; i++) {
-                bindAttribute(attributeNumber, attributeNames[i]);
-                attributeNumber += attributeSizes[i];
+            for (int i = 0; i < attributeNames.size(); i++) {
+                bindAttribute(attributeNumber, attributeNames.get(i));
+                attributeNumber += attributeSizes.get(i);
             }
         }
 
@@ -129,8 +143,24 @@ public class ShaderProgram {
         return ubo;
     }
 
+    public String getUBOName() {
+        return uboName;
+    }
+
+    public int getNumUBOArrays() {
+        return numUBOArrays;
+    }
+
     private int loadShader(String filename, int type) {
+        return loadShader(filename, type, null, null);
+    }
+
+    private int loadShader(String filename, int type, ArrayList<String> attributeNames,
+            ArrayList<Integer> attributeSizes) {
+
         StringBuilder shaderSource = new StringBuilder();
+
+        boolean insideFirstUBO = false;
 
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filename));
@@ -138,42 +168,64 @@ public class ShaderProgram {
             while ((line = reader.readLine()) != null) {
                 shaderSource.append(line).append("\n");
 
+                if (insideFirstUBO) {
+                    String trimmed = line.trim();
+                    if (trimmed.startsWith("vec4["))
+                        numUBOArrays++;
+
+                    if (trimmed.startsWith("}"))
+                        insideFirstUBO = false;
+                }
+
                 String[] parts = line.split(" ");
-                if (parts.length != 3) {
+
+                if (parts.length != 3)
                     continue;
-                }
-                if (!parts[0].equals("uniform")) {
-                    continue;
-                }
-                if (parts[2].equals("{")) {
-                    // uniform buffer object
-                    UniformBufferObject ubo = new UniformBufferObject(parts[1], uniformBufferObjects.size());
-                    uniformBufferObjects.put(parts[1], ubo);
-                } else {
-                    // normal uniform variable
-                    int datatype = -1;
-                    for (int i = 0; i < UniformVariable.TYPE_NAMES.length; i++) {
-                        if (parts[1].equals(UniformVariable.TYPE_NAMES[i])) {
-                            datatype = i;
-                            break;
-                        }
+
+                switch (parts[0]) {
+                    case "in" -> {
+                        if (attributeNames == null)
+                            continue;
+
+                        attributeNames.add(parts[2].substring(0, parts[2].length() - 1));
+                        attributeSizes.add(parts[1].startsWith("mat") ? (int) (parts[1].charAt(3) - '0') : 1);
                     }
-                    if (datatype == -1) {
-                        System.out.format("Invalid datatype: \"%s\"!\n", parts[1]);
-                        continue;
-                    }
-                    String name = parts[2].replaceAll(";", "");
-                    int openIndex = name.indexOf('[');
-                    if (openIndex != -1) {
-                        int closeIndex = name.indexOf(']');
-                        String baseName = name.substring(0, openIndex);
-                        int len = Integer.parseInt(name.substring(openIndex + 1, closeIndex));
-                        for (int i = 0; i < len; i++) {
-                            name = String.format("%s[%d]", baseName, i);
-                            uniformVariables.put(name, new UniformVariable(datatype, name));
+                    case "uniform" -> {
+                        if (parts[2].equals("{")) {
+                            // uniform buffer object
+                            UniformBufferObject ubo = new UniformBufferObject(parts[1], uniformBufferObjects.size());
+                            uniformBufferObjects.put(parts[1], ubo);
+                            if (uboName == null) {
+                                uboName = parts[1];
+                                insideFirstUBO = true;
+                            }
+                        } else {
+                            // normal uniform variable
+                            int datatype = -1;
+                            for (int i = 0; i < UniformVariable.TYPE_NAMES.length; i++) {
+                                if (parts[1].equals(UniformVariable.TYPE_NAMES[i])) {
+                                    datatype = i;
+                                    break;
+                                }
+                            }
+                            if (datatype == -1) {
+                                System.out.format("Invalid datatype: \"%s\"!\n", parts[1]);
+                                continue;
+                            }
+                            String name = parts[2].replaceAll(";", "");
+                            int openIndex = name.indexOf('[');
+                            if (openIndex != -1) {
+                                int closeIndex = name.indexOf(']');
+                                String baseName = name.substring(0, openIndex);
+                                int len = Integer.parseInt(name.substring(openIndex + 1, closeIndex));
+                                for (int i = 0; i < len; i++) {
+                                    name = String.format("%s[%d]", baseName, i);
+                                    uniformVariables.put(name, new UniformVariable(datatype, name));
+                                }
+                            } else {
+                                uniformVariables.put(name, new UniformVariable(datatype, name));
+                            }
                         }
-                    } else {
-                        uniformVariables.put(name, new UniformVariable(datatype, name));
                     }
                 }
             }

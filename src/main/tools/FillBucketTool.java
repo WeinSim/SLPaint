@@ -4,7 +4,7 @@ import java.util.LinkedList;
 
 import main.Image;
 
-public final class FillBucketTool extends ClickTool {
+public final class FillBucketTool extends ImageTool {
 
     public static final FillBucketTool INSTANCE = new FillBucketTool();
 
@@ -15,7 +15,7 @@ public final class FillBucketTool extends ClickTool {
     }
 
     @Override
-    protected void click(int x, int y, int mouseButton) {
+    public void click(int x, int y, int mouseButton) {
         Image image = app.getImage();
 
         if (!image.isInside(x, y))

@@ -26,7 +26,7 @@ public abstract class UIDragContainer<D extends UIElement & Draggable> extends U
     public void update() {
         super.update();
 
-        if (!panel.isMousePressed()) {
+        if (!panel.isLeftMousePressed()) {
             dragging = false;
         }
         if (dragging) {
