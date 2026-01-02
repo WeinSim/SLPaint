@@ -2,6 +2,8 @@ package main.tools;
 
 import java.awt.image.BufferedImage;
 
+import org.lwjgl.glfw.GLFW;
+
 import main.ClipboardManager;
 import main.Image;
 import main.apps.MainApp;
@@ -15,11 +17,38 @@ public final class SelectionTool extends DragTool {
 
     private SelectionTool() {
         selection = null;
-    }
 
-    @Override
-    public int getMargin() {
-        return 0;
+        // Ctrl + A: select everything
+        addKeyboardShortcut(new KeyboardShortcut(
+                GLFW.GLFW_KEY_A, GLFW.GLFW_MOD_CONTROL, DragTool.NONE | DragTool.IDLE, DragTool.IDLE,
+                this::selectEverything));
+
+        // Esc: finish selection
+        addKeyboardShortcut(new KeyboardShortcut(
+                GLFW.GLFW_KEY_CAPS_LOCK, 0, DragTool.IDLE, DragTool.NONE, this::finish));
+
+        // Del: delete selection
+        addKeyboardShortcut(new KeyboardShortcut(
+                GLFW.GLFW_KEY_DELETE, 0, DragTool.IDLE, DragTool.NONE, this::clearSelection));
+
+        // Ctrl + V: paste
+        addKeyboardShortcut(new KeyboardShortcut(
+                GLFW.GLFW_KEY_V, GLFW.GLFW_MOD_CONTROL, DragTool.NONE | DragTool.IDLE, DragTool.IDLE,
+                this::pasteFromClipboard));
+
+        // Ctrl + C: copy
+        addKeyboardShortcut(new KeyboardShortcut(
+                GLFW.GLFW_KEY_C, GLFW.GLFW_MOD_CONTROL, DragTool.IDLE, DragTool.IDLE, this::copyToClipboard));
+
+        // Ctrl + X: cut
+        addKeyboardShortcut(new KeyboardShortcut(
+                GLFW.GLFW_KEY_X, GLFW.GLFW_MOD_CONTROL, DragTool.IDLE, DragTool.NONE, this::cutToClipboard));
+
+        // Arrow keys: move selection
+        addKeyboardShortcut(new KeyboardShortcut(GLFW.GLFW_KEY_UP, 0, DragTool.IDLE, DragTool.IDLE, () -> y--));
+        addKeyboardShortcut(new KeyboardShortcut(GLFW.GLFW_KEY_DOWN, 0, DragTool.IDLE, DragTool.IDLE, () -> y++));
+        addKeyboardShortcut(new KeyboardShortcut(GLFW.GLFW_KEY_LEFT, 0, DragTool.IDLE, DragTool.IDLE, () -> x--));
+        addKeyboardShortcut(new KeyboardShortcut(GLFW.GLFW_KEY_RIGHT, 0, DragTool.IDLE, DragTool.IDLE, () -> x++));
     }
 
     @Override
@@ -28,23 +57,24 @@ public final class SelectionTool extends DragTool {
     }
 
     @Override
-    public void init() {
+    public void start() {
         createSubImage();
-    }
-
-    @Override
-    public void finish() {
-        // can selection ever be null here?
-        if (selection != null) {
-            app.getImage().drawSubImage(x, y, selection.getBufferedImage());
-            clearSelection();
-        }
     }
 
     private void createSubImage() {
         selection = new Image(app.getImage().getSubImage(x, y, width, height,
                 MainApp.isTransparentSelection() ? app.getSecondaryColor() : null));
         app.getImage().setPixels(x, y, width, height, app.getSecondaryColor());
+    }
+
+    @Override
+    public void finish() {
+        if (selection != null) {
+            app.getImage().drawSubImage(x, y, selection.getBufferedImage());
+            clearSelection();
+        }
+
+        state = NONE;
     }
 
     public void clearSelection() {
@@ -89,17 +119,22 @@ public final class SelectionTool extends DragTool {
         selection = new Image(paste);
     }
 
-    public void moveSelection(int dx, int dy) {
-        x += dx;
-        y += dy;
+    @Override
+    public int getMargin() {
+        return 0;
+    }
+
+    @Override
+    public String getName() {
+        return "Selection";
     }
 
     public Image getSelection() {
         return selection;
     }
 
-    @Override
-    public String getName() {
-        return "Selection";
+    public void moveSelection(int dx, int dy) {
+        x += dx;
+        y += dy;
     }
 }

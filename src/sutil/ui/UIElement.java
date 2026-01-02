@@ -3,6 +3,7 @@ package sutil.ui;
 import java.util.function.Supplier;
 
 import org.lwjgl.glfw.GLFW;
+import org.lwjglx.util.vector.Vector4f;
 
 import sutil.SUtil;
 import sutil.math.SVector;
@@ -105,10 +106,12 @@ public abstract class UIElement {
     /**
      * @param scroll
      * @param mousePos
+     * @param mods     Only contains the {@code GLFW.GLFW_MOD_CONTROL} and
+     *                 {@code GLFW.GLFW_MOD_SHIFT} modifiers
      * @return Wether the mouse scroll action has been "used up" by this
      *         {@code UIElement}.
      */
-    public boolean mouseWheel(SVector scroll, SVector mousePos) {
+    public boolean mouseWheel(SVector scroll, SVector mousePos, int mods) {
         return false;
     }
 
@@ -191,28 +194,60 @@ public abstract class UIElement {
         return parent.getAbsolutePosition().add(position);
     }
 
-    public final SVector getBackgroundColor() {
-        return style.getBackgroundColor();
+    public Vector4f backgroundColor() {
+        return style.backgroundColor();
     }
 
-    public final SVector getOutlineColor() {
-        SVector ol = style.getOutlineColor();
+    public boolean doBackgroundCheckerboard() {
+        return style.doBackgroundCheckerboard();
+    }
+
+    public Vector4f backgroundCheckerboardColor1() {
+        return style.backgroundCheckerboardColor1();
+    }
+
+    public Vector4f backgroundCheckerboardColor2() {
+        return style.backgroundCheckerboardColor2();
+    }
+
+    public double backgroundCheckerboardSize() {
+        return style.backgroundCheckerboardSize();
+    }
+
+    public final Vector4f strokeColor() {
+        Vector4f ol = style.strokeColor();
         if (ol == null && panel.getSelectedElement() == this) {
-            ol = panel.getOutlineNormalColor();
+            ol = panel.getStrokeNormalColor();
         }
         return ol;
     }
 
-    public final double getStrokeWeight() {
-        double sw = style.getStrokeWeight();
+    public final double strokeWeight() {
+        double sw = style.strokeWeight();
         if (panel.getSelectedElement() == this) {
-            if (style.getOutlineColor() == null) {
+            if (style.strokeColor() == null) {
                 sw = panel.getStrokeWeight();
             } else {
                 sw *= 2;
             }
         }
         return sw;
+    }
+
+    public boolean doStrokeCheckerboard() {
+        return style.doStrokeCheckerboard();
+    }
+
+    public Vector4f strokeCheckerboardColor1() {
+        return style.strokeCheckerboardColor1();
+    }
+
+    public Vector4f strokeCheckerboardColor2() {
+        return style.strokeCheckerboardColor2();
+    }
+
+    public double strokeCheckerboardSize() {
+        return style.strokeCheckerboardSize();
     }
 
     public void setOutlineNormal(boolean outlineNormal) {
@@ -260,8 +295,8 @@ public abstract class UIElement {
     }
 
     public void setDefaultStyle() {
-        Supplier<SVector> backgroundColorSupplier = () -> {
-            SVector bgColor = null;
+        Supplier<Vector4f> backgroundColorSupplier = () -> {
+            Vector4f bgColor = null;
             if (backgroundNormal) {
                 bgColor = panel.getBackgroundNormalColor();
             }
@@ -270,13 +305,13 @@ public abstract class UIElement {
             }
             return bgColor;
         };
-        Supplier<SVector> outlineColorSupplier = () -> {
-            SVector outlineColor = null;
+        Supplier<Vector4f> outlineColorSupplier = () -> {
+            Vector4f outlineColor = null;
             if (outlineNormal) {
-                outlineColor = panel.getOutlineNormalColor();
+                outlineColor = panel.getStrokeNormalColor();
             }
             if (mouseAbove && outlineHighlight) {
-                outlineColor = panel.getOutlineHighlightColor();
+                outlineColor = panel.getStrokeHighlightColor();
             }
             return outlineColor;
         };

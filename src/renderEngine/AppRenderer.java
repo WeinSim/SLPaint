@@ -2,17 +2,18 @@ package renderEngine;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
+import org.lwjglx.util.vector.Vector4f;
 
 import main.Image;
 import main.apps.App;
 import main.apps.MainApp;
 import renderEngine.fonts.TextFont;
 import renderEngine.shaders.bufferobjects.FrameBufferObject;
-import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIFloatContainer;
+import sutil.ui.UIImage;
 import sutil.ui.UIScale;
 import sutil.ui.UIText;
 import sutil.ui.UITextInput;
@@ -23,9 +24,8 @@ import ui.Sizes;
 import ui.components.AlphaScale;
 import ui.components.HueSatField;
 import ui.components.LightnessScale;
-import ui.components.UIColorElement;
 
-public class AppRenderer<T extends App> {
+public class AppRenderer {
 
     /**
      * 
@@ -46,24 +46,30 @@ public class AppRenderer<T extends App> {
     private static final int NUM_DIVISIONS = 1024;
     private static final int NUM_LAYERS = 16;
 
-    protected T app;
+    private static final boolean DEBUG_RENDERING = false;
+
+    protected App app;
 
     protected UIRenderMaster uiMaster;
 
     protected int layer;
     protected int division;
 
-    public AppRenderer(T app) {
+    public AppRenderer(App app) {
         this.app = app;
         uiMaster = new UIRenderMaster(app, app.getLoader());
     }
 
     public void render() {
-        setDefaultBGColor();
+        uiMaster.setBGColor(new Vector4f());
 
         uiMaster.start();
 
-        renderUI();
+        if (DEBUG_RENDERING) {
+            renderDebug();
+        } else {
+            renderUI();
+        }
 
         uiMaster.render();
     }
@@ -76,7 +82,7 @@ public class AppRenderer<T extends App> {
         uiMaster.resetMatrix();
         AppUI<?> ui = app.getUI();
 
-        layer = 1;
+        layer = 0;
         division = 0;
 
         renderUIElement(ui.getRoot());
@@ -107,46 +113,51 @@ public class AppRenderer<T extends App> {
 
         layer += element.getRelativeLayer();
 
-        // background
-        SVector bgColor = element.getBackgroundColor();
-        if (element instanceof UIColorElement e) {
-            if (bgColor != null) {
-                // this is just a hack for now because we cannot guarantee the "color"-rect to
-                // render above the checkered background rect
-                uiMaster.depth(getDepth(0));
+        // checkerboard background
+        if (element.doBackgroundCheckerboard()) {
+            uiMaster.depth(getDepth(0));
+            Vector4f c1 = element.backgroundCheckerboardColor1(),
+                    c2 = element.backgroundCheckerboardColor2();
+            double s = element.backgroundCheckerboardSize();
+            uiMaster.checkerboardFill(new Vector4f[] { c1, c2 }, s);
+            uiMaster.noStroke();
+            uiMaster.rect(position, size);
 
-                double alpha = SUtil.alpha(e.getColor()) / 255.0;
-                SVector[] checkerboardColors = Colors.getTransparentColors();
-                SVector c0 = new SVector(checkerboardColors[0]).lerp(bgColor, alpha),
-                        c1 = new SVector(checkerboardColors[1]).lerp(bgColor, alpha);
-
-                uiMaster.checkerboardFill(new SVector[] { c0, c1 }, Sizes.CHECKERBOARD_SIZE.size);
-                uiMaster.noStroke();
-                uiMaster.rect(position, size);
-
-                bgColor = null;
-            }
+            // this is just a hack for now to guarantee that semi transparent colors render
+            // correctly
+            uiMaster.render();
         }
 
-        uiMaster.depth(getDepth(1));
+        // background
+        Vector4f bgColor = element.backgroundColor();
         if (bgColor != null) {
+            uiMaster.depth(getDepth(1));
             uiMaster.fill(bgColor);
             uiMaster.noStroke();
             uiMaster.rect(position, size);
         }
 
         // outline
-        SVector olColor = element.getOutlineColor();
         boolean doOutline = false;
         int debugOutline = App.getDebugOutline();
         if ((debugOutline == 1 && element.mouseAbove()) || debugOutline == 2) {
             uiMaster.stroke(new SVector(1, 0.7, 0.1));
             uiMaster.strokeWeight(Sizes.STROKE_WEIGHT.size);
             doOutline = true;
-        } else if (olColor != null) {
-            uiMaster.stroke(olColor);
-            uiMaster.strokeWeight(element.getStrokeWeight());
+        } else if (element.doStrokeCheckerboard()) {
+            Vector4f c1 = element.strokeCheckerboardColor1(),
+                    c2 = element.strokeCheckerboardColor2();
+            double s = element.strokeCheckerboardSize();
+            uiMaster.checkerboardStroke(new Vector4f[] { c1, c2 }, s);
+            uiMaster.strokeWeight(element.strokeWeight());
             doOutline = true;
+        } else {
+            Vector4f olColor = element.strokeColor();
+            if (olColor != null) {
+                uiMaster.stroke(olColor);
+                uiMaster.strokeWeight(element.strokeWeight());
+                doOutline = true;
+            }
         }
         if (doOutline) {
             uiMaster.depth(getDepth(3));
@@ -208,10 +219,18 @@ public class AppRenderer<T extends App> {
             uiMaster.fill(text.getColor());
             uiMaster.text(text.getText(), position);
         }
+        if (element instanceof UIImage image) {
+            uiMaster.image(image.getTextureID(), position, size);
+            // incredibly ugly but it works for now.
+            // This causes the main image to render first and a (transparent) selection can
+            // render above it. Otherwise, the selection would render first and the image
+            // would not render behind transparent parts of the selection.
+            uiMaster.render();
+        }
         if (element instanceof UITextInput textInput) {
             if (textInput.isCursorVisible()) {
                 uiMaster.noStroke();
-                uiMaster.fill(textInput.getOutlineColor());
+                uiMaster.fill(textInput.strokeColor());
                 uiMaster.rect(textInput.getCursorPosition(), textInput.getCursorSize());
             }
         }
@@ -228,7 +247,7 @@ public class AppRenderer<T extends App> {
                 uiMaster.rect(pos, siz);
 
                 // color gradient
-                uiMaster.fill(MainApp.toSVector(a.getRGB()));
+                uiMaster.fill(MainApp.toVector4f(a.getRGB()));
                 uiMaster.alphaScale(pos, siz, a.getOrientation() == UIContainer.VERTICAL);
             } else {
                 uiMaster.noStroke();
@@ -259,7 +278,7 @@ public class AppRenderer<T extends App> {
         uiMaster = new UIRenderMaster(app, app.getLoader());
     }
 
-    public void renderTextToImage(String text, double x, double y, double size, SVector color, TextFont font,
+    public void renderTextToImage(String text, double x, double y, double size, Vector4f color, TextFont font,
             Image image) {
 
         if (text.isEmpty())
@@ -274,7 +293,7 @@ public class AppRenderer<T extends App> {
                 GL11.GL_ONE, GL11.GL_ONE, // rgb
                 GL11.GL_ONE_MINUS_DST_ALPHA, GL11.GL_ONE); // alpha
 
-        uiMaster.setBGColor(new SVector(), 0.0);
+        uiMaster.setBGColor(new Vector4f(0, 0, 0, 0));
         uiMaster.fill(color);
         uiMaster.textFont(font);
         uiMaster.textSize(size);
@@ -295,5 +314,45 @@ public class AppRenderer<T extends App> {
             array[i] /= divisor;
         }
         image.drawSubImage(0, 0, width, height, array);
+    }
+
+    private void renderDebug() {
+        uiMaster.setBGColor(new Vector4f(1, 1, 1, 1));
+
+        SVector p1 = new SVector(500, 100),
+                p2 = new SVector(300, 700),
+                p3 = new SVector(1000, 500);
+        SVector s1 = new SVector(800, 100),
+                s2 = new SVector(250, 250),
+                s3 = new SVector(100, 200);
+        SVector c1 = new SVector(0.8, 0.2, 0.2),
+                c2 = new SVector(0.2, 0.8, 0.2),
+                c3 = new SVector(0.2, 0.2, 0.8);
+
+        uiMaster.fill(c1);
+        uiMaster.ellipse(p1, s1);
+
+        uiMaster.fill(c2);
+        uiMaster.ellipse(p2, s2);
+
+        uiMaster.hueSatField(p3, new SVector(200, 200), true, true);
+
+        uiMaster.noStroke();
+
+        uiMaster.fill(c1);
+        uiMaster.rect(p1, s1);
+
+        uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
+        uiMaster.depth(getDepth(0));
+        uiMaster.rect(p2, s2);
+
+        p2.x += 50;
+
+        uiMaster.fill(c2);
+        uiMaster.depth(getDepth(1));
+        uiMaster.rect(p2, s2);
+
+        uiMaster.fill(c3);
+        uiMaster.rect(p3, s3);
     }
 }

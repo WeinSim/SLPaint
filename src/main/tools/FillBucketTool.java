@@ -12,6 +12,7 @@ public final class FillBucketTool extends ImageTool {
     private static final int[] FILL_YOFF = { 1, 0, -1, 0 };
 
     private FillBucketTool() {
+        super();
     }
 
     @Override
@@ -48,6 +49,10 @@ public final class FillBucketTool extends ImageTool {
                 }
             }
         }
+    }
+
+    @Override
+    public void finish() {
     }
 
     @Override

@@ -5,6 +5,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.function.Supplier;
 
+import org.lwjglx.util.vector.Vector4f;
+
 import main.apps.App;
 import renderEngine.fonts.TextFont;
 import sutil.math.SVector;
@@ -28,7 +30,7 @@ public abstract class AppUI<T extends App> extends UIPanel {
         defaultTextSize = Sizes.TEXT.size;
 
         root = new UIRoot(this, UIContainer.VERTICAL, UIContainer.LEFT);
-        root.zeroMargin().zeroPadding().noBackground().noOutline();
+        root.zeroMargin().zeroPadding().noOutline();
         int[] displaySize = app.getWindow().getDisplaySize();
         root.setFixedSize(new SVector(displaySize[0], displaySize[1]));
 
@@ -41,17 +43,11 @@ public abstract class AppUI<T extends App> extends UIPanel {
         root.setFixedSize(new SVector(width, height));
     }
 
-    public static <T extends UIElement> T setButtonStyle1(T element) {
-        element.setOutlineNormal(true);
-        element.setBackgroundHighlight(true);
-        element.setDefaultStyle();
-        return element;
-    }
-
-    public static <T extends UIElement> T setButtonStyle2(T element, Supplier<Boolean> selectedSupplier) {
-        Supplier<SVector> backgroundColorSupplier = () -> selectedSupplier.get() ? Colors.getBackgroundHighlightColor2()
+    public static <T extends UIElement> T setSelectableButtonStyle(T element, Supplier<Boolean> selectedSupplier) {
+        Supplier<Vector4f> backgroundColorSupplier = () -> selectedSupplier.get()
+                ? Colors.getBackgroundHighlightColor2()
                 : null;
-        Supplier<SVector> outlineColorSupplier = () -> element.mouseAbove() ? Colors.getOutlineNormalColor() : null;
+        Supplier<Vector4f> outlineColorSupplier = () -> element.mouseAbove() ? Colors.getOutlineNormalColor() : null;
         Supplier<Double> strokeWeightSupplier = () -> Sizes.STROKE_WEIGHT.size;
         element.setStyle(new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier));
         return element;
@@ -88,32 +84,32 @@ public abstract class AppUI<T extends App> extends UIPanel {
     }
 
     @Override
-    public SVector getDefaultTextColor() {
+    public Vector4f getDefaultTextColor() {
         return Colors.getTextColor();
     }
 
     @Override
-    public SVector getBackgroundNormalColor() {
+    public Vector4f getBackgroundNormalColor() {
         return Colors.getBackgroundNormalColor();
     }
 
     @Override
-    public SVector getBackgroundHighlightColor() {
+    public Vector4f getBackgroundHighlightColor() {
         return Colors.getBackgroundHighlightColor();
     }
 
     @Override
-    public SVector getOutlineNormalColor() {
+    public Vector4f getStrokeNormalColor() {
         return Colors.getOutlineNormalColor();
     }
 
     @Override
-    public SVector getOutlineHighlightColor() {
+    public Vector4f getStrokeHighlightColor() {
         return Colors.getOutlineHighlightColor();
     }
 
     @Override
-    public SVector getSeparatorColor() {
+    public Vector4f getSeparatorColor() {
         return Colors.getSeparatorColor();
     }
 

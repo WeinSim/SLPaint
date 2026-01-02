@@ -1,25 +1,26 @@
 package ui;
 
+import org.lwjglx.util.vector.Vector4f;
+
 import main.ColorPicker;
 import main.apps.MainApp;
 import main.settings.BooleanSetting;
 import main.settings.ColorSetting;
-import sutil.math.SVector;
 
 public class Colors {
 
-    private static final SVector[] DEFAULT_UI_COLORS_DARK = {
-            new SVector(0.3, 0.3, 0.3),
-            new SVector(0.07, 0.35, 0.5),
-            new SVector(0.5, 0.07, 0.35),
-            new SVector(0.42, 0.14, 0.14)
+    private static final Vector4f[] DEFAULT_UI_COLORS_DARK = {
+            new Vector4f(0.3f, 0.3f, 0.3f, 1.0f),
+            new Vector4f(0.07f, 0.35f, 0.5f, 1.0f),
+            new Vector4f(0.5f, 0.07f, 0.35f, 1.0f),
+            new Vector4f(0.42f, 0.14f, 0.14f, 1.0f)
     };
 
-    private static final SVector[] DEFAULT_UI_COLORS_LIGHT = {
-            new SVector(1, 1, 1),
-            new SVector(0.67, 0.85, 0.95),
-            new SVector(0.95, 0.63, 0.84),
-            new SVector(0.84, 0.51, 0.51)
+    private static final Vector4f[] DEFAULT_UI_COLORS_LIGHT = {
+            new Vector4f(1, 1, 1, 1),
+            new Vector4f(0.67f, 0.85f, 0.95f, 1.0f),
+            new Vector4f(0.95f, 0.63f, 0.84f, 1.0f),
+            new Vector4f(0.84f, 0.51f, 0.51f, 1.0f)
     };
 
     private static enum UIColor {
@@ -47,7 +48,7 @@ public class Colors {
     private Colors() {
     }
 
-    public static SVector[] getDefaultColors() {
+    public static Vector4f[] getDefaultColors() {
         return isDarkMode() ? DEFAULT_UI_COLORS_DARK : DEFAULT_UI_COLORS_LIGHT;
     }
 
@@ -71,39 +72,43 @@ public class Colors {
         return baseColor.get();
     }
 
-    public static SVector getBackgroundNormalColor() {
+    public static Vector4f getBackgroundNormalColor() {
         return getUIColor(UIColor.BACKGROUND_NORMAL);
     }
 
-    public static SVector getBackgroundHighlightColor() {
+    public static Vector4f getBackgroundHighlightColor() {
         return getUIColor(UIColor.BACKGROUND_HIGHLIGHT);
     }
 
-    public static SVector getBackgroundHighlightColor2() {
+    public static Vector4f getBackgroundHighlightColor2() {
         return getUIColor(UIColor.BACKGROUND_HIGHLIGHT_2);
     }
 
-    public static SVector getOutlineNormalColor() {
+    public static Vector4f getOutlineNormalColor() {
         return getUIColor(UIColor.OUTLINE_NORMAL);
     }
 
-    public static SVector getOutlineHighlightColor() {
+    public static Vector4f getOutlineHighlightColor() {
         return getUIColor(UIColor.OUTLINE_HIGHLIGHT);
     }
 
-    public static SVector getSeparatorColor() {
+    public static Vector4f getSeparatorColor() {
         return getUIColor(UIColor.SEPARATOR);
     }
 
-    public static SVector getCanvasColor() {
+    public static Vector4f getCanvasColor() {
         return getUIColor(UIColor.CANVAS);
     }
 
-    public static SVector[] getTransparentColors() {
-        return new SVector[] { getUIColor(UIColor.TRANSPARENCY_1), getUIColor(UIColor.TRANSPARENCY_2) };
+    public static Vector4f[] getTransparentColors() {
+        return new Vector4f[] { getUIColor(UIColor.TRANSPARENCY_1), getUIColor(UIColor.TRANSPARENCY_2) };
     }
 
-    private static SVector getUIColor(UIColor colorType) {
+    public static Vector4f[] getSelectionBorderColors() {
+        return new Vector4f[] { new Vector4f(0, 0, 0, 1), new Vector4f(1, 1, 1, 1) };
+    }
+
+    private static Vector4f getUIColor(UIColor colorType) {
         double brightness = isDarkMode() ? colorType.darkModeBrightness : colorType.lightModeBrightness;
 
         brightness = switch (colorType) {
@@ -115,10 +120,12 @@ public class Colors {
         // This method is being called ~5520 times per second (which is too much!)
         // Maybe cache the results?
 
-        return MainApp.toSVector(getBaseColor()).copy().scale(brightness);
+        Vector4f ret = (Vector4f) MainApp.toVector4f(getBaseColor()).scale((float) brightness);
+        ret.w = 1.0f;
+        return ret;
     }
 
-    public static SVector getTextColor() {
-        return isDarkMode() ? new SVector(1, 1, 1) : new SVector(0, 0, 0);
+    public static Vector4f getTextColor() {
+        return isDarkMode() ? new Vector4f(1, 1, 1, 1) : new Vector4f(0, 0, 0, 1);
     }
 }

@@ -2,10 +2,11 @@ package ui.components;
 
 import java.util.function.Supplier;
 
+import org.lwjglx.util.vector.Vector4f;
+
 import main.apps.MainApp;
 import sutil.math.SVector;
 import sutil.ui.UIElement;
-import sutil.ui.UIStyle;
 import ui.Colors;
 import ui.Sizes;
 
@@ -21,15 +22,15 @@ public class UIColorElement extends UIElement {
         this.colorSupplier = colorSupplier;
         this.size = size;
 
-        Supplier<SVector> backgroundColorSupplier = () -> MainApp.toSVector(getColor());
-        Supplier<SVector> outlineColorSupplier = outline
-                ? () -> getColor() == null
-                        ? new SVector(0.5, 0.5, 0.5)
-                        : Colors.getTextColor()
-                // : Colors.getOutlineNormalColor()
-                : () -> null;
-        Supplier<Double> strokeWeightSupplier = () -> Sizes.STROKE_WEIGHT.size;
-        setStyle(new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier));
+        style.setBackgroundColor(() -> MainApp.toVector4f(getColor()));
+        style.setBackgroundCheckerboard(
+                () -> getColor() != null,
+                () -> Colors.getTransparentColors()[0],
+                () -> Colors.getTransparentColors()[1],
+                () -> Sizes.CHECKERBOARD_SIZE.size);
+        if (outline) {
+            style.setStrokeColor(() -> getColor() == null ?  new Vector4f(0.5f, 0.5f, 0.5f, 1.0f) : Colors.getTextColor());
+        }
     }
 
     @Override

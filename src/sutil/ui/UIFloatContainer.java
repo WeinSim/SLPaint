@@ -57,7 +57,6 @@ public class UIFloatContainer extends UIContainer {
         double minDistSq = Double.POSITIVE_INFINITY;
 
         UIRoot root = panel.getRoot();
-        SVector parentAbsolutePos = parent.getAbsolutePosition();
         for (PositionSupplier positionSupplier : positionSuppliers) {
             SVector absolutePos = positionSupplier.getAbsolutePosition();
             SVector originalAbsolutePos = new SVector(absolutePos);
@@ -70,11 +69,12 @@ public class UIFloatContainer extends UIContainer {
                 minDistSq = distSq;
                 minAbsolutePos = clipToRoot ? absolutePos : originalAbsolutePos;
             }
-            if (distSq == 0.0) {
+
+            if (distSq == 0.0)
                 break;
-            }
         }
 
+        SVector parentAbsolutePos = parent.getAbsolutePosition();
         position.set(minAbsolutePos).sub(parentAbsolutePos);
     }
 
@@ -104,7 +104,7 @@ public class UIFloatContainer extends UIContainer {
 
         PositionSupplier(int attachPoint, SVector position) {
             this.attachPoint = attachPoint;
-            this.position = position;
+            this.position = new SVector(position);
 
             parent = null;
             parentAttachPoint = 0;

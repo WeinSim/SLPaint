@@ -87,9 +87,9 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
                     : parent.getSize().y;
 
             if (orientation == VERTICAL) {
-                size.set(width, 2 * getStrokeWeight());
+                size.set(width, 2 * strokeWeight());
             } else {
-                size.set(2 * getStrokeWeight(), width);
+                size.set(2 * strokeWeight(), width);
             }
         }
 

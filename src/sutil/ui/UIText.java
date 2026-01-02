@@ -2,6 +2,8 @@ package sutil.ui;
 
 import java.util.function.Supplier;
 
+import org.lwjglx.util.vector.Vector4f;
+
 import sutil.math.SVector;
 
 public class UIText extends UIElement {
@@ -10,13 +12,14 @@ public class UIText extends UIElement {
     private Supplier<String> textUpdater = this::getText;
 
     private double textSize;
+    // panel::getDefaultTextSize doesn't work because initially, panel is null
     private Supplier<Double> textSizeUpdater = () -> panel.getDefaultTextSize();
 
     private String fontName;
     private Supplier<String> fontUpdater = () -> panel.getDefaultFontName();
 
-    private SVector color = new SVector();
-    private Supplier<SVector> colorUpdater = () -> panel.getDefaultTextColor();
+    private Vector4f color = new Vector4f();
+    private Supplier<Vector4f> colorUpdater = () -> panel.getDefaultTextColor();
 
     public UIText(String text) {
         this.text = text;
@@ -94,16 +97,16 @@ public class UIText extends UIElement {
         this.textSizeUpdater = textSizeUpdater;
     }
 
-    public SVector getColor() {
+    public Vector4f getColor() {
         return color;
     }
 
-    public void setColor(SVector color) {
+    public void setColor(Vector4f color) {
         this.color.set(color);
         colorUpdater = this::getColor;
     }
 
-    public void setColor(Supplier<SVector> colorUpdater) {
+    public void setColor(Supplier<Vector4f> colorUpdater) {
         this.colorUpdater = colorUpdater;
     }
 }

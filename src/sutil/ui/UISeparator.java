@@ -33,7 +33,7 @@ public class UISeparator extends UIContainer {
             setVFillSize();
             zeroMargin();
 
-            style.setOutlineColorSupplier(() -> panel.getSeparatorColor());
+            style.setStrokeColor(() -> panel.getSeparatorColor());
         }
     }
 }

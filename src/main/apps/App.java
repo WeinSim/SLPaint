@@ -49,7 +49,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
     protected AppUI<?> ui;
     protected boolean adjustSizeOnInit = false;
 
-    protected AppRenderer<?> renderer;
+    protected AppRenderer renderer;
     private Loader loader;
 
     /**
@@ -123,7 +123,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         }
     }
 
-    public final void update(double deltaT) {
+    public void update(double deltaT) {
         if (avgFrameTime < 0) {
             avgFrameTime = deltaT;
         } else {
@@ -207,12 +207,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         Window.ScrollInfo scrollInfo;
         while ((scrollInfo = window.getNextScrollInfo()) != null) {
             if (focus)
-                ui.mouseWheel(new SVector(scrollInfo.xoffset(), scrollInfo.yoffset()), mousePos);
+                ui.mouseWheel(new SVector(scrollInfo.xoffset(), scrollInfo.yoffset()), mousePos, getModifierKeys());
 
             mouseScroll(scrollInfo.xoffset(), scrollInfo.yoffset());
         }
-
-        childUpdate();
 
         // empty event queue
         while (!eventQueue.isEmpty()) {
@@ -222,7 +220,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         int[] displaySize = window.getDisplaySize();
         ui.setRootSize(displaySize[0], displaySize[1]);
 
-        SVector mousePos = window.getMousePosition();
         ui.update(mousePos, focus);
 
         if (ui.mouseAboveTextInput()) {
@@ -230,16 +227,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         } else {
             window.setArrowCursor();
         }
-    }
-
-    /**
-     * This is the method that subclass of App can override. The rason they cannot
-     * override the update() method (and call super.update() from there) is that
-     * parts of App.update() need to come first (e.g. setting the mousePosition and
-     * focus fields) and others need to come last (most importantly ui.update()).
-     */
-    protected void childUpdate() {
-
     }
 
     protected void charInput(char c) {
@@ -297,13 +284,21 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
 
     public final void render() {
         if (renderer == null) {
-            renderer = new AppRenderer<App>(this);
+            renderer = new AppRenderer(this);
         }
         renderer.render();
     }
 
-    protected boolean keyPressed(boolean[] keys, boolean[] prevKeys, int key) {
-        return keys[key] && !prevKeys[key];
+    public int getModifierKeys() {
+        int mods = 0;
+
+        if (keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT])
+            mods |= GLFW.GLFW_MOD_SHIFT;
+
+        if (keys[GLFW.GLFW_KEY_LEFT_CONTROL] || keys[GLFW.GLFW_KEY_RIGHT_CONTROL])
+            mods |= GLFW.GLFW_MOD_CONTROL;
+
+        return mods;
     }
 
     public void queueEvent(UIAction action) {

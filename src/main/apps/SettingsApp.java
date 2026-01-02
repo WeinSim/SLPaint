@@ -1,10 +1,10 @@
 package main.apps;
 
 import org.lwjgl.glfw.GLFW;
+import org.lwjglx.util.vector.Vector4f;
 
 import main.ColorPicker;
 import renderEngine.Window;
-import sutil.math.SVector;
 import ui.Colors;
 import ui.Sizes;
 
@@ -39,9 +39,9 @@ public final class SettingsApp extends App {
         if (Colors.isDarkMode() == darkMode) {
             return;
         }
-        SVector[] oldColors = Colors.getDefaultColors();
+        Vector4f[] oldColors = Colors.getDefaultColors();
         Colors.setDarkMode(darkMode);
-        SVector[] newColors = Colors.getDefaultColors();
+        Vector4f[] newColors = Colors.getDefaultColors();
 
         int baseRGB = Colors.getBaseColor();
 

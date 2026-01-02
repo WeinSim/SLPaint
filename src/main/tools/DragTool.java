@@ -1,11 +1,20 @@
 package main.tools;
 
+import org.lwjgl.glfw.GLFW;
+
 public abstract sealed class DragTool extends ImageTool permits SelectionTool, TextTool {
+
+    public static final int INITIAL_DRAG = 0x02, IDLE = 0x04, IDLE_DRAG = 0x08;
+
+    // INITIAL_DRAG
+    private int startX, startY;
 
     protected int x, y;
     protected int width, height;
 
     public DragTool() {
+        super();
+
         x = 0;
         y = 0;
         width = 0;
@@ -14,7 +23,16 @@ public abstract sealed class DragTool extends ImageTool permits SelectionTool, T
 
     @Override
     public void click(int x, int y, int mouseButton) {
-        // TODO: have the startInitialDrag start here?
+        if (state == NONE) {
+            if (mouseButton == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                startX = Math.min(Math.max(0, x), app.getImage().getWidth() - 1);
+                startY = Math.min(Math.max(0, y), app.getImage().getHeight() - 1);
+
+                state = INITIAL_DRAG;
+            }
+        } else {
+            finish();
+        }
     }
 
     /**
@@ -24,7 +42,7 @@ public abstract sealed class DragTool extends ImageTool permits SelectionTool, T
      */
     public abstract boolean enterIdle();
 
-    public abstract void init();
+    public abstract void start();
 
     public abstract int getMargin();
 
@@ -58,5 +76,17 @@ public abstract sealed class DragTool extends ImageTool permits SelectionTool, T
 
     public void setHeight(int height) {
         this.height = height;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public int getStartX() {
+        return startX;
+    }
+
+    public int getStartY() {
+        return startY;
     }
 }

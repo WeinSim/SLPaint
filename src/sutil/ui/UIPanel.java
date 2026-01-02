@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 import org.lwjgl.glfw.GLFW;
+import org.lwjglx.util.vector.Vector4f;
 
 import sutil.math.SVector;
 
@@ -133,8 +134,8 @@ public abstract class UIPanel {
         });
     }
 
-    public void mouseWheel(SVector scroll, SVector mousePos) {
-        queueEvent(() -> root.mouseWheel(scroll.copy().scale(mouseWheelSensitivity), mousePos));
+    public void mouseWheel(SVector scroll, SVector mousePos, int mods) {
+        queueEvent(() -> root.mouseWheel(scroll.copy().scale(mouseWheelSensitivity), mousePos, mods));
     }
 
     public void queueEvent(UIAction action) {
@@ -202,28 +203,34 @@ public abstract class UIPanel {
         return padding;
     }
 
-    public SVector getDefaultTextColor() {
-        return new SVector(1, 1, 1).scale(1.0);
+    public Vector4f getDefaultTextColor() {
+        float brightness = 1.0f;
+        return new Vector4f(brightness, brightness, brightness, 1.0f);
     }
 
-    public SVector getBackgroundNormalColor() {
-        return new SVector(1, 1, 1).scale(0.1);
+    public Vector4f getBackgroundNormalColor() {
+        float brightness = 0.1f;
+        return new Vector4f(brightness, brightness, brightness, 1.0f);
     }
 
-    public SVector getBackgroundHighlightColor() {
-        return new SVector(1, 1, 1).scale(0.2);
+    public Vector4f getBackgroundHighlightColor() {
+        float brightness = 0.2f;
+        return new Vector4f(brightness, brightness, brightness, 1.0f);
     }
 
-    public SVector getOutlineNormalColor() {
-        return new SVector(1, 1, 1).scale(0.6);
+    public Vector4f getStrokeNormalColor() {
+        float brightness = 0.6f;
+        return new Vector4f(brightness, brightness, brightness, 1.0f);
     }
 
-    public SVector getOutlineHighlightColor() {
-        return new SVector(1, 1, 1).scale(0.75);
+    public Vector4f getStrokeHighlightColor() {
+        float brightness = 0.75f;
+        return new Vector4f(brightness, brightness, brightness, 1.0f);
     }
 
-    public SVector getSeparatorColor() {
-        return new SVector(1, 1, 1).scale(0.15);
+    public Vector4f getSeparatorColor() {
+        float brightness = 0.15f;
+        return new Vector4f(brightness, brightness, brightness, 1.0f);
     }
 
     public double getStrokeWeight() {

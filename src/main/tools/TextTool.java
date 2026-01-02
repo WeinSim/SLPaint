@@ -1,5 +1,7 @@
 package main.tools;
 
+import org.lwjgl.glfw.GLFW;
+
 import sutil.math.SVector;
 
 public final class TextTool extends DragTool {
@@ -42,21 +44,32 @@ public final class TextTool extends DragTool {
     private String font = DEFAULT_FONT_NAME;
 
     private TextTool() {
-        size = DEFAULT_TEXT_SIZE;
-        // text = "";
+        super();
 
-        // addKeyboardShortcut(new KeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, IDLE,
-        // NONE, this::flattenText));
+        size = DEFAULT_TEXT_SIZE;
+
+        text = "";
+
+        addKeyboardShortcut(
+                new KeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, DragTool.IDLE, DragTool.NONE, this::finish));
     }
 
-    // @Override
-    // public boolean startInitialDrag(int x, int y, int mouseButton) {
-    // if (super.startInitialDrag(x, y, mouseButton)) {
-    // text = "";
-    // return true;
-    // }
-    // return false;
-    // }
+    @Override
+    public void start() {
+        app.getUI().select(app.getTextToolInput());
+        text = "";
+    }
+
+    @Override
+    public void finish() {
+        if (!text.isEmpty()) {
+            SVector position = app.getImagePosition(app.getTextToolInput().getAbsolutePosition());
+            app.renderTextToImage(text, position.x, position.y, size, app.getLoader().loadFont(font));
+            text = "";
+        }
+
+        state = NONE;
+    }
 
     @Override
     public int getMargin() {
@@ -67,25 +80,6 @@ public final class TextTool extends DragTool {
     public boolean enterIdle() {
         return true;
     }
-
-    @Override
-    public void init() {
-        app.getUI().select(app.getTextToolInput());
-        text = "";
-    }
-
-    @Override
-    public void finish() {
-        SVector position = app.getImagePosition(app.getTextToolInput().getAbsolutePosition());
-        app.renderTextToImage(text, position.x, position.y, size, app.getLoader().loadFont(font));
-    }
-
-    // private void invalidState() {
-    // final String baseString = "INITIAL_DRAG, IDLE and IDLE_DRAG states undefined
-    // for %s tool";
-    // throw new UnsupportedOperationException(String.format(baseString,
-    // getName()));
-    // }
 
     @Override
     public String getName() {

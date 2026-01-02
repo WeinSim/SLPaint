@@ -10,6 +10,6 @@ public class ToolButton extends UIButton {
     public ToolButton(MainApp app, ImageTool tool) {
         super(tool.getName().charAt(0) + "", () -> app.setActiveTool(tool));
 
-        AppUI.setButtonStyle2(this, () -> app.getActiveTool() == tool);
+        AppUI.setSelectableButtonStyle(this, () -> app.getActiveTool() == tool);
     }
 }

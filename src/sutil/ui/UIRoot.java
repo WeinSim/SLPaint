@@ -14,7 +14,6 @@ public class UIRoot extends UIContainer {
 
         backgroundNormal = true;
         outlineNormal = false;
-
     }
 
     @Override

@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import org.lwjgl.glfw.GLFW;
+import org.lwjglx.util.vector.Vector4f;
 
 import main.ColorArray;
 import main.ColorPicker;
@@ -21,7 +22,7 @@ import main.settings.BooleanSetting;
 import main.settings.ColorArraySetting;
 import main.settings.Settings;
 import main.tools.ImageTool;
-import renderEngine.MainAppRenderer;
+import renderEngine.AppRenderer;
 import renderEngine.Window;
 import renderEngine.fonts.TextFont;
 import sutil.SUtil;
@@ -34,27 +35,23 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- * Make DragTool functionality part of UI
- *   Make sure that only left mouse button presses can trigger actions
- *     Currently there are some checks for mouseButton == LEFT, but they are
- *       not everywhere
  * 
  * App:
- *   Line tool
  *   Selection tool
- *     Fix bug: when pressing Ctrl+V with an empty clipboard and then trying to
- *       select something, the program crashes. Reason: the selection tool's
- *         state gets set to idle (ImageTool.keyPressed()) even though the
- *         paste action failed. Then, the next SelectionTool.flattenSelection()
- *         call crashes because there is nothing to be flattened.
  *     Selection resizing
  *     Selection Ctrl+Shift+X
- *   Image resizing
- *     When the size of the image changes, the text tool's FBO's texture should
- *       also update its size.
  *   Text tool
  *     Text area resizing
  *     Everything regarding text input
+ *   Image resizing
+ *     When the size of the image changes, the text tool's FBO's texture should
+ *       also update its size
+ *   Line tool
+ *   Pencil tool
+ *     Sizes 1 & 2 and 3 & 4 look the same
+ *     Drawing with a semi-transparent color has weird artifacts because some
+ *       pixels are drawn multiple times on consecutive frames, resulting in
+ *       the wrong opacity
  *   Undo / redo
  *   Transparency
  *     Simply selecting a transparent area and unselecting it causes the
@@ -164,12 +161,6 @@ public final class MainApp extends App {
 
     public static final int PRIMARY_COLOR = 0, SECONDARY_COLOR = 1;
 
-    private static final int MIN_ZOOM_LEVEL = -4;
-    private static final int MAX_ZOOM_LEVEL = 8;
-    private static final double ZOOM_BASE = 1.6;
-
-    private static final double MOUSE_WHEEL_SENSITIVITY = 100;
-
     private static BooleanSetting transparentSelection = new BooleanSetting("transparentSelection");
 
     private static ColorArraySetting customUIBaseColors = new ColorArraySetting("customUIColors");
@@ -196,10 +187,6 @@ public final class MainApp extends App {
     private int colorSelection;
     private ColorArray customColorButtonArray;
 
-    private SVector imageTranslation;
-    private int imageZoomLevel;
-    private boolean draggingImage;
-
     private ImageCanvas canvas;
 
     public MainApp() {
@@ -216,11 +203,7 @@ public final class MainApp extends App {
 
         createUI();
 
-        renderer = new MainAppRenderer(this);
-
-        imageTranslation = new SVector();
-
-        ImageTool.init(this);
+        renderer = new AppRenderer(this);
 
         setActiveTool(ImageTool.PENCIL);
         prevTool = ImageTool.PENCIL;
@@ -248,37 +231,8 @@ public final class MainApp extends App {
     }
 
     @Override
-    public void childUpdate() {
-        if (frameCount == 2) {
-            // Calling this in setup() does not work because the UI has not been updated
-            // yet, so the absolute position of the image canvas it still (0, 0).
-            resetImageTransform();
-        }
-
-        // int[] mouseImagePos = getMouseImagePosition();
-        // int mouseX = mouseImagePos[0];
-        // int mouseY = mouseImagePos[1];
-
-        // // tool update / release
-        // for (int i = 0; i < mouseButtons.length; i++) {
-        // if (mouseButtons[i]) {
-        // if (!keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
-        // // tool update
-        // int[] pMouse = getMouseImagePosition(prevMousePos);
-        // activeTool.mouseDragged(mouseX, mouseY, pMouse[0], pMouse[1], i);
-        // }
-        // }
-        // }
-
-        // stop dragging image
-        if (!mouseButtons[1] || !keys[GLFW.GLFW_KEY_LEFT_CONTROL]) {
-            draggingImage = false;
-        }
-        // dragging image
-        if (draggingImage) {
-            SVector mouseMovement = new SVector(mousePos).sub(prevMousePos);
-            imageTranslation.add(mouseMovement);
-        }
+    public void update(double deltaT) {
+        super.update(deltaT);
 
         if (colorSelection == PRIMARY_COLOR) {
             primaryColor = selectedColorPicker.getRGB();
@@ -288,72 +242,6 @@ public final class MainApp extends App {
 
         // update image texture
         getImage().updateOpenGLTexture();
-
-        // System.out.println(getFrameRate());
-    }
-
-    @Override
-    protected void mousePressed(int button, int mods) {
-        super.mousePressed(button, mods);
-
-        if (canDoScrollZoomPan()) {
-            switch (button) {
-                // start dragging image
-                case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> {
-                    if ((mods & GLFW.GLFW_MOD_CONTROL) != 0) {
-                        draggingImage = true;
-                    }
-                }
-            }
-        }
-    }
-
-    public void toolClick(int mouseButton) {
-        int[] mousePos = getMouseImagePosition();
-        int mouseX = mousePos[0],
-                mouseY = mousePos[1];
-
-        // tool click
-        activeTool.click(mouseX, mouseY, mouseButton);
-    }
-
-    @Override
-    protected void mouseScroll(double xoff, double yoff) {
-        super.mouseScroll(xoff, yoff);
-
-        SVector mousePos = window.getMousePosition();
-
-        // canvas actions
-        if (canDoScrollZoomPan()) {
-            SVector scrollAmount = new SVector(xoff, yoff).scale(MOUSE_WHEEL_SENSITIVITY);
-            boolean ctrlPressed = keys[GLFW.GLFW_KEY_LEFT_CONTROL];
-            if (ctrlPressed) {
-                // zoom
-                double prevZoom = getImageZoom();
-                imageZoomLevel += (int) Math.signum(scrollAmount.y);
-                imageZoomLevel = Math.min(Math.max(MIN_ZOOM_LEVEL, imageZoomLevel), MAX_ZOOM_LEVEL);
-                double zoom = getImageZoom();
-                imageTranslation.set(imageTranslation.sub(mousePos).scale(zoom / prevZoom).add(mousePos));
-                window.setHandCursor();
-            } else {
-                // scroll
-                boolean shiftPressed = keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT];
-                if (shiftPressed) {
-                    double temp = scrollAmount.x;
-                    scrollAmount.x = scrollAmount.y;
-                    scrollAmount.y = temp;
-                }
-                imageTranslation.add(scrollAmount);
-            }
-        }
-    }
-
-    private boolean canDoScrollZoomPan() {
-        boolean ret = canvas.mouseAbove();
-        if (textToolInput.isVisible()) {
-            ret |= textToolInput.mouseAbove();
-        }
-        return ret;
     }
 
     @Override
@@ -364,7 +252,7 @@ public final class MainApp extends App {
     }
 
     public void renderTextToImage(String text, double x, double y, double size, TextFont font) {
-        renderer.renderTextToImage(text, x, y, size, toSVector(primaryColor), font, getImage());
+        renderer.renderTextToImage(text, x, y, size, toVector4f(primaryColor), font, getImage());
     }
 
     public void selectColor(int color) {
@@ -407,7 +295,7 @@ public final class MainApp extends App {
                     }
                     double distSq = pa.magSq();
                     if (distSq < maxDistSq)
-                        image.setPixel(x, y, color);
+                        image.drawPixel(x, y, color);
                 }
             }
         } else {
@@ -425,7 +313,7 @@ public final class MainApp extends App {
                     }
                     double distSq = pa.magSq();
                     if (distSq < maxDistSq)
-                        image.setPixel(x, y, color);
+                        image.drawPixel(x, y, color);
                 }
             }
         }
@@ -455,8 +343,7 @@ public final class MainApp extends App {
                     this,
                     getSelectedColor());
             // colorSelection == 0 ? primaryColor : secondaryColor);
-            case SETTINGS_DIALOG ->
-                new SettingsApp(this);
+            case SETTINGS_DIALOG -> new SettingsApp(this);
             default -> null;
         };
     }
@@ -494,20 +381,15 @@ public final class MainApp extends App {
     }
 
     public void resetImageTransform() {
-        imageZoomLevel = 0;
-        imageTranslation = canvas.getAbsolutePosition().add(new SVector(canvas.getHMargin(), canvas.getVMargin()));
+        canvas.resetImageTransform();
     }
 
     public Image getImage() {
         return imageFileManager.getImage();
     }
 
-    public SVector getImageTranslation() {
-        return imageTranslation;
-    }
-
     public double getImageZoom() {
-        return Math.pow(ZOOM_BASE, imageZoomLevel) * Sizes.getUIScale();
+        return canvas.getImageZoom();
     }
 
     public void setCanvas(ImageCanvas element) {
@@ -601,8 +483,18 @@ public final class MainApp extends App {
         MainApp.transparentSelection.set(transparentSelection);
     }
 
+    // TODO: all of these get...Position methods have horrible names
+
+    public int[] getPrevMouseImagePosition() {
+        return getMouseImagePosition(prevMousePos);
+    }
+
     public int[] getMouseImagePosition() {
-        return getMouseImagePosition(window.getMousePosition());
+        return getMouseImagePosition(mousePos);
+    }
+
+    public SVector getMouseImagePosVec() {
+        return getImagePosition(mousePos);
     }
 
     private int[] getMouseImagePosition(SVector mouse) {
@@ -611,17 +503,21 @@ public final class MainApp extends App {
     }
 
     public SVector getImagePosition(SVector screenSpacePos) {
-        return screenSpacePos.copy().sub(imageTranslation).div(getImageZoom());
+        return canvas.getImagePosition(screenSpacePos);
     }
 
     // TODO: check if there are places in the code that do the same calculation but
     // don't call this method
     public SVector getScreenPosition(SVector imagePos) {
-        return imagePos.copy().scale(getImageZoom()).add(imageTranslation);
+        return canvas.getScreenPosition(imagePos);
     }
 
-    public SVector getMouseImagePosVec() {
-        return window.getMousePosition().copy().sub(imageTranslation).div(getImageZoom());
+    public SVector getMousePosition() {
+        return mousePos;
+    }
+
+    public SVector getPrevMousePosition() {
+        return prevMousePos;
     }
 
     public int[] getDisplaySize() {
@@ -654,7 +550,7 @@ public final class MainApp extends App {
     public static String formatFilesize(long filesize) {
         final String[] prefixes = { "k", "M", "G", "T" };
         long remainder = 0;
-        for (int i = 0; i < prefixes.length; i++) {
+        for (int i = 0; i < prefixes.length + 1; i++) {
             if (filesize < 1024) {
                 if (i == 0) {
                     return filesize + "B";
@@ -669,18 +565,19 @@ public final class MainApp extends App {
         return "[Filesize too large!]";
     }
 
-    public static int toInt(SVector color) {
-        return SUtil.toARGB(color.x * 255, color.y * 255, color.z * 255);
+    public static int toInt(Vector4f color) {
+        return SUtil.toARGB(color.x * 255, color.y * 255, color.z * 255, color.w * 255);
     }
 
-    public static SVector toSVector(Integer color) {
-        if (color == null) {
+    public static Vector4f toVector4f(Integer color) {
+        if (color == null)
             return null;
-        }
+
         int red = SUtil.red(color);
         int green = SUtil.green(color);
         int blue = SUtil.blue(color);
-        return new SVector(red, green, blue).div(255);
+        int alpha = SUtil.alpha(color);
+        return (Vector4f) new Vector4f(red, green, blue, alpha).scale(1.0f / 255);
     }
 
     public static int runCommand(String directory, ArrayList<String> commands) {

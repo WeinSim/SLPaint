@@ -2,7 +2,7 @@ package sutil.ui;
 
 import java.util.function.Supplier;
 
-import sutil.math.SVector;
+import org.lwjglx.util.vector.Vector4f;
 
 public class UIFloatMenu extends UIFloatContainer {
 
@@ -66,8 +66,8 @@ public class UIFloatMenu extends UIFloatContainer {
         contextMenu.addAttachPoint(BOTTOM_RIGHT, label, BOTTOM_LEFT);
         contextMenu.setVisibilitySupplier(() -> expandedLabel == label);
 
-        label.style.backgroundColorSupplier = () -> {
-            SVector bgColor = null;
+        label.style.setBackgroundColor(() -> {
+            Vector4f bgColor = null;
             if (backgroundNormal) {
                 bgColor = panel.getBackgroundNormalColor();
             }
@@ -75,7 +75,7 @@ public class UIFloatMenu extends UIFloatContainer {
                 bgColor = panel.getBackgroundHighlightColor();
             }
             return bgColor;
-        };
+        });
 
         add(contextMenu);
     }

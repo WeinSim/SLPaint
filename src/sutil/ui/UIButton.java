@@ -2,8 +2,6 @@ package sutil.ui;
 
 import java.util.function.Supplier;
 
-import sutil.math.SVector;
-
 public class UIButton extends UILabel {
 
     public UIButton(String text, UIAction clickAction) {
@@ -19,12 +17,12 @@ public class UIButton extends UILabel {
     }
 
     private void init(UIAction clickAction) {
-        Supplier<SVector> bg = () -> mouseAbove
-                ? panel.getBackgroundHighlightColor()
-                : panel.getBackgroundNormalColor();
-        Supplier<SVector> ol = () -> panel.getOutlineNormalColor();
-        Supplier<Double> sw = () -> panel.getStrokeWeight();
-        setStyle(new UIStyle(bg, ol, sw));
+        // style.setBackgroundColor(
+        //         () -> mouseAbove ? panel.getBackgroundHighlightColor() : panel.getBackgroundNormalColor());
+
+        outlineNormal = true;
+        backgroundNormal = true;
+        backgroundHighlight = true;
 
         setLeftClickAction(clickAction);
         selectable = true;

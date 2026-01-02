@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.lwjgl.glfw.GLFW;
+
 import sutil.math.SVector;
 
 public class UIContainer extends UIElement {
@@ -204,15 +206,15 @@ public class UIContainer extends UIElement {
     }
 
     @Override
-    public boolean mouseWheel(SVector scroll, SVector mousePos) {
+    public boolean mouseWheel(SVector scroll, SVector mousePos, int mods) {
         SVector relativeMouse = new SVector(mousePos).sub(position);
         for (UIElement child : getChildren()) {
-            if (child.mouseWheel(scroll, relativeMouse)) {
+            if (child.mouseWheel(scroll, relativeMouse, mods)) {
                 return true;
             }
         }
 
-        if (mouseAbove()) {
+        if (mouseAbove() && (mods & GLFW.GLFW_MOD_CONTROL) == 0) {
             boolean doScroll = false;
             if (isHScroll()) {
                 scrollOffset.x += scroll.x;
@@ -227,7 +229,7 @@ public class UIContainer extends UIElement {
             }
         }
 
-        return super.mouseWheel(scroll, mousePos);
+        return super.mouseWheel(scroll, mousePos, mods);
     }
 
     @Override
@@ -857,11 +859,10 @@ public class UIContainer extends UIElement {
             this.orientation = orientation;
 
             UIStyle style = new UIStyle(
-                    () -> mouseAbove || scrollbarContainer.isDragging()
-                            ? panel.getOutlineNormalColor()
-                            : panel.getOutlineHighlightColor(),
-                    () -> null,
-                    () -> 0.0);
+                    () -> mouseAbove || scrollbarContainer.isDragging() ? panel.getStrokeNormalColor()
+                            : panel.getStrokeHighlightColor(),
+                    () -> null, () -> 0.0);
+
             setStyle(style);
         }
 

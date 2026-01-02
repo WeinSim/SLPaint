@@ -7,11 +7,13 @@ public final class PipetteTool extends ImageTool {
     public static final PipetteTool INSTANCE = new PipetteTool();
 
     private PipetteTool() {
+        super();
     }
 
     @Override
     public void click(int x, int y, int mouseButton) {
         Image image = app.getImage();
+
         if (!image.isInside(x, y))
             return;
 
@@ -24,6 +26,10 @@ public final class PipetteTool extends ImageTool {
         }
 
         app.switchBackToPreviousTool();
+    }
+
+    @Override
+    public void finish() {
     }
 
     @Override

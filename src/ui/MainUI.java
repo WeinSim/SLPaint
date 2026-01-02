@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 import main.Image;
 import main.ImageFormat;
 import main.apps.MainApp;
+import main.tools.DragTool;
 import main.tools.ImageTool;
 import main.tools.PencilTool;
 import main.tools.SelectionTool;
@@ -23,9 +24,7 @@ import sutil.ui.UIToggle;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.ImageCanvas;
-import ui.components.TextToolContainer;
 import ui.components.ToolButton;
-import ui.components.ToolContainer;
 import ui.components.UIColorElement;
 
 public class MainUI extends AppUI<MainApp> {
@@ -49,7 +48,9 @@ public class MainUI extends AppUI<MainApp> {
         topRow.withSeparators().setHFillSize().setHAlignment(UIContainer.LEFT).withBackground().noOutline();
 
         UIContainer settings = addTopRowSection(topRow, "Settings");
-        settings.add(new UIButton("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG)));
+        UIButton settingsButton = new UIButton("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG));
+        // setButtonStyle1(settingsButton);
+        settings.add(settingsButton);
 
         UIContainer fileOptions = addTopRowSection(topRow, "File");
         fileOptions.add(new UIText("..."));
@@ -120,7 +121,7 @@ public class MainUI extends AppUI<MainApp> {
         for (int i = 0; i < 2; i++) {
             final int index = i;
             UIContainer colorContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
-            setButtonStyle2(colorContainer, () -> app.getColorSelection() == index);
+            setSelectableButtonStyle(colorContainer, () -> app.getColorSelection() == index);
             colorContainer.setSelectable(true);
 
             Supplier<Integer> cg = i == 0 ? app::getPrimaryColor : app::getSecondaryColor;
@@ -160,7 +161,7 @@ public class MainUI extends AppUI<MainApp> {
         topRow.add(allColors);
 
         UIContainer topRowScrollbars = topRow.addScrollbars().setHFillSize();
-        topRowScrollbars.setRelativeLayer(2);
+        topRowScrollbars.setRelativeLayer(ImageCanvas.NUM_UI_LAYERS);
         root.add(topRowScrollbars);
 
         ImageCanvas canvas = new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, UIContainer.TOP, app);
@@ -190,27 +191,22 @@ public class MainUI extends AppUI<MainApp> {
                 UIContainer.VERTICAL,
                 true,
                 false));
-        canvas.add(sidePanel.addScrollbars().setRelativeLayer(2));
+        canvas.add(sidePanel.addScrollbars().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
 
         UIContainer debugPanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
                 UIContainer.VERTICAL);
         debugPanel.withBackground().noOutline();
         debugPanel.setVFillSize();
-        debugPanel.setHFixedSize(300);
+        debugPanel.setHFixedSize(400);
 
-        // debugPanel.add(new UIText("Tools"));
-        // for (ImageTool tool : ImageTool.INSTANCES) {
-        // debugPanel.add(new UIText(() -> String.format(" %s: state = %d",
-        // tool.getName(), tool.getState())));
-        // }
-        // debugPanel.add(new UIText(() -> String.format("Active tool: %s",
-        // app.getActiveTool().getName())));
-        // debugPanel.add(new UIText(() -> String.format(" State: %d",
-        // app.getActiveTool().getState())));
-        // debugPanel.add(new UIText(() -> String.format("TextTool.text: \"%s\"",
-        // ImageTool.TEXT.getText())));
-        // debugPanel.add(new UIText(() -> String.format("TextTool.font: \"%s\"",
-        // ImageTool.TEXT.getFont())));
+        debugPanel.add(new UIText("Tools"));
+        for (ImageTool tool : ImageTool.INSTANCES) {
+            debugPanel.add(new UIText(() -> String.format(" %s: state = %d", tool.getName(), tool.getState())));
+        }
+        debugPanel.add(new UIText(() -> String.format("Active tool: %s", app.getActiveTool().getName())));
+        debugPanel.add(new UIText(() -> String.format(" State: %d", app.getActiveTool().getState())));
+        debugPanel.add(new UIText(() -> String.format("TextTool.text: \"%s\"", ImageTool.TEXT.getText())));
+        debugPanel.add(new UIText(() -> String.format("TextTool.font: \"%s\"", ImageTool.TEXT.getFont())));
 
         // debugPanel.add(new UIText(" "));
         // String[] lipsum = lipsum(Integer.MAX_VALUE, 3);
@@ -221,14 +217,12 @@ public class MainUI extends AppUI<MainApp> {
         // debugPanel.add(new UITextInput(this::getDebugString, this::setDebugString,
         // true));
 
-        // canvas.add(debugPanel.addScrollbars());
-
-        canvas.add(new TextToolContainer(app));
+        canvas.add(debugPanel.addScrollbars().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
 
         root.add(canvas);
 
         UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
-        statusBar.withBackground().noOutline().setRelativeLayer(2);
+        statusBar.withBackground().noOutline().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS);
         statusBar.setHFillSize();
         statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate())));
         statusBar.add(new UISeparator());
@@ -267,9 +261,9 @@ public class MainUI extends AppUI<MainApp> {
         statusBar.add(new UISeparator());
         statusBar.add(new UILabel(() -> {
             String ret = "Selection size:";
-            SelectionTool selectionManager = ImageTool.SELECTION;
-            if (app.getActiveTool() == selectionManager
-                    && selectionManager.getState() != ToolContainer.NONE) {
+            SelectionTool selection = ImageTool.SELECTION;
+            if (app.getActiveTool() == selection
+                    && selection.getState() != DragTool.NONE) {
                 ret += " %d x %d px".formatted(ImageTool.SELECTION.getWidth(), ImageTool.SELECTION.getHeight());
             }
             return ret;
@@ -310,7 +304,6 @@ public class MainUI extends AppUI<MainApp> {
     }
 
     private UIContainer createIntPicker(Supplier<Integer> sizeGetter, Consumer<Integer> sizeSetter) {
-
         UIContainer container = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         container.zeroMargin().zeroPadding().noOutline();
         container.add(new UIButton("-", () -> sizeSetter.accept(sizeGetter.get() - 1)));

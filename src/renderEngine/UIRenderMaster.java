@@ -199,12 +199,8 @@ public class UIRenderMaster {
         currentFramebuffer = framebuffer;
     }
 
-    public void setBGColor(SVector bgColor) {
-        setBGColor(bgColor, 1.0);
-    }
-
-    public void setBGColor(SVector bgColor, double alpha) {
-        GL11.glClearColor((float) bgColor.x, (float) bgColor.y, (float) bgColor.z, (float) alpha);
+    public void setBGColor(Vector4f bgColor) {
+        GL11.glClearColor(bgColor.x, bgColor.y, bgColor.z, bgColor.w);
         GL11.glClearDepth(1.0);
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
     }

@@ -188,6 +188,52 @@ public class Image {
         setDirty(x0 + w - 1, y0 + h - 1);
     }
 
+    /**
+     * The {@code drawPixel} method respects the color's alpha value. That means if
+     * you draw with an alpha of 0.5, the pixel's color will become a 50/50 mix of
+     * the old color and the new color.
+     * 
+     * @param x
+     * @param y
+     * @param color
+     * @see Image#setPixel
+     */
+    public void drawPixel(int x, int y, int color) {
+        if (!isInside(x, y))
+            return;
+
+        int alpha = SUtil.alpha(color);
+        if (alpha == 0)
+            return;
+
+        if (alpha == 255)
+            setPixel(x, y, color);
+
+        int red = SUtil.red(color),
+                green = SUtil.green(color),
+                blue = SUtil.blue(color);
+
+        int[] oldColor = bufferedImage.getRaster().getPixel(x, y, (int[]) null);
+
+        int[] colorArray = {
+                ((255 - alpha) * oldColor[0] + alpha * red) / 255,
+                ((255 - alpha) * oldColor[1] + alpha * green) / 255,
+                ((255 - alpha) * oldColor[2] + alpha * blue) / 255,
+                255 - (255 - alpha) * (255 - oldColor[3]) / 255
+        };
+        bufferedImage.getRaster().setPixel(x, y, colorArray);
+        setDirty(x, y);
+    }
+
+    /**
+     * The {@code setPixel} method does not respect the color's alpha value. The
+     * pixels color is simply set to the new color.
+     * 
+     * @param x
+     * @param y
+     * @param color
+     * @see Image#drawPixel
+     */
     public void setPixel(int x, int y, int color) {
         if (!isInside(x, y))
             return;
