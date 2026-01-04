@@ -78,7 +78,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         UIContainer gap = new UIContainer(0, 0).zeroMargin().zeroPadding();
         gap.noOutline();
         baseColorHeading.add(gap);
-        UIColorElement baseColorButton = new UIColorElement(Colors::getBaseColor, Sizes.COLOR_BUTTON.size, true);
+        UIColorElement baseColorButton = new UIColorElement(Colors::baseColor, Sizes.COLOR_BUTTON.size, true);
         baseColorHeading.add(baseColorButton);
         baseColorHeading.setLeftClickAction(() -> colorSelectionExpanded = !colorSelectionExpanded);
         baseColor.add(baseColorHeading);
@@ -91,12 +91,12 @@ public class SettingsUI extends AppUI<SettingsApp> {
         defaultColors.zeroMargin().noOutline();
         UIContainer defaultColorContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         defaultColorContainer.zeroMargin().noOutline();
-        int numDefaultColors = Colors.getNumDefaultColors();
+        int numDefaultColors = Colors.numDefaults();
         for (int i = 0; i < numDefaultColors; i++) {
             final int j = i;
-            UIColorElement button = new UIColorElement(() -> MainApp.toInt(Colors.getDefaultColors()[j]),
+            UIColorElement button = new UIColorElement(() -> MainApp.toInt(Colors.defaults()[j]),
                     Sizes.COLOR_BUTTON.size, true);
-            button.setLeftClickAction(() -> app.setUIColor(MainApp.toInt(Colors.getDefaultColors()[j])));
+            button.setLeftClickAction(() -> app.setUIColor(MainApp.toInt(Colors.defaults()[j])));
             defaultColorContainer.add(button);
         }
         defaultColors.add(defaultColorContainer);

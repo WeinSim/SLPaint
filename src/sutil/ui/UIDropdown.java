@@ -37,8 +37,8 @@ public class UIDropdown extends UIContainer {
         });
 
         dropdown = new UIFloatMenu(this::isExpanded, scroll);
-        dropdown.addAttachPoint(UIFloatContainer.TOP_LEFT, this, UIFloatContainer.BOTTOM_LEFT);
-        dropdown.addAttachPoint(UIFloatContainer.BOTTOM_LEFT, this, UIFloatContainer.TOP_LEFT);
+        dropdown.addAnchor(UIFloatContainer.Anchor.TOP_LEFT, this, UIFloatContainer.Anchor.BOTTOM_LEFT);
+        dropdown.addAnchor(UIFloatContainer.Anchor.BOTTOM_LEFT, this, UIFloatContainer.Anchor.TOP_LEFT);
         UIAction[] clickActions = new UIAction[options.length];
         for (int i = 0; i < clickActions.length; i++) {
             final int j = i;

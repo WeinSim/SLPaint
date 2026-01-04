@@ -6,7 +6,33 @@ import sutil.math.SVector;
 
 public class UIFloatContainer extends UIContainer {
 
-    public static final int TOP_LEFT = 0, TOP_RIGHT = 1, BOTTOM_LEFT = 2, BOTTOM_RIGHT = 3;
+    public enum Anchor {
+
+        TOP_LEFT(0, 0),
+        TOP_CENTER(1, 0),
+        TOP_RIGHT(2, 0),
+        CENTER_LEFT(0, 1),
+        CENTER_CENTER(1, 1),
+        CENTER_RIGHT(2, 1),
+        BOTTOM_LEFT(0, 2),
+        BOTTOM_CENTER(1, 2),
+        BOTTOM_RIGHT(2, 2);
+
+        public final int dx, dy;
+
+        private Anchor(int dx, int dy) {
+            this.dx = dx;
+            this.dy = dy;
+        }
+
+        public static Anchor fromOffsets(int dx, int dy) {
+            for (Anchor anchor : values()) {
+                if (anchor.dx == dx && anchor.dy == dy)
+                    return anchor;
+            }
+            return null;
+        }
+    }
 
     private ArrayList<PositionSupplier> positionSuppliers;
 
@@ -40,14 +66,14 @@ public class UIFloatContainer extends UIContainer {
         return this;
     }
 
-    public UIFloatContainer addAttachPoint(int attachPoint, UIElement parent, int parentAttachPoint) {
-        positionSuppliers.add(new PositionSupplier(attachPoint, parent, parentAttachPoint));
+    public UIFloatContainer addAnchor(Anchor anchor, UIElement parent, Anchor parentAnchor) {
+        positionSuppliers.add(new PositionSupplier(anchor, parent, parentAnchor));
 
         return this;
     }
 
-    public UIFloatContainer addAttachPoint(int attachPoint, SVector position) {
-        positionSuppliers.add(new PositionSupplier(attachPoint, position));
+    public UIFloatContainer addAnchor(Anchor anchor, SVector position) {
+        positionSuppliers.add(new PositionSupplier(anchor, position));
 
         return this;
     }
@@ -95,25 +121,25 @@ public class UIFloatContainer extends UIContainer {
 
     private class PositionSupplier {
 
-        final int attachPoint;
+        final Anchor anchor;
 
         final SVector position;
 
         final UIElement parent;
-        final int parentAttachPoint;
+        final Anchor parentAnchor;
 
-        PositionSupplier(int attachPoint, SVector position) {
-            this.attachPoint = attachPoint;
+        public PositionSupplier(Anchor anchor, SVector position) {
+            this.anchor = anchor;
             this.position = new SVector(position);
 
             parent = null;
-            parentAttachPoint = 0;
+            parentAnchor = null;
         }
 
-        PositionSupplier(int attachPoint, UIElement parent, int parentAttachPoint) {
-            this.attachPoint = attachPoint;
+        public PositionSupplier(Anchor anchor, UIElement parent, Anchor parentAnchor) {
+            this.anchor = anchor;
             this.parent = parent;
-            this.parentAttachPoint = parentAttachPoint;
+            this.parentAnchor = parentAnchor;
 
             position = null;
         }
@@ -122,22 +148,16 @@ public class UIFloatContainer extends UIContainer {
             SVector absolutePos;
             if (parent != null) {
                 absolutePos = parent.getAbsolutePosition();
-                if (parentAttachPoint == BOTTOM_LEFT || parentAttachPoint == BOTTOM_RIGHT) {
-                    absolutePos.y += parent.getSize().y;
-                }
-                if (parentAttachPoint == TOP_RIGHT || parentAttachPoint == BOTTOM_RIGHT) {
-                    absolutePos.x += parent.getSize().x;
-                }
+                SVector parentSize = parent.getSize();
+
+                absolutePos.x += parentSize.x * parentAnchor.dx * 0.5;
+                absolutePos.y += parentSize.y * parentAnchor.dy * 0.5;
             } else {
                 absolutePos = UIFloatContainer.this.parent.getAbsolutePosition().add(position);
             }
 
-            if (attachPoint == BOTTOM_LEFT || attachPoint == BOTTOM_RIGHT) {
-                absolutePos.y -= size.y;
-            }
-            if (attachPoint == TOP_RIGHT || attachPoint == BOTTOM_RIGHT) {
-                absolutePos.x -= size.x;
-            }
+            absolutePos.x -= size.x * anchor.dx * 0.5;
+            absolutePos.y -= size.y * anchor.dy * 0.5;
 
             return absolutePos;
         }

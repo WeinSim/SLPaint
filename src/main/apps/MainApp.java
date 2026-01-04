@@ -35,10 +35,15 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
+ *   Selection resizing
+ *     Make the "Lock selection ratio" button actually do something
+ *     Add a RESIZING state to DragTool that prevents the DragToolContainer
+ *       from being moved with the arrow keys while it is being resized
+ *   Add a visual separator around the side panel / between the side panel and
+ *     the top / bottom panels
  * 
  * App:
  *   Selection tool
- *     Selection resizing
  *     Selection Ctrl+Shift+X
  *   Text tool
  *     Text area resizing
@@ -52,6 +57,7 @@ import ui.components.ImageCanvas;
  *     Drawing with a semi-transparent color has weird artifacts because some
  *       pixels are drawn multiple times on consecutive frames, resulting in
  *       the wrong opacity
+ *       => Make the pencil tool also use the temp framebuffer?
  *   Undo / redo
  *   Transparency
  *     Simply selecting a transparent area and unselecting it causes the
@@ -80,6 +86,12 @@ import ui.components.ImageCanvas;
  *     reopening
  *     (this is a property of the .png file format that can be changed I think
  *       (?))
+ *     Pixels with an alpha value of 0 are considered different if they differ
+ *       in their color information. What is the expected behavior here?
+ *   Pasting / drawing a half-transparent red pixel over a fully opaque green
+ *     one results in brown overlap instead of yellow (see MinutePhysics video)
+ *     => Add correct gamma blending? (as a setting?)
+ *       Have OpenGL also do correct gamma blending?
  * 
  * Backend:
  *   Allow switching between old and new rendering infrastructure for each
@@ -112,13 +124,11 @@ import ui.components.ImageCanvas;
  *       Cache conversion from String to FontChar[] in TextFont
  *       Only override the parts of the text VAOs that actually change from one
  *         frame to the next
- *   Items in dropdown menues overlap their parent's stroke with their fill
  *   Anti aliasing doesn't work despite being enabled
  *     (glfwWindowHint(GLFW_SAMPLES, 4) and glEnable(GL_MULTISAMPLE))
  *   Fix stuttering artifact when resizing windows on Linux
  *     (see https://www.glfw.org/docs/latest/window.html#window_refresh)
  *     Rename transformationMatrix to uiMatrix
- *   Remove magic numbers in {@link renderEngine.MainAppRenderer#render()}
  *   Maximized windows don't show up correctly on Windows 11
  *   Extras (optional):
  *     3D view
@@ -162,6 +172,7 @@ public final class MainApp extends App {
     public static final int PRIMARY_COLOR = 0, SECONDARY_COLOR = 1;
 
     private static BooleanSetting transparentSelection = new BooleanSetting("transparentSelection");
+    private static BooleanSetting lockSelectionRatio = new BooleanSetting("lockSelectionRatio");
 
     private static ColorArraySetting customUIBaseColors = new ColorArraySetting("customUIColors");
 
@@ -249,6 +260,10 @@ public final class MainApp extends App {
         super.finish();
 
         Settings.finish();
+    }
+
+    public void renderImageToImage(Image image, int x, int y, int width, int height) {
+        renderer.renderImageToImage(image, x, y, width, height, getImage());
     }
 
     public void renderTextToImage(String text, double x, double y, double size, TextFont font) {
@@ -481,6 +496,14 @@ public final class MainApp extends App {
 
     public static void setTransparentSelection(boolean transparentSelection) {
         MainApp.transparentSelection.set(transparentSelection);
+    }
+
+    public static boolean isLockSelectionRatio() {
+        return lockSelectionRatio.get();
+    }
+
+    public static void setLockSelectionRatio(boolean lockSelectionRatio) {
+        MainApp.lockSelectionRatio.set(lockSelectionRatio);
     }
 
     // TODO: all of these get...Position methods have horrible names

@@ -50,7 +50,12 @@ public class UIRenderMaster {
     private TextCollector textCollector;
     private ImageCollector imageCollector;
 
-    private FrameBufferObject textFBO;
+    /**
+     * Used for drawing text and selected parts of the image first onto this texture
+     * (by openGL) and is then drawn onto the actual image (by the CPU, since only
+     * pixels need to be copied).
+     */
+    private FrameBufferObject tempFBO;
 
     private FrameBufferObject currentFramebuffer;
 
@@ -100,7 +105,7 @@ public class UIRenderMaster {
         shapeCollectors.add(imageCollector);
 
         if (app instanceof MainApp mainApp) {
-            textFBO = loader.createFBO(mainApp.getImage().getWidth(), mainApp.getImage().getHeight());
+            tempFBO = loader.createFBO(mainApp.getImage().getWidth(), mainApp.getImage().getHeight());
         }
 
         uiMatrixStack = new LinkedList<>();
@@ -183,8 +188,8 @@ public class UIRenderMaster {
         framebuffer(null);
     }
 
-    public void textFramebuffer() {
-        framebuffer(textFBO);
+    public void tempFrameBuffer() {
+        framebuffer(tempFBO);
     }
 
     public void framebuffer(FrameBufferObject framebuffer) {
@@ -511,7 +516,7 @@ public class UIRenderMaster {
         return matrix;
     }
 
-    public FrameBufferObject getTextFBO() {
-        return textFBO;
+    public FrameBufferObject getTempFBO() {
+        return tempFBO;
     }
 }

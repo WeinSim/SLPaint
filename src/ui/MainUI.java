@@ -164,25 +164,26 @@ public class MainUI extends AppUI<MainApp> {
         topRowScrollbars.setRelativeLayer(ImageCanvas.NUM_UI_LAYERS);
         root.add(topRowScrollbars);
 
-        ImageCanvas canvas = new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, UIContainer.TOP, app);
-        canvas.noOutline();
+        UIContainer mainRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
+        mainRow.zeroMargin().zeroPadding().noBackground().noOutline();
+        mainRow.setFillSize();
+
+        mainRow.add(new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, UIContainer.TOP, app));
 
         UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER, UIContainer.TOP,
                 UIContainer.VERTICAL);
         sidePanel.withSeparators().withBackground().noOutline();
-        // sidePanel.setVFillSize();
-        sidePanel.setVMinimalSize();
-        UIContainer transparentSelection = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
-        transparentSelection.zeroMargin().noOutline();
-        transparentSelection.setHFillSize();
-        UIContainer fill = new UIContainer(0, 0);
-        fill.noOutline();
-        fill.setHFillSize();
-        transparentSelection.add(new UIText("Transparent selection"));
-        transparentSelection.add(fill);
-        UIToggle toggle = new UIToggle(MainApp::isTransparentSelection, MainApp::setTransparentSelection);
-        transparentSelection.add(toggle);
-        sidePanel.add(transparentSelection);
+        sidePanel.setVFillSize();
+
+        sidePanel.add(createToggleContainer(
+                "Transparent selection",
+                MainApp::isTransparentSelection,
+                MainApp::setTransparentSelection));
+
+        sidePanel.add(createToggleContainer(
+                "Lock selection ratio",
+                MainApp::isLockSelectionRatio,
+                MainApp::setLockSelectionRatio));
 
         sidePanel.add(new ColorPickContainer(
                 app.getSelectedColorPicker(),
@@ -191,7 +192,7 @@ public class MainUI extends AppUI<MainApp> {
                 UIContainer.VERTICAL,
                 true,
                 false));
-        canvas.add(sidePanel.addScrollbars().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
+        mainRow.add(sidePanel.addScrollbars().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
 
         UIContainer debugPanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
                 UIContainer.VERTICAL);
@@ -217,9 +218,9 @@ public class MainUI extends AppUI<MainApp> {
         // debugPanel.add(new UITextInput(this::getDebugString, this::setDebugString,
         // true));
 
-        canvas.add(debugPanel.addScrollbars().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
+        // canvas.add(debugPanel.addScrollbars().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
 
-        root.add(canvas);
+        root.add(mainRow);
 
         UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
         statusBar.withBackground().noOutline().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS);
@@ -273,6 +274,20 @@ public class MainUI extends AppUI<MainApp> {
         root.add(statusBar);
 
         // root.add(mainField);
+    }
+
+    private UIContainer createToggleContainer(String label, Supplier<Boolean> getter, Consumer<Boolean> setter) {
+        UIContainer container = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        container.zeroMargin().noOutline();
+        container.setHFillSize();
+        UIContainer fill = new UIContainer(0, 0);
+        fill.noOutline();
+        fill.setHFillSize();
+        container.add(new UIText(label));
+        container.add(fill);
+        UIToggle toggle = new UIToggle(getter, setter);
+        container.add(toggle);
+        return container;
     }
 
     private UIContainer addTopRowSection(UIContainer topRow, String name) {

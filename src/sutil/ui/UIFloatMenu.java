@@ -60,10 +60,10 @@ public class UIFloatMenu extends UIFloatContainer {
         label.setHFillSize();
         add(label);
 
-        contextMenu.addAttachPoint(TOP_LEFT, label, TOP_RIGHT);
-        contextMenu.addAttachPoint(TOP_RIGHT, label, TOP_LEFT);
-        contextMenu.addAttachPoint(BOTTOM_LEFT, label, BOTTOM_RIGHT);
-        contextMenu.addAttachPoint(BOTTOM_RIGHT, label, BOTTOM_LEFT);
+        contextMenu.addAnchor(Anchor.TOP_LEFT, label, Anchor.TOP_RIGHT);
+        contextMenu.addAnchor(Anchor.TOP_RIGHT, label, Anchor.TOP_LEFT);
+        contextMenu.addAnchor(Anchor.BOTTOM_LEFT, label, Anchor.BOTTOM_RIGHT);
+        contextMenu.addAnchor(Anchor.BOTTOM_RIGHT, label, Anchor.BOTTOM_LEFT);
         contextMenu.setVisibilitySupplier(() -> expandedLabel == label);
 
         label.style.setBackgroundColor(() -> {

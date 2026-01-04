@@ -45,9 +45,9 @@ public abstract class AppUI<T extends App> extends UIPanel {
 
     public static <T extends UIElement> T setSelectableButtonStyle(T element, Supplier<Boolean> selectedSupplier) {
         Supplier<Vector4f> backgroundColorSupplier = () -> selectedSupplier.get()
-                ? Colors.getBackgroundHighlightColor2()
+                ? Colors.backgroundHighlight2()
                 : null;
-        Supplier<Vector4f> outlineColorSupplier = () -> element.mouseAbove() ? Colors.getOutlineNormalColor() : null;
+        Supplier<Vector4f> outlineColorSupplier = () -> element.mouseAbove() ? Colors.outlineNormal() : null;
         Supplier<Double> strokeWeightSupplier = () -> Sizes.STROKE_WEIGHT.size;
         element.setStyle(new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier));
         return element;
@@ -85,32 +85,32 @@ public abstract class AppUI<T extends App> extends UIPanel {
 
     @Override
     public Vector4f getDefaultTextColor() {
-        return Colors.getTextColor();
+        return Colors.text();
     }
 
     @Override
     public Vector4f getBackgroundNormalColor() {
-        return Colors.getBackgroundNormalColor();
+        return Colors.backgroundNormal();
     }
 
     @Override
     public Vector4f getBackgroundHighlightColor() {
-        return Colors.getBackgroundHighlightColor();
+        return Colors.backgroundHighlight();
     }
 
     @Override
     public Vector4f getStrokeNormalColor() {
-        return Colors.getOutlineNormalColor();
+        return Colors.outlineNormal();
     }
 
     @Override
     public Vector4f getStrokeHighlightColor() {
-        return Colors.getOutlineHighlightColor();
+        return Colors.outlineHighlight();
     }
 
     @Override
     public Vector4f getSeparatorColor() {
-        return Colors.getSeparatorColor();
+        return Colors.separator();
     }
 
     @Override

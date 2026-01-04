@@ -25,11 +25,11 @@ public class UIColorElement extends UIElement {
         style.setBackgroundColor(() -> MainApp.toVector4f(getColor()));
         style.setBackgroundCheckerboard(
                 () -> getColor() != null,
-                () -> Colors.getTransparentColors()[0],
-                () -> Colors.getTransparentColors()[1],
+                () -> Colors.transparent()[0],
+                () -> Colors.transparent()[1],
                 () -> Sizes.CHECKERBOARD_SIZE.size);
         if (outline) {
-            style.setStrokeColor(() -> getColor() == null ?  new Vector4f(0.5f, 0.5f, 0.5f, 1.0f) : Colors.getTextColor());
+            style.setStrokeColor(() -> getColor() == null ?  new Vector4f(0.5f, 0.5f, 0.5f, 1.0f) : Colors.text());
         }
     }
 

@@ -103,7 +103,7 @@ public class ColorPickContainer extends UIContainer {
         UIContainer colorPreview = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         colorPreview.zeroMargin().noOutline();
         UIContainer colorBox = new UIContainer(UIContainer.HORIZONTAL, 0);
-        colorBox.setStyle(new UIStyle(() -> null, Colors::getTextColor, () -> 2.0));
+        colorBox.setStyle(new UIStyle(() -> null, Colors::text, () -> 2.0));
         colorBox.zeroMargin().zeroPadding().noOutline();
         double previewWidth = Sizes.COLOR_PICKER_PREVIEW.width,
                 previewHeight = Sizes.COLOR_PICKER_PREVIEW.height;

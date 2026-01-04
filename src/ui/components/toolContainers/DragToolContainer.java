@@ -22,8 +22,8 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
         relativeLayer = 2;
 
         style.setStrokeCheckerboard(
-                () -> Colors.getSelectionBorderColors()[0],
-                () -> Colors.getSelectionBorderColors()[1],
+                () -> Colors.selectionBorder()[0],
+                () -> Colors.selectionBorder()[1],
                 () -> Sizes.CHECKERBOARD_SIZE.size);
         style.setStrokeWeight(2.0);
 
@@ -74,7 +74,7 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
 
         SVector pos = new SVector(tool.getX(), tool.getY()).scale(zoom).add(app.getCanvas().getImageTranslation());
         clearAttachPoints();
-        addAttachPoint(TOP_LEFT, pos);
+        addAnchor(Anchor.TOP_LEFT, pos);
     }
 
     @Override
@@ -88,6 +88,8 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
                         if (tool.enterIdle()) {
                             tool.start();
                             tool.setState(DragTool.IDLE);
+                        } else {
+                            tool.finish();
                         }
                     }
                     case DragTool.IDLE_DRAG -> {

@@ -23,12 +23,15 @@ import ui.components.toolContainers.ToolContainer;
 public class ImageCanvas extends UIContainer {
 
     /**
-     * The number of layers that a {@code ImageCanvas} needs:
+     * The number of layers that a {@code ImageCanvas} needs.
+     * <p>
+     * 
      * 0 = image
      * 1 = selection image
      * 2 = selection border, text input
+     * 3 = size knobs
      */
-    public static final int NUM_UI_LAYERS = 3;
+    public static final int NUM_UI_LAYERS = 4;
 
     private static final int MIN_ZOOM_LEVEL = -4;
     private static final int MAX_ZOOM_LEVEL = 8;
@@ -44,11 +47,13 @@ public class ImageCanvas extends UIContainer {
         super(orientation, hAlignment, vAlignment);
 
         this.app = app;
-
         app.setCanvas(this);
-        setFillSize();
 
-        style.setBackgroundColor(Colors::getCanvasColor);
+        noOutline();
+        setFillSize();
+        zeroMargin();
+
+        style.setBackgroundColor(Colors::canvas);
 
         resetImageTransform();
         draggingImage = false;
@@ -58,8 +63,17 @@ public class ImageCanvas extends UIContainer {
         add(new PencilToolContainer(app));
         add(new PipetteToolContainer(app));
         add(new FillBucketToolContainer(app));
-        add(new SelectionToolContainer(app));
         add(new TextToolContainer(app));
+        SelectionToolContainer stc = new SelectionToolContainer(app);
+        add(stc);
+        for (int dy = 0; dy <= 2; dy++) {
+            for (int dx = 0; dx <= 2; dx++) {
+                if (dx == 1 && dy == 1)
+                    continue;
+
+                add(new SizeKnob(stc, dx, dy));
+            }
+        }
     }
 
     @Override
@@ -224,7 +238,7 @@ public class ImageCanvas extends UIContainer {
             super.update();
 
             clearAttachPoints();
-            addAttachPoint(TOP_LEFT, imageTranslation);
+            addAnchor(Anchor.TOP_LEFT, imageTranslation);
         }
 
         // horrible name but whatever
@@ -233,7 +247,7 @@ public class ImageCanvas extends UIContainer {
             public ImageContainerChild() {
                 super(0, new SVector());
 
-                Vector4f[] c = Colors.getTransparentColors();
+                Vector4f[] c = Colors.transparent();
                 double s = Sizes.CHECKERBOARD_SIZE.size;
                 style.setBackgroundCheckerboard(c[0], c[1], s);
             }

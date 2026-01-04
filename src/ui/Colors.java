@@ -48,11 +48,11 @@ public class Colors {
     private Colors() {
     }
 
-    public static Vector4f[] getDefaultColors() {
+    public static Vector4f[] defaults() {
         return isDarkMode() ? DEFAULT_UI_COLORS_DARK : DEFAULT_UI_COLORS_LIGHT;
     }
 
-    public static int getNumDefaultColors() {
+    public static int numDefaults() {
         return DEFAULT_UI_COLORS_DARK.length;
     }
 
@@ -64,7 +64,7 @@ public class Colors {
         Colors.darkMode.set(darkMode);
     }
 
-    public static int getBaseColor() {
+    public static int baseColor() {
         return baseColor.get().getRGB();
     }
 
@@ -72,40 +72,44 @@ public class Colors {
         return baseColor.get();
     }
 
-    public static Vector4f getBackgroundNormalColor() {
+    public static Vector4f backgroundNormal() {
         return getUIColor(UIColor.BACKGROUND_NORMAL);
     }
 
-    public static Vector4f getBackgroundHighlightColor() {
+    public static Vector4f backgroundHighlight() {
         return getUIColor(UIColor.BACKGROUND_HIGHLIGHT);
     }
 
-    public static Vector4f getBackgroundHighlightColor2() {
+    public static Vector4f backgroundHighlight2() {
         return getUIColor(UIColor.BACKGROUND_HIGHLIGHT_2);
     }
 
-    public static Vector4f getOutlineNormalColor() {
+    public static Vector4f outlineNormal() {
         return getUIColor(UIColor.OUTLINE_NORMAL);
     }
 
-    public static Vector4f getOutlineHighlightColor() {
+    public static Vector4f outlineHighlight() {
         return getUIColor(UIColor.OUTLINE_HIGHLIGHT);
     }
 
-    public static Vector4f getSeparatorColor() {
+    public static Vector4f separator() {
         return getUIColor(UIColor.SEPARATOR);
     }
 
-    public static Vector4f getCanvasColor() {
+    public static Vector4f canvas() {
         return getUIColor(UIColor.CANVAS);
     }
 
-    public static Vector4f[] getTransparentColors() {
+    public static Vector4f[] transparent() {
         return new Vector4f[] { getUIColor(UIColor.TRANSPARENCY_1), getUIColor(UIColor.TRANSPARENCY_2) };
     }
 
-    public static Vector4f[] getSelectionBorderColors() {
+    public static Vector4f[] selectionBorder() {
         return new Vector4f[] { new Vector4f(0, 0, 0, 1), new Vector4f(1, 1, 1, 1) };
+    }
+
+    public static Vector4f text() {
+        return isDarkMode() ? new Vector4f(1, 1, 1, 1) : new Vector4f(0, 0, 0, 1);
     }
 
     private static Vector4f getUIColor(UIColor colorType) {
@@ -120,12 +124,8 @@ public class Colors {
         // This method is being called ~5520 times per second (which is too much!)
         // Maybe cache the results?
 
-        Vector4f ret = (Vector4f) MainApp.toVector4f(getBaseColor()).scale((float) brightness);
+        Vector4f ret = (Vector4f) MainApp.toVector4f(baseColor()).scale((float) brightness);
         ret.w = 1.0f;
         return ret;
-    }
-
-    public static Vector4f getTextColor() {
-        return isDarkMode() ? new Vector4f(1, 1, 1, 1) : new Vector4f(0, 0, 0, 1);
     }
 }

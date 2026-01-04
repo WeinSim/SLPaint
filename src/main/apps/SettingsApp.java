@@ -39,11 +39,11 @@ public final class SettingsApp extends App {
         if (Colors.isDarkMode() == darkMode) {
             return;
         }
-        Vector4f[] oldColors = Colors.getDefaultColors();
+        Vector4f[] oldColors = Colors.defaults();
         Colors.setDarkMode(darkMode);
-        Vector4f[] newColors = Colors.getDefaultColors();
+        Vector4f[] newColors = Colors.defaults();
 
-        int baseRGB = Colors.getBaseColor();
+        int baseRGB = Colors.baseColor();
 
         // this is a bit of a hack
         for (int i = 0; i < oldColors.length; i++) {

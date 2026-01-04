@@ -150,7 +150,7 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
 
             // clipToRoot = false;
 
-            setStyle(new UIStyle(Colors::getTextColor, () -> null, () -> Sizes.STROKE_WEIGHT.size));
+            setStyle(new UIStyle(Colors::text, () -> null, () -> Sizes.STROKE_WEIGHT.size));
 
             if (vertical) {
                 setFixedSize(new SVector(CURSOR_LINE_WIDTH, CURSOR_LINE_LENGTH));

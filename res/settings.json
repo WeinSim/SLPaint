@@ -11,5 +11,6 @@
         76
     ],
     "hslColorSpace" : true,
-    "hueSatCircle" : true
+    "hueSatCircle" : true,
+    "lockSelectionRatio" : true
 }

@@ -96,8 +96,8 @@ public class Image {
         return SUtil.toARGB(array[0], array[1], array[2], array[3]);
     }
 
-    public void drawSubImage(int x, int y, BufferedImage image) {
-        drawSubImage(x, y, image.getWidth(), image.getHeight(), image, null);
+    public void drawSubImage(int x, int y, int width, int height, BufferedImage image) {
+        drawSubImage(x, y, width, height, image, null);
     }
 
     public void drawSubImage(int x, int y, int width, int height, int[] pixels) {

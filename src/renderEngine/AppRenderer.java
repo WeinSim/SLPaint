@@ -61,7 +61,7 @@ public class AppRenderer {
     }
 
     public void render() {
-        uiMaster.setBGColor(new Vector4f());
+        uiMaster.setBGColor(new Vector4f(0, 0, 0, 1));
 
         uiMaster.start();
 
@@ -75,7 +75,7 @@ public class AppRenderer {
     }
 
     protected void setDefaultBGColor() {
-        uiMaster.setBGColor(Colors.getBackgroundNormalColor());
+        uiMaster.setBGColor(Colors.backgroundNormal());
     }
 
     protected void renderUI() {
@@ -90,10 +90,12 @@ public class AppRenderer {
 
     /**
      * Subdivisions:
+     * Divisions incrementing from the bottom:
      * 0: checkerboard background
      * 1: background color
      * 2: main content (text, toggle, hueSat etc.)
-     * 3: stroke
+     * Divisions decrementing from the top:
+     * 0: stroke
      */
     private void renderUIElement(UIElement element) {
         // System.out.format("Rendering UIElement \"%s\", position = %s, size = %s\n",
@@ -160,9 +162,18 @@ public class AppRenderer {
             }
         }
         if (doOutline) {
-            uiMaster.depth(getDepth(3));
+            // TODO: this is kind of an ugly hack to ensure that a container's outline
+            // renders above all of its children.
+
+            int oldOldDivision = division;
+
+            division = NUM_DIVISIONS - 1 - division;
+
+            uiMaster.depth(getDepth(0));
             uiMaster.noFill();
             uiMaster.rect(position, size);
+
+            division = oldOldDivision;
         }
 
         // children
@@ -193,7 +204,7 @@ public class AppRenderer {
             uiMaster.hueSatField(position, size, App.isCircularHueSatField(), App.isHSLColorSpace());
         }
         if (element instanceof UIToggle toggle) {
-            uiMaster.fill(Colors.getBackgroundHighlightColor2());
+            uiMaster.fill(Colors.backgroundHighlight2());
             double wh = size.y;
             double difference = size.x - size.y;
             uiMaster.ellipse(new SVector(position.x, position.y), new SVector(wh, wh));
@@ -201,7 +212,7 @@ public class AppRenderer {
             uiMaster.noStroke();
             uiMaster.rect(new SVector(position.x + wh / 2, position.y), new SVector(difference, wh));
 
-            uiMaster.fill(Colors.getTextColor());
+            uiMaster.fill(Colors.text());
             double x = position.x + (toggle.getState() ? difference : 0);
             SVector pos = new SVector(x, position.y);
             SVector s = new SVector(wh, wh);
@@ -243,7 +254,7 @@ public class AppRenderer {
             } else if (scale instanceof AlphaScale a) {
                 // checkerboard background
                 uiMaster.noStroke();
-                uiMaster.checkerboardFill(Colors.getTransparentColors(), siz.y / 2);
+                uiMaster.checkerboardFill(Colors.transparent(), siz.y / 2);
                 uiMaster.rect(pos, siz);
 
                 // color gradient
@@ -251,7 +262,7 @@ public class AppRenderer {
                 uiMaster.alphaScale(pos, siz, a.getOrientation() == UIContainer.VERTICAL);
             } else {
                 uiMaster.noStroke();
-                uiMaster.fill(Colors.getOutlineNormalColor());
+                uiMaster.fill(Colors.outlineNormal());
                 uiMaster.rect(pos, siz);
             }
         }
@@ -268,14 +279,39 @@ public class AppRenderer {
         int totalSubdiv = NUM_SUBDIVISIONS * (NUM_DIVISIONS * layer + division) + subdivision;
         double depth = -2 * (double) totalSubdiv / (NUM_LAYERS * NUM_DIVISIONS * NUM_SUBDIVISIONS) + 1;
 
-        // System.out.format("l = %3d, s = %d, f = %c => d = %.3f\n",
-        // layer, subdivision, foregroundDraw ? 't' : 'f', depth);
-
         return depth;
     }
 
     public void reloadShaders() {
         uiMaster = new UIRenderMaster(app, app.getLoader());
+    }
+
+    public void renderImageToImage(Image srcImage, int x, int y, int width, int height, Image dstImage) {
+        uiMaster.start();
+        uiMaster.tempFrameBuffer();
+
+        GL11.glDisable(GL11.GL_BLEND);
+
+        uiMaster.setBGColor(new Vector4f(0, 0, 0, 0));
+        uiMaster.image(srcImage.getTextureID(), new SVector(x, y), new SVector(width, height));
+
+        uiMaster.render();
+
+        GL11.glEnable(GL11.GL_BLEND);
+
+        FrameBufferObject fbo = uiMaster.getTempFBO();
+        int fboWidth = fbo.width(), fboHeight = fbo.height();
+
+        int[] array = new int[fboWidth * fboHeight * 4];
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID());
+        GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, GL11.GL_INT, array);
+
+        // final int divisor = 1 << (31 - 8);
+        final int divisor = (int) (Integer.MAX_VALUE / 255.0);
+        for (int i = 0; i < array.length; i++) {
+            array[i] /= divisor;
+        }
+        dstImage.drawSubImage(0, 0, fboWidth, fboHeight, array);
     }
 
     public void renderTextToImage(String text, double x, double y, double size, Vector4f color, TextFont font,
@@ -285,7 +321,7 @@ public class AppRenderer {
             return;
 
         uiMaster.start();
-        uiMaster.textFramebuffer();
+        uiMaster.tempFrameBuffer();
 
         // For this text rendering, we only care about the alpha output.
         // The color channel should be filled with the text color.
@@ -301,7 +337,7 @@ public class AppRenderer {
 
         uiMaster.render();
 
-        FrameBufferObject fbo = uiMaster.getTextFBO();
+        FrameBufferObject fbo = uiMaster.getTempFBO();
         int width = fbo.width(), height = fbo.height();
 
         int[] array = new int[width * height * 4];
@@ -342,7 +378,7 @@ public class AppRenderer {
         uiMaster.fill(c1);
         uiMaster.rect(p1, s1);
 
-        uiMaster.checkerboardFill(Colors.getTransparentColors(), 15);
+        uiMaster.checkerboardFill(Colors.transparent(), 15);
         uiMaster.depth(getDepth(0));
         uiMaster.rect(p2, s2);
 

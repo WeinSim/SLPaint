@@ -11,5 +11,6 @@
     "darkMode": false,
     "hueSatCircle" : true,
     "hslColorSpace": true,
-    "transparentSelection": false
+    "transparentSelection": false,
+    "lockSelectionRatio": true
 }

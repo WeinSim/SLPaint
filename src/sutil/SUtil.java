@@ -339,25 +339,72 @@ public class SUtil {
     }
 
     public static boolean pointInsideRect(SVector point, SVector pos, SVector size) {
-        return point.x >= pos.x && point.x < pos.x + size.x
-                && point.y >= pos.y && point.y < pos.y + size.y;
+        double x0 = pos.x, x1 = pos.x + size.x;
+        double y0 = pos.y, y1 = pos.y + size.y;
+
+        double xmin = Math.min(x0, x1), xmax = Math.max(x0, x1);
+        double ymin = Math.min(y0, y1), ymax = Math.max(y0, y1);
+
+        return point.x >= xmin && point.x < xmax
+                && point.y >= ymin && point.y < ymax;
     }
 
     public static boolean pointInsideCube(SVector point, SVector pos, SVector size) {
-        return point.x >= pos.x && point.x < pos.x + size.x
-                && point.y >= pos.y && point.y < pos.y + size.y
-                && point.z >= pos.z && point.z < pos.z + size.z;
+        double x0 = pos.x, x1 = pos.x + size.x;
+        double y0 = pos.y, y1 = pos.y + size.y;
+        double z0 = pos.z, z1 = pos.z + size.z;
+
+        double xmin = Math.min(x0, x1), xmax = Math.max(x0, x1);
+        double ymin = Math.min(y0, y1), ymax = Math.max(y0, y1);
+        double zmin = Math.min(z0, z1), zmax = Math.max(z0, z1);
+
+        return point.x >= xmin && point.x < xmax
+                && point.y >= ymin && point.y < ymax
+                && point.z >= zmin && point.z < zmax;
     }
 
     public static boolean rectsOverlap(SVector pos1, SVector size1, SVector pos2, SVector size2) {
-        return pos1.x + size1.x >= pos2.x && pos1.x < pos2.x + size2.x
-                && pos1.y + size1.y >= pos2.y && pos1.y < pos2.y + size2.y;
+        double x0 = pos1.x, x1 = pos1.x + size1.x;
+        double y0 = pos1.y, y1 = pos1.y + size1.y;
+
+        double xmin1 = Math.min(x0, x1), xmax1 = Math.max(x0, x1);
+        double ymin1 = Math.min(y0, y1), ymax1 = Math.max(y0, y1);
+
+        x0 = pos2.x;
+        x1 = pos2.x + size2.x;
+        y0 = pos2.y;
+        y1 = pos2.y + size2.y;
+
+        double xmin2 = Math.min(x0, x1), xmax2 = Math.max(x0, x1);
+        double ymin2 = Math.min(y0, y1), ymax2 = Math.max(y0, y1);
+
+        return xmax1 >= xmin2 && xmin1 < xmax2
+                && ymax1 >= ymin2 && ymin1 < ymax2;
     }
 
     public static boolean cuboidsOverlap(SVector pos1, SVector size1, SVector pos2, SVector size2) {
-        return pos1.x + size1.x >= pos2.x && pos1.x < pos2.x + size2.x
-                && pos1.y + size1.y >= pos2.y && pos1.y < pos2.y + size2.y
-                && pos1.z + size1.z >= pos2.z && pos1.z < pos2.z + size2.z;
+        double x0 = pos1.x, x1 = pos1.x + size1.x;
+        double y0 = pos1.y, y1 = pos1.y + size1.y;
+        double z0 = pos1.z, z1 = pos1.z + size1.z;
+
+        double xmin1 = Math.min(x0, x1), xmax1 = Math.max(x0, x1);
+        double ymin1 = Math.min(y0, y1), ymax1 = Math.max(y0, y1);
+        double zmin1 = Math.min(z0, z1), zmax1 = Math.max(z0, z1);
+
+        x0 = pos2.x;
+        x1 = pos2.x + size2.x;
+        y0 = pos2.y;
+        y1 = pos2.y + size2.y;
+        z0 = pos2.z;
+        z1 = pos2.z + size2.z;
+
+        double xmin2 = Math.min(x0, x1), xmax2 = Math.max(x0, x1);
+        double ymin2 = Math.min(y0, y1), ymax2 = Math.max(y0, y1);
+        double zmin2 = Math.min(z0, z1), zmax2 = Math.max(z0, z1);
+
+        return xmax1 >= xmin2 && xmin1 < xmax2
+                && ymax1 >= ymin2 && ymin1 < ymax2
+                && zmax1 >= zmin2 && zmin1 < zmax2;
     }
 
     public static double lerp(double x0, double x1, double t) {

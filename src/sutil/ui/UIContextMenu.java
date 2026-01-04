@@ -21,10 +21,10 @@ public class UIContextMenu extends UIFloatMenu {
             visible = true;
             clearAttachPoints();
             SVector basePos = new SVector(container.mousePosition);
-            addAttachPoint(TOP_LEFT, basePos);
-            addAttachPoint(TOP_RIGHT, basePos);
-            addAttachPoint(BOTTOM_LEFT, basePos);
-            addAttachPoint(BOTTOM_RIGHT, basePos);
+            addAnchor(Anchor.TOP_LEFT, basePos);
+            addAnchor(Anchor.TOP_RIGHT, basePos);
+            addAnchor(Anchor.BOTTOM_LEFT, basePos);
+            addAnchor(Anchor.BOTTOM_RIGHT, basePos);
         });
         container.setLeftClickAction(this::hide);
         container.add(this);

@@ -17,7 +17,8 @@ public enum Sizes {
     UI_SCALE_MARGIN(13),
     COLOR_PICKER_SIDE_PANEL(200),
     COLOR_PICKER_EXTRA_WINDOW(300),
-    COLOR_PICKER_PREVIEW(120, 75);
+    COLOR_PICKER_PREVIEW(120, 75),
+    SIZE_KNOB(15);
 
     public final double size;
     public final double width;
