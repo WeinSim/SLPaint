@@ -4,9 +4,11 @@ import org.lwjgl.glfw.GLFW;
 
 import main.apps.MainApp;
 import main.tools.DragTool;
+import main.tools.ImageTool;
 import sutil.math.SVector;
 import ui.Colors;
 import ui.Sizes;
+import ui.components.SizeKnob;
 
 public abstract sealed class DragToolContainer<T extends DragTool> extends ToolContainer<T>
         permits SelectionToolContainer, TextToolContainer {
@@ -14,6 +16,12 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
     // IDLE_DRAG
     private SVector dragStartMouseCoords;
     private int dragStartX, dragStartY;
+
+    // RESIZING
+    private SizeKnob dragKnob;
+    private SVector dragStartPos;
+    private SVector dragStartSize;
+    private SVector dragStartMouse;
 
     public DragToolContainer(T tool, MainApp app) {
         super(tool, app);
@@ -27,9 +35,23 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
                 () -> Sizes.CHECKERBOARD_SIZE.size);
         style.setStrokeWeight(2.0);
 
+        setMarginScale(1.0);
+
+        for (int dy = 0; dy <= 2; dy++) {
+            for (int dx = 0; dx <= 2; dx++) {
+                if (dx == 1 && dy == 1)
+                    continue;
+
+                add(new SizeKnob(this, tool, dx, dy));
+            }
+        }
+
         setLeftClickAction(this::startIdleDrag);
 
-        setMarginScale(1.0);
+        dragKnob = null;
+        dragStartPos = new SVector();
+        dragStartSize = new SVector();
+        dragStartMouse = new SVector();
     }
 
     @Override
@@ -67,6 +89,18 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
                 tool.setX(x);
                 tool.setY(y);
             }
+            case DragTool.RESIZING -> {
+                if (!panel.isLeftMousePressed()) {
+                    dragKnob = null;
+                    tool.setState(DragTool.IDLE);
+                    break;
+                }
+                if (dragKnob != null) {
+                    SVector mouseDelta = app.getMouseImagePosVec().sub(dragStartMouse);
+                    boolean lockRatio = tool == ImageTool.SELECTION ? MainApp.isLockSelectionRatio() : false;
+                    dragKnob.updateSelection(dragStartPos, dragStartSize, mouseDelta, lockRatio);
+                }
+            }
         }
 
         double zoom = app.getImageZoom();
@@ -85,12 +119,10 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
             case GLFW.GLFW_MOUSE_BUTTON_LEFT -> {
                 switch (tool.getState()) {
                     case DragTool.INITIAL_DRAG -> {
-                        if (tool.enterIdle()) {
+                        if (tool.enterIdle())
                             tool.start();
-                            tool.setState(DragTool.IDLE);
-                        } else {
+                        else
                             tool.finish();
-                        }
                     }
                     case DragTool.IDLE_DRAG -> {
                         tool.setState(DragTool.IDLE);
@@ -112,8 +144,17 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
 
     protected abstract boolean canStartIdleDrag();
 
+    public void startSizeDrag(SizeKnob knob) {
+        dragKnob = knob;
+        dragStartPos.set(tool.getX(), tool.getY());
+        dragStartSize.set(tool.getWidth(), tool.getHeight());
+        dragStartMouse.set(app.getMouseImagePosVec());
+
+        tool.setState(DragTool.RESIZING);
+    }
+
     @Override
     protected int getVisibleStates() {
-        return DragTool.INITIAL_DRAG | DragTool.IDLE | DragTool.IDLE_DRAG;
+        return DragTool.INITIAL_DRAG | DragTool.IDLE | DragTool.IDLE_DRAG | DragTool.RESIZING;
     }
 }

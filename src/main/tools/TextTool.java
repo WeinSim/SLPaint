@@ -50,14 +50,15 @@ public final class TextTool extends DragTool {
 
         text = "";
 
-        addKeyboardShortcut(
-                new KeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, DragTool.IDLE, DragTool.NONE, this::finish));
+        addKeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, IDLE, this::finish);
     }
 
     @Override
     public void start() {
         app.getUI().select(app.getTextToolInput());
         text = "";
+
+        state = IDLE;
     }
 
     @Override
@@ -84,6 +85,16 @@ public final class TextTool extends DragTool {
     @Override
     public String getName() {
         return "Text";
+    }
+
+    @Override
+    public void setWidth(int width) {
+        super.setWidth(Math.max(1, width));
+    }
+
+    @Override
+    public void setHeight(int height) {
+        super.setHeight(Math.max(1, height));
     }
 
     public int getSize() {

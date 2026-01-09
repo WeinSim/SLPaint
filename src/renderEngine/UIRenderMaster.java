@@ -211,6 +211,16 @@ public class UIRenderMaster {
     }
 
     public void rect(SVector position, SVector size) {
+        // this approach is a bit ugly because it creates up to 4 new SVectors
+        if (size.x < 0) {
+            position = new SVector(position.x + size.x, position.y);
+            size = new SVector(-size.x, size.y);
+        }
+        if (size.y < 0) {
+            position = new SVector(position.x, position.y + size.y);
+            size = new SVector(size.x, -size.y);
+        }
+
         if (fillMode > 0)
             rectFillCollector.addShape(
                     new RectFillDrawCall(position, depth, size,

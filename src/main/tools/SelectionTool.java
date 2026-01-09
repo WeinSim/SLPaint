@@ -19,36 +19,28 @@ public final class SelectionTool extends DragTool {
         selection = null;
 
         // Ctrl + A: select everything
-        addKeyboardShortcut(new KeyboardShortcut(
-                GLFW.GLFW_KEY_A, GLFW.GLFW_MOD_CONTROL, DragTool.NONE | DragTool.IDLE, DragTool.IDLE,
-                this::selectEverything));
+        addKeyboardShortcut(GLFW.GLFW_KEY_A, GLFW.GLFW_MOD_CONTROL, NONE | IDLE, this::selectEverything);
 
         // Esc: finish selection
-        addKeyboardShortcut(new KeyboardShortcut(
-                GLFW.GLFW_KEY_CAPS_LOCK, 0, DragTool.IDLE, DragTool.NONE, this::finish));
+        addKeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, IDLE, this::finish);
 
         // Del: delete selection
-        addKeyboardShortcut(new KeyboardShortcut(
-                GLFW.GLFW_KEY_DELETE, 0, DragTool.IDLE, DragTool.NONE, this::clearSelection));
+        addKeyboardShortcut(GLFW.GLFW_KEY_DELETE, 0, IDLE, this::clearSelection);
 
         // Ctrl + V: paste
-        addKeyboardShortcut(new KeyboardShortcut(
-                GLFW.GLFW_KEY_V, GLFW.GLFW_MOD_CONTROL, DragTool.NONE | DragTool.IDLE, DragTool.IDLE,
-                this::pasteFromClipboard));
+        addKeyboardShortcut(GLFW.GLFW_KEY_V, GLFW.GLFW_MOD_CONTROL, NONE | IDLE, this::pasteFromClipboard);
 
         // Ctrl + C: copy
-        addKeyboardShortcut(new KeyboardShortcut(
-                GLFW.GLFW_KEY_C, GLFW.GLFW_MOD_CONTROL, DragTool.IDLE, DragTool.IDLE, this::copyToClipboard));
+        addKeyboardShortcut(GLFW.GLFW_KEY_C, GLFW.GLFW_MOD_CONTROL, IDLE, this::copyToClipboard);
 
         // Ctrl + X: cut
-        addKeyboardShortcut(new KeyboardShortcut(
-                GLFW.GLFW_KEY_X, GLFW.GLFW_MOD_CONTROL, DragTool.IDLE, DragTool.NONE, this::cutToClipboard));
+        addKeyboardShortcut(GLFW.GLFW_KEY_X, GLFW.GLFW_MOD_CONTROL, IDLE, this::cutToClipboard);
 
         // Arrow keys: move selection
-        addKeyboardShortcut(new KeyboardShortcut(GLFW.GLFW_KEY_UP, 0, DragTool.IDLE, DragTool.IDLE, () -> y--));
-        addKeyboardShortcut(new KeyboardShortcut(GLFW.GLFW_KEY_DOWN, 0, DragTool.IDLE, DragTool.IDLE, () -> y++));
-        addKeyboardShortcut(new KeyboardShortcut(GLFW.GLFW_KEY_LEFT, 0, DragTool.IDLE, DragTool.IDLE, () -> x--));
-        addKeyboardShortcut(new KeyboardShortcut(GLFW.GLFW_KEY_RIGHT, 0, DragTool.IDLE, DragTool.IDLE, () -> x++));
+        addKeyboardShortcut(GLFW.GLFW_KEY_UP, 0, IDLE, () -> y--);
+        addKeyboardShortcut(GLFW.GLFW_KEY_DOWN, 0, IDLE, () -> y++);
+        addKeyboardShortcut(GLFW.GLFW_KEY_LEFT, 0, IDLE, () -> x--);
+        addKeyboardShortcut(GLFW.GLFW_KEY_RIGHT, 0, IDLE, () -> x++);
     }
 
     @Override
@@ -65,12 +57,15 @@ public final class SelectionTool extends DragTool {
         selection = new Image(app.getImage().getSubImage(x, y, width, height,
                 MainApp.isTransparentSelection() ? app.getSecondaryColor() : null));
         app.getImage().setPixels(x, y, width, height, app.getSecondaryColor());
+
+        state = IDLE;
     }
 
     @Override
     public void finish() {
         if (selection != null) {
-            // app.getImage().drawSubImage(x, y, width, height, selection.getBufferedImage());
+            // app.getImage().drawSubImage(x, y, width, height,
+            // selection.getBufferedImage());
             app.renderImageToImage(selection, x, y, width, height);
             clearSelection();
         }
@@ -78,11 +73,13 @@ public final class SelectionTool extends DragTool {
         state = NONE;
     }
 
-    public void clearSelection() {
+    private void clearSelection() {
         if (selection != null) {
             selection.cleanUp();
         }
         selection = null;
+
+        state = NONE;
     }
 
     public void selectEverything() {
@@ -118,6 +115,8 @@ public final class SelectionTool extends DragTool {
         height = paste.getHeight();
 
         selection = new Image(paste);
+
+        state = IDLE;
     }
 
     @Override

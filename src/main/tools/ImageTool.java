@@ -57,11 +57,15 @@ public abstract sealed class ImageTool permits PencilTool, DragTool, FillBucketT
         this.state = state;
     }
 
+    protected void addKeyboardShortcut(int key, int modifiers, int initialState, Runnable action) {
+        keyboardShortcuts.add(new KeyboardShortcut(key, modifiers, initialState, action));
+    }
+
     protected void addKeyboardShortcut(KeyboardShortcut shortcut) {
         keyboardShortcuts.add(shortcut);
     }
 
-    public record KeyboardShortcut(int key, int modifiers, int initialState, int finalState, Runnable action) {
+    public record KeyboardShortcut(int key, int modifiers, int initialState, Runnable action) {
     }
 
     public ArrayList<KeyboardShortcut> getKeyboardShortcuts() {

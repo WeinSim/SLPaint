@@ -4,7 +4,7 @@ import org.lwjgl.glfw.GLFW;
 
 public abstract sealed class DragTool extends ImageTool permits SelectionTool, TextTool {
 
-    public static final int INITIAL_DRAG = 0x02, IDLE = 0x04, IDLE_DRAG = 0x08;
+    public static final int INITIAL_DRAG = 0x02, IDLE = 0x04, IDLE_DRAG = 0x08, RESIZING = 0x10;
 
     // INITIAL_DRAG
     private int startX, startY;

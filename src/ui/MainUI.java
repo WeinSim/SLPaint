@@ -15,6 +15,7 @@ import sutil.SUtil;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UIDropdown;
+import sutil.ui.UIElement;
 import sutil.ui.UILabel;
 import sutil.ui.UINumberInput;
 import sutil.ui.UIScale;
@@ -160,15 +161,17 @@ public class MainUI extends AppUI<MainApp> {
         allColors.add(ccc);
         topRow.add(allColors);
 
-        UIContainer topRowScrollbars = topRow.addScrollbars().setHFillSize();
-        topRowScrollbars.setRelativeLayer(ImageCanvas.NUM_UI_LAYERS);
-        root.add(topRowScrollbars);
+        addToRoot(topRow.addScrollbars().setHFillSize());
+
+        addToRoot(new UISeparator().zeroMargin());
 
         UIContainer mainRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
         mainRow.zeroMargin().zeroPadding().noBackground().noOutline();
         mainRow.setFillSize();
 
         mainRow.add(new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, UIContainer.TOP, app));
+
+        mainRow.add(new UISeparator().zeroMargin());
 
         UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER, UIContainer.TOP,
                 UIContainer.VERTICAL);
@@ -192,6 +195,7 @@ public class MainUI extends AppUI<MainApp> {
                 UIContainer.VERTICAL,
                 true,
                 false));
+
         mainRow.add(sidePanel.addScrollbars().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
 
         UIContainer debugPanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
@@ -222,8 +226,10 @@ public class MainUI extends AppUI<MainApp> {
 
         root.add(mainRow);
 
+        addToRoot(new UISeparator().zeroMargin());
+
         UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
-        statusBar.withBackground().noOutline().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS);
+        statusBar.withBackground().noOutline();
         statusBar.setHFillSize();
         statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate())));
         statusBar.add(new UISeparator());
@@ -269,11 +275,12 @@ public class MainUI extends AppUI<MainApp> {
             }
             return ret;
         }));
-        // canvas.add(statusBar);
-        // mainField.add(canvas);
-        root.add(statusBar);
 
-        // root.add(mainField);
+        addToRoot(statusBar);
+    }
+
+    private void addToRoot(UIElement element) {
+        root.add(element.setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
     }
 
     private UIContainer createToggleContainer(String label, Supplier<Boolean> getter, Consumer<Boolean> setter) {

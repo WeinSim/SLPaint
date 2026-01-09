@@ -35,30 +35,21 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Selection resizing
- *     Make the "Lock selection ratio" button actually do something
- *     Add a RESIZING state to DragTool that prevents the DragToolContainer
- *       from being moved with the arrow keys while it is being resized
- *   Add a visual separator around the side panel / between the side panel and
- *     the top / bottom panels
  * 
  * App:
- *   Selection tool
- *     Selection Ctrl+Shift+X
- *   Text tool
- *     Text area resizing
- *     Everything regarding text input
  *   Image resizing
  *     When the size of the image changes, the text tool's FBO's texture should
  *       also update its size
+ *   Selection tool
+ *     Selection Ctrl+Shift+X
  *   Line tool
+ *   Undo / redo
  *   Pencil tool
  *     Sizes 1 & 2 and 3 & 4 look the same
  *     Drawing with a semi-transparent color has weird artifacts because some
  *       pixels are drawn multiple times on consecutive frames, resulting in
  *       the wrong opacity
  *       => Make the pencil tool also use the temp framebuffer?
- *   Undo / redo
  *   Transparency
  *     Simply selecting a transparent area and unselecting it causes the
  *       transparency to go away. Reason: selecting the area replaces that part
@@ -82,22 +73,16 @@ import ui.components.ImageCanvas;
  *     Keep track of all file locks in one centralized place to avoid leaking
  *   Recognize remapping from CAPS_LOCK to ESCAPE
  *   (When parent app closes, children should also close)
- *   Pixels with an alpha value of 0 lose color information when saving and
- *     reopening
- *     (this is a property of the .png file format that can be changed I think
- *       (?))
+ *   Fully-transparent pixels
  *     Pixels with an alpha value of 0 are considered different if they differ
  *       in their color information. What is the expected behavior here?
+ *     Pixels with an alpha value of 0 lose color information when saving and
+ *       reopening. (This is a property of the .png file format that can be
+ *       changed I think (?). Also, what is the expected behavior?)
  *   Pasting / drawing a half-transparent red pixel over a fully opaque green
  *     one results in brown overlap instead of yellow (see MinutePhysics video)
  *     => Add correct gamma blending? (as a setting?)
  *       Have OpenGL also do correct gamma blending?
- * 
- * Backend:
- *   Allow switching between old and new rendering infrastructure for each
- *     shader individually? (Would fix rectangle transparency bug)
- *   Proper package names / structure
- *   Error handling
  * 
  * UI:
  *   Make the pencil size UI prettier
@@ -133,6 +118,12 @@ import ui.components.ImageCanvas;
  *   Extras (optional):
  *     3D view
  *     Debug view
+ * 
+ * Backend:
+ *   Proper package names / structure
+ *   Error handling
+ *   Allow switching between old and new rendering infrastructure for each
+ *     shader individually? (Has become quite unneccessary, I think)
  * </pre>
  */
 public final class MainApp extends App {
@@ -506,8 +497,6 @@ public final class MainApp extends App {
         MainApp.lockSelectionRatio.set(lockSelectionRatio);
     }
 
-    // TODO: all of these get...Position methods have horrible names
-
     public int[] getPrevMouseImagePosition() {
         return getMouseImagePosition(prevMousePos);
     }
@@ -529,8 +518,6 @@ public final class MainApp extends App {
         return canvas.getImagePosition(screenSpacePos);
     }
 
-    // TODO: check if there are places in the code that do the same calculation but
-    // don't call this method
     public SVector getScreenPosition(SVector imagePos) {
         return canvas.getScreenPosition(imagePos);
     }

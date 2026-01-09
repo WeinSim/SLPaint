@@ -3,64 +3,87 @@ package ui.components;
 import org.lwjglx.util.vector.Vector4f;
 
 import main.tools.DragTool;
-import main.tools.ImageTool;
 import sutil.math.SVector;
 import sutil.ui.UIFloatContainer;
 import ui.Sizes;
-import ui.components.toolContainers.SelectionToolContainer;
+import ui.components.toolContainers.DragToolContainer;
 
 public class SizeKnob extends UIFloatContainer {
 
     private final int dx, dy;
 
-    public SizeKnob(SelectionToolContainer parent, int dx, int dy) {
+    private final DragTool tool;
+
+    public SizeKnob(DragToolContainer<?> parent, DragTool tool, int dx, int dy) {
         super(0, 0);
         this.dx = dx;
         this.dy = dy;
+        this.tool = tool;
 
         style.setBackgroundColor(new Vector4f(1, 1, 1, 1));
         style.setStrokeColor(new Vector4f(0, 0, 0, 1));
         style.setStrokeWeight(2.0);
 
         clipToRoot = false;
-        relativeLayer = 3;
+        relativeLayer = 1;
 
         double width = Sizes.SIZE_KNOB.width,
                 height = Sizes.SIZE_KNOB.height;
         setFixedSize(new SVector(width, height));
 
         setLeftClickAction(() -> parent.startSizeDrag(this));
-        setVisibilitySupplier(() -> (ImageTool.SELECTION.getState() & (DragTool.IDLE | DragTool.IDLE_DRAG)) != 0);
+        final int visibleStates = DragTool.IDLE | DragTool.IDLE_DRAG | DragTool.RESIZING;
+        setVisibilitySupplier(() -> (tool.getState() & visibleStates) != 0);
 
         Anchor parentAttachPoint = Anchor.fromOffsets(dx, dy);
         addAnchor(Anchor.CENTER_CENTER, parent, parentAttachPoint);
     }
 
-    public void updateSelection(SVector dragStartPos, SVector dragStartSize, SVector mouseDelta) {
-        // update x
-        if (dx == 0) {
-            double oldX = dragStartPos.x;
-            double newX = oldX + mouseDelta.x;
-            ImageTool.SELECTION.setX((int) Math.round(newX));
-        }
-        // update width
-        if (dx != 1) {
-            double oldWidth = dragStartSize.x;
-            double newWidth = oldWidth + mouseDelta.x * (dx - 1);
-            ImageTool.SELECTION.setWidth((int) Math.round(newWidth));
+    public void updateSelection(SVector dragStartPos, SVector dragStartSize, SVector mouseDelta, boolean lockRatio) {
+        // Size
+
+        double oldWidth = dragStartSize.x,
+                oldHeight = dragStartSize.y;
+        double newWidth = oldWidth,
+                newHeight = oldHeight;
+
+        newWidth += mouseDelta.x * (dx - 1);
+        newHeight += mouseDelta.y * (dy - 1);
+
+        if (lockRatio) {
+            double ratio = oldWidth / oldHeight;
+            if (dx == 1) {
+                // change only height
+                newWidth = newHeight * ratio;
+            } else if (dy == 1) {
+                // change only width
+                newHeight = newWidth / ratio;
+            } else {
+                // change both
+
+                // find projection of target size onto original size
+                double scale = (newWidth * oldWidth + newHeight * oldHeight)
+                        / (oldWidth * oldWidth + oldHeight * oldHeight);
+
+                newWidth = scale * oldWidth;
+                newHeight = scale * oldHeight;
+            }
         }
 
-        // update y
-        if (dy == 0) {
-            double oldY = dragStartPos.y;
-            double newY = oldY + mouseDelta.y;
-            ImageTool.SELECTION.setY((int) Math.round(newY));
-        }
-        // update width
-        if (dy != 1) {
-            double oldHeight = dragStartSize.y;
-            double newHeight = oldHeight + mouseDelta.y * (dy - 1);
-            ImageTool.SELECTION.setHeight((int) Math.round(newHeight));
-        }
+        tool.setWidth((int) Math.round(newWidth));
+        tool.setHeight((int) Math.round(newHeight));
+
+        // Position
+
+        double x = dragStartPos.x,
+                y = dragStartPos.y;
+
+        if (dx == 0)
+            x -= tool.getWidth() - oldWidth;
+        if (dy == 0)
+            y -= tool.getHeight() - oldHeight;
+
+        tool.setX((int) Math.round(x));
+        tool.setY((int) Math.round(y));
     }
 }

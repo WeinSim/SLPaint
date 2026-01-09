@@ -279,6 +279,10 @@ public class AppRenderer {
         int totalSubdiv = NUM_SUBDIVISIONS * (NUM_DIVISIONS * layer + division) + subdivision;
         double depth = -2 * (double) totalSubdiv / (NUM_LAYERS * NUM_DIVISIONS * NUM_SUBDIVISIONS) + 1;
 
+        // System.out.format("getDepth: layer = %2d, division = %4d, subdivision = %d =>
+        // %.4f\n",
+        // layer, division, subdivision, depth);
+
         return depth;
     }
 

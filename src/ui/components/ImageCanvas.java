@@ -6,6 +6,7 @@ import org.lwjglx.util.vector.Vector4f;
 import main.Image;
 import main.apps.MainApp;
 import main.tools.ImageTool;
+import main.tools.ImageTool.KeyboardShortcut;
 import sutil.math.SVector;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
@@ -64,16 +65,7 @@ public class ImageCanvas extends UIContainer {
         add(new PipetteToolContainer(app));
         add(new FillBucketToolContainer(app));
         add(new TextToolContainer(app));
-        SelectionToolContainer stc = new SelectionToolContainer(app);
-        add(stc);
-        for (int dy = 0; dy <= 2; dy++) {
-            for (int dx = 0; dx <= 2; dx++) {
-                if (dx == 1 && dy == 1)
-                    continue;
-
-                add(new SizeKnob(stc, dx, dy));
-            }
-        }
+        add(new SelectionToolContainer(app));
     }
 
     @Override
@@ -103,30 +95,25 @@ public class ImageCanvas extends UIContainer {
         super.keyPressed(key, mods);
 
         // tools
-        // TODO: prioritize currently active tool if a shortcut has multiple matches
-        boolean shortcutMatch = false;
+        ImageTool shortcutTool = null;
         for (ImageTool tool : ImageTool.INSTANCES) {
-            for (ImageTool.KeyboardShortcut shortcut : tool.getKeyboardShortcuts()) {
+            for (KeyboardShortcut shortcut : tool.getKeyboardShortcuts()) {
                 if (shortcut.key() == key
                         && (shortcut.initialState() & tool.getState()) != 0
                         && shortcut.modifiers() == mods) {
 
+                    if (shortcutTool != null) {
+                        System.err.format(
+                                "Found conflicting image tool keyboard shortcuts! tool 1 = %s, tool 2 = %s, key = %d, mods = %d\n",
+                                shortcutTool, tool, key, mods);
+                    }
+
                     app.setActiveTool(tool);
                     shortcut.action().run();
-                    // TODO: this shouldn't be neccessary. the tool should automatically be in the
-                    // final state after the shortcut action
-                    tool.setState(shortcut.finalState());
-
-                    shortcutMatch = true;
-                    break;
+                    shortcutTool = tool;
                 }
             }
-            if (shortcutMatch)
-                break;
         }
-
-        if (shortcutMatch)
-            return;
     }
 
     @Override

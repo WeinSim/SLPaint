@@ -2,9 +2,13 @@ package sutil.ui;
 
 public class UISeparator extends UIContainer {
 
+    private boolean forceZeroMargin;
+
     public UISeparator() {
         super(VERTICAL, LEFT);
-        outlineNormal = false;
+
+        noOutline();
+        forceZeroMargin = false;
 
         add(new UISeparatorInside());
     }
@@ -21,8 +25,17 @@ public class UISeparator extends UIContainer {
             setVFillSize();
         }
 
-        hMarginScale = parent.orientation == VERTICAL ? 0 : 1;
-        vMarginScale = 1 - hMarginScale;
+        if (!forceZeroMargin) {
+            hMarginScale = parent.orientation == VERTICAL ? 0 : 1;
+            vMarginScale = 1 - hMarginScale;
+        }
+    }
+
+    @Override
+    public UIContainer zeroMargin() {
+        forceZeroMargin = true;
+
+        return super.zeroMargin();
     }
 
     private class UISeparatorInside extends UIContainer {
