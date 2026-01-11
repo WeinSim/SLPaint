@@ -17,9 +17,6 @@ public class UIButton extends UILabel {
     }
 
     private void init(UIAction clickAction) {
-        // style.setBackgroundColor(
-        //         () -> mouseAbove ? panel.getBackgroundHighlightColor() : panel.getBackgroundNormalColor());
-
         outlineNormal = true;
         backgroundNormal = true;
         backgroundHighlight = true;

@@ -1,7 +1,6 @@
 package ui.components;
 
 import org.lwjgl.glfw.GLFW;
-import org.lwjglx.util.vector.Vector4f;
 
 import main.Image;
 import main.apps.MainApp;
@@ -234,9 +233,8 @@ public class ImageCanvas extends UIContainer {
             public ImageContainerChild() {
                 super(0, new SVector());
 
-                Vector4f[] c = Colors.transparent();
-                double s = Sizes.CHECKERBOARD_SIZE.size;
-                style.setBackgroundCheckerboard(c[0], c[1], s);
+                style.setBackgroundCheckerboard(() -> Colors.transparent()[0], () -> Colors.transparent()[1],
+                        () -> Sizes.CHECKERBOARD_SIZE.size);
             }
 
             @Override

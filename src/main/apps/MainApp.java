@@ -22,12 +22,12 @@ import main.settings.BooleanSetting;
 import main.settings.ColorArraySetting;
 import main.settings.Settings;
 import main.tools.ImageTool;
-import renderEngine.AppRenderer;
 import renderEngine.Window;
 import renderEngine.fonts.TextFont;
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UITextInput;
+import ui.AppUI;
 import ui.MainUI;
 import ui.Sizes;
 import ui.components.ImageCanvas;
@@ -91,6 +91,9 @@ import ui.components.ImageCanvas;
  *     characters, the text is not properly split across multiple lines
  *   Tool icons & cursors
  *   Make side panel collapsable
+ *   Instead of the ImageCanvas being on layer 0 and everything else on layer
+ *     ImageCanvas.NUM_UI_LAYERS, put everything on layer 0 and turn on the
+ *     clip area for the ImageCanvas?
  * Rendering:
  *   Improve UITextInput cursor visibility
  *   Text rendering
@@ -156,11 +159,13 @@ public final class MainApp extends App {
             SUtil.toARGB(199, 191, 230),
     };
 
-    public static final int SAVE_DIALOG = 1, NEW_DIALOG = 2, CHANGE_SIZE_DIALOG = 3, NEW_COLOR_DIALOG = 4,
+    public static final int SAVE_DIALOG = 1, NEW_DIALOG = 2, RESIZE_DIALOG = 3, NEW_COLOR_DIALOG = 4,
             ROTATE_DIALOG = 5, FLIP_DIALOG = 6, UNABLE_TO_SAVE_IMAGE_DIALOG = 7, DISCARD_UNSAVED_CHANGES_DIALOG = 9,
             SETTINGS_DIALOG = 10;
 
     public static final int PRIMARY_COLOR = 0, SECONDARY_COLOR = 1;
+
+    public static final int MIN_IMAGE_SIZE = 1, MAX_IMAGE_SIZE = 65535;
 
     private static BooleanSetting transparentSelection = new BooleanSetting("transparentSelection");
     private static BooleanSetting lockSelectionRatio = new BooleanSetting("lockSelectionRatio");
@@ -203,33 +208,19 @@ public final class MainApp extends App {
         colorSelection = PRIMARY_COLOR;
         selectedColorPicker = new ColorPicker(getSelectedColor());
 
-        createUI();
-
-        renderer = new AppRenderer(this);
-
         setActiveTool(ImageTool.PENCIL);
         prevTool = ImageTool.PENCIL;
 
         // R -> reset image transform
-        keyboardShortcuts.add(new KeyboardShortcut(
-                GLFW.GLFW_KEY_R,
-                0,
-                this::resetImageTransform,
-                false));
+        addKeyboardShortcut(GLFW.GLFW_KEY_R, 0, this::resetImageTransform, false);
 
         // Ctrl + S -> save
-        keyboardShortcuts.add(new KeyboardShortcut(
-                GLFW.GLFW_KEY_S,
-                GLFW.GLFW_MOD_CONTROL,
-                this::saveImage,
-                true));
+        addKeyboardShortcut(GLFW.GLFW_KEY_S, GLFW.GLFW_MOD_CONTROL, this::saveImage, true);
 
         // Ctrl + Shift + S -> save
-        keyboardShortcuts.add(new KeyboardShortcut(
-                GLFW.GLFW_KEY_S,
-                GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SHIFT,
-                this::saveImageAs,
-                true));
+        addKeyboardShortcut(GLFW.GLFW_KEY_S, GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SHIFT, this::saveImageAs, true);
+
+        addKeyboardShortcut(GLFW.GLFW_KEY_A, 0, () -> getImage().updateOpenGLTexture(false), true);
     }
 
     @Override
@@ -251,6 +242,11 @@ public final class MainApp extends App {
         super.finish();
 
         Settings.finish();
+    }
+
+    @Override
+    protected AppUI<?> createUI() {
+        return new MainUI(this);
     }
 
     public void renderImageToImage(Image image, int x, int y, int width, int height) {
@@ -325,18 +321,12 @@ public final class MainApp extends App {
         }
     }
 
-    public SVector[] getImageViewport() {
-        SVector pos = canvas.getAbsolutePosition();
-        SVector size = canvas.getSize();
-        return new SVector[] { new SVector(pos.x + 1, pos.y + 1), new SVector(pos.x + size.x - 1, pos.y + size.y - 1) };
-    }
-
     public void showDialog(int type) {
         super.showDialog(type);
         switch (type) {
             case SAVE_DIALOG -> (new SaveDialog(this)).start();
             case UNABLE_TO_SAVE_IMAGE_DIALOG -> (new UnableToSaveImageDialog(this)).start();
-            case NEW_COLOR_DIALOG, SETTINGS_DIALOG -> {
+            case NEW_COLOR_DIALOG, SETTINGS_DIALOG, RESIZE_DIALOG -> {
             }
             default -> (new UnimplementedDialog(this, type)).start();
         }
@@ -345,11 +335,9 @@ public final class MainApp extends App {
     @Override
     protected App createChildApp(int dialogType) {
         return switch (dialogType) {
-            case NEW_COLOR_DIALOG -> new ColorEditorApp(
-                    this,
-                    getSelectedColor());
-            // colorSelection == 0 ? primaryColor : secondaryColor);
+            case NEW_COLOR_DIALOG -> new ColorEditorApp(this, getSelectedColor());
             case SETTINGS_DIALOG -> new SettingsApp(this);
+            case RESIZE_DIALOG -> new ResizeApp(this);
             default -> null;
         };
     }

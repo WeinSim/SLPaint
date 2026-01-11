@@ -48,7 +48,7 @@ public abstract class UIElement {
         visible = visibilitySupplier.get();
 
         if (this == panel.getSelectedElement()) {
-            // shouldn't this only happen when visible == true?
+            // TODO: shouldn't this only happen when visible == true?
             panel.confirmSelectedElement();
         }
     }

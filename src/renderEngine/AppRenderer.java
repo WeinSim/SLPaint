@@ -357,42 +357,46 @@ public class AppRenderer {
     }
 
     private void renderDebug() {
-        uiMaster.setBGColor(new Vector4f(1, 1, 1, 1));
+        uiMaster.setBGColor(new Vector4f(0.2f, 0.2f, 0.2f, 1));
 
         SVector p1 = new SVector(500, 100),
-                p2 = new SVector(300, 700),
+                p2 = new SVector(600, 100),
                 p3 = new SVector(1000, 500);
         SVector s1 = new SVector(800, 100),
-                s2 = new SVector(250, 250),
+                s2 = new SVector(800, 800),
                 s3 = new SVector(100, 200);
         SVector c1 = new SVector(0.8, 0.2, 0.2),
                 c2 = new SVector(0.2, 0.8, 0.2),
                 c3 = new SVector(0.2, 0.2, 0.8);
 
-        uiMaster.fill(c1);
-        uiMaster.ellipse(p1, s1);
+        MainApp app = (MainApp) this.app;
 
-        uiMaster.fill(c2);
-        uiMaster.ellipse(p2, s2);
+        uiMaster.image(app.getImage().getTextureID(), p2, s2);
 
-        uiMaster.hueSatField(p3, new SVector(200, 200), true, true);
+        // uiMaster.fill(c1);
+        // uiMaster.ellipse(p1, s1);
 
-        uiMaster.noStroke();
+        // uiMaster.fill(c2);
+        // uiMaster.ellipse(p2, s2);
 
-        uiMaster.fill(c1);
-        uiMaster.rect(p1, s1);
+        // uiMaster.hueSatField(p3, new SVector(200, 200), true, true);
 
-        uiMaster.checkerboardFill(Colors.transparent(), 15);
-        uiMaster.depth(getDepth(0));
-        uiMaster.rect(p2, s2);
+        // uiMaster.noStroke();
 
-        p2.x += 50;
+        // uiMaster.fill(c1);
+        // uiMaster.rect(p1, s1);
 
-        uiMaster.fill(c2);
-        uiMaster.depth(getDepth(1));
-        uiMaster.rect(p2, s2);
+        // uiMaster.checkerboardFill(Colors.transparent(), 15);
+        // uiMaster.depth(getDepth(0));
+        // uiMaster.rect(p2, s2);
 
-        uiMaster.fill(c3);
-        uiMaster.rect(p3, s3);
+        // p2.x += 50;
+
+        // uiMaster.fill(c2);
+        // uiMaster.depth(getDepth(1));
+        // uiMaster.rect(p2, s2);
+
+        // uiMaster.fill(c3);
+        // uiMaster.rect(p3, s3);
     }
 }

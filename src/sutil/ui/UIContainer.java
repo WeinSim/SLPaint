@@ -3,6 +3,7 @@ package sutil.ui;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.function.Supplier;
 
 import org.lwjgl.glfw.GLFW;
 
@@ -110,7 +111,24 @@ public class UIContainer extends UIElement {
             }
             if (containsNonFloatChildren) {
                 UISeparator separator = new UISeparator();
-                separator.setVisibilitySupplier(child.visibilitySupplier::get);
+                Supplier<Boolean> childVis = () -> {
+                    if (!child.visibilitySupplier.get())
+                        return false;
+
+                    // The separator should not be visible if the corresponding child is the first
+                    // visible element. Thus, we need to find another visible non-separator element
+                    // in the list of children that comes before it.
+                    // Note that this implementation depends on the fact that the updateVisibility()
+                    // method goes through all the children in order.
+
+                    for (UIElement e : getChildren()) {
+                        if (!(e instanceof UISeparator) && e != child)
+                            return true;
+                    }
+
+                    return false;
+                };
+                separator.setVisibilitySupplier(childVis);
                 addActual(separator);
             }
         }
@@ -119,17 +137,13 @@ public class UIContainer extends UIElement {
     }
 
     private final void addActual(UIElement child) {
-        // why are floating elements added first?
-        // if (child instanceof UIFloatContainer) {
-        // children.addFirst(child);
-        // } else {
         children.add(child);
-        // }
-        child.parent = this;
 
+        child.parent = this;
         child.setPanel(panel);
     }
 
+    // TODO: what is the purpose of this locking mechanism?
     public void lock() {
         children.lock();
 
@@ -710,10 +724,24 @@ public class UIContainer extends UIElement {
         return this;
     }
 
-    public UIContainer withSeparators() {
+    /**
+     * Automaticalls inserts separators between every element that is being added.
+     * 
+     * @param spaciousLayout {@code true}: sets margin and padding scale to 2.
+     *                       {@code false}: sets margin and padding scale to 0.
+     * 
+     * @return {@code this}
+     */
+    public UIContainer withSeparators(boolean spaciousLayout) {
         addSeparators = true;
 
-        setMarginScale(2.0);
+        if (spaciousLayout) {
+            setMarginScale(2.0);
+            setPaddingScale(2.0);
+        } else {
+            zeroMargin();
+            zeroPadding();
+        }
 
         return this;
     }

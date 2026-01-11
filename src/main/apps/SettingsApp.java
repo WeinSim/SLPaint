@@ -5,7 +5,9 @@ import org.lwjglx.util.vector.Vector4f;
 
 import main.ColorPicker;
 import renderEngine.Window;
+import ui.AppUI;
 import ui.Colors;
+import ui.SettingsUI;
 import ui.Sizes;
 
 public final class SettingsApp extends App {
@@ -13,22 +15,12 @@ public final class SettingsApp extends App {
     private ColorPicker colorPicker;
 
     public SettingsApp(MainApp mainApp) {
-        super((int) Sizes.SETTINGS_APP.width, (int) Sizes.SETTINGS_APP.height, Window.NORMAL, true, "Settings",
+        super((int) Sizes.SETTINGS_APP.width, (int) Sizes.SETTINGS_APP.height, Window.NORMAL, true, false, "Settings",
                 mainApp);
 
         colorPicker = Colors.getBaseColorPicker();
 
-        createUI();
-    }
-
-    @Override
-    protected void keyPressed(int key, int mods) {
-        super.keyPressed(key, mods);
-
-        switch (key) {
-            // Esc -> close window
-            case GLFW.GLFW_KEY_CAPS_LOCK -> window.requestClose();
-        }
+        addKeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, window::requestClose, false);
     }
 
     public void setUIColor(int color) {
@@ -60,5 +52,10 @@ public final class SettingsApp extends App {
 
     public ColorPicker getColorPicker() {
         return colorPicker;
+    }
+
+    @Override
+    protected AppUI<?> createUI() {
+        return new SettingsUI(this);
     }
 }

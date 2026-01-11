@@ -12,10 +12,12 @@ import main.tools.PencilTool;
 import main.tools.SelectionTool;
 import main.tools.TextTool;
 import sutil.SUtil;
+import sutil.math.SVector;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UIDropdown;
 import sutil.ui.UIElement;
+import sutil.ui.UIImage;
 import sutil.ui.UILabel;
 import sutil.ui.UINumberInput;
 import sutil.ui.UIScale;
@@ -42,11 +44,11 @@ public class MainUI extends AppUI<MainApp> {
     protected void init() {
         root.setOrientation(UIContainer.VERTICAL);
         root.setHAlignment(UIContainer.LEFT);
-        root.zeroMargin().zeroPadding().noOutline();
+        root.withSeparators(false).noOutline();
 
         UIContainer topRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER,
                 UIContainer.HORIZONTAL);
-        topRow.withSeparators().setHFillSize().setHAlignment(UIContainer.LEFT).withBackground().noOutline();
+        topRow.withSeparators(true).setHFillSize().setHAlignment(UIContainer.LEFT).withBackground().noOutline();
 
         UIContainer settings = addTopRowSection(topRow, "Settings");
         UIButton settingsButton = new UIButton("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG));
@@ -54,15 +56,14 @@ public class MainUI extends AppUI<MainApp> {
         settings.add(settingsButton);
 
         UIContainer fileOptions = addTopRowSection(topRow, "File");
-        fileOptions.add(new UIText("..."));
+        fileOptions.add(new UILabel("..."));
         // fileOptions.add(new UIButton("New", app::newImage));
         // fileOptions.add(new UIButton("Open", app::openImage));
         // fileOptions.add(new UIButton("Save", app::saveImage));
 
         UIContainer imageOptions = addTopRowSection(topRow, "Image");
-        imageOptions.add(new UIText("..."));
-        // imageOptions.add(new UIButton("Change Size", () ->
-        // app.showDialog(MainApp.CHANGE_SIZE_DIALOG)));
+        // imageOptions.add(new UILabel("..."));
+        imageOptions.add(new UIButton("Resize", () -> app.showDialog(MainApp.RESIZE_DIALOG)));
         // imageOptions.add(new UIButton("Rotate", () ->
         // app.showDialog(MainApp.ROTATE_DIALOG)));
         // imageOptions.add(new UIButton("Flip", () ->
@@ -75,7 +76,7 @@ public class MainUI extends AppUI<MainApp> {
 
         UIContainer pencilTools = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
         pencilTools.zeroMargin().noOutline();
-        pencilTools.setVisibilitySupplier(() -> this.app.getActiveTool() == ImageTool.PENCIL);
+        pencilTools.setVisibilitySupplier(() -> app.getActiveTool() == ImageTool.PENCIL);
 
         final double min = PencilTool.MIN_SIZE,
                 max = PencilTool.MAX_SIZE;
@@ -92,6 +93,22 @@ public class MainUI extends AppUI<MainApp> {
 
         pencilTools.add(pencilSizeBottomRow);
         topRow.add(pencilTools);
+
+        UIContainer selectionTools = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
+        selectionTools.zeroMargin().noOutline();
+        selectionTools.setVisibilitySupplier(() -> app.getActiveTool() == ImageTool.SELECTION);
+
+        selectionTools.add(createToggleContainer(
+                "Transparent selection",
+                MainApp::isTransparentSelection,
+                MainApp::setTransparentSelection));
+
+        selectionTools.add(createToggleContainer(
+                "Lock selection ratio",
+                MainApp::isLockSelectionRatio,
+                MainApp::setLockSelectionRatio));
+
+        topRow.add(selectionTools);
 
         UIContainer textTools = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         textTools.zeroMargin().setVFillSize().noOutline();
@@ -166,27 +183,14 @@ public class MainUI extends AppUI<MainApp> {
         addToRoot(new UISeparator().zeroMargin());
 
         UIContainer mainRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
-        mainRow.zeroMargin().zeroPadding().noBackground().noOutline();
+        mainRow.withSeparators(false).noBackground().noOutline();
         mainRow.setFillSize();
 
         mainRow.add(new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, UIContainer.TOP, app));
 
-        mainRow.add(new UISeparator().zeroMargin());
-
         UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER, UIContainer.TOP,
                 UIContainer.VERTICAL);
-        sidePanel.withSeparators().withBackground().noOutline();
-        sidePanel.setVFillSize();
-
-        sidePanel.add(createToggleContainer(
-                "Transparent selection",
-                MainApp::isTransparentSelection,
-                MainApp::setTransparentSelection));
-
-        sidePanel.add(createToggleContainer(
-                "Lock selection ratio",
-                MainApp::isLockSelectionRatio,
-                MainApp::setLockSelectionRatio));
+        sidePanel.withSeparators(true).setVFillSize().withBackground().noOutline();
 
         sidePanel.add(new ColorPickContainer(
                 app.getSelectedColorPicker(),
@@ -196,13 +200,18 @@ public class MainUI extends AppUI<MainApp> {
                 true,
                 false));
 
-        mainRow.add(sidePanel.addScrollbars().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
-
         UIContainer debugPanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
                 UIContainer.VERTICAL);
-        debugPanel.withBackground().noOutline();
-        debugPanel.setVFillSize();
+        debugPanel.setVFillSize().noOutline();
         debugPanel.setHFixedSize(400);
+
+        debugPanel.add(new UIImage(0, new SVector(200, 200)) {
+            @Override
+            public void update() {
+                super.update();
+                textureID = app.getImage().getTextureID();
+            };
+        }.withOutline());
 
         debugPanel.add(new UIText("Tools"));
         for (ImageTool tool : ImageTool.INSTANCES) {
@@ -222,7 +231,9 @@ public class MainUI extends AppUI<MainApp> {
         // debugPanel.add(new UITextInput(this::getDebugString, this::setDebugString,
         // true));
 
-        // canvas.add(debugPanel.addScrollbars().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
+        sidePanel.add(debugPanel.addScrollbars().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
+
+        mainRow.add(sidePanel.addScrollbars().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
 
         root.add(mainRow);
 

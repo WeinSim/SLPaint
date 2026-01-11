@@ -1,5 +1,7 @@
 package main;
 
+import java.awt.AlphaComposite;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,7 +42,7 @@ public class ImageFile {
         // the file's content
         lock = channel.lock(0, Long.MAX_VALUE, true);
 
-        BufferedImage bufferedimage = null;
+        BufferedImage bufferedImage = null;
         FileInputStream fis = new FileInputStream(file);
         try (ImageInputStream iis = ImageIO.createImageInputStream(fis)) {
             Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
@@ -56,12 +58,26 @@ public class ImageFile {
                             formatName));
                 }
                 reader.setInput(iis);
-                bufferedimage = reader.read(0);
+                bufferedImage = reader.read(0);
             } else {
                 throw new IOException("No fitting ImageReader was found for the given file!");
             }
         }
-        image = new Image(bufferedimage);
+        image = new Image(toARGB(bufferedImage));
+    }
+
+    private static BufferedImage toARGB(BufferedImage src) {
+        if (src.getType() == BufferedImage.TYPE_INT_ARGB)
+            return src;
+
+        BufferedImage dst = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D g = dst.createGraphics();
+        g.setComposite(AlphaComposite.Src); // IMPORTANT: no blending
+        g.drawImage(src, 0, 0, null);
+        g.dispose();
+
+        return dst;
     }
 
     /**

@@ -1,9 +1,11 @@
 package main;
 
 import java.awt.image.BufferedImage;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.awt.image.DataBufferInt;
+import java.nio.IntBuffer;
+import java.util.Arrays;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
@@ -20,61 +22,124 @@ public class Image {
     private int dirtyMinY;
     private int dirtyMaxY;
 
-    public Image(BufferedImage bufferedImage) {
-        init(bufferedImage);
-    }
-
-    private void init(BufferedImage image) {
-        bufferedImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        bufferedImage.getGraphics().drawImage(image, 0, 0, null);
-
+    public Image(BufferedImage image) {
         textureID = GL11.glGenTextures();
 
-        dirtyMinX = 0;
-        dirtyMaxX = bufferedImage.getWidth() - 1;
-        dirtyMinY = 0;
-        dirtyMaxY = bufferedImage.getHeight() - 1;
-        updateOpenGLTexture(true);
+        bufferedImage = image;
+
+        updateOpenGLTexture(false);
+    }
+
+    public void changeSize(int newWidth, int newHeight, int backgroundColor) {
+        BufferedImage oldImage = bufferedImage,
+                newImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+
+        int oldWidth = oldImage.getWidth(),
+                oldHeight = oldImage.getHeight();
+
+        int[] oldPixels = ((DataBufferInt) oldImage.getRaster().getDataBuffer()).getData(),
+                newPixels = ((DataBufferInt) newImage.getRaster().getDataBuffer()).getData();
+
+        if (newWidth > oldWidth || newHeight > oldHeight)
+            Arrays.fill(newPixels, backgroundColor);
+
+        int copyWidth = Math.min(oldWidth, newWidth),
+                copyHeight = Math.min(oldHeight, newHeight);
+
+        for (int y = 0; y < newHeight; y++) {
+            int x0 = 0;
+            if (y < copyHeight) {
+                System.arraycopy(oldPixels, y * oldWidth, newPixels, y * newWidth, copyWidth);
+                x0 = copyWidth;
+            }
+
+            for (int x = x0; x < newWidth; x++) {
+                newPixels[y * newHeight + x] = backgroundColor;
+            }
+        }
+
+        bufferedImage = newImage;
+
+        updateOpenGLTexture(false);
     }
 
     public void updateOpenGLTexture() {
         if (dirty) {
-            updateOpenGLTexture(false);
+            updateOpenGLTexture(true);
         }
     }
 
-    private void updateOpenGLTexture(boolean firstTime) {
-        int width = dirtyMaxX - dirtyMinX + 1;
-        int height = dirtyMaxY - dirtyMinY + 1;
-        int[] pixels = bufferedImage.getRGB(dirtyMinX, dirtyMinY, width, height, null, 0,
-                bufferedImage.getWidth());
+    public void updateOpenGLTexture(boolean subArea) {
+        int width = bufferedImage.getWidth(),
+                height = bufferedImage.getHeight();
 
-        ByteBuffer buffer = ByteBuffer.allocateDirect(width * height * 4);
-        buffer.order(ByteOrder.nativeOrder());
-
-        for (int y = dirtyMinY; y <= dirtyMaxY; y++) {
-            for (int x = dirtyMinX; x <= dirtyMaxX; x++) {
-                int pixel = pixels[(y - dirtyMinY) * getWidth() + (x - dirtyMinX)];
-                buffer.put((byte) ((pixel >> 16) & 0xFF));
-                buffer.put((byte) ((pixel >> 8) & 0xFF));
-                buffer.put((byte) (pixel & 0xFF));
-                buffer.put((byte) ((pixel >> 24) & 0xFF));
-            }
-        }
-
+        int[] pixels = ((DataBufferInt) bufferedImage.getRaster().getDataBuffer()).getData();
+        IntBuffer buffer = BufferUtils.createIntBuffer(width * height);
+        buffer.put(pixels);
         buffer.flip();
 
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
-        if (firstTime) {
-            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, bufferedImage.getWidth(), bufferedImage.getHeight(),
-                    0, GL12.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
-        } else {
-            GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, dirtyMinX, dirtyMinY, width, height, GL11.GL_RGBA,
-                    GL11.GL_UNSIGNED_BYTE, buffer);
-        }
 
-        dirty = false;
+        if (subArea) {
+            int dirtyWidth = dirtyMaxX - dirtyMinX + 1,
+                    dirtyHeight = dirtyMaxY - dirtyMinY + 1;
+
+            GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, width);
+            GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_PIXELS, dirtyMinX);
+            GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_ROWS, dirtyMinY);
+
+            GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, dirtyMinX, dirtyMinY, dirtyWidth, dirtyHeight, GL12.GL_BGRA,
+                    GL12.GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
+
+            dirty = false;
+
+            GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, 0);
+            GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_PIXELS, 0);
+            GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_ROWS, 0);
+        } else {
+            GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 4);
+
+            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, height, 0, GL12.GL_BGRA,
+                    GL12.GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
+        }
     }
+
+    // public void updateOpenGLTexture(boolean firstTime) {
+    // int width = dirtyMaxX - dirtyMinX + 1;
+    // int height = dirtyMaxY - dirtyMinY + 1;
+    // int[] pixels = bufferedImage.getRGB(dirtyMinX, dirtyMinY, width, height,
+    // null, 0, width);
+
+    // ByteBuffer buffer = ByteBuffer.allocateDirect(width * height * 4);
+    // buffer.order(ByteOrder.nativeOrder());
+
+    // for (int y = dirtyMinY; y <= dirtyMaxY; y++) {
+    // for (int x = dirtyMinX; x <= dirtyMaxX; x++) {
+    // int pixel = pixels[(y - dirtyMinY) * width + (x - dirtyMinX)];
+    // buffer.put((byte) ((pixel >> 16) & 0xFF));
+    // buffer.put((byte) ((pixel >> 8) & 0xFF));
+    // buffer.put((byte) (pixel & 0xFF));
+    // buffer.put((byte) ((pixel >> 24) & 0xFF));
+    // }
+    // }
+
+    // buffer.flip();
+
+    // GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+    // if (firstTime) {
+    // int w = bufferedImage.getWidth(),
+    // h = bufferedImage.getHeight();
+    // System.out.format("w = %4d, h = %4d\n", w, h);
+    // GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, w, h, 0, GL12.GL_RGBA,
+    // GL11.GL_UNSIGNED_BYTE, buffer);
+    // } else {
+    // GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, dirtyMinX, dirtyMinY, width,
+    // height, GL11.GL_RGBA,
+    // GL11.GL_UNSIGNED_BYTE, buffer);
+    // }
+
+    // dirty = false;
+    // }
 
     public BufferedImage getSubImage(int startX, int startY, int width, int height, Integer backgroundColor) {
         int[] oldPixels = bufferedImage.getRGB(startX, startY, width, height, null, 0, getWidth());
@@ -203,9 +268,9 @@ public class Image {
             return;
 
         int alpha = SUtil.alpha(color);
+
         if (alpha == 0)
             return;
-
         if (alpha == 255)
             setPixel(x, y, color);
 

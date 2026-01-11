@@ -1,6 +1,9 @@
 package main.apps;
 
 import main.ColorPicker;
+import renderEngine.Window;
+import ui.AppUI;
+import ui.ColorEditorUI;
 
 public final class ColorEditorApp extends App {
 
@@ -9,14 +12,10 @@ public final class ColorEditorApp extends App {
     private MainApp mainApp;
 
     public ColorEditorApp(MainApp mainApp, int initialColor) {
-        super(500, 500, 0, false, "Color Editor", mainApp);
+        super(500, 500, Window.NORMAL, false, true, "Color Editor", mainApp);
         this.mainApp = mainApp;
 
         colorPicker = new ColorPicker(initialColor);
-
-        adjustSizeOnInit = true;
-
-        createUI();
     }
 
     public ColorPicker getColorPicker() {
@@ -30,5 +29,10 @@ public final class ColorEditorApp extends App {
     @Override
     protected App createChildApp(int dialogType) {
         return null;
+    }
+
+    @Override
+    protected AppUI<?> createUI() {
+        return new ColorEditorUI(this);
     }
 }

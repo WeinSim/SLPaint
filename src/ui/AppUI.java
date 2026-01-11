@@ -30,7 +30,7 @@ public abstract class AppUI<T extends App> extends UIPanel {
         defaultTextSize = Sizes.TEXT.size;
 
         root = new UIRoot(this, UIContainer.VERTICAL, UIContainer.LEFT);
-        root.zeroMargin().zeroPadding().noOutline();
+        root.zeroMargin().zeroPadding().noOutline().withBackground();
         int[] displaySize = app.getWindow().getDisplaySize();
         root.setFixedSize(new SVector(displaySize[0], displaySize[1]));
 

@@ -68,7 +68,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
     private UIContainer createBaseColor() {
         UIContainer baseColor = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
-        baseColor.withSeparators();
+        baseColor.withSeparators(true);
 
         UIContainer baseColorHeading = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
         baseColorHeading.zeroMargin().noOutline();

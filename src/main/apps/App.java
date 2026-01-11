@@ -16,11 +16,8 @@ import sutil.ui.UIAction;
 import sutil.ui.UIRoot;
 import sutil.ui.UITextInput;
 import ui.AppUI;
-import ui.ColorEditorUI;
-import ui.MainUI;
-import ui.SettingsUI;
 
-public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
+public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp {
 
     private static final double FRAME_TIME_GAMMA = 0.05;
 
@@ -44,7 +41,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
 
     private LinkedList<UIAction> eventQueue;
 
-    protected ArrayList<KeyboardShortcut> keyboardShortcuts;
+    private ArrayList<KeyboardShortcut> keyboardShortcuts;
 
     protected AppUI<?> ui;
     protected boolean adjustSizeOnInit = false;
@@ -64,11 +61,14 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
     private HashMap<Integer, App> childApps;
 
     public App(int width, int height, int windowMode, String title) {
-        this(width, height, windowMode, true, title, null);
+        this(width, height, windowMode, true, false, title, null);
     }
 
-    public App(int width, int height, int windowMode, boolean resizable, String title, App parent) {
+    public App(int width, int height, int windowMode, boolean resizable, boolean adjustSizeOnInit, String title,
+            App parent) {
+
         this.parent = parent;
+        this.adjustSizeOnInit = adjustSizeOnInit;
 
         MainLoop.addApp(this);
 
@@ -102,19 +102,17 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         keyboardShortcuts.add(new KeyboardShortcut(
                 GLFW.GLFW_KEY_R,
                 GLFW.GLFW_MOD_SHIFT,
-                this::createUI,
+                this::loadUI,
                 true));
     }
 
-    protected void createUI() {
-        ui = switch (this) {
-            case MainApp m -> new MainUI(m);
-            case ColorEditorApp c -> new ColorEditorUI(c);
-            case SettingsApp s -> new SettingsUI(s);
-            default -> throw new RuntimeException(String.format("No UI for class %s!", getClass().getName()));
-        };
+    private void loadUI() {
+        ui = createUI();
 
         if (adjustSizeOnInit) {
+            // calling ui.update here to ensure the root has the correct size
+            ui.update(mousePos, window.isFocused());
+
             UIRoot root = ui.getRoot();
             SVector rootSize = root.getSize();
             int width = (int) rootSize.x;
@@ -122,6 +120,8 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
             window.setSizeAndCenter(width, height);
         }
     }
+
+    protected abstract AppUI<?> createUI();
 
     public void update(double deltaT) {
         if (avgFrameTime < 0) {
@@ -140,6 +140,11 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
         }
 
         boolean focus = window.isFocused();
+
+        // UI loading happens here because the UI might need some things set up by the
+        // child class' constructor.
+        if (ui == null)
+            loadUI();
 
         // process char input
         Character c;
@@ -347,6 +352,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp {
 
     public void setDialogType(int dialogType) {
         this.dialogType = dialogType;
+    }
+
+    protected void addKeyboardShortcut(int key, int modifiers, Runnable action, boolean text) {
+        keyboardShortcuts.add(new KeyboardShortcut(key, modifiers, action, text));
     }
 
     /**
