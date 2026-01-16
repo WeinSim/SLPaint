@@ -14,6 +14,7 @@ import sutil.ui.UINumberInput;
 import sutil.ui.UIScale;
 import sutil.ui.UIStyle;
 import sutil.ui.UIText;
+import ui.AppUI;
 import ui.Colors;
 import ui.Sizes;
 
@@ -26,14 +27,10 @@ public class ColorPickContainer extends UIContainer {
     private static final String[] HSV_NAMES = { "H", "S", "V" };
 
     private ColorPicker colorPicker;
-    private double size;
+    private Supplier<Double> size;
 
-    public ColorPickContainer(ColorPicker colorPicker, Consumer<Integer> buttonAction) {
-        this(colorPicker, buttonAction, Sizes.COLOR_PICKER_EXTRA_WINDOW.size, VERTICAL, true, true);
-    }
-
-    public ColorPickContainer(ColorPicker colorPicker, Consumer<Integer> buttonAction, double size, int orientation,
-            boolean addAlpha, boolean addPreview) {
+    public ColorPickContainer(ColorPicker colorPicker, Consumer<Integer> buttonAction, Supplier<Double> size,
+            int orientation, boolean addAlpha, boolean addPreview) {
 
         super(orientation, orientation == VERTICAL ? CENTER : TOP);
         this.colorPicker = colorPicker;
@@ -105,16 +102,18 @@ public class ColorPickContainer extends UIContainer {
         UIContainer colorBox = new UIContainer(UIContainer.HORIZONTAL, 0);
         colorBox.setStyle(new UIStyle(() -> null, Colors::text, () -> 2.0));
         colorBox.zeroMargin().zeroPadding().noOutline();
-        double previewWidth = Sizes.COLOR_PICKER_PREVIEW.width,
-                previewHeight = Sizes.COLOR_PICKER_PREVIEW.height;
-        if (addPreview) {
-            previewWidth /= 2;
-        }
+        Supplier<SVector> previewSize = () -> {
+            SVector size = ((AppUI<?>) panel).getWidthHeight(Sizes.COLOR_PICKER_PREVIEW);
+            if (addPreview) {
+                size.x /= 2;
+            }
+            return size;
+        };
         for (int i = addPreview ? 0 : 1; i < 2; i++) {
             Supplier<Integer> bgColorSupplier = i == 0
                     ? colorPicker::getInitialColor
                     : colorPicker::getRGB;
-            colorBox.add(new UIColorElement(bgColorSupplier, new SVector(previewWidth, previewHeight), false));
+            colorBox.add(new UIColorElement(bgColorSupplier, previewSize, false));
         }
         colorPreview.add(colorBox);
         colorPreview.add(new UIText("Preview"));

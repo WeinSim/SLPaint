@@ -19,7 +19,7 @@ public class UIContextMenu extends UIFloatMenu {
         container.setRightClickAction(() -> {
             expandedLabel = null;
             visible = true;
-            clearAttachPoints();
+            clearAnchors();
             SVector basePos = new SVector(container.mousePosition);
             addAnchor(Anchor.TOP_LEFT, basePos);
             addAnchor(Anchor.TOP_RIGHT, basePos);

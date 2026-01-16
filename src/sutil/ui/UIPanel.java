@@ -26,6 +26,7 @@ public abstract class UIPanel {
     protected double padding = 10;
 
     protected double defaultTextSize = 32;
+    protected double smallTextSize = 26;
     protected String defaultFontName = "Courier New Bold";
 
     protected double mouseWheelSensitivity = 100;
@@ -195,50 +196,54 @@ public abstract class UIPanel {
 
     public abstract int getCharIndex(String text, double textSize, String fontName, double x);
 
-    public double getMargin() {
-        return margin;
-    }
-
-    public double getPadding() {
-        return padding;
-    }
-
-    public Vector4f getDefaultTextColor() {
+    public Vector4f defaultTextColor() {
         float brightness = 1.0f;
         return new Vector4f(brightness, brightness, brightness, 1.0f);
     }
 
-    public Vector4f getBackgroundNormalColor() {
+    public Vector4f backgroundNormalColor() {
         float brightness = 0.1f;
         return new Vector4f(brightness, brightness, brightness, 1.0f);
     }
 
-    public Vector4f getBackgroundHighlightColor() {
+    public Vector4f backgroundHighlightColor() {
         float brightness = 0.2f;
         return new Vector4f(brightness, brightness, brightness, 1.0f);
     }
 
-    public Vector4f getStrokeNormalColor() {
+    public Vector4f strokeNormalColor() {
         float brightness = 0.6f;
         return new Vector4f(brightness, brightness, brightness, 1.0f);
     }
 
-    public Vector4f getStrokeHighlightColor() {
+    public Vector4f strokeHighlightColor() {
         float brightness = 0.75f;
         return new Vector4f(brightness, brightness, brightness, 1.0f);
     }
 
-    public Vector4f getSeparatorColor() {
+    public Vector4f separatorColor() {
         float brightness = 0.15f;
         return new Vector4f(brightness, brightness, brightness, 1.0f);
     }
 
-    public double getStrokeWeight() {
+    public double strokeWeightSize() {
         return 1.0;
     }
 
-    public double getDefaultTextSize() {
+    public double marginSize() {
+        return margin;
+    }
+
+    public double paddingSize() {
+        return padding;
+    }
+
+    public double defaultTextSize() {
         return defaultTextSize;
+    }
+
+    public double smallTextSize() {
+        return smallTextSize;
     }
 
     public String getDefaultFontName() {

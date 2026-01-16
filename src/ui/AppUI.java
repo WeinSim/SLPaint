@@ -21,13 +21,18 @@ public abstract class AppUI<T extends App> extends UIPanel {
 
     protected T app;
 
+    private double uiScale;
+
     public AppUI(T app) {
         this.app = app;
 
-        margin = Sizes.MARGIN.size;
-        padding = Sizes.PADDING.size;
+        float[] scale = app.getWindow().getWindowContentScale();
+        uiScale = Math.sqrt(scale[0] * scale[1]);
 
-        defaultTextSize = Sizes.TEXT.size;
+        margin = getSize(Sizes.MARGIN);
+        padding = getSize(Sizes.PADDING);
+
+        defaultTextSize = getSize(Sizes.TEXT);
 
         root = new UIRoot(this, UIContainer.VERTICAL, UIContainer.LEFT);
         root.zeroMargin().zeroPadding().noOutline().withBackground();
@@ -43,12 +48,12 @@ public abstract class AppUI<T extends App> extends UIPanel {
         root.setFixedSize(new SVector(width, height));
     }
 
-    public static <T extends UIElement> T setSelectableButtonStyle(T element, Supplier<Boolean> selectedSupplier) {
+    public static <E extends UIElement> E setSelectableButtonStyle(E element, Supplier<Boolean> selectedSupplier) {
         Supplier<Vector4f> backgroundColorSupplier = () -> selectedSupplier.get()
                 ? Colors.backgroundHighlight2()
                 : null;
         Supplier<Vector4f> outlineColorSupplier = () -> element.mouseAbove() ? Colors.outlineNormal() : null;
-        Supplier<Double> strokeWeightSupplier = () -> Sizes.STROKE_WEIGHT.size;
+        Supplier<Double> strokeWeightSupplier = () -> element.getPanel().strokeWeightSize();
         element.setStyle(new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier));
         return element;
     }
@@ -81,41 +86,6 @@ public abstract class AppUI<T extends App> extends UIPanel {
     public int getCharIndex(String text, double textSize, String fontName, double x) {
         TextFont font = app.getLoader().loadFont(fontName);
         return font.getCharIndex(text, x / textSize * font.getSize());
-    }
-
-    @Override
-    public Vector4f getDefaultTextColor() {
-        return Colors.text();
-    }
-
-    @Override
-    public Vector4f getBackgroundNormalColor() {
-        return Colors.backgroundNormal();
-    }
-
-    @Override
-    public Vector4f getBackgroundHighlightColor() {
-        return Colors.backgroundHighlight();
-    }
-
-    @Override
-    public Vector4f getStrokeNormalColor() {
-        return Colors.outlineNormal();
-    }
-
-    @Override
-    public Vector4f getStrokeHighlightColor() {
-        return Colors.outlineHighlight();
-    }
-
-    @Override
-    public Vector4f getSeparatorColor() {
-        return Colors.separator();
-    }
-
-    @Override
-    public double getStrokeWeight() {
-        return Sizes.STROKE_WEIGHT.size;
     }
 
     /**
@@ -159,5 +129,118 @@ public abstract class AppUI<T extends App> extends UIPanel {
         }
 
         return ret;
+    }
+
+    @Override
+    public Vector4f defaultTextColor() {
+        return Colors.text();
+    }
+
+    @Override
+    public Vector4f backgroundNormalColor() {
+        return Colors.backgroundNormal();
+    }
+
+    @Override
+    public Vector4f backgroundHighlightColor() {
+        return Colors.backgroundHighlight();
+    }
+
+    @Override
+    public Vector4f strokeNormalColor() {
+        return Colors.outlineNormal();
+    }
+
+    @Override
+    public Vector4f strokeHighlightColor() {
+        return Colors.outlineHighlight();
+    }
+
+    @Override
+    public Vector4f separatorColor() {
+        return Colors.separator();
+    }
+
+    // public SVector mainAppSize() {
+    // return getWidthHeight(Sizes.MAIN_APP);
+    // }
+
+    // public SVector settingsAppSize() {
+    // return getWidthHeight(Sizes.SETTINGS_APP);
+    // }
+
+    @Override
+    public double strokeWeightSize() {
+        return getSize(Sizes.STROKE_WEIGHT);
+    }
+
+    @Override
+    public double defaultTextSize() {
+        return getSize(Sizes.TEXT);
+    }
+
+    @Override
+    public double smallTextSize() {
+        return getSize(Sizes.TEXT_SMALL);
+    }
+
+    // public double marginSize() {
+    // return getSize(Sizes.MARGIN);
+    // }
+
+    // public double paddingSize() {
+    // return getSize(Sizes.PADDING);
+    // }
+
+    // public double scaleSize() {
+    // return getSize(Sizes.SCALE);
+    // }
+
+    // public double colorButtonSize() {
+    // return getSize(Sizes.COLOR_BUTTON);
+    // }
+
+    // public double bigColorButtonSize() {
+    // return getSize(Sizes.BIG_COLOR_BUTTON);
+    // }
+
+    // public SVector colorPickerPreviewSize() {
+    // return getWidthHeight(Sizes.COLOR_PICKER_PREVIEW);
+    // }
+
+    // public double checkerboardSize() {
+    // return getSize(Sizes.CHECKERBOARD);
+    // }
+
+    // public double colorPickerPanelSize() {
+    // return getSize(Sizes.COLOR_PICKER_PANEL);
+    // }
+
+    // public double colorPickerExtraWindowSize() {
+    // return getSize(Sizes.COLOR_PICKER_EXTRA_WINDOW);
+    // }
+
+    // public double sizeKnobSize() {
+    // return getSize(Sizes.SIZE_KNOB);
+    // }
+
+    public double getSize(Sizes s) {
+        return getSize(s.size, s.forceInteger);
+    }
+
+    private double getSize(double s, boolean forceInteger) {
+        double size = s * uiScale;
+        if (forceInteger) {
+            size = (int) Math.round(size);
+        }
+        return size;
+    }
+
+    public SVector getWidthHeight(Sizes s) {
+        return new SVector(getSize(s.width, s.forceInteger), getSize(s.height, s.forceInteger));
+    }
+
+    public double getUIScale() {
+        return uiScale;
     }
 }

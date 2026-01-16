@@ -5,7 +5,7 @@ public class UISeparator extends UIContainer {
     public UISeparator() {
         super(VERTICAL, LEFT);
 
-        style.setStrokeColor(() -> panel.getSeparatorColor());
+        style.setStrokeColor(() -> panel.separatorColor());
         zeroMargin();
         zeroPadding();
     }

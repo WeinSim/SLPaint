@@ -78,7 +78,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         UIContainer gap = new UIContainer(0, 0).zeroMargin().zeroPadding();
         gap.noOutline();
         baseColorHeading.add(gap);
-        UIColorElement baseColorButton = new UIColorElement(Colors::baseColor, Sizes.COLOR_BUTTON.size, true);
+        UIColorElement baseColorButton = new UIColorElement(Colors::baseColor, () -> getSize(Sizes.COLOR_BUTTON));
         baseColorHeading.add(baseColorButton);
         baseColorHeading.setLeftClickAction(() -> colorSelectionExpanded = !colorSelectionExpanded);
         baseColor.add(baseColorHeading);
@@ -95,7 +95,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         for (int i = 0; i < numDefaultColors; i++) {
             final int j = i;
             UIColorElement button = new UIColorElement(() -> MainApp.toInt(Colors.defaults()[j]),
-                    Sizes.COLOR_BUTTON.size, true);
+                    () -> getSize(Sizes.COLOR_BUTTON));
             button.setLeftClickAction(() -> app.setUIColor(MainApp.toInt(Colors.defaults()[j])));
             defaultColorContainer.add(button);
         }
@@ -121,7 +121,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         ColorPickContainer colorPickContainer = new ColorPickContainer(
                 colorPicker,
                 MainApp::addCustomUIBaseColor,
-                Sizes.COLOR_PICKER_SIDE_PANEL.size,
+                () -> getSize(Sizes.COLOR_PICKER_PANEL),
                 UIContainer.HORIZONTAL, false, true);
         colorPickContainer.setVisibilitySupplier(() -> colorSelectionExpanded);
         baseColor.add(colorPickContainer);

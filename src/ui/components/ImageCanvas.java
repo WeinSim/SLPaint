@@ -11,6 +11,7 @@ import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIFloatContainer;
 import sutil.ui.UIImage;
+import ui.AppUI;
 import ui.Colors;
 import ui.Sizes;
 import ui.components.toolContainers.FillBucketToolContainer;
@@ -55,7 +56,11 @@ public class ImageCanvas extends UIContainer {
 
         style.setBackgroundColor(Colors::canvas);
 
-        resetImageTransform();
+        // TODO: calling resetImageTransform here crashes because the ImageCanvas
+        // doesn't know its panel yet.
+        // resetImageTransform();
+        imageTranslation = new SVector();
+
         draggingImage = false;
 
         add(new ImageContainer());
@@ -184,12 +189,12 @@ public class ImageCanvas extends UIContainer {
     }
 
     public void resetImageTransform() {
-        imageTranslation = new SVector(10, 10).scale(Sizes.getUIScale());
+        imageTranslation = new SVector(10, 10).scale(((AppUI<?>) panel).getUIScale());
         imageZoomLevel = 0;
     }
 
     public double getImageZoom() {
-        return Math.pow(ZOOM_BASE, imageZoomLevel) * Sizes.getUIScale();
+        return Math.pow(ZOOM_BASE, imageZoomLevel) * ((AppUI<?>) panel).getUIScale();
     }
 
     public SVector getImageTranslation() {
@@ -223,7 +228,7 @@ public class ImageCanvas extends UIContainer {
         public void update() {
             super.update();
 
-            clearAttachPoints();
+            clearAnchors();
             addAnchor(Anchor.TOP_LEFT, imageTranslation);
         }
 
@@ -233,8 +238,10 @@ public class ImageCanvas extends UIContainer {
             public ImageContainerChild() {
                 super(0, new SVector());
 
-                style.setBackgroundCheckerboard(() -> Colors.transparent()[0], () -> Colors.transparent()[1],
-                        () -> Sizes.CHECKERBOARD_SIZE.size);
+                style.setBackgroundCheckerboard(
+                        () -> Colors.transparent()[0],
+                        () -> Colors.transparent()[1],
+                        () -> ((AppUI<?>) panel).getSize(Sizes.CHECKERBOARD));
             }
 
             @Override

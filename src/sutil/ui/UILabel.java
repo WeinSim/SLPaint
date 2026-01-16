@@ -8,7 +8,7 @@ public class UILabel extends UIContainer {
 
     private UIText firstChild;
 
-    public UILabel(String[] text) {
+    public UILabel(String[] text, boolean smallText) {
         super(VERTICAL, LEFT);
 
         outlineNormal = false;
@@ -17,11 +17,11 @@ public class UILabel extends UIContainer {
         textUpdater = null;
 
         if (text.length == 0) {
-            firstChild = new UIText("");
+            firstChild = new UIText("", smallText);
             add(firstChild);
         } else {
             for (String line : text) {
-                UIText child = new UIText(line);
+                UIText child = new UIText(line, smallText);
                 if (firstChild == null) {
                     firstChild = child;
                 }
@@ -31,11 +31,19 @@ public class UILabel extends UIContainer {
     }
 
     public UILabel(String text) {
-        this(text.split("\n"));
+        this(text, false);
+    }
+
+    public UILabel(String text, boolean smallText) {
+        this(text.split("\n"), smallText);
     }
 
     public UILabel(Supplier<String> textUpdater) {
-        this("");
+        this(textUpdater, false);
+    }
+
+    public UILabel(Supplier<String> textUpdater, boolean smallText) {
+        this("", smallText);
         this.textUpdater = textUpdater;
     }
 

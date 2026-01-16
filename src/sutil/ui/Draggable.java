@@ -1,13 +1,29 @@
 package sutil.ui;
 
-/**
- * A {@code UIElement} that can be dragged around with the mouse must implement
- * the {@code Draggable} interface. Such a {@code UIElement} always represents
- * some underlying value (e.g. volume / brightness / transparency), which can be
- * either one- or two-dimensional. The {@code Draggable} interface is used for
- * communicating these underlying values.
- */
-public interface Draggable {
+import sutil.math.SVector;
+
+public abstract class Draggable extends UIFloatContainer {
+
+    public Draggable() {
+        this(0, 0);
+    }
+
+    public Draggable(int orientation, int alignment) {
+        super(orientation, alignment);
+    }
+
+    @Override
+    public void update() {
+        super.update();
+
+        clearAnchors();
+
+        SVector pos = new SVector(getRelativeX(), getRelativeY());
+        pos.x *= parent.size.x - size.x;
+        pos.y *= parent.size.y - size.y;
+
+        addAnchor(Anchor.TOP_LEFT, pos);
+    }
 
     /**
      * @return The underlying value represented by the x-coordinate of this

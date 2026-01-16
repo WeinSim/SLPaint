@@ -5,6 +5,7 @@ import org.lwjglx.util.vector.Vector4f;
 import main.tools.DragTool;
 import sutil.math.SVector;
 import sutil.ui.UIFloatContainer;
+import ui.AppUI;
 import ui.Sizes;
 import ui.components.toolContainers.DragToolContainer;
 
@@ -27,16 +28,20 @@ public class SizeKnob extends UIFloatContainer {
         clipToRoot = false;
         relativeLayer = 1;
 
-        double width = Sizes.SIZE_KNOB.width,
-                height = Sizes.SIZE_KNOB.height;
-        setFixedSize(new SVector(width, height));
-
         setLeftClickAction(() -> parent.startSizeDrag(this));
         final int visibleStates = DragTool.IDLE | DragTool.IDLE_DRAG | DragTool.RESIZING;
         setVisibilitySupplier(() -> (tool.getState() & visibleStates) != 0);
 
         Anchor parentAttachPoint = Anchor.fromOffsets(dx, dy);
         addAnchor(Anchor.CENTER_CENTER, parent, parentAttachPoint);
+    }
+
+    @Override
+    public void update() {
+        super.update();
+
+        double wh = ((AppUI<?>) panel).getSize(Sizes.SIZE_KNOB);
+        setFixedSize(new SVector(wh, wh));
     }
 
     public void updateSelection(SVector dragStartPos, SVector dragStartSize, SVector mouseDelta, boolean lockRatio) {

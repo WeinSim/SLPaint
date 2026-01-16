@@ -6,6 +6,7 @@ import main.apps.MainApp;
 import main.tools.DragTool;
 import main.tools.ImageTool;
 import sutil.math.SVector;
+import ui.AppUI;
 import ui.Colors;
 import ui.Sizes;
 import ui.components.SizeKnob;
@@ -32,7 +33,7 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
         style.setStrokeCheckerboard(
                 () -> Colors.selectionBorder()[0],
                 () -> Colors.selectionBorder()[1],
-                () -> Sizes.CHECKERBOARD_SIZE.size);
+                () -> ((AppUI<?>) panel).getSize(Sizes.CHECKERBOARD));
         style.setStrokeWeight(2.0);
 
         setMarginScale(1.0);
@@ -107,7 +108,7 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
         setFixedSize(new SVector(tool.getWidth(), tool.getHeight()).scale(zoom));
 
         SVector pos = new SVector(tool.getX(), tool.getY()).scale(zoom).add(app.getCanvas().getImageTranslation());
-        clearAttachPoints();
+        clearAnchors();
         addAnchor(Anchor.TOP_LEFT, pos);
     }
 

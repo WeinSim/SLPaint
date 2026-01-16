@@ -12,21 +12,32 @@ public class UIText extends UIElement {
     private Supplier<String> textUpdater = this::getText;
 
     private double textSize;
+    private boolean smallTextSize = false;
     // panel::getDefaultTextSize doesn't work because initially, panel is null
-    private Supplier<Double> textSizeUpdater = () -> panel.getDefaultTextSize();
+    private Supplier<Double> textSizeUpdater = () -> smallTextSize ? panel.smallTextSize() : panel.defaultTextSize();
 
     private String fontName;
     private Supplier<String> fontUpdater = () -> panel.getDefaultFontName();
 
     private Vector4f color = new Vector4f();
-    private Supplier<Vector4f> colorUpdater = () -> panel.getDefaultTextColor();
+    private Supplier<Vector4f> colorUpdater = () -> panel.defaultTextColor();
 
     public UIText(String text) {
+        this(text, false);
+    }
+
+    public UIText(String text, boolean smallTextSize) {
         this.text = text;
+        this.smallTextSize = smallTextSize;
     }
 
     public UIText(Supplier<String> textUpdater) {
+        this(textUpdater, false);
+    }
+
+    public UIText(Supplier<String> textUpdater, boolean smallTextSize) {
         this.textUpdater = textUpdater;
+        this.smallTextSize = smallTextSize;
     }
 
     public double textWidth(int len) {

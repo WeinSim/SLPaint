@@ -2,7 +2,7 @@ package sutil.ui;
 
 import sutil.math.SVector;
 
-public abstract class UIDragContainer<D extends UIElement & Draggable> extends UIContainer {
+public abstract class UIDragContainer<D extends Draggable> extends UIContainer {
 
     protected D draggable;
 
@@ -26,11 +26,22 @@ public abstract class UIDragContainer<D extends UIElement & Draggable> extends U
     public void update() {
         super.update();
 
-        if (!panel.isLeftMousePressed()) {
+        if (!panel.isLeftMousePressed())
             dragging = false;
-        }
+
         if (dragging) {
-            drag(mousePosition);
+            SVector newDragPos = new SVector(mousePosition).sub(position).sub(dragStartMouse).add(dragStartD);
+
+            double relativeX = newDragPos.x / (size.x - draggable.size.x);
+            if (!Double.isFinite(relativeX))
+                relativeX = 0;
+            draggable.setRelativeX(relativeX);
+
+            double relativeY = newDragPos.y / (size.y - draggable.size.y);
+            if (!Double.isFinite(relativeY))
+                relativeY = 0;
+            draggable.setRelativeY(relativeY);
+
             panel.setDragging();
         }
     }
@@ -45,36 +56,10 @@ public abstract class UIDragContainer<D extends UIElement & Draggable> extends U
         dragStartMouse.set(mousePosition).sub(position);
     }
 
-    protected void drag(SVector mouse) {
-        if (mouse == null) {
-            return;
-        }
-        SVector newDragPos = new SVector(mouse).sub(position).sub(dragStartMouse).add(dragStartD);
-
-        double relativeX = newDragPos.x / (size.x - draggable.size.x);
-        if (!Double.isFinite(relativeX)) {
-            relativeX = 0;
-        }
-        draggable.setRelativeX(relativeX);
-
-        double relativeY = newDragPos.y / (size.y - draggable.size.y);
-        if (!Double.isFinite(relativeY)) {
-            relativeY = 0;
-        }
-        draggable.setRelativeY(relativeY);
-    }
-
     @Override
     public void add(UIElement child) {
+        // TODO: why can a UIDragContainer only contain one element?
         throw new UnsupportedOperationException("A UIDragContainer must contain exactly one element.");
-    }
-
-    @Override
-    public void positionChildren() {
-        SVector relativePos = new SVector(draggable.getRelativeX(), draggable.getRelativeY());
-        relativePos.x *= size.x - draggable.size.x;
-        relativePos.y *= size.y - draggable.size.y;
-        draggable.position.set(relativePos);
     }
 
     public boolean isDragging() {

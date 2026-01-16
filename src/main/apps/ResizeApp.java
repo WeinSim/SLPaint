@@ -3,12 +3,15 @@ package main.apps;
 import org.lwjgl.glfw.GLFW;
 
 import renderEngine.Window;
+import sutil.ui.UINumberInput;
 import ui.AppUI;
 import ui.ResizeUI;
 
 public final class ResizeApp extends App {
 
     private MainApp mainApp;
+
+    private UINumberInput widthInput;
 
     private int newImageWidth = 0,
             newImageHeight = 0;
@@ -21,9 +24,18 @@ public final class ResizeApp extends App {
         newImageWidth = mainApp.getImage().getWidth();
         newImageHeight = mainApp.getImage().getHeight();
 
-        addKeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, window::requestClose, false);
+        addKeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, this::cancel, false);
 
         addKeyboardShortcut(GLFW.GLFW_KEY_ENTER, 0, this::done, true);
+    }
+
+    @Override
+    public void update(double deltaT) {
+        super.update(deltaT);
+
+        if (frameCount == 1) {
+            ui.select(widthInput);
+        }
     }
 
     @Override
@@ -36,8 +48,16 @@ public final class ResizeApp extends App {
         return new ResizeUI(this);
     }
 
+    public void setWidthInput(UINumberInput widthInput) {
+        this.widthInput = widthInput;
+    }
+
     public void done() {
-        mainApp.getImage().changeSize(newImageWidth, newImageHeight, mainApp.getSecondaryColor());
+        mainApp.queueEvent(() -> mainApp.resizeImage(newImageWidth, newImageHeight));
+        window.requestClose();
+    }
+
+    public void cancel() {
         window.requestClose();
     }
 

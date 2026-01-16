@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 import main.apps.ResizeApp;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
+import sutil.ui.UILabel;
 import sutil.ui.UINumberInput;
 import sutil.ui.UIText;
 
@@ -21,7 +22,12 @@ public class ResizeUI extends AppUI<ResizeApp> {
 
         root.setMarginScale(2.0);
         root.setPaddingScale(1.0);
-        root.setAlignment(UIContainer.RIGHT);
+        root.setAlignment(UIContainer.CENTER);
+
+        root.add(new UILabel("Enter new image size."));
+
+        UIContainer absolute = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+        absolute.setHFillSize();
 
         for (int i = 0; i < 2; i++) {
             UIContainer row = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
@@ -31,10 +37,22 @@ public class ResizeUI extends AppUI<ResizeApp> {
             row.add(new UIContainer(0, 0).setHFillSize().noOutline());
             Supplier<Integer> getter = i == 0 ? app::getNewImageWidth : app::getNewImageHeight;
             Consumer<Integer> setter = i == 0 ? app::setNewImageWidth : app::setNewImageHeight;
-            row.add(new UINumberInput(getter, setter));
-            root.add(row);
+            UINumberInput input = new UINumberInput(getter, setter);
+            if (i == 0) {
+                app.setWidthInput(input);
+            }
+            row.add(input);
+            absolute.add(row);
         }
 
-        root.add(new UIButton("Resize image", app::done));
+        root.add(absolute);
+
+        UIContainer buttonRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.RIGHT, UIContainer.CENTER);
+        buttonRow.setHFillSize().zeroMargin().noOutline();
+
+        buttonRow.add(new UIButton("OK", app::done));
+        buttonRow.add(new UIButton("Cancel", app::cancel));
+
+        root.add(buttonRow);
     }
 }

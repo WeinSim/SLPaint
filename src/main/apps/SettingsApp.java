@@ -8,15 +8,13 @@ import renderEngine.Window;
 import ui.AppUI;
 import ui.Colors;
 import ui.SettingsUI;
-import ui.Sizes;
 
 public final class SettingsApp extends App {
 
     private ColorPicker colorPicker;
 
     public SettingsApp(MainApp mainApp) {
-        super((int) Sizes.SETTINGS_APP.width, (int) Sizes.SETTINGS_APP.height, Window.NORMAL, true, false, "Settings",
-                mainApp);
+        super(900, 650, Window.NORMAL, true, false, "Settings", mainApp);
 
         colorPicker = Colors.getBaseColorPicker();
 

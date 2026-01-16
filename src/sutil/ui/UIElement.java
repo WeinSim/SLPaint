@@ -194,6 +194,10 @@ public abstract class UIElement {
         return parent.getAbsolutePosition().add(position);
     }
 
+    public UIPanel getPanel() {
+        return panel;
+    }
+
     public Vector4f backgroundColor() {
         return style.backgroundColor();
     }
@@ -217,7 +221,7 @@ public abstract class UIElement {
     public final Vector4f strokeColor() {
         Vector4f ol = style.strokeColor();
         if (ol == null && panel.getSelectedElement() == this) {
-            ol = panel.getStrokeNormalColor();
+            ol = panel.strokeNormalColor();
         }
         return ol;
     }
@@ -226,7 +230,7 @@ public abstract class UIElement {
         double sw = style.strokeWeight();
         if (panel.getSelectedElement() == this) {
             if (style.strokeColor() == null) {
-                sw = panel.getStrokeWeight();
+                sw = panel.strokeWeightSize();
             } else {
                 sw *= 2;
             }
@@ -298,24 +302,24 @@ public abstract class UIElement {
         Supplier<Vector4f> backgroundColorSupplier = () -> {
             Vector4f bgColor = null;
             if (backgroundNormal) {
-                bgColor = panel.getBackgroundNormalColor();
+                bgColor = panel.backgroundNormalColor();
             }
             if (mouseAbove && backgroundHighlight) {
-                bgColor = panel.getBackgroundHighlightColor();
+                bgColor = panel.backgroundHighlightColor();
             }
             return bgColor;
         };
         Supplier<Vector4f> outlineColorSupplier = () -> {
             Vector4f outlineColor = null;
             if (outlineNormal) {
-                outlineColor = panel.getStrokeNormalColor();
+                outlineColor = panel.strokeNormalColor();
             }
             if (mouseAbove && outlineHighlight) {
-                outlineColor = panel.getStrokeHighlightColor();
+                outlineColor = panel.strokeHighlightColor();
             }
             return outlineColor;
         };
-        Supplier<Double> strokeWeightSupplier = () -> panel.getStrokeWeight();
+        Supplier<Double> strokeWeightSupplier = () -> panel.strokeWeightSize();
 
         style = new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier);
     }

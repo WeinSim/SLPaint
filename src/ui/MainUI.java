@@ -20,6 +20,7 @@ import sutil.ui.UIElement;
 import sutil.ui.UIImage;
 import sutil.ui.UILabel;
 import sutil.ui.UINumberInput;
+import sutil.ui.UIRadioButtonList;
 import sutil.ui.UIScale;
 import sutil.ui.UISeparator;
 import sutil.ui.UIText;
@@ -35,6 +36,7 @@ public class MainUI extends AppUI<MainApp> {
     public static final int NUM_COLOR_BUTTONS_PER_ROW = 10;
 
     private String debugString = "";
+    private int test = 0;
 
     public MainUI(MainApp app) {
         super(app);
@@ -44,7 +46,7 @@ public class MainUI extends AppUI<MainApp> {
     protected void init() {
         root.setOrientation(UIContainer.VERTICAL);
         root.setHAlignment(UIContainer.LEFT);
-        root.withSeparators(false).noOutline();
+        // root.withSeparators(false).noOutline();
 
         UIContainer topRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER,
                 UIContainer.HORIZONTAL);
@@ -143,7 +145,7 @@ public class MainUI extends AppUI<MainApp> {
             colorContainer.setSelectable(true);
 
             Supplier<Integer> cg = i == 0 ? app::getPrimaryColor : app::getSecondaryColor;
-            colorContainer.add(new UIColorElement(cg, Sizes.BIG_COLOR_BUTTON.size, true));
+            colorContainer.add(new UIColorElement(cg, () -> getSize(Sizes.BIG_COLOR_BUTTON)));
             UILabel label = new UILabel("%s\nColor".formatted(i == 0 ? "Primary" : "Secondary"));
             label.setAlignment(UIContainer.CENTER);
             label.zeroMargin();
@@ -164,7 +166,7 @@ public class MainUI extends AppUI<MainApp> {
             }
 
             final int color = MainApp.DEFAULT_COLORS[i];
-            UIColorElement button = new UIColorElement(() -> color, Sizes.COLOR_BUTTON.size, true);
+            UIColorElement button = new UIColorElement(() -> color, () -> getSize(Sizes.COLOR_BUTTON));
             button.setLeftClickAction(() -> app.selectColor(color));
             currentRow.add(button);
 
@@ -195,10 +197,13 @@ public class MainUI extends AppUI<MainApp> {
         sidePanel.add(new ColorPickContainer(
                 app.getSelectedColorPicker(),
                 app::addCustomColor,
-                Sizes.COLOR_PICKER_SIDE_PANEL.size,
+                () -> getSize(Sizes.COLOR_PICKER_PANEL),
                 UIContainer.VERTICAL,
                 true,
                 false));
+
+        sidePanel.add(new UIRadioButtonList(new String[] { "Option 1", "Option 2", "Option 3", "Option 4" },
+                this::getTest, this::setTest));
 
         UIContainer debugPanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
                 UIContainer.VERTICAL);
@@ -240,10 +245,9 @@ public class MainUI extends AppUI<MainApp> {
         addToRoot(new UISeparator().zeroMargin());
 
         UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
-        statusBar.withBackground().noOutline();
+        statusBar.withSeparators(false).withBackground().noOutline();
         statusBar.setHFillSize();
-        statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate())));
-        statusBar.add(new UISeparator());
+        statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate()), true));
         statusBar.add(new UILabel(() -> {
             String ret = "Format: ";
             ImageFormat format = app.getImageFormat();
@@ -258,15 +262,13 @@ public class MainUI extends AppUI<MainApp> {
                 ret += "%s (%s)".formatted(filename, MainApp.formatFilesize(filesize));
             }
             return ret;
-        }));
-        statusBar.add(new UISeparator());
+        }, true));
         statusBar.add(new UILabel(() -> {
             Image image = app.getImage();
             int width = image.getWidth();
             int height = image.getHeight();
             return "Size: %d x %d px".formatted(width, height);
-        }));
-        statusBar.add(new UISeparator());
+        }, true));
         statusBar.add(new UILabel(() -> {
             int[] mouseImagePos = app.getMouseImagePosition();
             boolean inside = app.getImage().isInside(mouseImagePos[0], mouseImagePos[1]);
@@ -275,8 +277,7 @@ public class MainUI extends AppUI<MainApp> {
                 ret += " %d, %d".formatted(mouseImagePos[0], mouseImagePos[1]);
             }
             return ret;
-        }));
-        statusBar.add(new UISeparator());
+        }, true));
         statusBar.add(new UILabel(() -> {
             String ret = "Selection size:";
             SelectionTool selection = ImageTool.SELECTION;
@@ -285,7 +286,7 @@ public class MainUI extends AppUI<MainApp> {
                 ret += " %d x %d px".formatted(ImageTool.SELECTION.getWidth(), ImageTool.SELECTION.getHeight());
             }
             return ret;
-        }));
+        }, true));
 
         addToRoot(statusBar);
     }
@@ -330,7 +331,7 @@ public class MainUI extends AppUI<MainApp> {
         // fill.setVFillSize().zeroMargin().noOutline();
         // options.add(fill);
 
-        options.add(new UIText(name));
+        options.add(new UIText(name, true));
 
         topRow.add(options);
         return optionButtons;
@@ -354,5 +355,13 @@ public class MainUI extends AppUI<MainApp> {
 
     public void setDebugString(String debugString) {
         this.debugString = debugString;
+    }
+
+    public int getTest() {
+        return test;
+    }
+
+    public void setTest(int index) {
+        this.test = index;
     }
 }

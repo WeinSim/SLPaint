@@ -60,7 +60,7 @@ public class UIFloatContainer extends UIContainer {
         this.clipToRoot = clipToRoot;
     }
 
-    public UIFloatContainer clearAttachPoints() {
+    public UIFloatContainer clearAnchors() {
         positionSuppliers.clear();
 
         return this;

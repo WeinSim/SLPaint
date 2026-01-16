@@ -299,4 +299,14 @@ public class Loader {
         vaos.clear();
         vbos.clear();
     }
+
+    public void cleanUpFBO(FrameBufferObject fbo) {
+        int fboID = fbo.fboID();
+        GL30.glDeleteFramebuffers(fboID);
+        fbos.remove((Integer) fboID);
+
+        int textureID = fbo.textureID();
+        GL11.glDeleteTextures(textureID);
+        textures.remove((Integer) textureID);
+    }
 }

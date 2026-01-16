@@ -14,13 +14,13 @@ import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIFloatContainer;
 import sutil.ui.UIImage;
+import sutil.ui.UIRadioButton;
 import sutil.ui.UIScale;
 import sutil.ui.UIText;
 import sutil.ui.UITextInput;
 import sutil.ui.UIToggle;
 import ui.AppUI;
 import ui.Colors;
-import ui.Sizes;
 import ui.components.AlphaScale;
 import ui.components.HueSatField;
 import ui.components.LightnessScale;
@@ -144,7 +144,7 @@ public class AppRenderer {
         int debugOutline = App.getDebugOutline();
         if ((debugOutline == 1 && element.mouseAbove()) || debugOutline == 2) {
             uiMaster.stroke(new SVector(1, 0.7, 0.1));
-            uiMaster.strokeWeight(Sizes.STROKE_WEIGHT.size);
+            uiMaster.strokeWeight(app.getUI().strokeWeightSize());
             doOutline = true;
         } else if (element.doStrokeCheckerboard()) {
             Vector4f c1 = element.strokeCheckerboardColor1(),
@@ -220,6 +220,18 @@ public class AppRenderer {
             pos.add(s.copy().scale((1 - factor) / 2));
             s.scale(factor);
             uiMaster.ellipse(pos, s);
+        }
+        if (element instanceof UIRadioButton radio) {
+            uiMaster.fill(Colors.backgroundHighlight2());
+            uiMaster.ellipse(position, size);
+
+            if (radio.getState()) {
+                final double factor = 0.6;
+                SVector pos = size.copy().scale((1 - factor) / 2).add(position);
+                SVector siz = size.copy().scale(factor);
+                uiMaster.fill(Colors.text());
+                uiMaster.ellipse(pos, siz);
+            }
         }
         if (element instanceof UIText text) {
             String fontName = text.getFontName();
@@ -356,6 +368,10 @@ public class AppRenderer {
         image.drawSubImage(0, 0, width, height, array);
     }
 
+    public void updateImageSize(int width, int height) {
+        uiMaster.setTempFBOSize(width, height);
+    }
+
     private void renderDebug() {
         uiMaster.setBGColor(new Vector4f(0.2f, 0.2f, 0.2f, 1));
 
@@ -369,34 +385,34 @@ public class AppRenderer {
                 c2 = new SVector(0.2, 0.8, 0.2),
                 c3 = new SVector(0.2, 0.2, 0.8);
 
-        MainApp app = (MainApp) this.app;
+        // MainApp app = (MainApp) this.app;
 
-        uiMaster.image(app.getImage().getTextureID(), p2, s2);
+        // uiMaster.image(app.getImage().getTextureID(), p2, s2);
 
-        // uiMaster.fill(c1);
-        // uiMaster.ellipse(p1, s1);
+        uiMaster.fill(c1);
+        uiMaster.ellipse(p1, s1);
 
-        // uiMaster.fill(c2);
-        // uiMaster.ellipse(p2, s2);
+        uiMaster.fill(c2);
+        uiMaster.ellipse(p2, s2);
 
-        // uiMaster.hueSatField(p3, new SVector(200, 200), true, true);
+        uiMaster.hueSatField(p3, new SVector(200, 200), true, true);
 
-        // uiMaster.noStroke();
+        uiMaster.noStroke();
 
-        // uiMaster.fill(c1);
-        // uiMaster.rect(p1, s1);
+        uiMaster.fill(c1);
+        uiMaster.rect(p1, s1);
 
-        // uiMaster.checkerboardFill(Colors.transparent(), 15);
-        // uiMaster.depth(getDepth(0));
-        // uiMaster.rect(p2, s2);
+        uiMaster.checkerboardFill(Colors.transparent(), 15);
+        uiMaster.depth(getDepth(0));
+        uiMaster.rect(p2, s2);
 
-        // p2.x += 50;
+        p2.x += 50;
 
-        // uiMaster.fill(c2);
-        // uiMaster.depth(getDepth(1));
-        // uiMaster.rect(p2, s2);
+        uiMaster.fill(c2);
+        uiMaster.depth(getDepth(1));
+        uiMaster.rect(p2, s2);
 
-        // uiMaster.fill(c3);
-        // uiMaster.rect(p3, s3);
+        uiMaster.fill(c3);
+        uiMaster.rect(p3, s3);
     }
 }

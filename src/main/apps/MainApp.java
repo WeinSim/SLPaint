@@ -29,17 +29,16 @@ import sutil.math.SVector;
 import sutil.ui.UITextInput;
 import ui.AppUI;
 import ui.MainUI;
-import ui.Sizes;
 import ui.components.ImageCanvas;
 
 /**
  * <pre>
  * TODO continue:
+ *   Resize window: add percent display
+ *   Image resizing
+ *     Size knobs
  * 
  * App:
- *   Image resizing
- *     When the size of the image changes, the text tool's FBO's texture should
- *       also update its size
  *   Selection tool
  *     Selection Ctrl+Shift+X
  *   Line tool
@@ -90,6 +89,8 @@ import ui.components.ImageCanvas;
  *   Fix bug in UILabel: when the textUpdater returns text containig newline
  *     characters, the text is not properly split across multiple lines
  *   Tool icons & cursors
+ *   Add a sizeGetter in UIContainer (or UIElement?) to replace all of the
+ *     overriden update() methods that set a fixed size?
  *   Make side panel collapsable
  *   Instead of the ImageCanvas being on layer 0 and everything else on layer
  *     ImageCanvas.NUM_UI_LAYERS, put everything on layer 0 and turn on the
@@ -123,6 +124,8 @@ import ui.components.ImageCanvas;
  *     Debug view
  * 
  * Backend:
+ *   Most of the things in AppUI could probably be moved into UIPanel
+ *   Performance: only ~40fps on Microsoft Surface
  *   Proper package names / structure
  *   Error handling
  *   Allow switching between old and new rendering infrastructure for each
@@ -130,8 +133,6 @@ import ui.components.ImageCanvas;
  * </pre>
  */
 public final class MainApp extends App {
-
-    public static final int RGB_BITMASK = 0x00FFFFFF;
 
     /**
      * https://images.minitool.com/de.minitool.com/images/uploads/news/2022/02/microsoft-paint-herunterladen-installieren/microsoft-paint-herunterladen-installieren-1.png
@@ -197,7 +198,7 @@ public final class MainApp extends App {
     private ImageCanvas canvas;
 
     public MainApp() {
-        super((int) Sizes.MAIN_APP.width, (int) Sizes.MAIN_APP.height, Window.MAXIMIZED, "SLPaint");
+        super(1280, 720, Window.MAXIMIZED, "SLPaint");
 
         customColorButtonArray = new ColorArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
 
@@ -340,6 +341,12 @@ public final class MainApp extends App {
             case RESIZE_DIALOG -> new ResizeApp(this);
             default -> null;
         };
+    }
+
+    public void resizeImage(int newWidth, int newHeight) {
+        getImage().changeSize(newWidth, newHeight, secondaryColor);
+
+        renderer.updateImageSize(newWidth, newHeight);
     }
 
     public void openImage() {

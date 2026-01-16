@@ -54,7 +54,7 @@ public class Image {
             }
 
             for (int x = x0; x < newWidth; x++) {
-                newPixels[y * newHeight + x] = backgroundColor;
+                newPixels[y * newWidth + x] = backgroundColor;
             }
         }
 
@@ -104,43 +104,6 @@ public class Image {
         }
     }
 
-    // public void updateOpenGLTexture(boolean firstTime) {
-    // int width = dirtyMaxX - dirtyMinX + 1;
-    // int height = dirtyMaxY - dirtyMinY + 1;
-    // int[] pixels = bufferedImage.getRGB(dirtyMinX, dirtyMinY, width, height,
-    // null, 0, width);
-
-    // ByteBuffer buffer = ByteBuffer.allocateDirect(width * height * 4);
-    // buffer.order(ByteOrder.nativeOrder());
-
-    // for (int y = dirtyMinY; y <= dirtyMaxY; y++) {
-    // for (int x = dirtyMinX; x <= dirtyMaxX; x++) {
-    // int pixel = pixels[(y - dirtyMinY) * width + (x - dirtyMinX)];
-    // buffer.put((byte) ((pixel >> 16) & 0xFF));
-    // buffer.put((byte) ((pixel >> 8) & 0xFF));
-    // buffer.put((byte) (pixel & 0xFF));
-    // buffer.put((byte) ((pixel >> 24) & 0xFF));
-    // }
-    // }
-
-    // buffer.flip();
-
-    // GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
-    // if (firstTime) {
-    // int w = bufferedImage.getWidth(),
-    // h = bufferedImage.getHeight();
-    // System.out.format("w = %4d, h = %4d\n", w, h);
-    // GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, w, h, 0, GL12.GL_RGBA,
-    // GL11.GL_UNSIGNED_BYTE, buffer);
-    // } else {
-    // GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, dirtyMinX, dirtyMinY, width,
-    // height, GL11.GL_RGBA,
-    // GL11.GL_UNSIGNED_BYTE, buffer);
-    // }
-
-    // dirty = false;
-    // }
-
     public BufferedImage getSubImage(int startX, int startY, int width, int height, Integer backgroundColor) {
         int[] oldPixels = bufferedImage.getRGB(startX, startY, width, height, null, 0, getWidth());
         int[] newPixels = new int[width * height];
@@ -176,9 +139,10 @@ public class Image {
         int y1 = Math.min(y + height, getHeight());
         int w = x1 - x0;
         int h = y1 - y0;
-        if (w <= 0 || h <= 0) {
+
+        if (w <= 0 || h <= 0)
             return;
-        }
+
         if (image != null) {
             pixels = new int[4 * w * h];
         }

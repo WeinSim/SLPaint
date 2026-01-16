@@ -11,6 +11,7 @@ import org.lwjglx.util.vector.Matrix3f;
 import org.lwjglx.util.vector.Vector3f;
 import org.lwjglx.util.vector.Vector4f;
 
+import main.Image;
 import main.apps.App;
 import main.apps.MainApp;
 import renderEngine.fonts.TextFont;
@@ -104,9 +105,7 @@ public class UIRenderMaster {
         imageCollector = new ImageCollector();
         shapeCollectors.add(imageCollector);
 
-        if (app instanceof MainApp mainApp) {
-            tempFBO = loader.createFBO(mainApp.getImage().getWidth(), mainApp.getImage().getHeight());
-        }
+        createTempFBO();
 
         uiMatrixStack = new LinkedList<>();
         clipAreaStack = new LinkedList<>();
@@ -182,6 +181,22 @@ public class UIRenderMaster {
         }
 
         loader.tempCleanUp();
+    }
+
+    private void createTempFBO() {
+        if (app instanceof MainApp mainApp) {
+            Image image = mainApp.getImage();
+            createTempFBO(image.getWidth(), image.getHeight());
+        }
+    }
+
+    private void createTempFBO(int width, int height) {
+        tempFBO = loader.createFBO(width, height);
+    }
+
+    public void setTempFBOSize(int width, int height) {
+        loader.cleanUpFBO(tempFBO);
+        createTempFBO(width, height);
     }
 
     public void defaultFramebuffer() {

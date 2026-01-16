@@ -141,6 +141,17 @@ public class Window {
         }
     }
 
+    public float[] getWindowContentScale() {
+        float[] xScale = new float[1],
+                yScale = new float[1];
+        GLFW.glfwGetWindowContentScale(windowHandle, xScale, yScale);
+
+        // System.out.format("GLFW window content scale: x = %.1f, y = %.1f\n",
+        // xScale[0], yScale[0]);
+
+        return new float[] { xScale[0], yScale[0] };
+    }
+
     public long getWindowHandle() {
         return windowHandle;
     }

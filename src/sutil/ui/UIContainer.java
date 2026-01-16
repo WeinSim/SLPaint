@@ -276,10 +276,10 @@ public class UIContainer extends UIElement {
         setSizeAccordingToBoundingBox();
 
         if (isHScroll() && hSizeType != SizeType.FIXED) {
-            size.x = 4 * panel.getMargin();
+            size.x = 4 * panel.marginSize();
         }
         if (isVScroll() && vSizeType != SizeType.FIXED) {
-            size.y = 4 * panel.getMargin();
+            size.y = 4 * panel.marginSize();
         }
 
         minSize.set(size);
@@ -567,7 +567,7 @@ public class UIContainer extends UIElement {
      * @return the space around the outside (left and right).
      */
     public final double getHMargin() {
-        return panel.getMargin() * hMarginScale;
+        return panel.marginSize() * hMarginScale;
     }
 
     /**
@@ -575,7 +575,7 @@ public class UIContainer extends UIElement {
      * @return the space around the outside (top and bottom).
      */
     public final double getVMargin() {
-        return panel.getMargin() * vMarginScale;
+        return panel.marginSize() * vMarginScale;
     }
 
     /**
@@ -583,7 +583,7 @@ public class UIContainer extends UIElement {
      * @return the space between the children.
      */
     public final double getPadding() {
-        return panel.getPadding() * paddingScale;
+        return panel.paddingSize() * paddingScale;
     }
 
     public UIContainer setMinimalSize() {
@@ -845,7 +845,7 @@ public class UIContainer extends UIElement {
         }
     }
 
-    private static class UIScrollbarContainer extends UIDragContainer<UIScrollbar> {
+    private class UIScrollbarContainer extends UIDragContainer<UIScrollbar> {
 
         UIScrollbarContainer(UIContainer scrollArea, int orientation) {
             super(new UIScrollbar(scrollArea, orientation));
@@ -854,7 +854,8 @@ public class UIContainer extends UIElement {
 
             draggable.setScrollbarContainer(this);
 
-            withOutline();
+            style.setStrokeColor(() -> scrollArea.strokeColor());
+            style.setStrokeWeight(() -> scrollArea.strokeWeight());
             withBackground();
             zeroMargin();
 
@@ -875,32 +876,33 @@ public class UIContainer extends UIElement {
         }
     }
 
-    private static class UIScrollbar extends UIElement implements Draggable {
-
-        private int orientation;
+    private static class UIScrollbar extends Draggable {
 
         private UIContainer scrollArea;
         private UIScrollbarContainer scrollbarContainer;
 
         UIScrollbar(UIContainer scrollArea, int orientation) {
+            super(orientation, 0);
+
             this.scrollArea = scrollArea;
-            this.orientation = orientation;
 
             UIStyle style = new UIStyle(
-                    () -> mouseAbove || scrollbarContainer.isDragging() ? panel.getStrokeNormalColor()
-                            : panel.getStrokeHighlightColor(),
+                    () -> mouseAbove || scrollbarContainer.isDragging() ? panel.strokeNormalColor()
+                            : panel.strokeHighlightColor(),
                     () -> null, () -> 0.0);
 
             setStyle(style);
         }
 
-        @Override
-        public void setPreferredSize() {
-            double min = 1.5 * panel.getMargin();
-            size.set(min, min);
-        }
+        // @Override
+        // public void setPreferredSize() {
+        // double min = 1.5 * panel.marginSize();
+        // size.set(min, min);
+        // }
 
         public void expandAsNeccessary() {
+            // this cannot be put in setPreferredSize() because we need the parent's size
+            // (which is usually too small during setPreferredSize)
             if (orientation == VERTICAL) {
                 size.y = Math.max(size.y, scrollArea.getHeightFraction() * parent.size.y);
             } else {

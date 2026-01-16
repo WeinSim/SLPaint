@@ -7,15 +7,15 @@ public class UIToggle extends UIElement {
 
     private Supplier<Boolean> stateSupplier;
 
-    public UIToggle(Supplier<Boolean> stateSupplier, Consumer<Boolean> stateSetter) {
+    public UIToggle(Supplier<Boolean> stateSupplier, Consumer<Boolean> stateConsumer) {
         this.stateSupplier = stateSupplier;
 
-        setLeftClickAction(() -> stateSetter.accept(!stateSupplier.get()));
+        setLeftClickAction(() -> stateConsumer.accept(!stateSupplier.get()));
     }
 
     @Override
     public void setPreferredSize() {
-        double textSize = panel.getDefaultTextSize();
+        double textSize = panel.defaultTextSize();
         size.set(3 * textSize , 1.5 * textSize);
     }
 

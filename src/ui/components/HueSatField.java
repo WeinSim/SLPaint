@@ -1,5 +1,7 @@
 package ui.components;
 
+import java.util.function.Supplier;
+
 import main.ColorPicker;
 import main.apps.App;
 import sutil.math.SVector;
@@ -9,18 +11,31 @@ import sutil.ui.UIDragContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIStyle;
 import ui.Colors;
-import ui.Sizes;
 
 public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
 
-    private static final double CURSOR_LINE_LENGTH = 10;
-    private static final double CURSOR_LINE_WIDTH = 4;
-    private static final double CURSOR_CENTER_GAP = 10;
+    /**
+     * Relative to the margin size
+     */
+    private static final double CURSOR_LINE_LENGTH = 1;
+    private static final double CURSOR_LINE_WIDTH = 0.4;
+    private static final double CURSOR_CENTER_GAP = 1;
 
-    public HueSatField(ColorPicker colorPicker, double size) {
+    private Supplier<Double> sizeSupplier;
+
+    public HueSatField(ColorPicker colorPicker, Supplier<Double> sizeSupplier) {
         super(new Cursor(colorPicker));
 
+        this.sizeSupplier = sizeSupplier;
+
         noOutline();
+    }
+
+    @Override
+    public void update() {
+        super.update();
+
+        double size = sizeSupplier.get();
         setFixedSize(new SVector(size, size));
     }
 
@@ -42,16 +57,15 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
         }
     }
 
-    protected static class Cursor extends UIContainer implements Draggable {
+    protected static class Cursor extends Draggable {
 
         private ColorPicker colorPicker;
 
         private double nextX;
 
         public Cursor(ColorPicker colorPicker) {
-            super(0, 0);
-
             this.colorPicker = colorPicker;
+
             noOutline();
 
             for (int i = 0; i < 4; i++) {
@@ -65,9 +79,10 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
 
         @Override
         public void positionChildren() {
-            final double a = CURSOR_LINE_WIDTH / 2;
-            final double b = CURSOR_LINE_LENGTH + CURSOR_CENTER_GAP / 2;
-            final double c = CURSOR_CENTER_GAP / 2;
+            double margin = panel.marginSize();
+            final double a = margin * CURSOR_LINE_WIDTH / 2;
+            final double b = margin * (CURSOR_LINE_LENGTH + CURSOR_CENTER_GAP / 2);
+            final double c = margin * CURSOR_CENTER_GAP / 2;
 
             int i = 0;
             for (UIElement child : getChildren()) {
@@ -145,17 +160,28 @@ public class HueSatField extends UIDragContainer<HueSatField.Cursor> {
 
     private static class CursorLine extends UIContainer {
 
+        private boolean vertical;
+
         public CursorLine(boolean vertical) {
             super(0, 0);
 
+            this.vertical = vertical;
+
             // clipToRoot = false;
 
-            setStyle(new UIStyle(Colors::text, () -> null, () -> Sizes.STROKE_WEIGHT.size));
+            setStyle(new UIStyle(Colors::text, () -> null, () -> panel.strokeWeightSize()));
+        }
+
+        @Override
+        public void update() {
+            super.update();
+
+            double margin = panel.marginSize();
 
             if (vertical) {
-                setFixedSize(new SVector(CURSOR_LINE_WIDTH, CURSOR_LINE_LENGTH));
+                setFixedSize(new SVector(CURSOR_LINE_WIDTH, CURSOR_LINE_LENGTH).scale(margin));
             } else {
-                setFixedSize(new SVector(CURSOR_LINE_LENGTH, CURSOR_LINE_WIDTH));
+                setFixedSize(new SVector(CURSOR_LINE_LENGTH, CURSOR_LINE_WIDTH).scale(margin));
             }
         }
     }
