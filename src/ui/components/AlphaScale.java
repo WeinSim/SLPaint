@@ -13,13 +13,23 @@ public class AlphaScale extends UIScale {
 
         narrow = false;
 
-        // This approach is very ugly but it works. It makes the slider appear behind
-        // the scale.
-        relativeLayer = 1;
-        draggable.setRelativeLayer(-1);
+        // relativeLayer = 1;
+        // draggable.setRelativeLayer(-1);
     }
 
-    public int getRGB() {
-        return colorPicker.getRGB();
+    @Override
+    protected Visuals getVisuals(int orientation) {
+        return new ASVisuals(orientation);
+    }
+
+    public class ASVisuals extends Visuals {
+
+        public ASVisuals(int orientation) {
+            super(orientation);
+        }
+
+        public int getRGB() {
+            return colorPicker.getRGB();
+        }
     }
 }

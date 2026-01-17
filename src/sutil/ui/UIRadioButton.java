@@ -14,7 +14,7 @@ public class UIRadioButton extends UIElement {
 
     @Override
     public void setPreferredSize() {
-        double wh = panel.defaultTextSize() * 1.3;
+        double wh = panel.get(UISizes.TEXT) * 1.3;
         size.set(wh, wh);
     }
 

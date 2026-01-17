@@ -6,7 +6,6 @@ import org.lwjglx.util.vector.Vector4f;
 import main.ColorPicker;
 import renderEngine.Window;
 import ui.AppUI;
-import ui.Colors;
 import ui.SettingsUI;
 
 public final class SettingsApp extends App {
@@ -16,7 +15,7 @@ public final class SettingsApp extends App {
     public SettingsApp(MainApp mainApp) {
         super(900, 650, Window.NORMAL, true, false, "Settings", mainApp);
 
-        colorPicker = Colors.getBaseColorPicker();
+        colorPicker = AppUI.getBaseColorPicker();
 
         addKeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, window::requestClose, false);
     }
@@ -26,14 +25,14 @@ public final class SettingsApp extends App {
     }
 
     public void setDarkMode(boolean darkMode) {
-        if (Colors.isDarkMode() == darkMode) {
+        if (AppUI.isDarkModeStatic() == darkMode)
             return;
-        }
-        Vector4f[] oldColors = Colors.defaults();
-        Colors.setDarkMode(darkMode);
-        Vector4f[] newColors = Colors.defaults();
 
-        int baseRGB = Colors.baseColor();
+        Vector4f[] oldColors = AppUI.getDefaultUIColors();
+        AppUI.setDarkMode(darkMode);
+        Vector4f[] newColors = AppUI.getDefaultUIColors();
+
+        int baseRGB = MainApp.toInt(AppUI.getBaseColorStatic());
 
         // this is a bit of a hack
         for (int i = 0; i < oldColors.length; i++) {

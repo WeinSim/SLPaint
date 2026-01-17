@@ -2,22 +2,12 @@ package sutil.ui;
 
 import sutil.math.SVector;
 
-public abstract class UIDragContainer<D extends Draggable> extends UIContainer {
-
-    protected D draggable;
+public abstract class UIDragContainer extends UIContainer {
 
     protected boolean dragging = false;
-    private SVector dragStartMouse;
-    private SVector dragStartD;
 
-    public UIDragContainer(D draggable) {
+    public UIDragContainer() {
         super(0, 0);
-
-        this.draggable = draggable;
-        super.add(draggable);
-
-        dragStartMouse = new SVector();
-        dragStartD = new SVector();
 
         setLeftClickAction(this::startDragging);
     }
@@ -30,39 +20,58 @@ public abstract class UIDragContainer<D extends Draggable> extends UIContainer {
             dragging = false;
 
         if (dragging) {
-            SVector newDragPos = new SVector(mousePosition).sub(position).sub(dragStartMouse).add(dragStartD);
-
-            double relativeX = newDragPos.x / (size.x - draggable.size.x);
-            if (!Double.isFinite(relativeX))
-                relativeX = 0;
-            draggable.setRelativeX(relativeX);
-
-            double relativeY = newDragPos.y / (size.y - draggable.size.y);
-            if (!Double.isFinite(relativeY))
-                relativeY = 0;
-            draggable.setRelativeY(relativeY);
-
-            panel.setDragging();
+            drag();
         }
     }
 
-    private void startDragging() {
+    protected void startDragging() {
         dragging = true;
-        dragStartD.set(draggable.position);
-        if (!draggable.mouseAbove) {
-            dragStartD.set(draggable.size).scale(-0.5);
-            dragStartD.add(mousePosition).sub(position);
-        }
-        dragStartMouse.set(mousePosition).sub(position);
     }
 
-    @Override
-    public void add(UIElement child) {
-        // TODO: why can a UIDragContainer only contain one element?
-        throw new UnsupportedOperationException("A UIDragContainer must contain exactly one element.");
+    protected void drag() {
+        panel.setDragging();
+
+        SVector relativePos = new SVector(mousePosition).sub(position);
+        relativePos.x /= size.x;
+        relativePos.y /= size.y;
+
+        setRelativeX(relativePos.x);
+        setRelativeY(relativePos.y);
     }
 
     public boolean isDragging() {
         return dragging;
     }
+
+    /**
+     * @return The underlying value represented by the x-coordinate of this
+     *         {@code Draggable}, in the range from 0 (minimum value) to 1 (maximum
+     *         value).
+     */
+    public abstract double getRelativeX();
+
+    /**
+     * @return The underlying value represented by the y-coordinate of this
+     *         {@code Draggable}, in the range from 0 (minimum value) to 1 (maximum
+     *         value).
+     */
+    public abstract double getRelativeY();
+
+    /**
+     * Sets the underlying value represented by the x-coordinate of this
+     * {@code Draggable}.
+     *
+     * @param x The new value, which is <b>not</b> guaranteed to be in the range
+     *          from 0 to 1.
+     */
+    public abstract void setRelativeX(double x);
+
+    /**
+     * Sets the underlying value represented by the y-coordinate of this
+     * {@code Draggable}.
+     *
+     * @param y The new value, which is <b>not</b> guaranteed to be in the range
+     *          from 0 to 1.
+     */
+    public abstract void setRelativeY(double y);
 }

@@ -69,10 +69,10 @@ public class UIFloatMenu extends UIFloatContainer {
         label.style.setBackgroundColor(() -> {
             Vector4f bgColor = null;
             if (backgroundNormal) {
-                bgColor = panel.backgroundNormalColor();
+                bgColor = panel.get(UIColors.BACKGROUND_NORMAL);
             }
             if ((label.mouseAbove() || expandedLabel == label) && label.backgroundHighlight) {
-                bgColor = panel.backgroundHighlightColor();
+                bgColor = panel.get(UIColors.BACKGROUND_HIGHLIGHT);
             }
             return bgColor;
         });

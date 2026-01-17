@@ -15,18 +15,21 @@ public abstract class UIPanel {
      */
     public static final int LEFT = 0, RIGHT = 1;
 
-    /**
-     * Space around the outside
-     */
-    protected double margin = 10;
+    private double uiScale = 1.0;
 
-    /**
-     * Space between children
-     */
-    protected double padding = 10;
+    // /**
+    // * Space around the outside
+    // */
+    // protected double margin = 10;
 
-    protected double defaultTextSize = 32;
-    protected double smallTextSize = 26;
+    // /**
+    // * Space between children
+    // */
+    // protected double padding = 10;
+
+    // protected double defaultTextSize = 32;
+    // protected double smallTextSize = 26;
+
     protected String defaultFontName = "Courier New Bold";
 
     protected double mouseWheelSensitivity = 100;
@@ -45,14 +48,22 @@ public abstract class UIPanel {
 
     private LinkedList<UIAction> eventQueue;
 
-    public UIPanel() {
+    public UIPanel(SVector initialRootSize) {
         selectedElement = null;
         dragging = false;
         leftMousePressed = false;
         rightMousePressed = false;
 
         eventQueue = new LinkedList<>();
+
+        root = new UIRoot(this, UIContainer.VERTICAL, UIContainer.LEFT);
+        root.zeroMargin().zeroPadding().noOutline().withBackground();
+        root.setFixedSize(initialRootSize);
+
+        init();
     }
+
+    protected abstract void init();
 
     public void update(SVector mousePos, boolean valid) {
         root.lock();
@@ -76,18 +87,6 @@ public abstract class UIPanel {
         root.update();
 
         root.updateSize();
-    }
-
-    /**
-     * During the updateVisibility() step of update(), the currently selected
-     * element has to report to the UIPanel that it is still visible.
-     */
-    void confirmSelectedElement() {
-        selectedElementVisible = true;
-    }
-
-    void setDragging() {
-        dragging = true;
     }
 
     public void mousePressed(int mouseButton, int mods) {
@@ -139,6 +138,10 @@ public abstract class UIPanel {
         queueEvent(() -> root.mouseWheel(scroll.copy().scale(mouseWheelSensitivity), mousePos, mods));
     }
 
+    public void setRootSize(int width, int height) {
+        root.setFixedSize(new SVector(width, height));
+    }
+
     public void queueEvent(UIAction action) {
         eventQueue.add(action);
     }
@@ -184,8 +187,34 @@ public abstract class UIPanel {
         return elements;
     }
 
-    public UIRoot getRoot() {
-        return root;
+    public boolean mouseAboveTextInput() {
+        return mouseAboveTextInput(root);
+    }
+
+    private boolean mouseAboveTextInput(UIElement element) {
+        if (element instanceof UITextInput && element.mouseAbove()) {
+            return true;
+        }
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getChildren()) {
+                if (mouseAboveTextInput(child)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * During the updateVisibility() step of update(), the currently selected
+     * element has to report to the UIPanel that it is still visible.
+     */
+    void confirmSelectedElement() {
+        selectedElementVisible = true;
+    }
+
+    void setDragging() {
+        dragging = true;
     }
 
     public double textWidth(String text, double textSize, String fontName) {
@@ -196,54 +225,39 @@ public abstract class UIPanel {
 
     public abstract int getCharIndex(String text, double textSize, String fontName, double x);
 
-    public Vector4f defaultTextColor() {
-        float brightness = 1.0f;
-        return new Vector4f(brightness, brightness, brightness, 1.0f);
+    public double get(UISizes s) {
+        return getSize(s.size, s.forceInteger);
     }
 
-    public Vector4f backgroundNormalColor() {
-        float brightness = 0.1f;
-        return new Vector4f(brightness, brightness, brightness, 1.0f);
+    private double getSize(double s, boolean forceInteger) {
+        double size = s * uiScale;
+        if (forceInteger) {
+            size = (int) Math.round(size);
+        }
+        return size;
     }
 
-    public Vector4f backgroundHighlightColor() {
-        float brightness = 0.2f;
-        return new Vector4f(brightness, brightness, brightness, 1.0f);
+    public SVector getWidthHeight(UISizes s) {
+        return new SVector(getSize(s.width, s.forceInteger), getSize(s.height, s.forceInteger));
     }
 
-    public Vector4f strokeNormalColor() {
-        float brightness = 0.6f;
-        return new Vector4f(brightness, brightness, brightness, 1.0f);
-    }
+    protected abstract boolean isDarkMode();
 
-    public Vector4f strokeHighlightColor() {
-        float brightness = 0.75f;
-        return new Vector4f(brightness, brightness, brightness, 1.0f);
-    }
+    protected abstract Vector4f getBaseColor();
 
-    public Vector4f separatorColor() {
-        float brightness = 0.15f;
-        return new Vector4f(brightness, brightness, brightness, 1.0f);
-    }
+    public Vector4f get(UIColors c) {
+        // This method is being called ~5520 times per second (which is too much!)
+        // Maybe cache the results?
 
-    public double strokeWeightSize() {
-        return 1.0;
-    }
-
-    public double marginSize() {
-        return margin;
-    }
-
-    public double paddingSize() {
-        return padding;
-    }
-
-    public double defaultTextSize() {
-        return defaultTextSize;
-    }
-
-    public double smallTextSize() {
-        return smallTextSize;
+        boolean darkMode = isDarkMode();
+        if (c.useBrightness) {
+            double brightness = darkMode ? c.darkModeBrightness : c.lightModeBrightness;
+            Vector4f ret = (Vector4f) new Vector4f(getBaseColor()).scale((float) brightness);
+            ret.w = 1.0f;
+            return ret;
+        } else {
+            return darkMode ? c.darkColor : c.lightColor;
+        }
     }
 
     public String getDefaultFontName() {
@@ -264,5 +278,17 @@ public abstract class UIPanel {
 
     public void setRoot(UIRoot root) {
         this.root = root;
+    }
+
+    public UIRoot getRoot() {
+        return root;
+    }
+
+    public void setUIScale(double uiScale) {
+        this.uiScale = uiScale;
+    }
+
+    public double getUIScale() {
+        return uiScale;
     }
 }

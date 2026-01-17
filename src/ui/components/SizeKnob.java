@@ -5,8 +5,7 @@ import org.lwjglx.util.vector.Vector4f;
 import main.tools.DragTool;
 import sutil.math.SVector;
 import sutil.ui.UIFloatContainer;
-import ui.AppUI;
-import ui.Sizes;
+import sutil.ui.UISizes;
 import ui.components.toolContainers.DragToolContainer;
 
 public class SizeKnob extends UIFloatContainer {
@@ -32,15 +31,15 @@ public class SizeKnob extends UIFloatContainer {
         final int visibleStates = DragTool.IDLE | DragTool.IDLE_DRAG | DragTool.RESIZING;
         setVisibilitySupplier(() -> (tool.getState() & visibleStates) != 0);
 
-        Anchor parentAttachPoint = Anchor.fromOffsets(dx, dy);
-        addAnchor(Anchor.CENTER_CENTER, parent, parentAttachPoint);
+        Anchor parentAnchor = Anchor.fromOffsets(dx, dy);
+        addAnchor(Anchor.CENTER_CENTER, parent, parentAnchor);
     }
 
     @Override
     public void update() {
         super.update();
 
-        double wh = ((AppUI<?>) panel).getSize(Sizes.SIZE_KNOB);
+        double wh = panel.get(UISizes.SIZE_KNOB);
         setFixedSize(new SVector(wh, wh));
     }
 

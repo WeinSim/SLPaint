@@ -314,6 +314,11 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         return window;
     }
 
+    public SVector getWindowSize() {
+        int[] size = window.getDisplaySize();
+        return new SVector(size[0], size[1]);
+    }
+
     public Loader getLoader() {
         return loader;
     }
@@ -348,6 +353,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
     public double getFrameRate() {
         return 1.0 / avgFrameTime;
+    }
+
+    public int getFrameCount() {
+        return frameCount;
     }
 
     public void setDialogType(int dialogType) {

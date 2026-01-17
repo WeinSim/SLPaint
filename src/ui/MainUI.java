@@ -23,6 +23,7 @@ import sutil.ui.UINumberInput;
 import sutil.ui.UIRadioButtonList;
 import sutil.ui.UIScale;
 import sutil.ui.UISeparator;
+import sutil.ui.UISizes;
 import sutil.ui.UIText;
 import sutil.ui.UIToggle;
 import ui.components.ColorPickContainer;
@@ -145,7 +146,7 @@ public class MainUI extends AppUI<MainApp> {
             colorContainer.setSelectable(true);
 
             Supplier<Integer> cg = i == 0 ? app::getPrimaryColor : app::getSecondaryColor;
-            colorContainer.add(new UIColorElement(cg, () -> getSize(Sizes.BIG_COLOR_BUTTON)));
+            colorContainer.add(new UIColorElement(cg, () -> get(UISizes.BIG_COLOR_BUTTON)));
             UILabel label = new UILabel("%s\nColor".formatted(i == 0 ? "Primary" : "Secondary"));
             label.setAlignment(UIContainer.CENTER);
             label.zeroMargin();
@@ -166,7 +167,7 @@ public class MainUI extends AppUI<MainApp> {
             }
 
             final int color = MainApp.DEFAULT_COLORS[i];
-            UIColorElement button = new UIColorElement(() -> color, () -> getSize(Sizes.COLOR_BUTTON));
+            UIColorElement button = new UIColorElement(() -> color, () -> get(UISizes.COLOR_BUTTON));
             button.setLeftClickAction(() -> app.selectColor(color));
             currentRow.add(button);
 
@@ -197,7 +198,7 @@ public class MainUI extends AppUI<MainApp> {
         sidePanel.add(new ColorPickContainer(
                 app.getSelectedColorPicker(),
                 app::addCustomColor,
-                () -> getSize(Sizes.COLOR_PICKER_PANEL),
+                () -> get(UISizes.COLOR_PICKER_PANEL),
                 UIContainer.VERTICAL,
                 true,
                 false));
@@ -247,7 +248,6 @@ public class MainUI extends AppUI<MainApp> {
         UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
         statusBar.withSeparators(false).withBackground().noOutline();
         statusBar.setHFillSize();
-        statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate()), true));
         statusBar.add(new UILabel(() -> {
             String ret = "Format: ";
             ImageFormat format = app.getImageFormat();
@@ -287,6 +287,9 @@ public class MainUI extends AppUI<MainApp> {
             }
             return ret;
         }, true));
+        statusBar.add(new UIContainer(0, 0).setHFillSize().noOutline());
+        statusBar.add(new UILabel(() -> String.format("Frame %d", app.getFrameCount()), true));
+        statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate()), true));
 
         addToRoot(statusBar);
     }

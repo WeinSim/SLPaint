@@ -9,14 +9,13 @@ import main.apps.MainApp;
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIButton;
+import sutil.ui.UIColors;
 import sutil.ui.UIContainer;
 import sutil.ui.UINumberInput;
 import sutil.ui.UIScale;
+import sutil.ui.UISizes;
 import sutil.ui.UIStyle;
 import sutil.ui.UIText;
-import ui.AppUI;
-import ui.Colors;
-import ui.Sizes;
 
 public class ColorPickContainer extends UIContainer {
 
@@ -100,10 +99,10 @@ public class ColorPickContainer extends UIContainer {
         UIContainer colorPreview = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         colorPreview.zeroMargin().noOutline();
         UIContainer colorBox = new UIContainer(UIContainer.HORIZONTAL, 0);
-        colorBox.setStyle(new UIStyle(() -> null, Colors::text, () -> 2.0));
+        colorBox.setStyle(new UIStyle(() -> null, () -> panel.get(UIColors.TEXT), () -> 2.0));
         colorBox.zeroMargin().zeroPadding().noOutline();
         Supplier<SVector> previewSize = () -> {
-            SVector size = ((AppUI<?>) panel).getWidthHeight(Sizes.COLOR_PICKER_PREVIEW);
+            SVector size = panel.getWidthHeight(UISizes.COLOR_PICKER_PREVIEW);
             if (addPreview) {
                 size.x /= 2;
             }

@@ -7,73 +7,57 @@ import java.util.function.Supplier;
 
 import org.lwjglx.util.vector.Vector4f;
 
+import main.ColorPicker;
 import main.apps.App;
+import main.settings.BooleanSetting;
+import main.settings.ColorSetting;
 import renderEngine.fonts.TextFont;
-import sutil.math.SVector;
-import sutil.ui.UIContainer;
+import sutil.SUtil;
+import sutil.ui.UIColors;
 import sutil.ui.UIElement;
 import sutil.ui.UIPanel;
-import sutil.ui.UIRoot;
+import sutil.ui.UISizes;
 import sutil.ui.UIStyle;
-import sutil.ui.UITextInput;
 
 public abstract class AppUI<T extends App> extends UIPanel {
 
+    private static final Vector4f[] DEFAULT_UI_COLORS_DARK = {
+            new Vector4f(0.3f, 0.3f, 0.3f, 1.0f),
+            new Vector4f(0.07f, 0.35f, 0.5f, 1.0f),
+            new Vector4f(0.5f, 0.07f, 0.35f, 1.0f),
+            new Vector4f(0.42f, 0.14f, 0.14f, 1.0f)
+    };
+
+    private static final Vector4f[] DEFAULT_UI_COLORS_LIGHT = {
+            new Vector4f(1, 1, 1, 1),
+            new Vector4f(0.67f, 0.85f, 0.95f, 1.0f),
+            new Vector4f(0.95f, 0.63f, 0.84f, 1.0f),
+            new Vector4f(0.84f, 0.51f, 0.51f, 1.0f)
+    };
+
     protected T app;
 
-    private double uiScale;
+    private static BooleanSetting darkMode = new BooleanSetting("darkMode");
+    private static ColorSetting baseColor = new ColorSetting("baseColor");
 
     public AppUI(T app) {
         this.app = app;
+        super(app.getWindowSize());
 
         float[] scale = app.getWindow().getWindowContentScale();
-        uiScale = Math.sqrt(scale[0] * scale[1]);
-
-        margin = getSize(Sizes.MARGIN);
-        padding = getSize(Sizes.PADDING);
-
-        defaultTextSize = getSize(Sizes.TEXT);
-
-        root = new UIRoot(this, UIContainer.VERTICAL, UIContainer.LEFT);
-        root.zeroMargin().zeroPadding().noOutline().withBackground();
-        int[] displaySize = app.getWindow().getDisplaySize();
-        root.setFixedSize(new SVector(displaySize[0], displaySize[1]));
-
-        init();
-    }
-
-    protected abstract void init();
-
-    public void setRootSize(int width, int height) {
-        root.setFixedSize(new SVector(width, height));
+        setUIScale(Math.sqrt(scale[0] * scale[1]));
     }
 
     public static <E extends UIElement> E setSelectableButtonStyle(E element, Supplier<Boolean> selectedSupplier) {
         Supplier<Vector4f> backgroundColorSupplier = () -> selectedSupplier.get()
-                ? Colors.backgroundHighlight2()
+                ? element.getPanel().get(UIColors.BACKGROUND_HIGHLIGHT_2)
                 : null;
-        Supplier<Vector4f> outlineColorSupplier = () -> element.mouseAbove() ? Colors.outlineNormal() : null;
-        Supplier<Double> strokeWeightSupplier = () -> element.getPanel().strokeWeightSize();
+        Supplier<Vector4f> outlineColorSupplier = () -> element.mouseAbove()
+                ? element.getPanel().get(UIColors.OUTLINE_NORMAL)
+                : null;
+        Supplier<Double> strokeWeightSupplier = () -> element.getPanel().get(UISizes.STROKE_WEIGHT);
         element.setStyle(new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier));
         return element;
-    }
-
-    public boolean mouseAboveTextInput() {
-        return mouseAboveTextInput(root);
-    }
-
-    private boolean mouseAboveTextInput(UIElement element) {
-        if (element instanceof UITextInput && element.mouseAbove()) {
-            return true;
-        }
-        if (element instanceof UIContainer container) {
-            for (UIElement child : container.getChildren()) {
-                if (mouseAboveTextInput(child)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     @Override
@@ -131,35 +115,75 @@ public abstract class AppUI<T extends App> extends UIPanel {
         return ret;
     }
 
-    @Override
-    public Vector4f defaultTextColor() {
-        return Colors.text();
+    public static boolean isDarkModeStatic() {
+        return darkMode.get();
     }
 
     @Override
-    public Vector4f backgroundNormalColor() {
-        return Colors.backgroundNormal();
+    protected boolean isDarkMode() {
+        return isDarkModeStatic();
+    }
+
+    public static void setDarkMode(boolean darkMode) {
+        AppUI.darkMode.set(darkMode);
+    }
+
+    public static Vector4f getBaseColorStatic() {
+        int rgb = baseColor.get().getRGB();
+
+        int red = SUtil.red(rgb);
+        int green = SUtil.green(rgb);
+        int blue = SUtil.blue(rgb);
+        int alpha = SUtil.alpha(rgb);
+        return (Vector4f) new Vector4f(red, green, blue, alpha).scale(1.0f / 255);
     }
 
     @Override
-    public Vector4f backgroundHighlightColor() {
-        return Colors.backgroundHighlight();
+    protected Vector4f getBaseColor() {
+        return getBaseColorStatic();
     }
 
-    @Override
-    public Vector4f strokeNormalColor() {
-        return Colors.outlineNormal();
+    public static Vector4f[] getDefaultUIColors() {
+        return isDarkModeStatic() ? DEFAULT_UI_COLORS_DARK : DEFAULT_UI_COLORS_LIGHT;
     }
 
-    @Override
-    public Vector4f strokeHighlightColor() {
-        return Colors.outlineHighlight();
+    public static int getNumDefaultUIColors() {
+        return DEFAULT_UI_COLORS_DARK.length;
     }
 
-    @Override
-    public Vector4f separatorColor() {
-        return Colors.separator();
+    public static ColorPicker getBaseColorPicker() {
+        return baseColor.get();
     }
+
+    // @Override
+    // public Vector4f defaultTextColor() {
+    // return Colors.text();
+    // }
+
+    // @Override
+    // public Vector4f backgroundNormalColor() {
+    // return Colors.backgroundNormal();
+    // }
+
+    // @Override
+    // public Vector4f backgroundHighlightColor() {
+    // return Colors.backgroundHighlight();
+    // }
+
+    // @Override
+    // public Vector4f strokeNormalColor() {
+    // return Colors.outlineNormal();
+    // }
+
+    // @Override
+    // public Vector4f strokeHighlightColor() {
+    // return Colors.outlineHighlight();
+    // }
+
+    // @Override
+    // public Vector4f separatorColor() {
+    // return Colors.separator();
+    // }
 
     // public SVector mainAppSize() {
     // return getWidthHeight(Sizes.MAIN_APP);
@@ -169,20 +193,20 @@ public abstract class AppUI<T extends App> extends UIPanel {
     // return getWidthHeight(Sizes.SETTINGS_APP);
     // }
 
-    @Override
-    public double strokeWeightSize() {
-        return getSize(Sizes.STROKE_WEIGHT);
-    }
+    // @Override
+    // public double strokeWeightSize() {
+    // return getSize(UISizes.STROKE_WEIGHT);
+    // }
 
-    @Override
-    public double defaultTextSize() {
-        return getSize(Sizes.TEXT);
-    }
+    // @Override
+    // public double defaultTextSize() {
+    // return getSize(UISizes.TEXT);
+    // }
 
-    @Override
-    public double smallTextSize() {
-        return getSize(Sizes.TEXT_SMALL);
-    }
+    // @Override
+    // public double smallTextSize() {
+    // return getSize(UISizes.TEXT_SMALL);
+    // }
 
     // public double marginSize() {
     // return getSize(Sizes.MARGIN);
@@ -223,24 +247,4 @@ public abstract class AppUI<T extends App> extends UIPanel {
     // public double sizeKnobSize() {
     // return getSize(Sizes.SIZE_KNOB);
     // }
-
-    public double getSize(Sizes s) {
-        return getSize(s.size, s.forceInteger);
-    }
-
-    private double getSize(double s, boolean forceInteger) {
-        double size = s * uiScale;
-        if (forceInteger) {
-            size = (int) Math.round(size);
-        }
-        return size;
-    }
-
-    public SVector getWidthHeight(Sizes s) {
-        return new SVector(getSize(s.width, s.forceInteger), getSize(s.height, s.forceInteger));
-    }
-
-    public double getUIScale() {
-        return uiScale;
-    }
 }

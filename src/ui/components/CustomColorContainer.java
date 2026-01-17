@@ -4,8 +4,7 @@ import java.util.function.Consumer;
 
 import main.ColorArray;
 import sutil.ui.UIContainer;
-import ui.AppUI;
-import ui.Sizes;
+import sutil.ui.UISizes;
 
 public class CustomColorContainer extends UIContainer {
 
@@ -16,7 +15,7 @@ public class CustomColorContainer extends UIContainer {
             final int j = i;
             UIColorElement button = new UIColorElement(
                     () -> colors.getColor(j),
-                    () -> ((AppUI<?>) panel).getSize(Sizes.COLOR_BUTTON));
+                    () -> panel.get(UISizes.COLOR_BUTTON));
             button.setLeftClickAction(() -> {
                 Integer color = colors.getColor(j);
                 if (color != null) {

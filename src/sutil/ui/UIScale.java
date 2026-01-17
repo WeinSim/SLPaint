@@ -4,18 +4,26 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import sutil.math.SVector;
-import ui.AppUI;
-import ui.Sizes;
 
-public class UIScale extends UIDragContainer<UIScale.Slider> {
+public class UIScale extends UIDragContainer {
+
+    private Supplier<Double> getter;
+    private Consumer<Double> setter;
 
     protected boolean narrow;
 
     public UIScale(int orientation, Supplier<Double> getter, Consumer<Double> setter) {
-        super(new Slider(orientation, getter, setter));
         this.orientation = orientation;
 
+        this.getter = getter;
+        this.setter = setter;
+
+        setAlignment(CENTER);
+
         noOutline();
+        zeroMargin();
+        zeroPadding();
+
         if (orientation == VERTICAL) {
             setHMinimalSize();
             setVFillSize();
@@ -24,99 +32,134 @@ public class UIScale extends UIDragContainer<UIScale.Slider> {
             setVMinimalSize();
         }
 
+        add(new Filler());
+        add(getVisuals(orientation));
+        add(new Slider(orientation));
+
         narrow = true;
     }
 
-    // @Override
-    // public void update() {
-    // super.update();
-
-    // if (orientation == VERTICAL) {
-    // setHFixedSize(2 * getHMargin() + getScaleWidth());
-    // } else {
-    // setVFixedSize(2 * getVMargin() + getScaleWidth());
-    // }
-    // }
-
-    // public SVector getScaleSize() {
-    // return getScaleOffset().scale(-2).add(size);
-    // }
-
-    // public SVector getScaleOffset() {
-    // return orientation == VERTICAL ? new SVector(getHMargin(), 0) : new
-    // SVector(0, getVMargin());
-    // }
-
-    protected double getScaleWidth() {
-        double margin = orientation == VERTICAL ? getHMargin() : getVMargin();
-        return narrow ? 2 : 2 * margin;
+    protected Visuals getVisuals(int orientation) {
+        return new Visuals(orientation);
     }
 
-    protected static class Visuals extends UIElement {
+    @Override
+    public void update() {
+        super.update();
+    }
 
-        @Override
-        public void setPreferredSize() {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("Unimplemented method 'setPreferredSize'");
+    // protected double getScaleWidth() {
+    //     double margin = orientation == VERTICAL ? getHMargin() : getVMargin();
+    //     return narrow ? 2 : 2 * margin;
+    // }
+
+    @Override
+    public double getRelativeX() {
+        return orientation == VERTICAL ? 0 : getter.get();
+    }
+
+    @Override
+    public double getRelativeY() {
+        return orientation == VERTICAL ? getter.get() : 0;
+    }
+
+    @Override
+    public void setRelativeX(double x) {
+        if (orientation == HORIZONTAL) {
+            setter.accept(Math.min(Math.max(0, x), 1));
         }
+    }
 
+    @Override
+    public void setRelativeY(double y) {
+        if (orientation == VERTICAL) {
+            setter.accept(Math.min(Math.max(0, y), 1));
+        }
+    }
+
+    private double getVisualWidth() {
+        return panel.get(narrow ? UISizes.SCALE_NARROW : UISizes.SCALE_WIDE);
     }
 
     /**
-     * The white visual indicators
+     * The bar in the the middle
      */
-    protected static class Slider extends Draggable {
+    protected class Visuals extends UIContainer {
 
-        private Supplier<Double> getter;
-        private Consumer<Double> setter;
-
-        public Slider(int orientation, Supplier<Double> Supplier, Consumer<Double> setter) {
+        public Visuals(int orientation) {
             super(orientation, 0);
 
-            this.getter = Supplier;
-            this.setter = setter;
+            style.setBackgroundColor(() -> panel.get(UIColors.OUTLINE_NORMAL));
 
-            setStyle(new UIStyle(
-                    () -> panel.defaultTextColor(),
-                    () -> null,
-                    () -> panel.strokeWeightSize()));
+            noOutline();
+            zeroMargin();
         }
 
         @Override
         public void update() {
             super.update();
 
-            double len = ((AppUI<?>) panel).getSize(Sizes.SCALE_SLIDER);
-            double width = ((AppUI<?>) panel).getSize(Sizes.SCALE_NARROW);
+            double s = getVisualWidth();
+            if (orientation == VERTICAL) {
+                setHFixedSize(s);
+                setVFillSize();
+            } else {
+                setHFillSize();
+                setVFixedSize(s);
+            }
+        }
+    }
+
+    /**
+     * The white visual indicators
+     */
+    protected class Slider extends UIFloatContainer {
+
+        public Slider(int orientation) {
+            super(orientation, 0);
+
+            setStyle(new UIStyle(() -> panel.get(UIColors.TEXT), () -> null, () -> panel.get(UISizes.STROKE_WEIGHT)));
+
+            relativeLayer = 0;
+            clipToRoot = false;
+            ignoreClipArea = false;
+        }
+
+        @Override
+        public void update() {
+            super.update();
+
+            double len = 2 * panel.get(UISizes.SCALE_SLIDER_LENGTH) + getVisualWidth();
+            double width = panel.get(UISizes.SCALE_SLIDER_WIDTH);
 
             if (orientation == VERTICAL) {
                 setFixedSize(new SVector(len, width));
             } else {
                 setFixedSize(new SVector(width, len));
             }
+
+            clearAnchors();
+            SVector pos = new SVector(getRelativeX(), getRelativeY()).mult(parent.getSize());
+            addAnchor(orientation == VERTICAL ? Anchor.CENTER_LEFT : Anchor.TOP_CENTER, pos);
+        }
+    }
+
+    /**
+     * Responsible for the gaps around the Visuals
+     */
+    private class Filler extends UIElement {
+
+        Filler() {
         }
 
         @Override
-        public double getRelativeX() {
-            return orientation == VERTICAL ? 0 : getter.get();
-        }
+        public void setPreferredSize() {
+            double w = 2 * panel.get(UISizes.SCALE_SLIDER_LENGTH) + getVisualWidth();
 
-        @Override
-        public double getRelativeY() {
-            return orientation == VERTICAL ? getter.get() : 0;
-        }
-
-        @Override
-        public void setRelativeX(double x) {
-            if (orientation == HORIZONTAL) {
-                setter.accept(Math.min(Math.max(0, x), 1));
-            }
-        }
-
-        @Override
-        public void setRelativeY(double y) {
             if (orientation == VERTICAL) {
-                setter.accept(Math.min(Math.max(0, y), 1));
+                size.set(w, 0);
+            } else {
+                size.set(0, w);
             }
         }
     }

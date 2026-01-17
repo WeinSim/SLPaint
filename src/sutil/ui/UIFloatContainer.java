@@ -38,14 +38,20 @@ public class UIFloatContainer extends UIContainer {
 
     protected boolean clipToRoot;
 
+    /**
+     * When set to {@code true}, the float container will ignore its parent's clip
+     * area.
+     */
+    protected boolean ignoreClipArea;
+
     public UIFloatContainer(int orientation, int alignment) {
         super(orientation, alignment);
 
         withBackground();
 
         relativeLayer = 1;
-
         clipToRoot = true;
+        ignoreClipArea = true;
 
         positionSuppliers = new ArrayList<>();
     }
@@ -117,6 +123,10 @@ public class UIFloatContainer extends UIContainer {
     @Override
     public UIContainer setVFillSize() {
         throw new IllegalArgumentException("A UIFloatContainer's sizeType must be either MINIMAL or FIXED");
+    }
+
+    public boolean ignoreClipArea() {
+        return ignoreClipArea;
     }
 
     private class PositionSupplier {

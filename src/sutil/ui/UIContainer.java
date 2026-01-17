@@ -14,6 +14,8 @@ public class UIContainer extends UIElement {
     public static final int LEFT = 0, TOP = 0, CENTER = 1, RIGHT = 2, BOTTOM = 2;
     public static final int VERTICAL = 0, HORIZONTAL = 1, NONE = 2, BOTH = 3;
 
+    private final double EPSILON = 1e-6;
+
     /**
      * Every {@code UIContainer} has one of three size types in both directions
      * (vertical and horizontal):
@@ -41,11 +43,6 @@ public class UIContainer extends UIElement {
     private final int scrollMode;
     private SVector scrollOffset;
     private SVector areaOvershoot;
-    /**
-     * Indicates wether a scroll bar should be hidden if there is not enough content
-     * to allow scrolling.
-     */
-    protected boolean hideScrollbars = true;
 
     protected SizeType hSizeType, vSizeType;
 
@@ -276,10 +273,10 @@ public class UIContainer extends UIElement {
         setSizeAccordingToBoundingBox();
 
         if (isHScroll() && hSizeType != SizeType.FIXED) {
-            size.x = 4 * panel.marginSize();
+            size.x = 4 * panel.get(UISizes.MARGIN);
         }
         if (isVScroll() && vSizeType != SizeType.FIXED) {
-            size.y = 4 * panel.marginSize();
+            size.y = 4 * panel.get(UISizes.MARGIN);
         }
 
         minSize.set(size);
@@ -359,17 +356,15 @@ public class UIContainer extends UIElement {
      * @see https://github.com/nicbarker/clay/blob/main/clay.h#L2190
      */
     private void expandOrShrinkChildren(ArrayList<UIContainer> containers, double remainingSize) {
-        final double epsilon = 1e-6;
-
         int sign = remainingSize < 0 ? -1 : 1;
         remainingSize *= sign; // remaining size will now always be positive.
 
-        while (remainingSize > epsilon) {
+        while (remainingSize > EPSILON) {
             if (sign == -1) {
                 // containers cannot shrink below their minimum size
                 for (int i = containers.size() - 1; i >= 0; i--) {
                     UIContainer child = containers.get(i);
-                    if (child.getSizeAlongAxis() - child.getMinSizeAlongAxis() < epsilon) {
+                    if (child.getSizeAlongAxis() - child.getMinSizeAlongAxis() < EPSILON) {
                         containers.remove(i);
                     }
                 }
@@ -384,11 +379,11 @@ public class UIContainer extends UIElement {
 
             for (UIContainer child : containers) {
                 double component = child.getSizeAlongAxis() * sign;
-                if (lessThan(component, smallest, epsilon)) {
+                if (lessThan(component, smallest, EPSILON)) {
                     secondSmallest = smallest;
                     smallest = component;
                 }
-                if (lessThan(smallest, component, epsilon)) {
+                if (lessThan(smallest, component, EPSILON)) {
                     secondSmallest = Math.min(secondSmallest, component);
                     sizeToAdd = secondSmallest - smallest;
                 }
@@ -398,7 +393,7 @@ public class UIContainer extends UIElement {
 
             for (UIContainer child : containers) {
                 double component = child.getSizeAlongAxis() * sign;
-                if (equalTo(component, smallest, epsilon)) {
+                if (equalTo(component, smallest, EPSILON)) {
                     double adding; // or removing. always positive.
                     if (sign == 1) {
                         adding = sizeToAdd;
@@ -567,7 +562,7 @@ public class UIContainer extends UIElement {
      * @return the space around the outside (left and right).
      */
     public final double getHMargin() {
-        return panel.marginSize() * hMarginScale;
+        return panel.get(UISizes.MARGIN) * hMarginScale;
     }
 
     /**
@@ -575,7 +570,7 @@ public class UIContainer extends UIElement {
      * @return the space around the outside (top and bottom).
      */
     public final double getVMargin() {
-        return panel.marginSize() * vMarginScale;
+        return panel.get(UISizes.MARGIN) * vMarginScale;
     }
 
     /**
@@ -583,7 +578,7 @@ public class UIContainer extends UIElement {
      * @return the space between the children.
      */
     public final double getPadding() {
-        return panel.paddingSize() * paddingScale;
+        return panel.get(UISizes.PADDING) * paddingScale;
     }
 
     public UIContainer setMinimalSize() {
@@ -803,13 +798,13 @@ public class UIContainer extends UIElement {
         return new UIScrollbarContainerWrapper(VERTICAL, container, this);
     }
 
-    private boolean hideScrollbar(int orientation) {
-        if (!hideScrollbars || areaOvershoot == null) {
-            return true;
-        }
+    private boolean showScrollbar(int orientation) {
+        if (areaOvershoot == null)
+            return false;
+
         return orientation == VERTICAL
-                ? isVScroll() && areaOvershoot.y <= 0.0
-                : isHScroll() && areaOvershoot.x <= 0.0;
+                ? isVScroll() && areaOvershoot.y > EPSILON
+                : isHScroll() && areaOvershoot.x > EPSILON;
     }
 
     private static class UIScrollbarContainerWrapper extends UIContainer {
@@ -845,60 +840,143 @@ public class UIContainer extends UIElement {
         }
     }
 
-    private class UIScrollbarContainer extends UIDragContainer<UIScrollbar> {
+    private static class UIScrollbarContainer extends UIDragContainer {
+
+        private UIContainer scrollArea;
+        private UIScrollbar scrollbar;
+
+        private SVector dragStartMouse;
+        private SVector dragStartD;
 
         UIScrollbarContainer(UIContainer scrollArea, int orientation) {
-            super(new UIScrollbar(scrollArea, orientation));
+            // super(new UIScrollbar(scrollArea, orientation));
 
             this.orientation = orientation;
+            this.scrollArea = scrollArea;
 
-            draggable.setScrollbarContainer(this);
+            scrollbar = new UIScrollbar(scrollArea, this, orientation);
+            add(scrollbar);
 
             style.setStrokeColor(() -> scrollArea.strokeColor());
             style.setStrokeWeight(() -> scrollArea.strokeWeight());
             withBackground();
             zeroMargin();
 
+            setVisibilitySupplier(() -> scrollArea.showScrollbar(orientation));
+
+            dragStartMouse = new SVector();
+            dragStartD = new SVector();
+        }
+
+        @Override
+        public void update() {
+            super.update();
+
+            double min = panel.get(UISizes.SCROLLBAR);
             if (orientation == VERTICAL) {
+                setHFixedSize(min);
                 setVFillSize();
             } else {
                 setHFillSize();
+                setVFixedSize(min);
             }
+        }
 
-            setVisibilitySupplier(() -> !scrollArea.hideScrollbar(orientation));
+        @Override
+        protected void startDragging() {
+            super.startDragging();
+
+            if (scrollbar.mouseAbove) {
+                dragStartD.set(scrollbar.position);
+            } else {
+                dragStartD.set(scrollbar.size).scale(-0.5);
+                dragStartD.add(mousePosition).sub(position);
+            }
+            dragStartMouse.set(mousePosition);
+        }
+
+        @Override
+        protected void drag() {
+            panel.setDragging();
+
+            SVector newDragPos = new SVector(mousePosition).sub(dragStartMouse).add(dragStartD);
+
+            SVector dragAreaSize = new SVector(size).sub(scrollbar.size);
+
+            double relativeX = newDragPos.x / dragAreaSize.x;
+            if (!Double.isFinite(relativeX))
+                relativeX = 0;
+            setRelativeX(relativeX);
+
+            double relativeY = newDragPos.y / dragAreaSize.y;
+            if (!Double.isFinite(relativeY))
+                relativeY = 0;
+            setRelativeY(relativeY);
         }
 
         @Override
         public void expandAsNeccessary() {
             super.expandAsNeccessary();
 
-            draggable.expandAsNeccessary();
+            scrollbar.expandAsNeccessary();
+        }
+
+        public double getRelativeX() {
+            return orientation == VERTICAL ? 0 : scrollArea.getRelativeScrollX();
+        }
+
+        public double getRelativeY() {
+            return orientation == VERTICAL ? scrollArea.getRelativeScrollY() : 0;
+        }
+
+        public void setRelativeX(double x) {
+            if (orientation == HORIZONTAL) {
+                scrollArea.setRelativeScrollX(x);
+            }
+        }
+
+        public void setRelativeY(double y) {
+            if (orientation == VERTICAL) {
+                scrollArea.setRelativeScrollY(y);
+            }
         }
     }
 
-    private static class UIScrollbar extends Draggable {
+    private static class UIScrollbar extends UIFloatContainer {
 
         private UIContainer scrollArea;
         private UIScrollbarContainer scrollbarContainer;
 
-        UIScrollbar(UIContainer scrollArea, int orientation) {
+        UIScrollbar(UIContainer scrollArea, UIScrollbarContainer scrollbarContainer, int orientation) {
             super(orientation, 0);
-
             this.scrollArea = scrollArea;
+            this.scrollbarContainer = scrollbarContainer;
 
             UIStyle style = new UIStyle(
-                    () -> mouseAbove || scrollbarContainer.isDragging() ? panel.strokeNormalColor()
-                            : panel.strokeHighlightColor(),
+                    () -> panel.get(mouseAbove || scrollbarContainer.isDragging()
+                            ? UIColors.OUTLINE_NORMAL
+                            : UIColors.OUTLINE_HIGHLIGHT),
                     () -> null, () -> 0.0);
 
             setStyle(style);
+
+            relativeLayer = 0;
+            clipToRoot = false;
+            ignoreClipArea = false;
         }
 
-        // @Override
-        // public void setPreferredSize() {
-        // double min = 1.5 * panel.marginSize();
-        // size.set(min, min);
-        // }
+        @Override
+        public void update() {
+            super.update();
+
+            clearAnchors();
+            SVector siz = new SVector(parent.getSize()).sub(size);
+            SVector pos = new SVector(scrollbarContainer.getRelativeX(), scrollbarContainer.getRelativeY()).mult(siz);
+            addAnchor(Anchor.TOP_LEFT, pos);
+
+            double min = panel.get(UISizes.SCROLLBAR);
+            setFixedSize(new SVector(min, min));
+        }
 
         public void expandAsNeccessary() {
             // this cannot be put in setPreferredSize() because we need the parent's size
@@ -907,34 +985,6 @@ public class UIContainer extends UIElement {
                 size.y = Math.max(size.y, scrollArea.getHeightFraction() * parent.size.y);
             } else {
                 size.x = Math.max(size.x, scrollArea.getWidthFraction() * parent.size.x);
-            }
-        }
-
-        public void setScrollbarContainer(UIScrollbarContainer scrollbarContainer) {
-            this.scrollbarContainer = scrollbarContainer;
-        }
-
-        @Override
-        public double getRelativeX() {
-            return orientation == VERTICAL ? 0 : scrollArea.getRelativeScrollX();
-        }
-
-        @Override
-        public double getRelativeY() {
-            return orientation == VERTICAL ? scrollArea.getRelativeScrollY() : 0;
-        }
-
-        @Override
-        public void setRelativeX(double x) {
-            if (orientation == HORIZONTAL) {
-                scrollArea.setRelativeScrollX(x);
-            }
-        }
-
-        @Override
-        public void setRelativeY(double y) {
-            if (orientation == VERTICAL) {
-                scrollArea.setRelativeScrollY(y);
             }
         }
     }

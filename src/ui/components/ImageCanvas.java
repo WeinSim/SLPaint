@@ -7,13 +7,12 @@ import main.apps.MainApp;
 import main.tools.ImageTool;
 import main.tools.ImageTool.KeyboardShortcut;
 import sutil.math.SVector;
+import sutil.ui.UIColors;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIFloatContainer;
 import sutil.ui.UIImage;
-import ui.AppUI;
-import ui.Colors;
-import ui.Sizes;
+import sutil.ui.UISizes;
 import ui.components.toolContainers.FillBucketToolContainer;
 import ui.components.toolContainers.PencilToolContainer;
 import ui.components.toolContainers.PipetteToolContainer;
@@ -54,7 +53,7 @@ public class ImageCanvas extends UIContainer {
         setFillSize();
         zeroMargin();
 
-        style.setBackgroundColor(Colors::canvas);
+        style.setBackgroundColor(() -> panel.get(UIColors.CANVAS));
 
         // TODO: calling resetImageTransform here crashes because the ImageCanvas
         // doesn't know its panel yet.
@@ -189,12 +188,12 @@ public class ImageCanvas extends UIContainer {
     }
 
     public void resetImageTransform() {
-        imageTranslation = new SVector(10, 10).scale(((AppUI<?>) panel).getUIScale());
+        imageTranslation = new SVector(10, 10).scale(panel.getUIScale());
         imageZoomLevel = 0;
     }
 
     public double getImageZoom() {
-        return Math.pow(ZOOM_BASE, imageZoomLevel) * ((AppUI<?>) panel).getUIScale();
+        return Math.pow(ZOOM_BASE, imageZoomLevel) * panel.getUIScale();
     }
 
     public SVector getImageTranslation() {
@@ -239,9 +238,9 @@ public class ImageCanvas extends UIContainer {
                 super(0, new SVector());
 
                 style.setBackgroundCheckerboard(
-                        () -> Colors.transparent()[0],
-                        () -> Colors.transparent()[1],
-                        () -> ((AppUI<?>) panel).getSize(Sizes.CHECKERBOARD));
+                        () -> panel.get(UIColors.TRANSPARENCY_1),
+                        () -> panel.get(UIColors.TRANSPARENCY_2),
+                        () -> panel.get(UISizes.CHECKERBOARD));
             }
 
             @Override

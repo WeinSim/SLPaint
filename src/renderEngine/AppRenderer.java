@@ -10,17 +10,18 @@ import main.apps.MainApp;
 import renderEngine.fonts.TextFont;
 import renderEngine.shaders.bufferobjects.FrameBufferObject;
 import sutil.math.SVector;
+import sutil.ui.UIColors;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIFloatContainer;
 import sutil.ui.UIImage;
+import sutil.ui.UIPanel;
 import sutil.ui.UIRadioButton;
-import sutil.ui.UIScale;
+import sutil.ui.UISizes;
 import sutil.ui.UIText;
 import sutil.ui.UITextInput;
 import sutil.ui.UIToggle;
 import ui.AppUI;
-import ui.Colors;
 import ui.components.AlphaScale;
 import ui.components.HueSatField;
 import ui.components.LightnessScale;
@@ -75,7 +76,7 @@ public class AppRenderer {
     }
 
     protected void setDefaultBGColor() {
-        uiMaster.setBGColor(Colors.backgroundNormal());
+        uiMaster.setBGColor(app.getUI().get(UIColors.BACKGROUND_NORMAL));
     }
 
     protected void renderUI() {
@@ -105,10 +106,13 @@ public class AppRenderer {
         int oldLayer = layer;
         int oldDivision = division;
 
+        UIPanel ui = element.getPanel();
+
         SVector position = element.getPosition();
         SVector size = element.getSize();
 
-        if (element instanceof UIFloatContainer) {
+        boolean ignoreClipArea = element instanceof UIFloatContainer f && f.ignoreClipArea();
+        if (ignoreClipArea) {
             uiMaster.pushClipArea();
             uiMaster.noClipArea();
         }
@@ -144,7 +148,7 @@ public class AppRenderer {
         int debugOutline = App.getDebugOutline();
         if ((debugOutline == 1 && element.mouseAbove()) || debugOutline == 2) {
             uiMaster.stroke(new SVector(1, 0.7, 0.1));
-            uiMaster.strokeWeight(app.getUI().strokeWeightSize());
+            uiMaster.strokeWeight(app.getUI().get(UISizes.STROKE_WEIGHT));
             doOutline = true;
         } else if (element.doStrokeCheckerboard()) {
             Vector4f c1 = element.strokeCheckerboardColor1(),
@@ -204,7 +208,7 @@ public class AppRenderer {
             uiMaster.hueSatField(position, size, App.isCircularHueSatField(), App.isHSLColorSpace());
         }
         if (element instanceof UIToggle toggle) {
-            uiMaster.fill(Colors.backgroundHighlight2());
+            uiMaster.fill(ui.get(UIColors.BACKGROUND_HIGHLIGHT_2));
             double wh = size.y;
             double difference = size.x - size.y;
             uiMaster.ellipse(new SVector(position.x, position.y), new SVector(wh, wh));
@@ -212,7 +216,7 @@ public class AppRenderer {
             uiMaster.noStroke();
             uiMaster.rect(new SVector(position.x + wh / 2, position.y), new SVector(difference, wh));
 
-            uiMaster.fill(Colors.text());
+            uiMaster.fill(ui.get(UIColors.TEXT));
             double x = position.x + (toggle.getState() ? difference : 0);
             SVector pos = new SVector(x, position.y);
             SVector s = new SVector(wh, wh);
@@ -222,14 +226,14 @@ public class AppRenderer {
             uiMaster.ellipse(pos, s);
         }
         if (element instanceof UIRadioButton radio) {
-            uiMaster.fill(Colors.backgroundHighlight2());
+            uiMaster.fill(ui.get(UIColors.BACKGROUND_HIGHLIGHT_2));
             uiMaster.ellipse(position, size);
 
             if (radio.getState()) {
                 final double factor = 0.6;
                 SVector pos = size.copy().scale((1 - factor) / 2).add(position);
                 SVector siz = size.copy().scale(factor);
-                uiMaster.fill(Colors.text());
+                uiMaster.fill(ui.get(UIColors.TEXT));
                 uiMaster.ellipse(pos, siz);
             }
         }
@@ -257,29 +261,23 @@ public class AppRenderer {
                 uiMaster.rect(textInput.getCursorPosition(), textInput.getCursorSize());
             }
         }
-        if (element instanceof UIScale scale) {
-            SVector pos = new SVector(position).add(scale.getScaleOffset());
-            SVector siz = scale.getScaleSize();
-            if (scale instanceof LightnessScale l) {
-                uiMaster.lightnessScale(pos, siz, l.getHue(), l.getSaturation(),
-                        l.getOrientation() == UIContainer.VERTICAL, App.isHSLColorSpace());
-            } else if (scale instanceof AlphaScale a) {
-                // checkerboard background
-                uiMaster.noStroke();
-                uiMaster.checkerboardFill(Colors.transparent(), siz.y / 2);
-                uiMaster.rect(pos, siz);
+        if (element instanceof LightnessScale.LSVisuals l) {
+            uiMaster.lightnessScale(position, size, l.getHue(), l.getSaturation(),
+                    l.getOrientation() == UIContainer.VERTICAL, App.isHSLColorSpace());
+        }
+        if (element instanceof AlphaScale.ASVisuals a) {
+            // checkerboard background
+            uiMaster.noStroke();
+            Vector4f[] transparency = { ui.get(UIColors.TRANSPARENCY_1), ui.get(UIColors.TRANSPARENCY_2) };
+            uiMaster.checkerboardFill(transparency, size.y / 2);
+            uiMaster.rect(position, size);
 
-                // color gradient
-                uiMaster.fill(MainApp.toVector4f(a.getRGB()));
-                uiMaster.alphaScale(pos, siz, a.getOrientation() == UIContainer.VERTICAL);
-            } else {
-                uiMaster.noStroke();
-                uiMaster.fill(Colors.outlineNormal());
-                uiMaster.rect(pos, siz);
-            }
+            // color gradient
+            uiMaster.fill(MainApp.toVector4f(a.getRGB()));
+            uiMaster.alphaScale(position, size, a.getOrientation() == UIContainer.VERTICAL);
         }
 
-        if (element instanceof UIFloatContainer) {
+        if (ignoreClipArea) {
             uiMaster.popClipArea();
         }
 
@@ -402,7 +400,7 @@ public class AppRenderer {
         uiMaster.fill(c1);
         uiMaster.rect(p1, s1);
 
-        uiMaster.checkerboardFill(Colors.transparent(), 15);
+        uiMaster.checkerboardFill(new Vector4f[] { new Vector4f(0, 0, 0, 1), new Vector4f(1, 1, 1, 1) }, 15);
         uiMaster.depth(getDepth(0));
         uiMaster.rect(p2, s2);
 

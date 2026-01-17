@@ -34,6 +34,9 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
+ *   UI context switching
+ *     Allow UISizes or UIColors to be passed instead of Supplier<Double> or
+ *       Supplier<Vector4f> respectively
  *   Resize window: add percent display
  *   Image resizing
  *     Size knobs
@@ -84,13 +87,16 @@ import ui.components.ImageCanvas;
  *       Have OpenGL also do correct gamma blending?
  * 
  * UI:
+ *   Add a sizeGetter in UIContainer (or UIElement?) to replace all of the
+ *     overriden update() methods that set a fixed size?
+ *   PositionSuppliers for UIFloatContainers should be able to take
+ *     Supplier<SVector>s as arguments
+ *     Would fix the scrollbar stuttering
  *   Make the pencil size UI prettier
  *   Text wrapping (see "Text input")
  *   Fix bug in UILabel: when the textUpdater returns text containig newline
  *     characters, the text is not properly split across multiple lines
  *   Tool icons & cursors
- *   Add a sizeGetter in UIContainer (or UIElement?) to replace all of the
- *     overriden update() methods that set a fixed size?
  *   Make side panel collapsable
  *   Instead of the ImageCanvas being on layer 0 and everything else on layer
  *     ImageCanvas.NUM_UI_LAYERS, put everything on layer 0 and turn on the
@@ -124,7 +130,8 @@ import ui.components.ImageCanvas;
  *     Debug view
  * 
  * Backend:
- *   Most of the things in AppUI could probably be moved into UIPanel
+ *   Sizes
+ *     Move things that should not be part of sutil.ui into ui package
  *   Performance: only ~40fps on Microsoft Surface
  *   Proper package names / structure
  *   Error handling

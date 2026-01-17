@@ -14,13 +14,13 @@ public class UIText extends UIElement {
     private double textSize;
     private boolean smallTextSize = false;
     // panel::getDefaultTextSize doesn't work because initially, panel is null
-    private Supplier<Double> textSizeUpdater = () -> smallTextSize ? panel.smallTextSize() : panel.defaultTextSize();
+    private Supplier<Double> textSizeUpdater = () -> panel.get(smallTextSize ? UISizes.TEXT_SMALL : UISizes.TEXT);
 
     private String fontName;
     private Supplier<String> fontUpdater = () -> panel.getDefaultFontName();
 
     private Vector4f color = new Vector4f();
-    private Supplier<Vector4f> colorUpdater = () -> panel.defaultTextColor();
+    private Supplier<Vector4f> colorUpdater = () -> panel.get(UIColors.TEXT);
 
     public UIText(String text) {
         this(text, false);

@@ -6,9 +6,8 @@ import main.apps.MainApp;
 import main.tools.DragTool;
 import main.tools.ImageTool;
 import sutil.math.SVector;
-import ui.AppUI;
-import ui.Colors;
-import ui.Sizes;
+import sutil.ui.UIColors;
+import sutil.ui.UISizes;
 import ui.components.SizeKnob;
 
 public abstract sealed class DragToolContainer<T extends DragTool> extends ToolContainer<T>
@@ -31,9 +30,9 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
         relativeLayer = 2;
 
         style.setStrokeCheckerboard(
-                () -> Colors.selectionBorder()[0],
-                () -> Colors.selectionBorder()[1],
-                () -> ((AppUI<?>) panel).getSize(Sizes.CHECKERBOARD));
+                () -> panel.get(UIColors.SELECTION_BORDER_1),
+                () -> panel.get(UIColors.SELECTION_BORDER_2),
+                () -> panel.get(UISizes.CHECKERBOARD));
         style.setStrokeWeight(2.0);
 
         setMarginScale(1.0);

@@ -33,15 +33,27 @@ public class LightnessScale extends UIScale {
 
         narrow = false;
 
-        relativeLayer = 1;
-        draggable.setRelativeLayer(-1);
+        // relativeLayer = 1;
+        // draggable.setRelativeLayer(-1);
     }
 
-    public double getHue() {
-        return colorPicker.getHue();
+    @Override
+    protected Visuals getVisuals(int orientation) {
+        return new LSVisuals(orientation);
     }
 
-    public double getSaturation() {
-        return colorPicker.getHSLSaturation();
+    public class LSVisuals extends Visuals {
+
+        public LSVisuals(int orientation) {
+            super(orientation);
+        }
+
+        public double getHue() {
+            return colorPicker.getHue();
+        }
+
+        public double getSaturation() {
+            return colorPicker.getHSLSaturation();
+        }
     }
 }

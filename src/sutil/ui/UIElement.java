@@ -221,7 +221,7 @@ public abstract class UIElement {
     public final Vector4f strokeColor() {
         Vector4f ol = style.strokeColor();
         if (ol == null && panel.getSelectedElement() == this) {
-            ol = panel.strokeNormalColor();
+            ol = panel.get(UIColors.OUTLINE_NORMAL);
         }
         return ol;
     }
@@ -230,7 +230,7 @@ public abstract class UIElement {
         double sw = style.strokeWeight();
         if (panel.getSelectedElement() == this) {
             if (style.strokeColor() == null) {
-                sw = panel.strokeWeightSize();
+                sw = panel.get(UISizes.STROKE_WEIGHT);
             } else {
                 sw *= 2;
             }
@@ -302,24 +302,24 @@ public abstract class UIElement {
         Supplier<Vector4f> backgroundColorSupplier = () -> {
             Vector4f bgColor = null;
             if (backgroundNormal) {
-                bgColor = panel.backgroundNormalColor();
+                bgColor = panel.get(UIColors.BACKGROUND_NORMAL);
             }
             if (mouseAbove && backgroundHighlight) {
-                bgColor = panel.backgroundHighlightColor();
+                bgColor = panel.get(UIColors.BACKGROUND_HIGHLIGHT);
             }
             return bgColor;
         };
         Supplier<Vector4f> outlineColorSupplier = () -> {
             Vector4f outlineColor = null;
             if (outlineNormal) {
-                outlineColor = panel.strokeNormalColor();
+                outlineColor = panel.get(UIColors.OUTLINE_NORMAL);
             }
             if (mouseAbove && outlineHighlight) {
-                outlineColor = panel.strokeHighlightColor();
+                outlineColor = panel.get(UIColors.OUTLINE_HIGHLIGHT);
             }
             return outlineColor;
         };
-        Supplier<Double> strokeWeightSupplier = () -> panel.strokeWeightSize();
+        Supplier<Double> strokeWeightSupplier = () -> panel.get(UISizes.STROKE_WEIGHT);
 
         style = new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier);
     }

@@ -149,7 +149,7 @@ public class UITextInput extends UIContainer {
     }
 
     public SVector getCursorSize() {
-        return new SVector(panel.strokeWeightSize(), uiText.getTextSize());
+        return new SVector(panel.get(UISizes.STROKE_WEIGHT), uiText.getTextSize());
     }
 
     public boolean isCursorVisible() {
