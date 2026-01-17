@@ -34,7 +34,6 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Resize window: add percent display
  *   Image resizing
  *     Size knobs
  * 
@@ -64,6 +63,10 @@ import ui.components.ImageCanvas;
  *     Multi-line text input
  *       Would require a variable number of UITexts as children (which is
  *         currently not possible. Why?)
+ *   Keyboard shortcuts
+ *     Selection one of the radio buttons in the resize ui and pressing enter
+ *       closes the resize window. => add option for keyboard shortcut to not
+ *       run if something is currently selected (similar to text input).
  *   Dialogs
  *     Save dialog
  *       Keep track of unsaved changes, ask user to save before quitting if

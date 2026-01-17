@@ -10,20 +10,26 @@ import ui.ResizeUI;
 
 public final class ResizeApp extends App {
 
+    public static final int PIXELS = 0, PERCENTAGE = 1;
+
     private MainApp mainApp;
 
     private UINumberInput widthInput;
 
-    private int newImageWidth = 0,
-            newImageHeight = 0;
+    private int widthPixels = 0, heightPixels = 0;
+    private double widthPercentage = 0, heightPercentage = 0;
+
+    private final int initialWidth, initialHeight;
 
     public ResizeApp(MainApp mainApp) {
         super(500, 500, Window.NORMAL, false, true, "Resize Image", mainApp);
 
         this.mainApp = mainApp;
 
-        newImageWidth = mainApp.getImage().getWidth();
-        newImageHeight = mainApp.getImage().getHeight();
+        initialWidth = mainApp.getImage().getWidth();
+        initialHeight = mainApp.getImage().getHeight();
+        setWidthPixels(initialWidth);
+        setHeightPixels(initialHeight);
 
         addKeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, this::cancel, false);
 
@@ -54,7 +60,7 @@ public final class ResizeApp extends App {
     }
 
     public void done() {
-        mainApp.queueEvent(() -> mainApp.resizeImage(newImageWidth, newImageHeight));
+        mainApp.queueEvent(() -> mainApp.resizeImage(widthPixels, heightPixels));
         window.requestClose();
     }
 
@@ -62,19 +68,67 @@ public final class ResizeApp extends App {
         window.requestClose();
     }
 
-    public int getNewImageWidth() {
-        return newImageWidth;
+    public int getWidthPixels() {
+        return widthPixels;
     }
 
-    public void setNewImageWidth(int newImageWidth) {
-        this.newImageWidth = Math.min(Math.max(MainApp.MIN_IMAGE_SIZE, newImageWidth), MainApp.MAX_IMAGE_SIZE);
+    public void setWidthPixels(int widthPixels) {
+        // this.widthPixels = Math.min(Math.max(MainApp.MIN_IMAGE_SIZE, widthPixels),
+        // MainApp.MAX_IMAGE_SIZE);
+        this.widthPixels = widthPixels;
+        clampWidthPixels();
+
+        widthPercentage = 100.0 * this.widthPixels / initialWidth;
     }
 
-    public int getNewImageHeight() {
-        return newImageHeight;
+    public int getHeightPixels() {
+        return heightPixels;
     }
 
-    public void setNewImageHeight(int newImageHeight) {
-        this.newImageHeight = Math.min(Math.max(MainApp.MIN_IMAGE_SIZE, newImageHeight), MainApp.MAX_IMAGE_SIZE);
+    public void setHeightPixels(int heightPixels) {
+        // this.heightPixels = Math.min(Math.max(MainApp.MIN_IMAGE_SIZE, heightPixels),
+        // MainApp.MAX_IMAGE_SIZE);
+        this.heightPixels = heightPixels;
+        clampHeightPixels();
+
+        heightPercentage = 100.0 * this.heightPixels / initialHeight;
+    }
+
+    public int getWidthPercentage() {
+        return (int) widthPercentage;
+    }
+
+    public void setWidthPercentage(int widthPercentage) {
+        this.widthPercentage = widthPercentage;
+
+        widthPixels = (int) (this.widthPercentage / 100.0 * initialWidth);
+        clampWidthPixels();
+    }
+
+    public int getHeightPercentage() {
+        return (int) heightPercentage;
+    }
+
+    public void setHeightPercentage(int heightPercentage) {
+        this.heightPercentage = heightPercentage;
+
+        heightPixels = (int) (this.heightPercentage / 100.0 * initialHeight);
+        clampHeightPixels();
+    }
+
+    private void clampWidthPixels() {
+        if (widthPixels < MainApp.MIN_IMAGE_SIZE) {
+            setWidthPixels(MainApp.MIN_IMAGE_SIZE);
+        } else if (widthPixels > MainApp.MAX_IMAGE_SIZE) {
+            setWidthPixels(MainApp.MAX_IMAGE_SIZE);
+        }
+    }
+
+    private void clampHeightPixels() {
+        if (heightPixels < MainApp.MIN_IMAGE_SIZE) {
+            setHeightPixels(MainApp.MIN_IMAGE_SIZE);
+        } else if (widthPixels > MainApp.MAX_IMAGE_SIZE) {
+            setHeightPixels(MainApp.MAX_IMAGE_SIZE);
+        }
     }
 }

@@ -124,7 +124,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
     protected abstract AppUI<?> createUI();
 
-    private void makeContextCurrent() {
+    public void makeContextCurrent() {
         window.makeContextCurrent();
         UI.setContext(ui);
     }
@@ -135,7 +135,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         if (ui == null)
             loadUI();
 
-        makeContextCurrent();
 
         if (avgFrameTime < 0) {
             avgFrameTime = deltaT;
@@ -295,8 +294,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     }
 
     public final void render() {
-        makeContextCurrent();
-
         if (renderer == null) {
             renderer = new AppRenderer(this);
         }

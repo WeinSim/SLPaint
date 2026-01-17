@@ -48,6 +48,8 @@ public class MainLoop {
             for (int i = apps.size() - 1; i >= 0; i--) {
                 App app = apps.get(i);
 
+                app.makeContextCurrent();
+
                 app.update(deltaT);
                 app.render();
 

@@ -8,12 +8,17 @@ import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UILabel;
 import sutil.ui.UINumberInput;
+import sutil.ui.UIRadioButtonList;
 import sutil.ui.UIText;
 
 public class ResizeUI extends AppUI<ResizeApp> {
 
+    private int sizeMode;
+
     public ResizeUI(ResizeApp app) {
         super(app);
+
+        sizeMode = ResizeApp.PIXELS;
     }
 
     @Override
@@ -24,7 +29,18 @@ public class ResizeUI extends AppUI<ResizeApp> {
         root.setPaddingScale(1.0);
         root.setAlignment(UIContainer.CENTER);
 
-        root.add(new UILabel("Enter new image size."));
+        root.add(new UILabel("Resize"));
+
+        UIContainer mode = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        mode.zeroMargin().noOutline();
+        mode.add(new UIText("By:"));
+        UIRadioButtonList radioButtons = new UIRadioButtonList(
+                UIContainer.HORIZONTAL,
+                new String[] { "Pixels", "Percentage" },
+                this::getSizeMode,
+                this::setSizeMode);
+        mode.add(radioButtons);
+        root.add(mode);
 
         UIContainer absolute = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
         absolute.setHFillSize();
@@ -35,13 +51,21 @@ public class ResizeUI extends AppUI<ResizeApp> {
 
             row.add(new UIText(i == 0 ? "Width:" : "Height:"));
             row.add(new UIContainer(0, 0).setHFillSize().noOutline());
-            Supplier<Integer> getter = i == 0 ? app::getNewImageWidth : app::getNewImageHeight;
-            Consumer<Integer> setter = i == 0 ? app::setNewImageWidth : app::setNewImageHeight;
-            UINumberInput input = new UINumberInput(getter, setter);
-            if (i == 0) {
-                app.setWidthInput(input);
-            }
-            row.add(input);
+            Supplier<Integer> pixelGetter = i == 0 ? app::getWidthPixels : app::getHeightPixels,
+                    percentageGetter = i == 0 ? app::getWidthPercentage : app::getHeightPercentage;
+            Consumer<Integer> pixelSetter = i == 0 ? app::setWidthPixels : app::setHeightPixels,
+                    percentageSetter = i == 0 ? app::setWidthPercentage : app::setHeightPercentage;
+            UINumberInput pixelInput = new UINumberInput(pixelGetter, pixelSetter),
+                    percentageInput = new UINumberInput(percentageGetter, percentageSetter);
+
+            pixelInput.setVisibilitySupplier(() -> getSizeMode() == ResizeApp.PIXELS);
+            percentageInput.setVisibilitySupplier(() -> getSizeMode() == ResizeApp.PERCENTAGE);
+
+            if (i == 0)
+                app.setWidthInput(pixelInput);
+
+            row.add(pixelInput);
+            row.add(percentageInput);
             absolute.add(row);
         }
 
@@ -54,5 +78,13 @@ public class ResizeUI extends AppUI<ResizeApp> {
         buttonRow.add(new UIButton("Cancel", app::cancel));
 
         root.add(buttonRow);
+    }
+
+    public int getSizeMode() {
+        return sizeMode;
+    }
+
+    public void setSizeMode(int sizeMode) {
+        this.sizeMode = sizeMode;
     }
 }

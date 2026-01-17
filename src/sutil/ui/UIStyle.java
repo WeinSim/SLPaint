@@ -8,7 +8,7 @@ public class UIStyle {
 
     private Supplier<Vector4f> backgroundColor;
     /**
-     * This is the checkerboard background that is be drawn behind the background
+     * This is the checkerboard background that is drawn behind the background
      */
     private CheckerboardInfo backgroundCheckerboard;
 
@@ -22,6 +22,8 @@ public class UIStyle {
      */
     private CheckerboardInfo strokeCheckerboard;
 
+    private Supplier<UIShape> shape;
+
     public UIStyle(Vector4f backgroundColor, Vector4f strokeColor, double strokeWeight) {
         this(() -> backgroundColor, () -> strokeColor, () -> strokeWeight);
     }
@@ -30,6 +32,8 @@ public class UIStyle {
         this.backgroundColor = backgroundColor;
         this.strokeColor = strokeColor;
         this.strokeWeight = strokeWeight;
+
+        shape = () -> UIShape.RECTANGLE;
 
         setNoBackgroundCheckerboard();
         setNoStrokeCheckerboard();
@@ -77,6 +81,10 @@ public class UIStyle {
 
     public double strokeCheckerboardSize() {
         return strokeCheckerboard.size().get();
+    }
+
+    public UIShape shape() {
+        return shape.get();
     }
 
     public void setBackgroundColor(Vector4f backgroundColor) {
@@ -137,6 +145,14 @@ public class UIStyle {
 
     public void setStrokeWeight(Supplier<Double> strokeWeight) {
         this.strokeWeight = strokeWeight;
+    }
+
+    public void setShape(UIShape shape) {
+        setShape(() -> shape);
+    }
+
+    public void setShape(Supplier<UIShape> shape) {
+        this.shape = shape;
     }
 
     private record CheckerboardInfo(Supplier<Boolean> active, Supplier<Vector4f> color1, Supplier<Vector4f> color2,

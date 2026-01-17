@@ -203,8 +203,11 @@ public class MainUI extends AppUI<MainApp> {
                 true,
                 false));
 
-        sidePanel.add(new UIRadioButtonList(new String[] { "Option 1", "Option 2", "Option 3", "Option 4" },
-                this::getTest, this::setTest));
+        sidePanel.add(new UIRadioButtonList(
+                UIContainer.VERTICAL,
+                new String[] { "Option 1", "Option 2", "Option 3", "Option 4" },
+                this::getTest,
+                this::setTest));
 
         UIContainer debugPanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
                 UIContainer.VERTICAL);

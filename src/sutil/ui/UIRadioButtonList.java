@@ -5,10 +5,11 @@ import java.util.function.Supplier;
 
 public class UIRadioButtonList extends UIContainer {
 
-    public UIRadioButtonList(String[] options, Supplier<Integer> stateSupplier, Consumer<Integer> stateConsumer) {
-        super(VERTICAL, LEFT);
+    public UIRadioButtonList(int orientation, String[] options, Supplier<Integer> stateSupplier, Consumer<Integer> stateConsumer) {
+        super(orientation, orientation == VERTICAL ? LEFT : CENTER);
 
         noOutline();
+        zeroMargin();
 
         for (int i = 0; i < options.length; i++) {
             UIContainer row = new UIContainer(HORIZONTAL, CENTER);
@@ -19,6 +20,8 @@ public class UIRadioButtonList extends UIContainer {
 
             final int j = i;
             row.setLeftClickAction(() -> stateConsumer.accept(j));
+
+            row.setSelectable(true);
 
             add(row);
         }

@@ -244,6 +244,10 @@ public abstract class UIElement {
         return style.strokeCheckerboardSize();
     }
 
+    public UIShape shape() {
+        return style.shape();
+    }
+
     public void setOutlineNormal(boolean outlineNormal) {
         this.outlineNormal = outlineNormal;
     }

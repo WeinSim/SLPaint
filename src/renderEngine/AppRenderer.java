@@ -16,11 +16,10 @@ import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIFloatContainer;
 import sutil.ui.UIImage;
-import sutil.ui.UIRadioButton;
+import sutil.ui.UIShape;
 import sutil.ui.UISizes;
 import sutil.ui.UIText;
 import sutil.ui.UITextInput;
-import sutil.ui.UIToggle;
 import ui.components.AlphaScale;
 import ui.components.HueSatField;
 import ui.components.LightnessScale;
@@ -106,6 +105,7 @@ public class AppRenderer {
 
         SVector position = element.getPosition();
         SVector size = element.getSize();
+        UIShape shape = element.shape();
 
         boolean ignoreClipArea = element instanceof UIFloatContainer f && f.ignoreClipArea();
         if (ignoreClipArea) {
@@ -123,7 +123,7 @@ public class AppRenderer {
             double s = element.backgroundCheckerboardSize();
             uiMaster.checkerboardFill(new Vector4f[] { c1, c2 }, s);
             uiMaster.noStroke();
-            uiMaster.rect(position, size);
+            drawShape(shape, position, size);
 
             // this is just a hack for now to guarantee that semi transparent colors render
             // correctly
@@ -136,7 +136,7 @@ public class AppRenderer {
             uiMaster.depth(getDepth(1));
             uiMaster.fill(bgColor);
             uiMaster.noStroke();
-            uiMaster.rect(position, size);
+            drawShape(shape, position, size);
         }
 
         // outline
@@ -200,39 +200,7 @@ public class AppRenderer {
 
         // content
         uiMaster.depth(getDepth(2));
-        if (element instanceof HueSatField) {
-            uiMaster.hueSatField(position, size, App.isCircularHueSatField(), App.isHSLColorSpace());
-        }
-        if (element instanceof UIToggle toggle) {
-            uiMaster.fill(UIColors.BACKGROUND_HIGHLIGHT_2.get());
-            double wh = size.y;
-            double difference = size.x - size.y;
-            uiMaster.ellipse(new SVector(position.x, position.y), new SVector(wh, wh));
-            uiMaster.ellipse(new SVector(position.x + size.x - wh, position.y), new SVector(wh, wh));
-            uiMaster.noStroke();
-            uiMaster.rect(new SVector(position.x + wh / 2, position.y), new SVector(difference, wh));
 
-            uiMaster.fill(UIColors.TEXT.get());
-            double x = position.x + (toggle.getState() ? difference : 0);
-            SVector pos = new SVector(x, position.y);
-            SVector s = new SVector(wh, wh);
-            final double factor = 0.7;
-            pos.add(s.copy().scale((1 - factor) / 2));
-            s.scale(factor);
-            uiMaster.ellipse(pos, s);
-        }
-        if (element instanceof UIRadioButton radio) {
-            uiMaster.fill(UIColors.BACKGROUND_HIGHLIGHT_2.get());
-            uiMaster.ellipse(position, size);
-
-            if (radio.getState()) {
-                final double factor = 0.6;
-                SVector pos = size.copy().scale((1 - factor) / 2).add(position);
-                SVector siz = size.copy().scale(factor);
-                uiMaster.fill(UIColors.TEXT.get());
-                uiMaster.ellipse(pos, siz);
-            }
-        }
         if (element instanceof UIText text) {
             String fontName = text.getFontName();
             double textSize = text.getTextSize();
@@ -242,6 +210,13 @@ public class AppRenderer {
             uiMaster.fill(text.getColor());
             uiMaster.text(text.getText(), position);
         }
+        if (element instanceof UITextInput textInput) {
+            if (textInput.isCursorVisible()) {
+                uiMaster.noStroke();
+                uiMaster.fill(textInput.strokeColor());
+                uiMaster.rect(textInput.getCursorPosition(), textInput.getCursorSize());
+            }
+        }
         if (element instanceof UIImage image) {
             uiMaster.image(image.getTextureID(), position, size);
             // incredibly ugly but it works for now.
@@ -249,13 +224,6 @@ public class AppRenderer {
             // render above it. Otherwise, the selection would render first and the image
             // would not render behind transparent parts of the selection.
             uiMaster.render();
-        }
-        if (element instanceof UITextInput textInput) {
-            if (textInput.isCursorVisible()) {
-                uiMaster.noStroke();
-                uiMaster.fill(textInput.strokeColor());
-                uiMaster.rect(textInput.getCursorPosition(), textInput.getCursorSize());
-            }
         }
         if (element instanceof LightnessScale.LSVisuals l) {
             uiMaster.lightnessScale(position, size, l.getHue(), l.getSaturation(),
@@ -267,10 +235,13 @@ public class AppRenderer {
             Vector4f[] transparency = { UIColors.TRANSPARENCY_1.get(), UIColors.TRANSPARENCY_2.get() };
             uiMaster.checkerboardFill(transparency, size.y / 2);
             uiMaster.rect(position, size);
-
             // color gradient
             uiMaster.fill(MainApp.toVector4f(a.getRGB()));
             uiMaster.alphaScale(position, size, a.getOrientation() == UIContainer.VERTICAL);
+        }
+        if (element instanceof HueSatField) {
+            uiMaster.hueSatField(position, size, App.isCircularHueSatField(),
+                    App.isHSLColorSpace());
         }
 
         if (ignoreClipArea) {
@@ -279,6 +250,35 @@ public class AppRenderer {
 
         layer = oldLayer;
         division = oldDivision;
+    }
+
+    private void drawShape(UIShape shape, SVector position, SVector size) {
+        switch (shape) {
+            case RECTANGLE -> uiMaster.rect(position, size);
+            case ROUND_RECTANGLE -> {
+                double max = Math.max(size.x, size.y),
+                        min = Math.min(size.x, size.y);
+                double difference = max - min;
+
+                SVector ellipsePos1 = position,
+                        ellipsePos2 = max == size.x
+                                ? new SVector(position.x + size.x - min, position.y)
+                                : new SVector(position.x, position.y + size.y - min);
+                SVector ellipseSize = new SVector(min, min);
+
+                SVector rectPos = max == size.x
+                        ? new SVector(position.x + min / 2, position.y)
+                        : new SVector(position.x, position.y + min / 2);
+                SVector rectSize = max == size.x
+                        ? new SVector(difference, min)
+                        : new SVector(min, difference);
+
+                uiMaster.ellipse(ellipsePos1, ellipseSize);
+                uiMaster.ellipse(ellipsePos2, ellipseSize);
+                uiMaster.rect(rectPos, rectSize);
+            }
+            case ELLIPSE -> uiMaster.ellipse(position, size);
+        }
     }
 
     protected double getDepth(int subdivision) {
