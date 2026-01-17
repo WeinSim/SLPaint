@@ -13,6 +13,7 @@ import renderEngine.Loader;
 import renderEngine.Window;
 import sutil.math.SVector;
 import sutil.ui.UIAction;
+import sutil.ui.UI;
 import sutil.ui.UIRoot;
 import sutil.ui.UITextInput;
 import ui.AppUI;
@@ -43,7 +44,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
     private ArrayList<KeyboardShortcut> keyboardShortcuts;
 
-    protected AppUI<?> ui;
+    private AppUI<?> ui;
     protected boolean adjustSizeOnInit = false;
 
     protected AppRenderer renderer;
@@ -113,7 +114,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
             // calling ui.update here to ensure the root has the correct size
             ui.update(mousePos, window.isFocused());
 
-            UIRoot root = ui.getRoot();
+            UIRoot root = UI.getRoot();
             SVector rootSize = root.getSize();
             int width = (int) rootSize.x;
             int height = (int) rootSize.y;
@@ -123,7 +124,19 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
     protected abstract AppUI<?> createUI();
 
+    private void makeContextCurrent() {
+        window.makeContextCurrent();
+        UI.setContext(ui);
+    }
+
     public void update(double deltaT) {
+        // UI loading happens here because the UI might need some things set up by the
+        // child class' constructor.
+        if (ui == null)
+            loadUI();
+
+        makeContextCurrent();
+
         if (avgFrameTime < 0) {
             avgFrameTime = deltaT;
         } else {
@@ -140,11 +153,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         }
 
         boolean focus = window.isFocused();
-
-        // UI loading happens here because the UI might need some things set up by the
-        // child class' constructor.
-        if (ui == null)
-            loadUI();
 
         // process char input
         Character c;
@@ -240,7 +248,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     protected void keyPressed(int key, int mods) {
         for (KeyboardShortcut shortcut : keyboardShortcuts) {
             if (key == shortcut.key() && mods == shortcut.modifiers()) {
-                if (!shortcut.text() && ui.getSelectedElement() instanceof UITextInput)
+                if (!shortcut.text() && UI.getSelectedElement() instanceof UITextInput)
                     continue;
                 shortcut.action().run();
             }
@@ -277,7 +285,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
                 child.setDialogType(dialogType);
                 childApps.put(dialogType, child);
             }
-            GLFW.glfwMakeContextCurrent(window.getWindowHandle());
         }
     }
 
@@ -288,6 +295,8 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     }
 
     public final void render() {
+        makeContextCurrent();
+
         if (renderer == null) {
             renderer = new AppRenderer(this);
         }

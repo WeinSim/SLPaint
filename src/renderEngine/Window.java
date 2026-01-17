@@ -76,7 +76,7 @@ public class Window {
         center();
 
         // Make the OpenGL context current
-        GLFW.glfwMakeContextCurrent(windowHandle);
+        makeContextCurrent();
         // Enable v-sync.
         // Note: this limits the application to 60fps, which can make very fast paint
         // strokes look jagged. To improve this, the rendering logic could be separated
@@ -102,6 +102,10 @@ public class Window {
         keyPressInfos = new ArrayList<>();
         mouseButtonInfos = new ArrayList<>();
         scrollInfos = new ArrayList<>();
+    }
+
+    public void makeContextCurrent() {
+        GLFW.glfwMakeContextCurrent(windowHandle);
     }
 
     public void updateDisplay() {

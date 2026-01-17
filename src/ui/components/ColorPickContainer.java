@@ -99,10 +99,10 @@ public class ColorPickContainer extends UIContainer {
         UIContainer colorPreview = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
         colorPreview.zeroMargin().noOutline();
         UIContainer colorBox = new UIContainer(UIContainer.HORIZONTAL, 0);
-        colorBox.setStyle(new UIStyle(() -> null, () -> panel.get(UIColors.TEXT), () -> 2.0));
+        colorBox.setStyle(new UIStyle(() -> null, UIColors.TEXT, () -> 2.0));
         colorBox.zeroMargin().zeroPadding().noOutline();
         Supplier<SVector> previewSize = () -> {
-            SVector size = panel.getWidthHeight(UISizes.COLOR_PICKER_PREVIEW);
+            SVector size = UISizes.COLOR_PICKER_PREVIEW.getWidthHeight();
             if (addPreview) {
                 size.x /= 2;
             }

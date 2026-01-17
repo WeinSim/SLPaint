@@ -12,6 +12,7 @@ import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIFloatContainer;
 import sutil.ui.UIImage;
+import sutil.ui.UI;
 import sutil.ui.UISizes;
 import ui.components.toolContainers.FillBucketToolContainer;
 import ui.components.toolContainers.PencilToolContainer;
@@ -53,7 +54,7 @@ public class ImageCanvas extends UIContainer {
         setFillSize();
         zeroMargin();
 
-        style.setBackgroundColor(() -> panel.get(UIColors.CANVAS));
+        style.setBackgroundColor(UIColors.CANVAS);
 
         // TODO: calling resetImageTransform here crashes because the ImageCanvas
         // doesn't know its panel yet.
@@ -81,7 +82,7 @@ public class ImageCanvas extends UIContainer {
         if (draggingImage) {
             int mods = app.getModifierKeys();
             boolean control = (mods & GLFW.GLFW_MOD_CONTROL) != 0;
-            if (!panel.isRightMousePressed() || !control) {
+            if (!UI.isRightMousePressed() || !control) {
                 draggingImage = false;
             }
         }
@@ -188,12 +189,12 @@ public class ImageCanvas extends UIContainer {
     }
 
     public void resetImageTransform() {
-        imageTranslation = new SVector(10, 10).scale(panel.getUIScale());
+        imageTranslation = new SVector(10, 10).scale(UI.getUIScale());
         imageZoomLevel = 0;
     }
 
     public double getImageZoom() {
-        return Math.pow(ZOOM_BASE, imageZoomLevel) * panel.getUIScale();
+        return Math.pow(ZOOM_BASE, imageZoomLevel) * UI.getUIScale();
     }
 
     public SVector getImageTranslation() {
@@ -237,10 +238,7 @@ public class ImageCanvas extends UIContainer {
             public ImageContainerChild() {
                 super(0, new SVector());
 
-                style.setBackgroundCheckerboard(
-                        () -> panel.get(UIColors.TRANSPARENCY_1),
-                        () -> panel.get(UIColors.TRANSPARENCY_2),
-                        () -> panel.get(UISizes.CHECKERBOARD));
+                style.setBackgroundCheckerboard(UIColors.TRANSPARENCY_1, UIColors.TRANSPARENCY_2, UISizes.CHECKERBOARD);
             }
 
             @Override

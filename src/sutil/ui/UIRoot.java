@@ -6,11 +6,8 @@ public class UIRoot extends UIContainer {
 
     private int minLayer, maxLayer;
 
-    public UIRoot(UIPanel panel, int orientation, int alignment) {
+    public UIRoot(int orientation, int alignment) {
         super(orientation, alignment);
-        this.panel = panel;
-
-        panel.setRoot(this);
 
         backgroundNormal = true;
         outlineNormal = false;

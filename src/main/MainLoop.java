@@ -47,7 +47,6 @@ public class MainLoop {
 
             for (int i = apps.size() - 1; i >= 0; i--) {
                 App app = apps.get(i);
-                GLFW.glfwMakeContextCurrent(app.getWindow().getWindowHandle());
 
                 app.update(deltaT);
                 app.render();

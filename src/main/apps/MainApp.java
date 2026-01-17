@@ -34,9 +34,6 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   UI context switching
- *     Allow UISizes or UIColors to be passed instead of Supplier<Double> or
- *       Supplier<Vector4f> respectively
  *   Resize window: add percent display
  *   Image resizing
  *     Size knobs
@@ -135,8 +132,6 @@ import ui.components.ImageCanvas;
  *   Performance: only ~40fps on Microsoft Surface
  *   Proper package names / structure
  *   Error handling
- *   Allow switching between old and new rendering infrastructure for each
- *     shader individually? (Has become quite unneccessary, I think)
  * </pre>
  */
 public final class MainApp extends App {

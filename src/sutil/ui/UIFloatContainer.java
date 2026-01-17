@@ -88,7 +88,7 @@ public class UIFloatContainer extends UIContainer {
         SVector minAbsolutePos = new SVector(0, 0);
         double minDistSq = Double.POSITIVE_INFINITY;
 
-        UIRoot root = panel.getRoot();
+        UIRoot root = UI.getRoot();
         for (PositionSupplier positionSupplier : positionSuppliers) {
             SVector absolutePos = positionSupplier.getAbsolutePosition();
             SVector originalAbsolutePos = new SVector(absolutePos);

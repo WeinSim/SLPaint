@@ -6,6 +6,7 @@ import main.apps.MainApp;
 import main.tools.DragTool;
 import main.tools.ImageTool;
 import sutil.math.SVector;
+import sutil.ui.UI;
 import sutil.ui.UIColors;
 import sutil.ui.UISizes;
 import ui.components.SizeKnob;
@@ -29,10 +30,7 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
         clipToRoot = false;
         relativeLayer = 2;
 
-        style.setStrokeCheckerboard(
-                () -> panel.get(UIColors.SELECTION_BORDER_1),
-                () -> panel.get(UIColors.SELECTION_BORDER_2),
-                () -> panel.get(UISizes.CHECKERBOARD));
+        style.setStrokeCheckerboard(UIColors.SELECTION_BORDER_1, UIColors.SELECTION_BORDER_2, UISizes.CHECKERBOARD);
         style.setStrokeWeight(2.0);
 
         setMarginScale(1.0);
@@ -90,7 +88,7 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
                 tool.setY(y);
             }
             case DragTool.RESIZING -> {
-                if (!panel.isLeftMousePressed()) {
+                if (!UI.isLeftMousePressed()) {
                     dragKnob = null;
                     tool.setState(DragTool.IDLE);
                     break;

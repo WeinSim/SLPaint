@@ -15,7 +15,7 @@ public class UIToggle extends UIElement {
 
     @Override
     public void setPreferredSize() {
-        double textSize = panel.get(UISizes.TEXT);
+        double textSize = UISizes.TEXT.get();
         size.set(3 * textSize , 1.5 * textSize);
     }
 

@@ -13,9 +13,7 @@ public class CustomColorContainer extends UIContainer {
 
         for (int i = 0; i < colors.getCapacity(); i++) {
             final int j = i;
-            UIColorElement button = new UIColorElement(
-                    () -> colors.getColor(j),
-                    () -> panel.get(UISizes.COLOR_BUTTON));
+            UIColorElement button = new UIColorElement(() -> colors.getColor(j), UISizes.COLOR_BUTTON);
             button.setLeftClickAction(() -> {
                 Integer color = colors.getColor(j);
                 if (color != null) {

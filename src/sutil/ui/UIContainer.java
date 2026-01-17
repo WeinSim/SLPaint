@@ -88,15 +88,6 @@ public class UIContainer extends UIElement {
         scrollOffset = new SVector();
     }
 
-    @Override
-    public void setPanel(UIPanel panel) {
-        super.setPanel(panel);
-
-        for (UIElement child : children) {
-            child.setPanel(panel);
-        }
-    }
-
     public void add(UIElement child) {
         if (addSeparators && !(child instanceof UIFloatContainer)) {
             boolean containsNonFloatChildren = false;
@@ -137,7 +128,6 @@ public class UIContainer extends UIElement {
         children.add(child);
 
         child.parent = this;
-        child.setPanel(panel);
     }
 
     // TODO: what is the purpose of this locking mechanism?
@@ -273,10 +263,10 @@ public class UIContainer extends UIElement {
         setSizeAccordingToBoundingBox();
 
         if (isHScroll() && hSizeType != SizeType.FIXED) {
-            size.x = 4 * panel.get(UISizes.MARGIN);
+            size.x = 4 * UISizes.MARGIN.get();
         }
         if (isVScroll() && vSizeType != SizeType.FIXED) {
-            size.y = 4 * panel.get(UISizes.MARGIN);
+            size.y = 4 * UISizes.MARGIN.get();
         }
 
         minSize.set(size);
@@ -562,7 +552,7 @@ public class UIContainer extends UIElement {
      * @return the space around the outside (left and right).
      */
     public final double getHMargin() {
-        return panel.get(UISizes.MARGIN) * hMarginScale;
+        return UISizes.MARGIN.get() * hMarginScale;
     }
 
     /**
@@ -570,7 +560,7 @@ public class UIContainer extends UIElement {
      * @return the space around the outside (top and bottom).
      */
     public final double getVMargin() {
-        return panel.get(UISizes.MARGIN) * vMarginScale;
+        return UISizes.MARGIN.get() * vMarginScale;
     }
 
     /**
@@ -578,7 +568,7 @@ public class UIContainer extends UIElement {
      * @return the space between the children.
      */
     public final double getPadding() {
-        return panel.get(UISizes.PADDING) * paddingScale;
+        return UISizes.PADDING.get() * paddingScale;
     }
 
     public UIContainer setMinimalSize() {
@@ -872,7 +862,7 @@ public class UIContainer extends UIElement {
         public void update() {
             super.update();
 
-            double min = panel.get(UISizes.SCROLLBAR);
+            double min = UISizes.SCROLLBAR.get();
             if (orientation == VERTICAL) {
                 setHFixedSize(min);
                 setVFillSize();
@@ -897,7 +887,7 @@ public class UIContainer extends UIElement {
 
         @Override
         protected void drag() {
-            panel.setDragging();
+            UI.setDragging();
 
             SVector newDragPos = new SVector(mousePosition).sub(dragStartMouse).add(dragStartD);
 
@@ -953,9 +943,9 @@ public class UIContainer extends UIElement {
             this.scrollbarContainer = scrollbarContainer;
 
             UIStyle style = new UIStyle(
-                    () -> panel.get(mouseAbove || scrollbarContainer.isDragging()
-                            ? UIColors.OUTLINE_NORMAL
-                            : UIColors.OUTLINE_HIGHLIGHT),
+                    () -> mouseAbove || scrollbarContainer.isDragging()
+                            ? UIColors.OUTLINE_NORMAL.get()
+                            : UIColors.OUTLINE_HIGHLIGHT.get(),
                     () -> null, () -> 0.0);
 
             setStyle(style);
@@ -974,7 +964,7 @@ public class UIContainer extends UIElement {
             SVector pos = new SVector(scrollbarContainer.getRelativeX(), scrollbarContainer.getRelativeY()).mult(siz);
             addAnchor(Anchor.TOP_LEFT, pos);
 
-            double min = panel.get(UISizes.SCROLLBAR);
+            double min = UISizes.SCROLLBAR.get();
             setFixedSize(new SVector(min, min));
         }
 

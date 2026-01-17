@@ -78,7 +78,7 @@ public class UIScale extends UIDragContainer {
     }
 
     private double getVisualWidth() {
-        return panel.get(narrow ? UISizes.SCALE_NARROW : UISizes.SCALE_WIDE);
+        return narrow ? UISizes.SCALE_NARROW.get() : UISizes.SCALE_WIDE.get();
     }
 
     /**
@@ -89,7 +89,7 @@ public class UIScale extends UIDragContainer {
         public Visuals(int orientation) {
             super(orientation, 0);
 
-            style.setBackgroundColor(() -> panel.get(UIColors.OUTLINE_NORMAL));
+            style.setBackgroundColor(UIColors.OUTLINE_NORMAL);
 
             noOutline();
             zeroMargin();
@@ -118,7 +118,7 @@ public class UIScale extends UIDragContainer {
         public Slider(int orientation) {
             super(orientation, 0);
 
-            setStyle(new UIStyle(() -> panel.get(UIColors.TEXT), () -> null, () -> panel.get(UISizes.STROKE_WEIGHT)));
+            setStyle(new UIStyle(UIColors.TEXT, () -> null, UISizes.STROKE_WEIGHT));
 
             relativeLayer = 0;
             clipToRoot = false;
@@ -129,8 +129,8 @@ public class UIScale extends UIDragContainer {
         public void update() {
             super.update();
 
-            double len = 2 * panel.get(UISizes.SCALE_SLIDER_LENGTH) + getVisualWidth();
-            double width = panel.get(UISizes.SCALE_SLIDER_WIDTH);
+            double len = 2 * UISizes.SCALE_SLIDER_LENGTH.get() + getVisualWidth();
+            double width = UISizes.SCALE_SLIDER_WIDTH.get();
 
             if (orientation == VERTICAL) {
                 setFixedSize(new SVector(len, width));
@@ -154,7 +154,7 @@ public class UIScale extends UIDragContainer {
 
         @Override
         public void setPreferredSize() {
-            double w = 2 * panel.get(UISizes.SCALE_SLIDER_LENGTH) + getVisualWidth();
+            double w = 2 * UISizes.SCALE_SLIDER_LENGTH.get() + getVisualWidth();
 
             if (orientation == VERTICAL) {
                 size.set(w, 0);

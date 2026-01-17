@@ -1,8 +1,10 @@
 package sutil.ui;
 
+import java.util.function.Supplier;
+
 import org.lwjglx.util.vector.Vector4f;
 
-public enum UIColors {
+public enum UIColors implements Supplier<Vector4f> {
 
     BACKGROUND_NORMAL(0.24, 0.95),
     BACKGROUND_HIGHLIGHT(0.5, 0.9),
@@ -10,12 +12,13 @@ public enum UIColors {
     OUTLINE_NORMAL(1.1, 0.45),
     OUTLINE_HIGHLIGHT(0.9, 0.6),
     SEPARATOR(0.56, 0.7),
+    TEXT(new Vector4f(1f, 1f, 1f, 1f), new Vector4f(0f, 0f, 0f, 1f)),
     CANVAS(0.4, 0.85),
     TRANSPARENCY_1(0.6, 1),
     TRANSPARENCY_2(0.0, 0.85),
-    TEXT(new Vector4f(1f, 1f, 1f, 1f), new Vector4f(0f, 0f, 0f, 1f)),
-    SELECTION_BORDER_1(new Vector4f(0f, 0f, 0f, 1f), new Vector4f(0f, 0f, 0f, 1f)),
-    SELECTION_BORDER_2(new Vector4f(1f, 1f, 1f, 1f), new Vector4f(1f, 1f, 1f, 1f));
+    SELECTION_BORDER_1(new Vector4f(0f, 0f, 0f, 1f)),
+    SELECTION_BORDER_2(new Vector4f(1f, 1f, 1f, 1f)),
+    INVALID(new Vector4f(0.5f, 0.5f, 0.5f, 1f));
 
     public final double darkModeBrightness, lightModeBrightness;
 
@@ -33,6 +36,10 @@ public enum UIColors {
         lightColor = null;
     }
 
+    private UIColors(Vector4f color) {
+        this(color, color);
+    }
+
     private UIColors(Vector4f darkColor, Vector4f lightColor) {
         this.darkColor = darkColor;
         this.lightColor = lightColor;
@@ -41,5 +48,21 @@ public enum UIColors {
 
         darkModeBrightness = 0;
         lightModeBrightness = 0;
+    }
+
+    @Override
+    public Vector4f get() {
+        // This method is being called ~5520 times per second (which is too much!)
+        // Maybe cache the results?
+
+        boolean darkMode = UI.isDarkMode();
+        if (useBrightness) {
+            double brightness = darkMode ? darkModeBrightness : lightModeBrightness;
+            Vector4f ret = (Vector4f) new Vector4f(UI.getBaseColor()).scale((float) brightness);
+            ret.w = 1.0f;
+            return ret;
+        } else {
+            return darkMode ? darkColor : lightColor;
+        }
     }
 }

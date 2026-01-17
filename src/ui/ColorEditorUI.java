@@ -22,7 +22,7 @@ public class ColorEditorUI extends AppUI<ColorEditorApp> {
                     app.getMainApp().addCustomColor(color);
                     app.getWindow().requestClose();
                 },
-                () -> get(UISizes.COLOR_PICKER_PANEL),
+                UISizes.COLOR_PICKER_PANEL,
                 UIContainer.VERTICAL,
                 true,
                 true));

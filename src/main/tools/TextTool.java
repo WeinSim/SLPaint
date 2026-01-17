@@ -3,6 +3,7 @@ package main.tools;
 import org.lwjgl.glfw.GLFW;
 
 import sutil.math.SVector;
+import sutil.ui.UI;
 
 public final class TextTool extends DragTool {
 
@@ -55,7 +56,7 @@ public final class TextTool extends DragTool {
 
     @Override
     public void start() {
-        app.getUI().select(app.getTextToolInput());
+        UI.select(app.getTextToolInput());
         text = "";
 
         state = IDLE;

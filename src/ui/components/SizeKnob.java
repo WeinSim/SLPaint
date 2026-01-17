@@ -39,7 +39,7 @@ public class SizeKnob extends UIFloatContainer {
     public void update() {
         super.update();
 
-        double wh = panel.get(UISizes.SIZE_KNOB);
+        double wh = UISizes.SIZE_KNOB.get();
         setFixedSize(new SVector(wh, wh));
     }
 

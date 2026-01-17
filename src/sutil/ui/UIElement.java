@@ -15,8 +15,6 @@ public abstract class UIElement {
     protected UIContainer parent;
     protected int relativeLayer;
 
-    protected UIPanel panel;
-
     protected boolean outlineNormal = false;
     protected boolean outlineHighlight = false;
     protected boolean backgroundNormal = false;
@@ -47,9 +45,9 @@ public abstract class UIElement {
     public void updateVisibility() {
         visible = visibilitySupplier.get();
 
-        if (this == panel.getSelectedElement()) {
+        if (this == UI.getSelectedElement()) {
             // TODO: shouldn't this only happen when visible == true?
-            panel.confirmSelectedElement();
+            UI.confirmSelectedElement();
         }
     }
 
@@ -82,16 +80,16 @@ public abstract class UIElement {
             return;
 
         switch (mouseButton) {
-            case UIPanel.LEFT -> {
+            case UI.LEFT -> {
                 if (leftClickAction != null) {
                     leftClickAction.run();
                 }
 
                 if (selectOnClick) {
-                    panel.select(this, mousePosition);
+                    UI.select(this, mousePosition);
                 }
             }
-            case UIPanel.RIGHT -> {
+            case UI.RIGHT -> {
                 if (rightClickAction != null) {
                     rightClickAction.run();
                 }
@@ -166,10 +164,6 @@ public abstract class UIElement {
         return this;
     }
 
-    protected void setPanel(UIPanel panel) {
-        this.panel = panel;
-    }
-
     public boolean mouseAbove() {
         return mouseAbove;
     }
@@ -194,10 +188,6 @@ public abstract class UIElement {
         return parent.getAbsolutePosition().add(position);
     }
 
-    public UIPanel getPanel() {
-        return panel;
-    }
-
     public Vector4f backgroundColor() {
         return style.backgroundColor();
     }
@@ -220,17 +210,17 @@ public abstract class UIElement {
 
     public final Vector4f strokeColor() {
         Vector4f ol = style.strokeColor();
-        if (ol == null && panel.getSelectedElement() == this) {
-            ol = panel.get(UIColors.OUTLINE_NORMAL);
+        if (ol == null && UI.getSelectedElement() == this) {
+            ol = UIColors.OUTLINE_NORMAL.get();
         }
         return ol;
     }
 
     public final double strokeWeight() {
         double sw = style.strokeWeight();
-        if (panel.getSelectedElement() == this) {
+        if (UI.getSelectedElement() == this) {
             if (style.strokeColor() == null) {
-                sw = panel.get(UISizes.STROKE_WEIGHT);
+                sw = UISizes.STROKE_WEIGHT.get();
             } else {
                 sw *= 2;
             }
@@ -302,24 +292,24 @@ public abstract class UIElement {
         Supplier<Vector4f> backgroundColorSupplier = () -> {
             Vector4f bgColor = null;
             if (backgroundNormal) {
-                bgColor = panel.get(UIColors.BACKGROUND_NORMAL);
+                bgColor = UIColors.BACKGROUND_NORMAL.get();
             }
             if (mouseAbove && backgroundHighlight) {
-                bgColor = panel.get(UIColors.BACKGROUND_HIGHLIGHT);
+                bgColor = UIColors.BACKGROUND_HIGHLIGHT.get();
             }
             return bgColor;
         };
         Supplier<Vector4f> outlineColorSupplier = () -> {
             Vector4f outlineColor = null;
             if (outlineNormal) {
-                outlineColor = panel.get(UIColors.OUTLINE_NORMAL);
+                outlineColor = UIColors.OUTLINE_NORMAL.get();
             }
             if (mouseAbove && outlineHighlight) {
-                outlineColor = panel.get(UIColors.OUTLINE_HIGHLIGHT);
+                outlineColor = UIColors.OUTLINE_HIGHLIGHT.get();
             }
             return outlineColor;
         };
-        Supplier<Double> strokeWeightSupplier = () -> panel.get(UISizes.STROKE_WEIGHT);
+        Supplier<Double> strokeWeightSupplier = UISizes.STROKE_WEIGHT;
 
         style = new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier);
     }

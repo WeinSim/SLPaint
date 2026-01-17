@@ -10,18 +10,17 @@ import main.apps.MainApp;
 import renderEngine.fonts.TextFont;
 import renderEngine.shaders.bufferobjects.FrameBufferObject;
 import sutil.math.SVector;
+import sutil.ui.UI;
 import sutil.ui.UIColors;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
 import sutil.ui.UIFloatContainer;
 import sutil.ui.UIImage;
-import sutil.ui.UIPanel;
 import sutil.ui.UIRadioButton;
 import sutil.ui.UISizes;
 import sutil.ui.UIText;
 import sutil.ui.UITextInput;
 import sutil.ui.UIToggle;
-import ui.AppUI;
 import ui.components.AlphaScale;
 import ui.components.HueSatField;
 import ui.components.LightnessScale;
@@ -76,17 +75,16 @@ public class AppRenderer {
     }
 
     protected void setDefaultBGColor() {
-        uiMaster.setBGColor(app.getUI().get(UIColors.BACKGROUND_NORMAL));
+        uiMaster.setBGColor(UIColors.BACKGROUND_NORMAL.get());
     }
 
     protected void renderUI() {
         uiMaster.resetMatrix();
-        AppUI<?> ui = app.getUI();
 
         layer = 0;
         division = 0;
 
-        renderUIElement(ui.getRoot());
+        renderUIElement(UI.getRoot());
     }
 
     /**
@@ -105,8 +103,6 @@ public class AppRenderer {
 
         int oldLayer = layer;
         int oldDivision = division;
-
-        UIPanel ui = element.getPanel();
 
         SVector position = element.getPosition();
         SVector size = element.getSize();
@@ -148,7 +144,7 @@ public class AppRenderer {
         int debugOutline = App.getDebugOutline();
         if ((debugOutline == 1 && element.mouseAbove()) || debugOutline == 2) {
             uiMaster.stroke(new SVector(1, 0.7, 0.1));
-            uiMaster.strokeWeight(app.getUI().get(UISizes.STROKE_WEIGHT));
+            uiMaster.strokeWeight(UISizes.STROKE_WEIGHT.get());
             doOutline = true;
         } else if (element.doStrokeCheckerboard()) {
             Vector4f c1 = element.strokeCheckerboardColor1(),
@@ -208,7 +204,7 @@ public class AppRenderer {
             uiMaster.hueSatField(position, size, App.isCircularHueSatField(), App.isHSLColorSpace());
         }
         if (element instanceof UIToggle toggle) {
-            uiMaster.fill(ui.get(UIColors.BACKGROUND_HIGHLIGHT_2));
+            uiMaster.fill(UIColors.BACKGROUND_HIGHLIGHT_2.get());
             double wh = size.y;
             double difference = size.x - size.y;
             uiMaster.ellipse(new SVector(position.x, position.y), new SVector(wh, wh));
@@ -216,7 +212,7 @@ public class AppRenderer {
             uiMaster.noStroke();
             uiMaster.rect(new SVector(position.x + wh / 2, position.y), new SVector(difference, wh));
 
-            uiMaster.fill(ui.get(UIColors.TEXT));
+            uiMaster.fill(UIColors.TEXT.get());
             double x = position.x + (toggle.getState() ? difference : 0);
             SVector pos = new SVector(x, position.y);
             SVector s = new SVector(wh, wh);
@@ -226,14 +222,14 @@ public class AppRenderer {
             uiMaster.ellipse(pos, s);
         }
         if (element instanceof UIRadioButton radio) {
-            uiMaster.fill(ui.get(UIColors.BACKGROUND_HIGHLIGHT_2));
+            uiMaster.fill(UIColors.BACKGROUND_HIGHLIGHT_2.get());
             uiMaster.ellipse(position, size);
 
             if (radio.getState()) {
                 final double factor = 0.6;
                 SVector pos = size.copy().scale((1 - factor) / 2).add(position);
                 SVector siz = size.copy().scale(factor);
-                uiMaster.fill(ui.get(UIColors.TEXT));
+                uiMaster.fill(UIColors.TEXT.get());
                 uiMaster.ellipse(pos, siz);
             }
         }
@@ -268,7 +264,7 @@ public class AppRenderer {
         if (element instanceof AlphaScale.ASVisuals a) {
             // checkerboard background
             uiMaster.noStroke();
-            Vector4f[] transparency = { ui.get(UIColors.TRANSPARENCY_1), ui.get(UIColors.TRANSPARENCY_2) };
+            Vector4f[] transparency = { UIColors.TRANSPARENCY_1.get(), UIColors.TRANSPARENCY_2.get() };
             uiMaster.checkerboardFill(transparency, size.y / 2);
             uiMaster.rect(position, size);
 

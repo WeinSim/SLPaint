@@ -16,7 +16,7 @@ public abstract class UIDragContainer extends UIContainer {
     public void update() {
         super.update();
 
-        if (!panel.isLeftMousePressed())
+        if (!UI.isLeftMousePressed())
             dragging = false;
 
         if (dragging) {
@@ -29,7 +29,7 @@ public abstract class UIDragContainer extends UIContainer {
     }
 
     protected void drag() {
-        panel.setDragging();
+        UI.setDragging();
 
         SVector relativePos = new SVector(mousePosition).sub(position);
         relativePos.x /= size.x;

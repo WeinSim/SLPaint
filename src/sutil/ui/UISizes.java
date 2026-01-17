@@ -1,6 +1,10 @@
 package sutil.ui;
 
-public enum UISizes {
+import java.util.function.Supplier;
+
+import sutil.math.SVector;
+
+public enum UISizes implements Supplier<Double> {
 
     MAIN_APP(1280, 720),
     SETTINGS_APP(900, 650),
@@ -11,7 +15,7 @@ public enum UISizes {
     STROKE_WEIGHT(1.2, true),
     SCROLLBAR(15),
     SCALE_NARROW(2),
-    SCALE_WIDE(20),
+    SCALE_WIDE(18),
     SCALE_SLIDER_LENGTH(10),
     SCALE_SLIDER_WIDTH(2),
     COLOR_BUTTON(24),
@@ -48,5 +52,26 @@ public enum UISizes {
         this.width = width;
         this.height = height;
         this.forceInteger = forceInteger;
+    }
+
+    @Override
+    public Double get() {
+        return get(this);
+    }
+
+    public SVector getWidthHeight() {
+        return new SVector(getSize(width, forceInteger), getSize(height, forceInteger));
+    }
+
+    private static double get(UISizes s) {
+        return getSize(s.size, s.forceInteger);
+    }
+
+    private static double getSize(double s, boolean forceInteger) {
+        double size = s * UI.getUIScale();
+        if (forceInteger) {
+            size = (int) Math.round(size);
+        }
+        return size;
     }
 }

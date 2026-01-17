@@ -8,7 +8,9 @@ import org.lwjglx.util.vector.Vector4f;
 
 import sutil.math.SVector;
 
-public abstract class UIPanel {
+public abstract class UI {
+
+    private static UI context = null;
 
     /**
      * Mouse buttons
@@ -16,19 +18,6 @@ public abstract class UIPanel {
     public static final int LEFT = 0, RIGHT = 1;
 
     private double uiScale = 1.0;
-
-    // /**
-    // * Space around the outside
-    // */
-    // protected double margin = 10;
-
-    // /**
-    // * Space between children
-    // */
-    // protected double padding = 10;
-
-    // protected double defaultTextSize = 32;
-    // protected double smallTextSize = 26;
 
     protected String defaultFontName = "Courier New Bold";
 
@@ -48,7 +37,9 @@ public abstract class UIPanel {
 
     private LinkedList<UIAction> eventQueue;
 
-    public UIPanel(SVector initialRootSize) {
+    public UI(SVector initialRootSize) {
+        setContext(this);
+
         selectedElement = null;
         dragging = false;
         leftMousePressed = false;
@@ -56,7 +47,7 @@ public abstract class UIPanel {
 
         eventQueue = new LinkedList<>();
 
-        root = new UIRoot(this, UIContainer.VERTICAL, UIContainer.LEFT);
+        root = new UIRoot(UIContainer.VERTICAL, UIContainer.LEFT);
         root.zeroMargin().zeroPadding().noOutline().withBackground();
         root.setFixedSize(initialRootSize);
 
@@ -142,7 +133,7 @@ public abstract class UIPanel {
         root.setFixedSize(new SVector(width, height));
     }
 
-    public void queueEvent(UIAction action) {
+    private void queueEvent(UIAction action) {
         eventQueue.add(action);
     }
 
@@ -160,11 +151,19 @@ public abstract class UIPanel {
         }
     }
 
-    public void select(UIElement element) {
+    public static void select(UIElement element) {
+        context.selectImpl(element);
+    }
+
+    public void selectImpl(UIElement element) {
         select(element, null);
     }
 
-    public void select(UIElement element, SVector mouse) {
+    public static void select(UIElement element, SVector mouse) {
+        context.selectImpl(element, mouse);
+    }
+
+    public void selectImpl(UIElement element, SVector mouse) {
         selectedElement = element;
         if (element != null) {
             element.select(mouse);
@@ -205,74 +204,87 @@ public abstract class UIPanel {
         return false;
     }
 
+    static void confirmSelectedElement() {
+        context.confirmSelectedElementImpl();
+    }
+
     /**
      * During the updateVisibility() step of update(), the currently selected
      * element has to report to the UIPanel that it is still visible.
      */
-    void confirmSelectedElement() {
+    void confirmSelectedElementImpl() {
         selectedElementVisible = true;
     }
 
-    void setDragging() {
+    static void setDragging() {
+        context.setDraggingImpl();
+    }
+
+    void setDraggingImpl() {
         dragging = true;
     }
 
-    public double textWidth(String text, double textSize, String fontName) {
+    public static double textWidth(String text, double textSize, String fontName) {
         return textWidth(text, textSize, fontName, text.length());
     }
 
-    public abstract double textWidth(String text, double textSize, String fontName, int len);
-
-    public abstract int getCharIndex(String text, double textSize, String fontName, double x);
-
-    public double get(UISizes s) {
-        return getSize(s.size, s.forceInteger);
+    public static double textWidth(String text, double textSize, String fontName, int len) {
+        return context.textWidthImpl(text, textSize, fontName, len);
     }
 
-    private double getSize(double s, boolean forceInteger) {
-        double size = s * uiScale;
-        if (forceInteger) {
-            size = (int) Math.round(size);
-        }
-        return size;
+    public abstract double textWidthImpl(String text, double textSize, String fontName, int len);
+
+    public static int getCharIndex(String text, double textSize, String fonrName, double x) {
+        return context.getCharIndexImpl(text, textSize, fonrName, x);
     }
 
-    public SVector getWidthHeight(UISizes s) {
-        return new SVector(getSize(s.width, s.forceInteger), getSize(s.height, s.forceInteger));
+    public abstract int getCharIndexImpl(String text, double textSize, String fontName, double x);
+
+    public static boolean isDarkMode() {
+        return context.isDarkModeImpl();
     }
 
-    protected abstract boolean isDarkMode();
+    protected abstract boolean isDarkModeImpl();
 
-    protected abstract Vector4f getBaseColor();
-
-    public Vector4f get(UIColors c) {
-        // This method is being called ~5520 times per second (which is too much!)
-        // Maybe cache the results?
-
-        boolean darkMode = isDarkMode();
-        if (c.useBrightness) {
-            double brightness = darkMode ? c.darkModeBrightness : c.lightModeBrightness;
-            Vector4f ret = (Vector4f) new Vector4f(getBaseColor()).scale((float) brightness);
-            ret.w = 1.0f;
-            return ret;
-        } else {
-            return darkMode ? c.darkColor : c.lightColor;
-        }
+    public static Vector4f getBaseColor() {
+        return context.getBaseColorImpl();
     }
 
-    public String getDefaultFontName() {
+    protected abstract Vector4f getBaseColorImpl();
+
+    public static double getUIScale() {
+        return context.uiScale;
+    }
+
+    public static String getDefaultFontName() {
+        return context.getDefaultFontNameImpl();
+    }
+
+    public String getDefaultFontNameImpl() {
         return defaultFontName;
     }
 
-    public UIElement getSelectedElement() {
+    public static UIElement getSelectedElement() {
+        return context.getSelectedElementImpl();
+    }
+
+    public UIElement getSelectedElementImpl() {
         return selectedElement;
     }
 
-    public boolean isLeftMousePressed() {
+    public static boolean isLeftMousePressed() {
+        return context.isLeftMousePressedImpl();
+    }
+
+    public boolean isLeftMousePressedImpl() {
         return leftMousePressed;
     }
 
-    public boolean isRightMousePressed() {
+    public static boolean isRightMousePressed() {
+        return context.isRightMousePressedImpl();
+    }
+
+    public boolean isRightMousePressedImpl() {
         return rightMousePressed;
     }
 
@@ -280,7 +292,11 @@ public abstract class UIPanel {
         this.root = root;
     }
 
-    public UIRoot getRoot() {
+    public static UIRoot getRoot() {
+        return context.getRootImpl();
+    }
+
+    public UIRoot getRootImpl() {
         return root;
     }
 
@@ -288,7 +304,11 @@ public abstract class UIPanel {
         this.uiScale = uiScale;
     }
 
-    public double getUIScale() {
-        return uiScale;
+    public static void setContext(UI context) {
+        UI.context = context;
+    }
+
+    public static UI getContext() {
+        return context;
     }
 }

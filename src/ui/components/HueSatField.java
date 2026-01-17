@@ -151,9 +151,9 @@ public class HueSatField extends UIDragContainer {
 
         @Override
         public void positionChildren() {
-            double w = panel.get(UISizes.SCALE_SLIDER_WIDTH);
+            double w = UISizes.SCALE_SLIDER_WIDTH.get();
             final double a = w * CURSOR_WIDTH / 2;
-            double len = panel.get(UISizes.SCALE_SLIDER_LENGTH);
+            double len = UISizes.SCALE_SLIDER_LENGTH.get();
             final double b = len * (CURSOR_LINE_LENGTH + CURSOR_CENTER_GAP / 2);
             final double c = len * CURSOR_CENTER_GAP / 2;
 
@@ -181,15 +181,15 @@ public class HueSatField extends UIDragContainer {
 
             // clipToRoot = false;
 
-            setStyle(new UIStyle(() -> panel.get(UIColors.TEXT), () -> null, () -> panel.get(UISizes.STROKE_WEIGHT)));
+            setStyle(new UIStyle(UIColors.TEXT, () -> null, UISizes.STROKE_WEIGHT));
         }
 
         @Override
         public void update() {
             super.update();
 
-            double len = panel.get(UISizes.MARGIN) * CURSOR_LINE_LENGTH;
-            double w = panel.get(UISizes.SCALE_SLIDER_WIDTH) * CURSOR_WIDTH;
+            double len = UISizes.MARGIN.get() * CURSOR_LINE_LENGTH;
+            double w = UISizes.SCALE_SLIDER_WIDTH.get() * CURSOR_WIDTH;
 
             if (vertical) {
                 setFixedSize(new SVector(w, len));

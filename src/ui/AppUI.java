@@ -15,11 +15,11 @@ import renderEngine.fonts.TextFont;
 import sutil.SUtil;
 import sutil.ui.UIColors;
 import sutil.ui.UIElement;
-import sutil.ui.UIPanel;
+import sutil.ui.UI;
 import sutil.ui.UISizes;
 import sutil.ui.UIStyle;
 
-public abstract class AppUI<T extends App> extends UIPanel {
+public abstract class AppUI<T extends App> extends UI {
 
     private static final Vector4f[] DEFAULT_UI_COLORS_DARK = {
             new Vector4f(0.3f, 0.3f, 0.3f, 1.0f),
@@ -50,24 +50,24 @@ public abstract class AppUI<T extends App> extends UIPanel {
 
     public static <E extends UIElement> E setSelectableButtonStyle(E element, Supplier<Boolean> selectedSupplier) {
         Supplier<Vector4f> backgroundColorSupplier = () -> selectedSupplier.get()
-                ? element.getPanel().get(UIColors.BACKGROUND_HIGHLIGHT_2)
+                ? UIColors.BACKGROUND_HIGHLIGHT_2.get()
                 : null;
         Supplier<Vector4f> outlineColorSupplier = () -> element.mouseAbove()
-                ? element.getPanel().get(UIColors.OUTLINE_NORMAL)
+                ? UIColors.OUTLINE_NORMAL.get()
                 : null;
-        Supplier<Double> strokeWeightSupplier = () -> element.getPanel().get(UISizes.STROKE_WEIGHT);
+        Supplier<Double> strokeWeightSupplier = UISizes.STROKE_WEIGHT;
         element.setStyle(new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier));
         return element;
     }
 
     @Override
-    public double textWidth(String text, double textSize, String fontName, int len) {
+    public double textWidthImpl(String text, double textSize, String fontName, int len) {
         TextFont font = app.getLoader().loadFont(fontName);
         return font.textWidth(text, len) * textSize / font.getSize();
     }
 
     @Override
-    public int getCharIndex(String text, double textSize, String fontName, double x) {
+    public int getCharIndexImpl(String text, double textSize, String fontName, double x) {
         TextFont font = app.getLoader().loadFont(fontName);
         return font.getCharIndex(text, x / textSize * font.getSize());
     }
@@ -120,7 +120,7 @@ public abstract class AppUI<T extends App> extends UIPanel {
     }
 
     @Override
-    protected boolean isDarkMode() {
+    protected boolean isDarkModeImpl() {
         return isDarkModeStatic();
     }
 
@@ -139,7 +139,7 @@ public abstract class AppUI<T extends App> extends UIPanel {
     }
 
     @Override
-    protected Vector4f getBaseColor() {
+    protected Vector4f getBaseColorImpl() {
         return getBaseColorStatic();
     }
 

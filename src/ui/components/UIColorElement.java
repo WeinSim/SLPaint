@@ -2,8 +2,6 @@ package ui.components;
 
 import java.util.function.Supplier;
 
-import org.lwjglx.util.vector.Vector4f;
-
 import main.apps.MainApp;
 import sutil.math.SVector;
 import sutil.ui.UIColors;
@@ -32,12 +30,11 @@ public class UIColorElement extends UIElement {
         style.setBackgroundColor(() -> MainApp.toVector4f(getColor()));
         style.setBackgroundCheckerboard(
                 () -> getColor() != null,
-                () -> panel.get(UIColors.TRANSPARENCY_1),
-                () -> panel.get(UIColors.TRANSPARENCY_2),
-                () -> panel.get(UISizes.CHECKERBOARD));
+                UIColors.TRANSPARENCY_1,
+                UIColors.TRANSPARENCY_2,
+                UISizes.CHECKERBOARD);
         if (outline) {
-            style.setStrokeColor(
-                    () -> getColor() == null ? new Vector4f(0.5f, 0.5f, 0.5f, 1.0f) : panel.get(UIColors.TEXT));
+            style.setStrokeColor(() -> getColor() == null ? UIColors.INVALID.get() : UIColors.TEXT.get());
         }
     }
 

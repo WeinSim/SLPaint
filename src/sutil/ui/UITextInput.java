@@ -84,7 +84,7 @@ public class UITextInput extends UIContainer {
                     if (multiline) {
                         charInput('\n');
                     } else {
-                        panel.select(null);
+                        UI.select(null);
                     }
                 }
             }
@@ -149,7 +149,7 @@ public class UITextInput extends UIContainer {
     }
 
     public SVector getCursorSize() {
-        return new SVector(panel.get(UISizes.STROKE_WEIGHT), uiText.getTextSize());
+        return new SVector(UISizes.STROKE_WEIGHT.get(), uiText.getTextSize());
     }
 
     public boolean isCursorVisible() {
@@ -161,6 +161,6 @@ public class UITextInput extends UIContainer {
     }
 
     private boolean active() {
-        return panel.getSelectedElement() == this;
+        return UI.getSelectedElement() == this;
     }
 }

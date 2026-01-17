@@ -3,6 +3,7 @@ package main.apps;
 import org.lwjgl.glfw.GLFW;
 
 import renderEngine.Window;
+import sutil.ui.UI;
 import sutil.ui.UINumberInput;
 import ui.AppUI;
 import ui.ResizeUI;
@@ -34,7 +35,7 @@ public final class ResizeApp extends App {
         super.update(deltaT);
 
         if (frameCount == 1) {
-            ui.select(widthInput);
+            UI.select(widthInput);
         }
     }
 
