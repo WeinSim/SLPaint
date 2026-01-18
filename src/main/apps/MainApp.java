@@ -36,6 +36,7 @@ import ui.components.ImageCanvas;
  * TODO continue:
  *   Image resizing
  *     Size knobs
+ *     The image resize UI should not crop the image but stretch / squish it!
  * 
  * App:
  *   Selection tool
@@ -101,6 +102,7 @@ import ui.components.ImageCanvas;
  *   Instead of the ImageCanvas being on layer 0 and everything else on layer
  *     ImageCanvas.NUM_UI_LAYERS, put everything on layer 0 and turn on the
  *     clip area for the ImageCanvas?
+ * 
  * Rendering:
  *   Improve UITextInput cursor visibility
  *   Text rendering
@@ -277,7 +279,7 @@ public final class MainApp extends App {
     }
 
     public void drawLine(int x0, int y0, int x1, int y1, int size, int color) {
-        Image image = imageFileManager.getImage();
+        Image image = getImage();
 
         final int maxOffset = (size - 1) / 2;
 
@@ -295,6 +297,8 @@ public final class MainApp extends App {
                 int py = x1 == x0 ? y0 : (int) Math.round(SUtil.map(x, x0, x1, y0, y1));
                 for (int yoff = -2 * maxOffset; yoff <= 2 * maxOffset; yoff++) {
                     int y = py + yoff;
+                    if (!image.isInside(x, y))
+                        continue;
                     SVector pa = new SVector(x - x0, y - y0);
                     double h = Math.min(Math.max(pa.dot(ba) * invBaSq, 0), 1);
                     if (Double.isFinite(h)) {
@@ -313,6 +317,8 @@ public final class MainApp extends App {
                 int px = y1 == y0 ? x0 : (int) Math.round(SUtil.map(y, y0, y1, x0, x1));
                 for (int xoff = -2 * maxOffset; xoff <= 2 * maxOffset; xoff++) {
                     int x = px + xoff;
+                    if (!image.isInside(x, y))
+                        continue;
                     SVector pa = new SVector(x - x0, y - y0);
                     double h = Math.min(Math.max(pa.dot(ba) * invBaSq, 0), 1);
                     if (Double.isFinite(h)) {
@@ -348,10 +354,13 @@ public final class MainApp extends App {
         };
     }
 
-    public void resizeImage(int newWidth, int newHeight) {
-        getImage().changeSize(newWidth, newHeight, secondaryColor);
-
-        renderer.updateImageSize(newWidth, newHeight);
+    public void resizeImage(int newWidth, int newHeight, boolean crop) {
+        if (crop) {
+            getImage().crop(newWidth, newHeight, secondaryColor);
+        } else {
+            // TODO
+        }
+        renderer.setTempFBOSize(newWidth, newHeight);
     }
 
     public void openImage() {

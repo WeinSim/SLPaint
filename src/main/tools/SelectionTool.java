@@ -64,8 +64,6 @@ public final class SelectionTool extends DragTool {
     @Override
     public void finish() {
         if (selection != null) {
-            // app.getImage().drawSubImage(x, y, width, height,
-            // selection.getBufferedImage());
             app.renderImageToImage(selection, x, y, width, height);
             clearSelection();
         }

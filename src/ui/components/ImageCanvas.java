@@ -56,10 +56,7 @@ public class ImageCanvas extends UIContainer {
 
         style.setBackgroundColor(UIColors.CANVAS);
 
-        // TODO: calling resetImageTransform here crashes because the ImageCanvas
-        // doesn't know its panel yet.
-        // resetImageTransform();
-        imageTranslation = new SVector();
+        resetImageTransform();
 
         draggingImage = false;
 

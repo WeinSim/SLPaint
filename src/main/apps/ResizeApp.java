@@ -60,7 +60,7 @@ public final class ResizeApp extends App {
     }
 
     public void done() {
-        mainApp.queueEvent(() -> mainApp.resizeImage(widthPixels, heightPixels));
+        mainApp.queueEvent(() -> mainApp.resizeImage(widthPixels, heightPixels, false));
         window.requestClose();
     }
 
@@ -127,7 +127,7 @@ public final class ResizeApp extends App {
     private void clampHeightPixels() {
         if (heightPixels < MainApp.MIN_IMAGE_SIZE) {
             setHeightPixels(MainApp.MIN_IMAGE_SIZE);
-        } else if (widthPixels > MainApp.MAX_IMAGE_SIZE) {
+        } else if (heightPixels > MainApp.MAX_IMAGE_SIZE) {
             setHeightPixels(MainApp.MAX_IMAGE_SIZE);
         }
     }

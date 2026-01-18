@@ -1,6 +1,7 @@
 package renderEngine;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL30;
 import org.lwjglx.util.vector.Vector4f;
 
@@ -312,15 +313,15 @@ public class AppRenderer {
         FrameBufferObject fbo = uiMaster.getTempFBO();
         int fboWidth = fbo.width(), fboHeight = fbo.height();
 
-        int[] array = new int[fboWidth * fboHeight * 4];
+        int[] array = new int[fboWidth * fboHeight];
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID());
-        GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, GL11.GL_INT, array);
+        GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, array);
 
         // final int divisor = 1 << (31 - 8);
-        final int divisor = (int) (Integer.MAX_VALUE / 255.0);
-        for (int i = 0; i < array.length; i++) {
-            array[i] /= divisor;
-        }
+        // final int divisor = (int) (Integer.MAX_VALUE / 255.0);
+        // for (int i = 0; i < array.length; i++) {
+        // array[i] /= divisor;
+        // }
         dstImage.drawSubImage(0, 0, fboWidth, fboHeight, array);
     }
 
@@ -350,19 +351,19 @@ public class AppRenderer {
         FrameBufferObject fbo = uiMaster.getTempFBO();
         int width = fbo.width(), height = fbo.height();
 
-        int[] array = new int[width * height * 4];
+        int[] array = new int[width * height];
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID());
-        GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, GL11.GL_INT, array);
+        GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, array);
 
         // final int divisor = 1 << (31 - 8);
-        final int divisor = (int) (Integer.MAX_VALUE / 255.0);
-        for (int i = 0; i < array.length; i++) {
-            array[i] /= divisor;
-        }
+        // final int divisor = (int) (Integer.MAX_VALUE / 255.0);
+        // for (int i = 0; i < array.length; i++) {
+        // array[i] /= divisor;
+        // }
         image.drawSubImage(0, 0, width, height, array);
     }
 
-    public void updateImageSize(int width, int height) {
+    public void setTempFBOSize(int width, int height) {
         uiMaster.setTempFBOSize(width, height);
     }
 

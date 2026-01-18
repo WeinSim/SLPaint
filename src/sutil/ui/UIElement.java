@@ -45,8 +45,7 @@ public abstract class UIElement {
     public void updateVisibility() {
         visible = visibilitySupplier.get();
 
-        if (this == UI.getSelectedElement()) {
-            // TODO: shouldn't this only happen when visible == true?
+        if (visible && this == UI.getSelectedElement()) {
             UI.confirmSelectedElement();
         }
     }
