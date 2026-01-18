@@ -6,19 +6,18 @@ import java.util.function.Supplier;
 import main.apps.ResizeApp;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
-import sutil.ui.UILabel;
 import sutil.ui.UINumberInput;
 import sutil.ui.UIRadioButtonList;
 import sutil.ui.UIText;
 
 public class ResizeUI extends AppUI<ResizeApp> {
 
-    private int sizeMode;
+    private int inputMode;
 
     public ResizeUI(ResizeApp app) {
         super(app);
 
-        sizeMode = ResizeApp.PIXELS;
+        inputMode = ResizeApp.PIXELS;
     }
 
     @Override
@@ -29,21 +28,32 @@ public class ResizeUI extends AppUI<ResizeApp> {
         root.setPaddingScale(1.0);
         root.setAlignment(UIContainer.CENTER);
 
-        root.add(new UILabel("Resize"));
+        // root.add(new UILabel("Resize"));
 
-        UIContainer mode = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
-        mode.zeroMargin().noOutline();
-        mode.add(new UIText("By:"));
-        UIRadioButtonList radioButtons = new UIRadioButtonList(
+        UIRadioButtonList resizeMode = new UIRadioButtonList(
+                UIContainer.HORIZONTAL,
+                new String[] { "Scale image", "Crop image" },
+                app::getResizeMode,
+                app::setResizeMode);
+        resizeMode.setMarginScale(1.0).setPaddingScale(2.0);
+        root.add(resizeMode);
+
+        UIContainer inner = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+        inner.setHFillSize();
+
+        UIContainer inputMode = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        inputMode.setHFillSize().noOutline();
+        // inputMode.zeroMargin();
+        inputMode.add(new UIText("By:"));
+        // inputMode.add(new UIContainer(0, 0).zeroMargin().setHFillSize().noOutline());
+        UIContainer radioButtons = new UIRadioButtonList(
                 UIContainer.HORIZONTAL,
                 new String[] { "Pixels", "Percentage" },
-                this::getSizeMode,
-                this::setSizeMode);
-        mode.add(radioButtons);
-        root.add(mode);
-
-        UIContainer absolute = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
-        absolute.setHFillSize();
+                this::getInputMode,
+                this::setInputMode);
+        radioButtons.setPaddingScale(2.0);
+        inputMode.add(radioButtons);
+        inner.add(inputMode);
 
         for (int i = 0; i < 2; i++) {
             UIContainer row = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
@@ -58,18 +68,18 @@ public class ResizeUI extends AppUI<ResizeApp> {
             UINumberInput pixelInput = new UINumberInput(pixelGetter, pixelSetter),
                     percentageInput = new UINumberInput(percentageGetter, percentageSetter);
 
-            pixelInput.setVisibilitySupplier(() -> getSizeMode() == ResizeApp.PIXELS);
-            percentageInput.setVisibilitySupplier(() -> getSizeMode() == ResizeApp.PERCENTAGE);
+            pixelInput.setVisibilitySupplier(() -> getInputMode() == ResizeApp.PIXELS);
+            percentageInput.setVisibilitySupplier(() -> getInputMode() == ResizeApp.PERCENTAGE);
 
             if (i == 0)
                 app.setWidthInput(pixelInput);
 
             row.add(pixelInput);
             row.add(percentageInput);
-            absolute.add(row);
+            inner.add(row);
         }
 
-        root.add(absolute);
+        root.add(inner);
 
         UIContainer buttonRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.RIGHT, UIContainer.CENTER);
         buttonRow.setHFillSize().zeroMargin().noOutline();
@@ -80,11 +90,11 @@ public class ResizeUI extends AppUI<ResizeApp> {
         root.add(buttonRow);
     }
 
-    public int getSizeMode() {
-        return sizeMode;
+    public int getInputMode() {
+        return inputMode;
     }
 
-    public void setSizeMode(int sizeMode) {
-        this.sizeMode = sizeMode;
+    public void setInputMode(int sizeMode) {
+        this.inputMode = sizeMode;
     }
 }

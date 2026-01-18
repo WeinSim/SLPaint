@@ -8,13 +8,8 @@ public class AlphaScale extends UIScale {
     private ColorPicker colorPicker;
 
     public AlphaScale(int orientation, ColorPicker colorPicker) {
-        super(orientation, () -> colorPicker.getAlpha() / 255.0, d -> colorPicker.setAlpha((int) (d * 255)));
+        super(orientation, () -> colorPicker.getAlpha() / 255.0, d -> colorPicker.setAlpha((int) (d * 255)), false);
         this.colorPicker = colorPicker;
-
-        narrow = false;
-
-        // relativeLayer = 1;
-        // draggable.setRelativeLayer(-1);
     }
 
     @Override

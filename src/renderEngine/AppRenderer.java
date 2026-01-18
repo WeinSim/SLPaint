@@ -317,11 +317,6 @@ public class AppRenderer {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID());
         GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, array);
 
-        // final int divisor = 1 << (31 - 8);
-        // final int divisor = (int) (Integer.MAX_VALUE / 255.0);
-        // for (int i = 0; i < array.length; i++) {
-        // array[i] /= divisor;
-        // }
         dstImage.drawSubImage(0, 0, fboWidth, fboHeight, array);
     }
 
@@ -355,12 +350,31 @@ public class AppRenderer {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID());
         GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, array);
 
-        // final int divisor = 1 << (31 - 8);
-        // final int divisor = (int) (Integer.MAX_VALUE / 255.0);
-        // for (int i = 0; i < array.length; i++) {
-        // array[i] /= divisor;
-        // }
         image.drawSubImage(0, 0, width, height, array);
+    }
+
+    /**
+     * WARNING: this method expects the temp framebuffer to have a size of
+     * {@code newWidth} x {@code newHeight}!
+     */
+    public void resizeImage(Image image, int newWidth, int newHeight) {
+        uiMaster.start();
+        uiMaster.tempFrameBuffer();
+
+        GL11.glDisable(GL11.GL_BLEND);
+
+        uiMaster.image(image.getTextureID(), new SVector(), new SVector(newWidth, newHeight));
+
+        uiMaster.render();
+
+        FrameBufferObject fbo = uiMaster.getTempFBO();
+        int width = fbo.width(), height = fbo.height();
+
+        int[] array = new int[width * height];
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID());
+        GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, array);
+
+        image.resize(newWidth, newHeight, array);
     }
 
     public void setTempFBOSize(int width, int height) {

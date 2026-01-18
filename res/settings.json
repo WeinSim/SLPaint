@@ -2,7 +2,13 @@
     "transparentSelection" : true,
     "customUIColors" : {
         "capacity" : 10,
-        "values" : []
+        "values" : [
+            [
+                83,
+                68,
+                78
+            ]
+        ]
     },
     "darkMode" : true,
     "baseColor" : [

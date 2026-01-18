@@ -31,16 +31,10 @@ public class SizeKnob extends UIFloatContainer {
         final int visibleStates = DragTool.IDLE | DragTool.IDLE_DRAG | DragTool.RESIZING;
         setVisibilitySupplier(() -> (tool.getState() & visibleStates) != 0);
 
+        setFixedSize(UISizes.SIZE_KNOB.getWidthHeight());
+
         Anchor parentAnchor = Anchor.fromOffsets(dx, dy);
         addAnchor(Anchor.CENTER_CENTER, parent, parentAnchor);
-    }
-
-    @Override
-    public void update() {
-        super.update();
-
-        double wh = UISizes.SIZE_KNOB.get();
-        setFixedSize(new SVector(wh, wh));
     }
 
     public void updateSelection(SVector dragStartPos, SVector dragStartSize, SVector mouseDelta, boolean lockRatio) {

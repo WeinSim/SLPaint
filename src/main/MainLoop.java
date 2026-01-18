@@ -27,7 +27,7 @@ public class MainLoop {
 
         testImports();
 
-        // Loader.createFontAtlas("Courier New", 32);
+        // Loader.createFontAtlas("Courier New", 36);
         // Loader.createFontAtlas("Courier New Bold", 18);
 
         // Disables the message

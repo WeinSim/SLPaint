@@ -12,12 +12,15 @@ public final class ResizeApp extends App {
 
     public static final int PIXELS = 0, PERCENTAGE = 1;
 
+    public static final int CROP = 1, SCALE = 0;
+
     private MainApp mainApp;
 
     private UINumberInput widthInput;
 
     private int widthPixels = 0, heightPixels = 0;
     private double widthPercentage = 0, heightPercentage = 0;
+    private int resizeMode;
 
     private final int initialWidth, initialHeight;
 
@@ -30,6 +33,8 @@ public final class ResizeApp extends App {
         initialHeight = mainApp.getImage().getHeight();
         setWidthPixels(initialWidth);
         setHeightPixels(initialHeight);
+
+        resizeMode = SCALE;
 
         addKeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, this::cancel, false);
 
@@ -60,7 +65,12 @@ public final class ResizeApp extends App {
     }
 
     public void done() {
-        mainApp.queueEvent(() -> mainApp.resizeImage(widthPixels, heightPixels, false));
+        mainApp.queueEvent(
+                switch (resizeMode) {
+                    case CROP -> () -> mainApp.cropImage(widthPixels, heightPixels);
+                    case SCALE -> () -> mainApp.resizeImage(widthPixels, heightPixels);
+                    default -> throw new IllegalArgumentException("resizeMode must be either CROP or SCALE");
+                });
         window.requestClose();
     }
 
@@ -130,5 +140,13 @@ public final class ResizeApp extends App {
         } else if (heightPixels > MainApp.MAX_IMAGE_SIZE) {
             setHeightPixels(MainApp.MAX_IMAGE_SIZE);
         }
+    }
+
+    public int getResizeMode() {
+        return resizeMode;
+    }
+
+    public void setResizeMode(int resizeMode) {
+        this.resizeMode = resizeMode;
     }
 }

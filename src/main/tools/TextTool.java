@@ -32,9 +32,9 @@ public final class TextTool extends DragTool {
         // System.out.format("getFontFamilyNames: %.3fms\n", (System.nanoTime() -
         // startTime) * 1e-6);
 
-        FONT_NAMES = new String[] { "Courier New Bold" };
+        FONT_NAMES = new String[] { "Courier New" };
 
-        DEFAULT_FONT_NAME = "Courier New Bold";
+        DEFAULT_FONT_NAME = "Courier New";
         // DEFAULT_FONT_NAME = (new Font("Courier", Font.PLAIN, 1)).getFamily();
 
         INSTANCE = new TextTool();

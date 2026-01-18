@@ -36,7 +36,6 @@ import ui.components.ImageCanvas;
  * TODO continue:
  *   Image resizing
  *     Size knobs
- *     The image resize UI should not crop the image but stretch / squish it!
  * 
  * App:
  *   Selection tool
@@ -88,11 +87,6 @@ import ui.components.ImageCanvas;
  *       Have OpenGL also do correct gamma blending?
  * 
  * UI:
- *   Add a sizeGetter in UIContainer (or UIElement?) to replace all of the
- *     overriden update() methods that set a fixed size?
- *   PositionSuppliers for UIFloatContainers should be able to take
- *     Supplier<SVector>s as arguments
- *     Would fix the scrollbar stuttering
  *   Make the pencil size UI prettier
  *   Text wrapping (see "Text input")
  *   Fix bug in UILabel: when the textUpdater returns text containig newline
@@ -111,8 +105,11 @@ import ui.components.ImageCanvas;
  *       How to handle big font sizes?
  *         Generate texture atlas using fontbm on demand?
  *         Use SDFs (either in addition to or instead of regular bitmap fonts)?
+ *     Have different subdirectories for different sizes of the same font
  *     Reloading the shaders with Shift+S breaks text rendering
  *       Likely reason: the textData UBO isn't being updated
+ *     Glitchy pixels: when using Courier New (size 36), the lowecase 'u' has a
+ *       diagonal line of flickering pixels going bottom-left to top-right.
  *     Text renders inconsistently: some letters are blurry and other are not.
  *       For example, using Courier New Bold with a rasterized text size of 32,
  *       the letters 'e', 'r', 'i' and 'd' are blurry, whereas 'p', 'u', 'm'
@@ -354,12 +351,22 @@ public final class MainApp extends App {
         };
     }
 
-    public void resizeImage(int newWidth, int newHeight, boolean crop) {
-        if (crop) {
-            getImage().crop(newWidth, newHeight, secondaryColor);
-        } else {
-            // TODO
-        }
+    /**
+     * Stretches / squishes the image.
+     * Not to be confused with {@link MainApp#cropImage(int, int)}.
+     */
+    public void resizeImage(int newWidth, int newHeight) {
+        renderer.setTempFBOSize(newWidth, newHeight);
+
+        renderer.resizeImage(getImage(), newWidth, newHeight);
+    }
+
+    /**
+     * Crops the image. Not to be confused with
+     * {@link MainApp#resizeImage(int, int)}.
+     */
+    public void cropImage(int newWidth, int newHeight) {
+        getImage().crop(newWidth, newHeight, secondaryColor);
         renderer.setTempFBOSize(newWidth, newHeight);
     }
 

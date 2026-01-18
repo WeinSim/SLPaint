@@ -130,17 +130,6 @@ public class UIContainer extends UIElement {
         child.parent = this;
     }
 
-    // TODO: what is the purpose of this locking mechanism?
-    public void lock() {
-        children.lock();
-
-        for (UIElement child : children.children) {
-            if (child instanceof UIContainer container) {
-                container.lock();
-            }
-        }
-    }
-
     @Override
     public void updateVisibility() {
         super.updateVisibility();
@@ -251,7 +240,7 @@ public class UIContainer extends UIElement {
         }
     }
 
-    public final void setMinSize() {
+    public void setMinSize() {
         for (UIElement child : getChildren()) {
             if (child instanceof UIContainer container) {
                 container.setMinSize();
@@ -839,28 +828,18 @@ public class UIContainer extends UIElement {
         private SVector dragStartD;
 
         UIScrollbarContainer(UIContainer scrollArea, int orientation) {
-            // super(new UIScrollbar(scrollArea, orientation));
-
             this.orientation = orientation;
             this.scrollArea = scrollArea;
 
             scrollbar = new UIScrollbar(scrollArea, this, orientation);
             add(scrollbar);
 
-            style.setStrokeColor(() -> scrollArea.strokeColor());
-            style.setStrokeWeight(() -> scrollArea.strokeWeight());
+            style.setStrokeColor(scrollArea::strokeColor);
+            style.setStrokeWeight(scrollArea::strokeWeight);
             withBackground();
             zeroMargin();
 
             setVisibilitySupplier(() -> scrollArea.showScrollbar(orientation));
-
-            dragStartMouse = new SVector();
-            dragStartD = new SVector();
-        }
-
-        @Override
-        public void update() {
-            super.update();
 
             double min = UISizes.SCROLLBAR.get();
             if (orientation == VERTICAL) {
@@ -870,6 +849,9 @@ public class UIContainer extends UIElement {
                 setHFillSize();
                 setVFixedSize(min);
             }
+
+            dragStartMouse = new SVector();
+            dragStartD = new SVector();
         }
 
         @Override
@@ -950,22 +932,23 @@ public class UIContainer extends UIElement {
 
             setStyle(style);
 
+            addAnchor(Anchor.TOP_LEFT, this::getPos);
+
             relativeLayer = 0;
             clipToRoot = false;
             ignoreClipArea = false;
         }
 
-        @Override
-        public void update() {
-            super.update();
-
-            clearAnchors();
+        private SVector getPos() {
             SVector siz = new SVector(parent.getSize()).sub(size);
             SVector pos = new SVector(scrollbarContainer.getRelativeX(), scrollbarContainer.getRelativeY()).mult(siz);
-            addAnchor(Anchor.TOP_LEFT, pos);
+            return pos;
+        }
 
+        @Override
+        public void setMinSize() {
             double min = UISizes.SCROLLBAR.get();
-            setFixedSize(new SVector(min, min));
+            size.set(min, min);
         }
 
         public void expandAsNeccessary() {
@@ -983,30 +966,12 @@ public class UIContainer extends UIElement {
 
         private ArrayList<UIElement> children;
 
-        private boolean locked = false;
-
         ChildList() {
             children = new ArrayList<>();
         }
 
         void add(UIElement child) {
-            checkNotLocked();
             children.add(child);
-        }
-
-        // void addFirst(UIElement child) {
-        // checkNotLocked();
-        // children.addFirst(child);
-        // }
-
-        void checkNotLocked() {
-            if (locked) {
-                throw new IllegalStateException("Cannot add children to UIContainer after it has been locked.");
-            }
-        }
-
-        void lock() {
-            locked = true;
         }
 
         @Override

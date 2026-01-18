@@ -21,8 +21,8 @@ public abstract sealed class ToolContainer<T extends ImageTool> extends UIFloatC
         noOutline();
         noBackground();
 
-        zeroPadding();
-        zeroMargin();
+        // zeroPadding();
+        // zeroMargin();
 
         setVisibilitySupplier(() -> app.getActiveTool() == tool && (tool.getState() & getVisibleStates()) != 0);
     }

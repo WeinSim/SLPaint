@@ -42,10 +42,8 @@ public abstract class AppUI<T extends App> extends UI {
 
     public AppUI(T app) {
         this.app = app;
-        super(app.getWindowSize());
-
         float[] scale = app.getWindow().getWindowContentScale();
-        setUIScale(Math.sqrt(scale[0] * scale[1]));
+        super(Math.sqrt(scale[0] * scale[1]), app.getWindowSize());
     }
 
     public static <E extends UIElement> E setSelectableButtonStyle(E element, Supplier<Boolean> selectedSupplier) {

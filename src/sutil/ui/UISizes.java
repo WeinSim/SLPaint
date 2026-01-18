@@ -8,8 +8,8 @@ public enum UISizes implements Supplier<Double> {
 
     MAIN_APP(1280, 720),
     SETTINGS_APP(900, 650),
-    MARGIN(10),
-    PADDING(10),
+    MARGIN(8),
+    PADDING(8),
     STROKE_WEIGHT(1.2, true),
     TEXT(18),
     TEXT_SMALL(14),
@@ -26,9 +26,9 @@ public enum UISizes implements Supplier<Double> {
     COLOR_BUTTON(24),
     BIG_COLOR_BUTTON(36),
     CHECKERBOARD(12),
-    COLOR_PICKER_PANEL(200),
+    HUE_SAT_FIELD(200),
     COLOR_PICKER_EXTRA_WINDOW(300),
-    COLOR_PICKER_PREVIEW(120, 75),
+    COLOR_PICKER_PREVIEW(96, 60),
     SIZE_KNOB(15);
 
     public final double size;

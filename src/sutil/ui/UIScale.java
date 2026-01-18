@@ -10,13 +10,18 @@ public class UIScale extends UIDragContainer {
     private Supplier<Double> getter;
     private Consumer<Double> setter;
 
-    protected boolean narrow;
+    private boolean narrow;
 
     public UIScale(int orientation, Supplier<Double> getter, Consumer<Double> setter) {
+        this(orientation, getter, setter, true);
+    }
+
+    public UIScale(int orientation, Supplier<Double> getter, Consumer<Double> setter, boolean narrow) {
         this.orientation = orientation;
 
         this.getter = getter;
         this.setter = setter;
+        this.narrow = narrow;
 
         setAlignment(CENTER);
 
@@ -35,23 +40,11 @@ public class UIScale extends UIDragContainer {
         add(new Filler());
         add(getVisuals(orientation));
         add(new Slider(orientation));
-
-        narrow = true;
     }
 
     protected Visuals getVisuals(int orientation) {
         return new Visuals(orientation);
     }
-
-    @Override
-    public void update() {
-        super.update();
-    }
-
-    // protected double getScaleWidth() {
-    //     double margin = orientation == VERTICAL ? getHMargin() : getVMargin();
-    //     return narrow ? 2 : 2 * margin;
-    // }
 
     @Override
     public double getRelativeX() {
@@ -93,11 +86,6 @@ public class UIScale extends UIDragContainer {
 
             noOutline();
             zeroMargin();
-        }
-
-        @Override
-        public void update() {
-            super.update();
 
             double s = getVisualWidth();
             if (orientation == VERTICAL) {
@@ -120,27 +108,23 @@ public class UIScale extends UIDragContainer {
 
             setStyle(new UIStyle(UIColors.TEXT, () -> null, UISizes.STROKE_WEIGHT));
 
-            relativeLayer = 0;
-            clipToRoot = false;
-            ignoreClipArea = false;
-        }
-
-        @Override
-        public void update() {
-            super.update();
+            addAnchor(
+                    orientation == VERTICAL ? Anchor.CENTER_LEFT : Anchor.TOP_CENTER,
+                    () -> {
+                        return new SVector(getRelativeX(), getRelativeY()).mult(parent.getSize());
+                    });
 
             double len = 2 * UISizes.SCALE_SLIDER_LENGTH.get() + getVisualWidth();
             double width = UISizes.SCALE_SLIDER_WIDTH.get();
-
             if (orientation == VERTICAL) {
                 setFixedSize(new SVector(len, width));
             } else {
                 setFixedSize(new SVector(width, len));
             }
 
-            clearAnchors();
-            SVector pos = new SVector(getRelativeX(), getRelativeY()).mult(parent.getSize());
-            addAnchor(orientation == VERTICAL ? Anchor.CENTER_LEFT : Anchor.TOP_CENTER, pos);
+            relativeLayer = 0;
+            clipToRoot = false;
+            ignoreClipArea = false;
         }
     }
 

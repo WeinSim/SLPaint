@@ -10,8 +10,8 @@ public class UIToggle extends UIContainer {
     private Supplier<Boolean> stateSupplier;
 
     public UIToggle(Supplier<Boolean> stateSupplier, Consumer<Boolean> stateConsumer) {
-        this.stateSupplier = stateSupplier;
         super(HORIZONTAL, LEFT);
+        this.stateSupplier = stateSupplier;
 
         setLeftClickAction(() -> stateConsumer.accept(!stateSupplier.get()));
 

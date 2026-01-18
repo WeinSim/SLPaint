@@ -1,6 +1,7 @@
 package sutil.ui;
 
 import java.util.ArrayList;
+import java.util.function.Supplier;
 
 import sutil.math.SVector;
 
@@ -68,19 +69,21 @@ public class UIFloatContainer extends UIContainer {
 
     public UIFloatContainer clearAnchors() {
         positionSuppliers.clear();
-
         return this;
     }
 
     public UIFloatContainer addAnchor(Anchor anchor, UIElement parent, Anchor parentAnchor) {
         positionSuppliers.add(new PositionSupplier(anchor, parent, parentAnchor));
-
         return this;
     }
 
     public UIFloatContainer addAnchor(Anchor anchor, SVector position) {
         positionSuppliers.add(new PositionSupplier(anchor, position));
+        return this;
+    }
 
+    public UIFloatContainer addAnchor(Anchor anchor, Supplier<SVector> positionSupplier) {
+        positionSuppliers.add(new PositionSupplier(anchor, positionSupplier));
         return this;
     }
 
@@ -133,18 +136,11 @@ public class UIFloatContainer extends UIContainer {
 
         final Anchor anchor;
 
-        final SVector position;
-
         final UIElement parent;
         final Anchor parentAnchor;
 
-        public PositionSupplier(Anchor anchor, SVector position) {
-            this.anchor = anchor;
-            this.position = new SVector(position);
-
-            parent = null;
-            parentAnchor = null;
-        }
+        final SVector position;
+        final Supplier<SVector> positionSupplier;
 
         public PositionSupplier(Anchor anchor, UIElement parent, Anchor parentAnchor) {
             this.anchor = anchor;
@@ -152,6 +148,25 @@ public class UIFloatContainer extends UIContainer {
             this.parentAnchor = parentAnchor;
 
             position = null;
+            positionSupplier = null;
+        }
+
+        public PositionSupplier(Anchor anchor, SVector position) {
+            this.anchor = anchor;
+            this.position = new SVector(position);
+
+            positionSupplier = null;
+            parent = null;
+            parentAnchor = null;
+        }
+
+        public PositionSupplier(Anchor anchor, Supplier<SVector> positionSupplier) {
+            this.anchor = anchor;
+            this.positionSupplier = positionSupplier;
+
+            position = null;
+            parent = null;
+            parentAnchor = null;
         }
 
         SVector getAbsolutePosition() {
@@ -163,7 +178,8 @@ public class UIFloatContainer extends UIContainer {
                 absolutePos.x += parentSize.x * parentAnchor.dx * 0.5;
                 absolutePos.y += parentSize.y * parentAnchor.dy * 0.5;
             } else {
-                absolutePos = UIFloatContainer.this.parent.getAbsolutePosition().add(position);
+                absolutePos = UIFloatContainer.this.parent.getAbsolutePosition();
+                absolutePos.add(position != null ? position : positionSupplier.get());
             }
 
             absolutePos.x -= size.x * anchor.dx * 0.5;

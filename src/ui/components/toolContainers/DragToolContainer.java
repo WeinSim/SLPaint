@@ -33,7 +33,9 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
         style.setStrokeCheckerboard(UIColors.SELECTION_BORDER_1, UIColors.SELECTION_BORDER_2, UISizes.CHECKERBOARD);
         style.setStrokeWeight(2.0);
 
-        setMarginScale(1.0);
+        // setMarginScale(1.0);
+
+        addAnchor(Anchor.TOP_LEFT, this::getPos);
 
         for (int dy = 0; dy <= 2; dy++) {
             for (int dx = 0; dx <= 2; dx++) {
@@ -103,10 +105,6 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
 
         double zoom = app.getImageZoom();
         setFixedSize(new SVector(tool.getWidth(), tool.getHeight()).scale(zoom));
-
-        SVector pos = new SVector(tool.getX(), tool.getY()).scale(zoom).add(app.getCanvas().getImageTranslation());
-        clearAnchors();
-        addAnchor(Anchor.TOP_LEFT, pos);
     }
 
     @Override
@@ -154,5 +152,10 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
     @Override
     protected int getVisibleStates() {
         return DragTool.INITIAL_DRAG | DragTool.IDLE | DragTool.IDLE_DRAG | DragTool.RESIZING;
+    }
+
+    private SVector getPos() {
+        double zoom = app.getImageZoom();
+        return new SVector(tool.getX(), tool.getY()).scale(zoom).add(app.getCanvas().getImageTranslation());
     }
 }

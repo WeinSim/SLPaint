@@ -28,13 +28,9 @@ public class LightnessScale extends UIScale {
                     } else {
                         colorPicker.setValue(value);
                     }
-                });
+                },
+                false);
         this.colorPicker = colorPicker;
-
-        narrow = false;
-
-        // relativeLayer = 1;
-        // draggable.setRelativeLayer(-1);
     }
 
     @Override

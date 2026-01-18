@@ -1,7 +1,5 @@
 package ui.components;
 
-import java.util.function.Supplier;
-
 import main.ColorPicker;
 import main.apps.App;
 import sutil.math.SVector;
@@ -29,25 +27,15 @@ public class HueSatField extends UIDragContainer {
 
     private double nextX;
 
-    private Supplier<Double> sizeSupplier;
-
-    public HueSatField(ColorPicker colorPicker, Supplier<Double> sizeSupplier) {
+    public HueSatField(ColorPicker colorPicker) {
         this.colorPicker = colorPicker;
-        this.sizeSupplier = sizeSupplier;
 
         noOutline();
 
         add(new Cursor(colorPicker));
+        setFixedSize(UISizes.HUE_SAT_FIELD.getWidthHeight());
 
         nextX = 0;
-    }
-
-    @Override
-    public void update() {
-        super.update();
-
-        double size = sizeSupplier.get();
-        setFixedSize(new SVector(size, size));
     }
 
     @Override
@@ -129,24 +117,17 @@ public class HueSatField extends UIDragContainer {
 
             noOutline();
 
+            addAnchor(Anchor.CENTER_CENTER, () -> new SVector(getRelativeX(), getRelativeY()).mult(parent.getSize()));
+
+            setFixedSize(new SVector(0, 0));
+
             for (int i = 0; i < 4; i++) {
                 add(new CursorLine(i % 2 == 0));
             }
 
-            setFixedSize(new SVector(0, 0));
-
             clipToRoot = false;
             relativeLayer = 0;
             ignoreClipArea = false;
-        }
-
-        @Override
-        public void update() {
-            super.update();
-
-            clearAnchors();
-            SVector pos = new SVector(getRelativeX(), getRelativeY()).mult(parent.getSize());
-            addAnchor(Anchor.CENTER_CENTER, pos);
         }
 
         @Override
@@ -172,23 +153,12 @@ public class HueSatField extends UIDragContainer {
 
     private static class CursorLine extends UIContainer {
 
-        private boolean vertical;
-
         public CursorLine(boolean vertical) {
             super(0, 0);
 
-            this.vertical = vertical;
-
-            // clipToRoot = false;
-
             setStyle(new UIStyle(UIColors.TEXT, () -> null, UISizes.STROKE_WEIGHT));
-        }
 
-        @Override
-        public void update() {
-            super.update();
-
-            double len = UISizes.MARGIN.get() * CURSOR_LINE_LENGTH;
+            double len = UISizes.SCALE_SLIDER_LENGTH.get() * CURSOR_LINE_LENGTH;
             double w = UISizes.SCALE_SLIDER_WIDTH.get() * CURSOR_WIDTH;
 
             if (vertical) {

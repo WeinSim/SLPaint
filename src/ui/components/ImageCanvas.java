@@ -215,34 +215,22 @@ public class ImageCanvas extends UIContainer {
             noBackground();
             zeroMargin();
 
-            relativeLayer = 0;
-            clipToRoot = false;
+            addAnchor(Anchor.TOP_LEFT, ImageCanvas.this::getImageTranslation);
 
             add(new ImageContainerChild());
-        }
 
-        @Override
-        public void update() {
-            super.update();
-
-            clearAnchors();
-            addAnchor(Anchor.TOP_LEFT, imageTranslation);
+            relativeLayer = 0;
+            clipToRoot = false;
+            ignoreClipArea = false;
         }
 
         // horrible name but whatever
         private class ImageContainerChild extends UIImage {
 
             public ImageContainerChild() {
-                super(0, new SVector());
+                super(() -> app.getImage().getTextureID(), new SVector());
 
                 style.setBackgroundCheckerboard(UIColors.TRANSPARENCY_1, UIColors.TRANSPARENCY_2, UISizes.CHECKERBOARD);
-            }
-
-            @Override
-            public void update() {
-                super.update();
-
-                setTextureID(app.getImage().getTextureID());
             }
 
             @Override

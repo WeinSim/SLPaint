@@ -7,10 +7,6 @@ public class UIDropdown extends UIContainer {
 
     private boolean expanded;
 
-    private Supplier<Integer> valueSupplier;
-    private String[] options;
-    private UIText text;
-
     private final UIFloatMenu dropdown;
 
     public UIDropdown(String[] options, Supplier<Integer> valueSupplier, Consumer<Integer> valueSetter) {
@@ -21,16 +17,13 @@ public class UIDropdown extends UIContainer {
             boolean scroll) {
 
         super(0, 0);
-        this.options = options;
-        this.valueSupplier = valueSupplier;
 
         noBackground();
         withOutline();
         zeroPadding();
         backgroundHighlight = true;
 
-        text = new UIText("");
-        add(text);
+        add(new UIText(() -> options[valueSupplier.get()]));
 
         setLeftClickAction(() -> {
             expanded = !expanded;
@@ -51,13 +44,6 @@ public class UIDropdown extends UIContainer {
         add(dropdown);
 
         expanded = false;
-    }
-
-    @Override
-    public void update() {
-        super.update();
-
-        text.setText(options[valueSupplier.get()]);
     }
 
     @Override

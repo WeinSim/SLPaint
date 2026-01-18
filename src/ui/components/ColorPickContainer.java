@@ -26,14 +26,15 @@ public class ColorPickContainer extends UIContainer {
     private static final String[] HSV_NAMES = { "H", "S", "V" };
 
     private ColorPicker colorPicker;
-    private Supplier<Double> size;
+    // private Supplier<Double> size;
 
-    public ColorPickContainer(ColorPicker colorPicker, Consumer<Integer> buttonAction, Supplier<Double> size,
+    public ColorPickContainer(ColorPicker colorPicker, Consumer<Integer> buttonAction,
+            // Supplier<Double> size,
             int orientation, boolean addAlpha, boolean addPreview) {
 
         super(orientation, orientation == VERTICAL ? CENTER : TOP);
         this.colorPicker = colorPicker;
-        this.size = size;
+        // this.size = size;
 
         zeroMargin().noOutline();
 
@@ -53,7 +54,7 @@ public class ColorPickContainer extends UIContainer {
             add(row4);
         } else {
             UIContainer right = new UIContainer(VERTICAL, CENTER);
-            right.zeroMargin().noOutline();
+            right.zeroMargin().setPaddingScale(2.0).noOutline();
             if (addAlpha) {
                 right.add(row2);
             }
@@ -67,7 +68,7 @@ public class ColorPickContainer extends UIContainer {
         UIContainer row1 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
         row1.setPaddingScale(2);
         row1.zeroMargin().noOutline();
-        HueSatField hueSatField = new HueSatField(colorPicker, size);
+        HueSatField hueSatField = new HueSatField(colorPicker);
         row1.add(hueSatField);
         UIScale lightnessScale = new LightnessScale(UIContainer.VERTICAL, colorPicker);
         row1.add(lightnessScale);
@@ -92,11 +93,11 @@ public class ColorPickContainer extends UIContainer {
     }
 
     private UIContainer createRow3(boolean addPreview) {
-        UIContainer row3 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
+        UIContainer row3 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         row3.zeroMargin().noOutline();
         row3.setHFillSize();
 
-        UIContainer colorPreview = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
+        UIContainer colorPreview = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
         colorPreview.zeroMargin().noOutline();
         UIContainer colorBox = new UIContainer(UIContainer.HORIZONTAL, 0);
         colorBox.setStyle(new UIStyle(() -> null, UIColors.TEXT, () -> 2.0));
@@ -115,7 +116,7 @@ public class ColorPickContainer extends UIContainer {
             colorBox.add(new UIColorElement(bgColorSupplier, previewSize, false));
         }
         colorPreview.add(colorBox);
-        colorPreview.add(new UIText("Preview"));
+        colorPreview.add(new UIText("Preview", true));
         row3.add(colorPreview);
 
         UIContainer gap = new UIContainer(0, 0);

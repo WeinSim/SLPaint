@@ -87,7 +87,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         baseColor.add(baseColorHeading);
 
         UIContainer allColorsContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
-        allColorsContainer.zeroMargin().noOutline();
+        allColorsContainer.zeroMargin().setPaddingScale(2.0).noOutline();
         allColorsContainer.setVisibilitySupplier(() -> colorSelectionExpanded);
 
         UIContainer defaultColors = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
@@ -104,7 +104,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
             defaultColorContainer.add(button);
         }
         defaultColors.add(defaultColorContainer);
-        defaultColors.add(new UIText("Default Colors"));
+        defaultColors.add(new UIText("Default Colors", true));
         allColorsContainer.add(defaultColors);
 
         allColorsContainer.add(new UISeparator());
@@ -114,7 +114,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         CustomColorContainer ccc = new CustomColorContainer(MainApp.getCustomUIBaseColors(), app::setUIColor);
         ccc.zeroMargin().noOutline();
         customColors.add(ccc);
-        customColors.add(new UIText("Custom Colors"));
+        customColors.add(new UIText("Custom Colors", true));
         allColorsContainer.add(customColors);
 
         allColorsContainer.add(new UIButton("Clear", () -> MainApp.getCustomUIBaseColors().clear()));
@@ -125,7 +125,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         ColorPickContainer colorPickContainer = new ColorPickContainer(
                 colorPicker,
                 MainApp::addCustomUIBaseColor,
-                UISizes.COLOR_PICKER_PANEL,
+                // UISizes.COLOR_PICKER_PANEL,
                 UIContainer.HORIZONTAL, false, true);
         colorPickContainer.setVisibilitySupplier(() -> colorSelectionExpanded);
         baseColor.add(colorPickContainer);

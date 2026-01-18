@@ -20,7 +20,6 @@ import sutil.ui.UIElement;
 import sutil.ui.UIImage;
 import sutil.ui.UILabel;
 import sutil.ui.UINumberInput;
-import sutil.ui.UIRadioButtonList;
 import sutil.ui.UIScale;
 import sutil.ui.UISeparator;
 import sutil.ui.UISizes;
@@ -37,7 +36,8 @@ public class MainUI extends AppUI<MainApp> {
     public static final int NUM_COLOR_BUTTONS_PER_ROW = 10;
 
     private String debugString = "";
-    private int test = 0;
+
+    // private int test = 0;
 
     public MainUI(MainApp app) {
         super(app);
@@ -139,31 +139,43 @@ public class MainUI extends AppUI<MainApp> {
 
         topRow.add(textTools);
 
+        UIContainer primSecColorContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
+        primSecColorContainer.zeroMargin().setPaddingScale(1.0).noOutline();
+
         for (int i = 0; i < 2; i++) {
             final int index = i;
             UIContainer colorContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+            // colorContainer.zeroMargin();
             setSelectableButtonStyle(colorContainer, () -> app.getColorSelection() == index);
             colorContainer.setSelectable(true);
 
             Supplier<Integer> cg = i == 0 ? app::getPrimaryColor : app::getSecondaryColor;
             colorContainer.add(new UIColorElement(cg, UISizes.BIG_COLOR_BUTTON));
-            UILabel label = new UILabel("%s\nColor".formatted(i == 0 ? "Primary" : "Secondary"));
+            UILabel label = new UILabel(
+                    "%s\nColor".formatted(i == 0 ? "Primary" : "Secondary")
+            // "Color %d".formatted(i + 1)
+            // i == 0 ? "Primary" : "Secondary"
+            );
             label.setAlignment(UIContainer.CENTER);
             label.zeroMargin();
             colorContainer.add(label);
 
             colorContainer.setLeftClickAction(() -> app.setColorSelection(index));
 
-            topRow.add(colorContainer);
+            primSecColorContainer.add(colorContainer);
         }
 
+        topRow.add(primSecColorContainer);
+
+        final double colorPaddingScale = 1.0;
+
         UIContainer allColors = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
-        allColors.zeroMargin().noOutline();
+        allColors.zeroMargin().setPaddingScale(colorPaddingScale).noOutline();
         UIContainer currentRow = null;
         for (int i = 0; i < MainApp.DEFAULT_COLORS.length; i++) {
             if (currentRow == null) {
                 currentRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
-                currentRow.zeroMargin().noOutline();
+                currentRow.zeroMargin().setPaddingScale(colorPaddingScale).noOutline();
             }
 
             final int color = MainApp.DEFAULT_COLORS[i];
@@ -177,7 +189,7 @@ public class MainUI extends AppUI<MainApp> {
             }
         }
         CustomColorContainer ccc = new CustomColorContainer(app.getCustomColorButtonArray(), app::selectColor);
-        ccc.zeroMargin().noOutline();
+        ccc.zeroMargin().setPaddingScale(colorPaddingScale).noOutline();
         allColors.add(ccc);
         topRow.add(allColors);
 
@@ -198,29 +210,24 @@ public class MainUI extends AppUI<MainApp> {
         sidePanel.add(new ColorPickContainer(
                 app.getSelectedColorPicker(),
                 app::addCustomColor,
-                UISizes.COLOR_PICKER_PANEL,
+                // UISizes.COLOR_PICKER_PANEL,
                 UIContainer.VERTICAL,
                 true,
                 false));
 
-        sidePanel.add(new UIRadioButtonList(
-                UIContainer.VERTICAL,
-                new String[] { "Option 1", "Option 2", "Option 3", "Option 4" },
-                this::getTest,
-                this::setTest));
+        // sidePanel.add(new UIRadioButtonList(
+        // UIContainer.VERTICAL,
+        // new String[] { "Option 1", "Option 2", "Option 3", "Option 4" },
+        // this::getTest,
+        // this::setTest));
 
         UIContainer debugPanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
                 UIContainer.VERTICAL);
-        debugPanel.setVFillSize().noOutline();
-        debugPanel.setHFixedSize(400);
+        debugPanel.setFillSize().noOutline();
 
-        debugPanel.add(new UIImage(0, new SVector(200, 200)) {
-            @Override
-            public void update() {
-                super.update();
-                textureID = app.getImage().getTextureID();
-            };
-        }.withOutline());
+        UIImage debugImage = new UIImage(() -> app.getImage().getTextureID(), new SVector(200, 200));
+        debugImage.withOutline();
+        debugPanel.add(debugImage);
 
         debugPanel.add(new UIText("Tools"));
         for (ImageTool tool : ImageTool.INSTANCES) {
@@ -240,7 +247,7 @@ public class MainUI extends AppUI<MainApp> {
         // debugPanel.add(new UITextInput(this::getDebugString, this::setDebugString,
         // true));
 
-        sidePanel.add(debugPanel.addScrollbars().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
+        // sidePanel.add(debugPanel.addScrollbars());
 
         mainRow.add(sidePanel.addScrollbars().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
 
@@ -363,11 +370,11 @@ public class MainUI extends AppUI<MainApp> {
         this.debugString = debugString;
     }
 
-    public int getTest() {
-        return test;
-    }
+    // public int getTest() {
+    // return test;
+    // }
 
-    public void setTest(int index) {
-        this.test = index;
-    }
+    // public void setTest(int index) {
+    // this.test = index;
+    // }
 }

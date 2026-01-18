@@ -26,11 +26,9 @@ public class Image {
     private int dirtyMaxY;
 
     public Image(BufferedImage image) {
-        setBufferedImage(image);
-
         textureID = GL11.glGenTextures();
 
-        updateOpenGLTexture(false);
+        setBufferedImage(image);
     }
 
     private void setBufferedImage(BufferedImage image) {
@@ -42,6 +40,8 @@ public class Image {
         pixelArray = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
         width = image.getWidth();
         height = image.getHeight();
+
+        updateOpenGLTexture(false);
     }
 
     public void updateOpenGLTexture() {
@@ -79,6 +79,45 @@ public class Image {
             GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, height, 0, GL12.GL_BGRA,
                     GL12.GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
         }
+    }
+
+    public void crop(int newWidth, int newHeight, int backgroundColor) {
+        BufferedImage oldImage = bufferedImage,
+                newImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+
+        int oldWidth = oldImage.getWidth(),
+                oldHeight = oldImage.getHeight();
+
+        int[] oldPixels = ((DataBufferInt) oldImage.getRaster().getDataBuffer()).getData(),
+                newPixels = ((DataBufferInt) newImage.getRaster().getDataBuffer()).getData();
+
+        if (newWidth > oldWidth || newHeight > oldHeight)
+            Arrays.fill(newPixels, backgroundColor);
+
+        int copyWidth = Math.min(oldWidth, newWidth),
+                copyHeight = Math.min(oldHeight, newHeight);
+
+        for (int y = 0; y < newHeight; y++) {
+            int x0 = 0;
+            if (y < copyHeight) {
+                System.arraycopy(oldPixels, y * oldWidth, newPixels, y * newWidth, copyWidth);
+                x0 = copyWidth;
+            }
+
+            for (int x = x0; x < newWidth; x++) {
+                newPixels[y * newWidth + x] = backgroundColor;
+            }
+        }
+
+        setBufferedImage(newImage);
+    }
+
+    public void resize(int newWidth, int newHeight, int[] pixels) {
+        BufferedImage image = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+        int[] imagePixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+        System.arraycopy(pixels, 0, imagePixels, 0, pixels.length);
+
+        setBufferedImage(image);
     }
 
     public int getPixel(int x, int y) {
@@ -227,7 +266,6 @@ public class Image {
                 }
             }
         } else {
-            // TODO continue: this doesn't work
             for (int row = 0; row < numRows; row++) {
                 System.arraycopy(pixels, row * stride + offset, pixelArray, (y0 + row) * width + x0, len);
             }
@@ -235,39 +273,6 @@ public class Image {
 
         setDirty(x0, y0);
         setDirty(x1 - 1, y1 - 1);
-    }
-
-    public void crop(int newWidth, int newHeight, int backgroundColor) {
-        BufferedImage oldImage = bufferedImage,
-                newImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
-
-        int oldWidth = oldImage.getWidth(),
-                oldHeight = oldImage.getHeight();
-
-        int[] oldPixels = ((DataBufferInt) oldImage.getRaster().getDataBuffer()).getData(),
-                newPixels = ((DataBufferInt) newImage.getRaster().getDataBuffer()).getData();
-
-        if (newWidth > oldWidth || newHeight > oldHeight)
-            Arrays.fill(newPixels, backgroundColor);
-
-        int copyWidth = Math.min(oldWidth, newWidth),
-                copyHeight = Math.min(oldHeight, newHeight);
-
-        for (int y = 0; y < newHeight; y++) {
-            int x0 = 0;
-            if (y < copyHeight) {
-                System.arraycopy(oldPixels, y * oldWidth, newPixels, y * newWidth, copyWidth);
-                x0 = copyWidth;
-            }
-
-            for (int x = x0; x < newWidth; x++) {
-                newPixels[y * newWidth + x] = backgroundColor;
-            }
-        }
-
-        bufferedImage = newImage;
-
-        updateOpenGLTexture(false);
     }
 
     private void setDirty(int x, int y) {

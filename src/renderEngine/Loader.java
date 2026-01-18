@@ -246,7 +246,8 @@ public class Loader {
             int textureHeight, int fontSize, int[] charRanges, int[] extraChars, int bgColor) {
 
         ArrayList<String> commands = new ArrayList<>();
-        commands.add("/home/simon/code/executables/fontbm/fontbm");
+        // commands.add("/home/simon/code/executables/fontbm/fontbm");
+        commands.add("fontbm");
         addArgument(commands, "font-file", "%s.ttf".formatted(fontName));
         addArgument(commands, "output", "output");
         addArgument(commands, "padding-up", padding);

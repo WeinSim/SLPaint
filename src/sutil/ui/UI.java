@@ -19,7 +19,7 @@ public abstract class UI {
 
     private double uiScale = 1.0;
 
-    protected String defaultFontName = "Courier New Bold";
+    protected String defaultFontName = "Courier New";
 
     protected double mouseWheelSensitivity = 100;
 
@@ -37,7 +37,7 @@ public abstract class UI {
 
     private LinkedList<UIAction> eventQueue;
 
-    public UI(SVector initialRootSize) {
+    public UI(double uiScale, SVector initialRootSize) {
         setContext(this);
 
         selectedElement = null;
@@ -46,6 +46,8 @@ public abstract class UI {
         rightMousePressed = false;
 
         eventQueue = new LinkedList<>();
+
+        this.uiScale = uiScale;
 
         root = new UIRoot(UIContainer.VERTICAL, UIContainer.LEFT);
         root.zeroMargin().zeroPadding().noOutline().withBackground();
@@ -57,8 +59,6 @@ public abstract class UI {
     protected abstract void init();
 
     public void update(SVector mousePos, boolean valid) {
-        root.lock();
-
         while (!eventQueue.isEmpty()) {
             eventQueue.removeFirst().run();
         }

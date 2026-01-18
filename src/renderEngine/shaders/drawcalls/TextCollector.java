@@ -66,6 +66,9 @@ public class TextCollector extends ShapeCollector<TextDrawCall> {
         for (int i = 0; i < textureIDs.length; i++) {
             GL13.glActiveTexture(textureUnits[i]);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureIDs[i]);
+
+            String name = String.format("textureSamplers[%d]", i);
+            shaderProgram.loadUniform(name, i);
         }
 
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);

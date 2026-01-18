@@ -2,7 +2,6 @@ package ui;
 
 import main.apps.ColorEditorApp;
 import sutil.ui.UIContainer;
-import sutil.ui.UISizes;
 import ui.components.ColorPickContainer;
 
 public class ColorEditorUI extends AppUI<ColorEditorApp> {
@@ -22,7 +21,6 @@ public class ColorEditorUI extends AppUI<ColorEditorApp> {
                     app.getMainApp().addCustomColor(color);
                     app.getWindow().requestClose();
                 },
-                UISizes.COLOR_PICKER_PANEL,
                 UIContainer.VERTICAL,
                 true,
                 true));
