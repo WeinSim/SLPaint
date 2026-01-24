@@ -29,30 +29,18 @@ public class UIDropdown extends UIContainer {
             expanded = !expanded;
         });
 
-        dropdown = new UIFloatMenu(this::isExpanded, scroll);
+        dropdown = new UIFloatMenu(scroll, this::isExpanded, UIText.NORMAL);
+        dropdown.setCloseAction(() -> expanded = false);
         dropdown.addAnchor(UIFloatContainer.Anchor.TOP_LEFT, this, UIFloatContainer.Anchor.BOTTOM_LEFT);
         dropdown.addAnchor(UIFloatContainer.Anchor.BOTTOM_LEFT, this, UIFloatContainer.Anchor.TOP_LEFT);
-        Runnable[] clickActions = new Runnable[options.length];
-        for (int i = 0; i < clickActions.length; i++) {
+        for (int i = 0; i < options.length; i++) {
             final int j = i;
-            dropdown.addLabel(options[i], () -> {
-                valueSetter.accept(j);
-                expanded = false;
-            });
+            dropdown.addLabel(options[i], () -> valueSetter.accept(j));
         }
 
         add(dropdown);
 
         expanded = false;
-    }
-
-    @Override
-    public void mousePressed(int mouseButton, int mods) {
-        super.mousePressed(mouseButton, mods);
-
-        if (!mouseAbove() && !dropdown.mouseAbove()) {
-            expanded = false;
-        }
     }
 
     private boolean isExpanded() {

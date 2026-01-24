@@ -38,10 +38,7 @@ public final class SelectionTool extends DragTool {
 
         // Ctrl + Shift + X: crop image to selection
         addKeyboardShortcut(GLFW.GLFW_KEY_X, GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SHIFT, IDLE,
-                () -> {
-                    finish();
-                    app.cropImage(x, y, width, height);
-                });
+                this::cropImageToSelection);
 
         // Arrow keys: move selection
         addKeyboardShortcut(GLFW.GLFW_KEY_UP, 0, IDLE, () -> y--);
@@ -121,6 +118,7 @@ public final class SelectionTool extends DragTool {
 
         selection = new Image(paste);
 
+        app.setActiveTool(this);
         state = IDLE;
     }
 
@@ -141,6 +139,11 @@ public final class SelectionTool extends DragTool {
     public void moveSelection(int dx, int dy) {
         x += dx;
         y += dy;
+    }
+
+    public void cropImageToSelection() {
+        finish();
+        app.cropImage(x, y, width, height);
     }
 
     @Override

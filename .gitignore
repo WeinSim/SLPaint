@@ -1,2 +1,5 @@
 /.vscode/settings.json
 /bin
+/res/fonts/Courier New
+/res/fonts/Courier New Bold
+/src/sutil/SimplexNoise_octave.java

@@ -26,8 +26,8 @@ import sutil.json.values.JSONValue;
  */
 public class Settings {
 
-    private static final String SETTINGS_FILE = "res/settings.json";
-    private static final String DEFAULT_SETTINGS_FILE = "res/defaultSettings.json";
+    private static final String SETTINGS_FILE = "res/settings/settings.json";
+    private static final String DEFAULT_SETTINGS_FILE = "res/settings/defaultSettings.json";
 
     private static JSONObject defaultSettings;
     private static JSONObject currentSettings;

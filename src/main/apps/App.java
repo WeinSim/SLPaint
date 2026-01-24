@@ -17,7 +17,7 @@ import sutil.ui.UIRoot;
 import sutil.ui.UITextInput;
 import ui.AppUI;
 
-public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp {
+public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp, AboutApp {
 
     private static final double FRAME_TIME_GAMMA = 0.05;
 
@@ -258,6 +258,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     }
 
     protected void mouseScroll(double xoff, double yoff) {
+    }
+
+    public void exit() {
+        window.requestClose();
     }
 
     public void finish() {

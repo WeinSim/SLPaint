@@ -45,7 +45,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         UIContextMenu contextMenu = new UIContextMenu(false);
         contextMenu.addLabel("Label 1", () -> System.out.println("Label 1"));
-        contextMenu.add(new UISeparator());
+        contextMenu.addSeparator();
 
         UIFloatMenu nestedMenu = new UIFloatMenu(true);
         for (int i = 0; i < 20; i++) {
@@ -104,7 +104,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
             defaultColorContainer.add(button);
         }
         defaultColors.add(defaultColorContainer);
-        defaultColors.add(new UIText("Default Colors", true));
+        defaultColors.add(new UIText("Default Colors", UIText.SMALL));
         allColorsContainer.add(defaultColors);
 
         allColorsContainer.add(new UISeparator());
@@ -114,7 +114,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         CustomColorContainer ccc = new CustomColorContainer(MainApp.getCustomUIBaseColors(), app::setUIColor);
         ccc.zeroMargin().noOutline();
         customColors.add(ccc);
-        customColors.add(new UIText("Custom Colors", true));
+        customColors.add(new UIText("Custom Colors", UIText.SMALL));
         allColorsContainer.add(customColors);
 
         allColorsContainer.add(new UIButton("Clear", () -> MainApp.getCustomUIBaseColors().clear()));

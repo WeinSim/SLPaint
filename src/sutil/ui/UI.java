@@ -14,7 +14,7 @@ public abstract class UI {
 
     private double uiScale = 1.0;
 
-    protected String defaultFontName = "Courier New";
+    protected String defaultFontName = "FreeMono";
 
     protected double mouseWheelSensitivity = 100;
 

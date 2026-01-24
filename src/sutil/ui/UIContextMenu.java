@@ -26,7 +26,7 @@ public class UIContextMenu extends UIFloatMenu {
             addAnchor(Anchor.BOTTOM_LEFT, basePos);
             addAnchor(Anchor.BOTTOM_RIGHT, basePos);
         });
-        container.setLeftClickAction(this::hide);
+        setCloseAction(this::hide);
         container.add(this);
     }
 

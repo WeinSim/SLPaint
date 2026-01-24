@@ -21,6 +21,7 @@ import main.dialogs.UnimplementedDialog;
 import main.settings.BooleanSetting;
 import main.settings.ColorArraySetting;
 import main.settings.Settings;
+import main.tools.DragTool;
 import main.tools.ImageTool;
 import renderEngine.Window;
 import renderEngine.fonts.TextFont;
@@ -38,6 +39,7 @@ import ui.components.ImageCanvas;
  * App:
  *   Line tool
  *   Undo / redo
+ *   Image rotating / flipping
  *   Pencil tool
  *     Sizes 1 & 2 and 3 & 4 look the same
  *     Drawing with a semi-transparent color has weird artifacts because some
@@ -159,7 +161,7 @@ public final class MainApp extends App {
 
     public static final int SAVE_DIALOG = 1, NEW_DIALOG = 2, RESIZE_DIALOG = 3, NEW_COLOR_DIALOG = 4,
             ROTATE_DIALOG = 5, FLIP_DIALOG = 6, UNABLE_TO_SAVE_IMAGE_DIALOG = 7, DISCARD_UNSAVED_CHANGES_DIALOG = 9,
-            SETTINGS_DIALOG = 10;
+            SETTINGS_DIALOG = 10, CROP_DIALOG = 11, ABOUT_DIALOG = 12;
 
     public static final int PRIMARY_COLOR = 0, SECONDARY_COLOR = 1;
 
@@ -328,7 +330,7 @@ public final class MainApp extends App {
         switch (type) {
             case SAVE_DIALOG -> (new SaveDialog(this)).start();
             case UNABLE_TO_SAVE_IMAGE_DIALOG -> (new UnableToSaveImageDialog(this)).start();
-            case NEW_COLOR_DIALOG, SETTINGS_DIALOG, RESIZE_DIALOG -> {
+            case NEW_COLOR_DIALOG, SETTINGS_DIALOG, RESIZE_DIALOG, CROP_DIALOG, ABOUT_DIALOG -> {
             }
             default -> (new UnimplementedDialog(this, type)).start();
         }
@@ -339,7 +341,9 @@ public final class MainApp extends App {
         return switch (dialogType) {
             case NEW_COLOR_DIALOG -> new ColorEditorApp(this, getSelectedColor());
             case SETTINGS_DIALOG -> new SettingsApp(this);
-            case RESIZE_DIALOG -> new ResizeApp(this);
+            case CROP_DIALOG -> new ResizeApp(this, ResizeApp.CROP);
+            case RESIZE_DIALOG -> new ResizeApp(this, ResizeApp.SCALE);
+            case ABOUT_DIALOG -> new AboutApp(this);
             default -> null;
         };
     }
@@ -409,6 +413,30 @@ public final class MainApp extends App {
      */
     public void saveImageAs() {
         imageFileManager.saveAs();
+    }
+
+    public void copySelection() {
+        if (ImageTool.SELECTION.getState() == DragTool.IDLE) {
+            ImageTool.SELECTION.copyToClipboard();
+        }
+    }
+
+    public void cutSelection() {
+        if (ImageTool.SELECTION.getState() == DragTool.IDLE) {
+            ImageTool.SELECTION.cutToClipboard();
+        }
+    }
+
+    public void pasteSelection() {
+        if ((ImageTool.SELECTION.getState() & (DragTool.NONE | DragTool.IDLE)) != 0) {
+            ImageTool.SELECTION.pasteFromClipboard();
+        }
+    }
+
+    public void cropImageToSelection() {
+        if (ImageTool.SELECTION.getState() == DragTool.IDLE) {
+            ImageTool.SELECTION.cropImageToSelection();
+        }
     }
 
     public static ColorArray getCustomUIBaseColors() {
@@ -505,9 +533,7 @@ public final class MainApp extends App {
             }
         }
 
-        // start new tool
         activeTool = tool;
-        // activeTool.start();
     }
 
     public void switchBackToPreviousTool() {

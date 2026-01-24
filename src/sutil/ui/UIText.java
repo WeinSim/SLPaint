@@ -8,12 +8,15 @@ import sutil.math.SVector;
 
 public class UIText extends UIElement {
 
+    public static final Supplier<Double> NORMAL = UISizes.TEXT,
+            SMALL = UISizes.TEXT_SMALL;
+
     private String text;
     private Supplier<String> textUpdater = this::getText;
 
     private double textSize;
-    private boolean smallTextSize = false;
-    private Supplier<Double> textSizeUpdater = () -> smallTextSize ? UISizes.TEXT_SMALL.get() : UISizes.TEXT.get();
+    private Supplier<Double> textSizeUpdater;
+    // private Supplier<Double> textSizeUpdater = () -> ;
 
     private String fontName;
     private Supplier<String> fontUpdater = UI::getDefaultFontName;
@@ -22,21 +25,21 @@ public class UIText extends UIElement {
     private Supplier<Vector4f> colorUpdater = UIColors.TEXT;
 
     public UIText(String text) {
-        this(text, false);
+        this(text, NORMAL);
     }
 
-    public UIText(String text, boolean smallTextSize) {
+    public UIText(String text, Supplier<Double> textSizeUpdater) {
         this.text = text;
-        this.smallTextSize = smallTextSize;
+        this.textSizeUpdater = textSizeUpdater;
     }
 
     public UIText(Supplier<String> textUpdater) {
-        this(textUpdater, false);
+        this(textUpdater, NORMAL);
     }
 
-    public UIText(Supplier<String> textUpdater, boolean smallTextSize) {
+    public UIText(Supplier<String> textUpdater, Supplier<Double> textSizeUpdater) {
         this.textUpdater = textUpdater;
-        this.smallTextSize = smallTextSize;
+        this.textSizeUpdater = textSizeUpdater;
     }
 
     public double textWidth(int len) {

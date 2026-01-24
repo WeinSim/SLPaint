@@ -116,7 +116,7 @@ public class ColorPickContainer extends UIContainer {
             colorBox.add(new UIColorElement(bgColorSupplier, previewSize, false));
         }
         colorPreview.add(colorBox);
-        colorPreview.add(new UIText("Preview", true));
+        colorPreview.add(new UIText("Preview", UIText.SMALL));
         row3.add(colorPreview);
 
         UIContainer gap = new UIContainer(0, 0);

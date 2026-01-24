@@ -27,10 +27,14 @@ public class MainLoop {
 
         testImports();
 
-        // Loader.createFontAtlas("Courier New", 36);
-        // Loader.createFontAtlas("Courier New", 18);
-        // Loader.createFontAtlas("Courier New Bold", 36);
-        // Loader.createFontAtlas("Courier New Bold", 18);
+        // // String font1 = "Courier New";
+        // // String font2 = "Courier New Bold";
+        // String font1 = "FreeMono";
+        // String font2 = "FreeMonoBold";
+        // Loader.createFontAtlas(font1, 36);
+        // Loader.createFontAtlas(font1, 18);
+        // Loader.createFontAtlas(font2, 36);
+        // Loader.createFontAtlas(font2, 18);
 
         // Disables the message
         // "INFO:Use Java PNG Loader = true"

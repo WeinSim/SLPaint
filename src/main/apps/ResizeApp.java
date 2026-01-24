@@ -30,10 +30,10 @@ public final class ResizeApp extends App {
     private final double minWidthPercentage, minHeightPercentage,
             maxWidthPercentage, maxHeightPercentage;
 
-    public ResizeApp(MainApp mainApp) {
-        super(500, 500, Window.NORMAL, false, true, "Resize Image", mainApp);
-
+    public ResizeApp(MainApp mainApp, int resizeMode) {
         this.mainApp = mainApp;
+        this.resizeMode = resizeMode;
+        super(500, 500, Window.NORMAL, false, true, getTitle(resizeMode), mainApp);
 
         initialWidth = mainApp.getImage().getWidth();
         initialHeight = mainApp.getImage().getHeight();
@@ -46,11 +46,17 @@ public final class ResizeApp extends App {
         maxWidthPercentage = 100.0 * MainApp.MAX_IMAGE_SIZE / initialWidth;
         maxHeightPercentage = 100.0 * MainApp.MAX_IMAGE_SIZE / initialHeight;
 
-        resizeMode = SCALE;
-
         addKeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, this::cancel, false);
 
         addKeyboardShortcut(GLFW.GLFW_KEY_ENTER, 0, this::done, true);
+    }
+
+    private static String getTitle(int resizeMode) {
+        return resizeMode == CROP ? "Crop Image" : "Resize Image";
+    }
+
+    private String getTitle() {
+        return getTitle(resizeMode);
     }
 
     @Override
@@ -60,6 +66,8 @@ public final class ResizeApp extends App {
         if (frameCount == 1) {
             UI.select(widthInput);
         }
+
+        window.setTitle(getTitle());
     }
 
     @Override
@@ -83,11 +91,11 @@ public final class ResizeApp extends App {
                     case SCALE -> () -> mainApp.resizeImage(widthPixels, heightPixels);
                     default -> throw new IllegalArgumentException("resizeMode must be either CROP or SCALE");
                 });
-        window.requestClose();
+        exit();
     }
 
     public void cancel() {
-        window.requestClose();
+        exit();
     }
 
     public void setWidthPixels(int widthPixels) {

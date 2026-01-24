@@ -17,8 +17,10 @@ import sutil.math.SVector;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UIDropdown;
+import sutil.ui.UIFloatMenu;
 import sutil.ui.UIImage;
 import sutil.ui.UILabel;
+import sutil.ui.UIMenuBar;
 import sutil.ui.UINumberInput;
 import sutil.ui.UIScale;
 import sutil.ui.UISizes;
@@ -47,28 +49,52 @@ public class MainUI extends AppUI<MainApp> {
         root.setHAlignment(UIContainer.LEFT);
         root.withSeparators(false);
 
+        UIMenuBar menuBar = new UIMenuBar();
+
+        UIFloatMenu fileMenu = new UIFloatMenu();
+        fileMenu.addLabel("New", app::newImage);
+        fileMenu.addLabel("Open", app::openImage);
+        fileMenu.addLabel("Save", app::saveImage);
+        fileMenu.addLabel("Save As", app::saveImageAs);
+        fileMenu.addSeparator();
+        fileMenu.addLabel("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG));
+        fileMenu.addSeparator();
+        fileMenu.addLabel("Quit", app::exit);
+        menuBar.addMenu("File", fileMenu);
+
+        UIFloatMenu editMenu = new UIFloatMenu();
+        editMenu.addLabel("Undo", null);
+        editMenu.addLabel("Redo", null);
+        menuBar.addMenu("Edit", editMenu);
+
+        UIFloatMenu selectionMenu = new UIFloatMenu();
+        selectionMenu.addLabel("Copy", app::copySelection);
+        selectionMenu.addLabel("Cut", app::cutSelection);
+        selectionMenu.addLabel("Paste", app::pasteSelection);
+        selectionMenu.addSeparator();
+        selectionMenu.addLabel("Crop image to selection", app::cropImageToSelection);
+        menuBar.addMenu("Selection", selectionMenu);
+
+        UIFloatMenu imageMenu = new UIFloatMenu();
+        imageMenu.addLabel("Resize", () -> app.showDialog(MainApp.RESIZE_DIALOG));
+        imageMenu.addLabel("Crop", () -> app.showDialog(MainApp.CROP_DIALOG));
+        menuBar.addMenu("Image", imageMenu);
+
+        UIFloatMenu helpMenu = new UIFloatMenu();
+        helpMenu.addLabel("About", () -> app.showDialog(MainApp.ABOUT_DIALOG));
+        menuBar.addMenu("Help", helpMenu);
+
+        root.add(menuBar);
+
         UIContainer topRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER,
                 UIContainer.HORIZONTAL);
         topRow.withSeparators(true).setHFillSize().setHAlignment(UIContainer.LEFT).withBackground().noOutline();
 
-        UIContainer settings = addTopRowSection(topRow, "Settings");
-        UIButton settingsButton = new UIButton("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG));
-        // setButtonStyle1(settingsButton);
-        settings.add(settingsButton);
-
-        UIContainer fileOptions = addTopRowSection(topRow, "File");
-        fileOptions.add(new UILabel("..."));
-        // fileOptions.add(new UIButton("New", app::newImage));
-        // fileOptions.add(new UIButton("Open", app::openImage));
-        // fileOptions.add(new UIButton("Save", app::saveImage));
-
         UIContainer imageOptions = addTopRowSection(topRow, "Image");
         // imageOptions.add(new UILabel("..."));
         imageOptions.add(new UIButton("Resize", () -> app.showDialog(MainApp.RESIZE_DIALOG)));
-        // imageOptions.add(new UIButton("Rotate", () ->
-        // app.showDialog(MainApp.ROTATE_DIALOG)));
-        // imageOptions.add(new UIButton("Flip", () ->
-        // app.showDialog(MainApp.FLIP_DIALOG)));
+        imageOptions.add(new UIButton("Rotate", () -> app.showDialog(MainApp.ROTATE_DIALOG)));
+        imageOptions.add(new UIButton("Flip", () -> app.showDialog(MainApp.FLIP_DIALOG)));
 
         UIContainer toolbox = addTopRowSection(topRow, "Tools");
         for (ImageTool tool : ImageTool.INSTANCES) {
@@ -264,7 +290,7 @@ public class MainUI extends AppUI<MainApp> {
                 ret += "%s (%s)".formatted(filename, MainApp.formatFilesize(filesize));
             }
             return ret;
-        }, true));
+        }, UIText.SMALL));
         statusBar.add(new UILabel(() -> {
             int width, height;
             if (app.isImageResizing()) {
@@ -276,12 +302,12 @@ public class MainUI extends AppUI<MainApp> {
                 height = image.getHeight();
             }
             return "Image Size: %d x %d px".formatted(width, height);
-        }, true));
+        }, UIText.SMALL));
         statusBar.add(new UILabel(
                 () -> String.format("Selection size: %d x %d px",
                         ImageTool.SELECTION.getWidth(),
                         ImageTool.SELECTION.getHeight()),
-                true).setVisibilitySupplier(
+                UIText.SMALL).setVisibilitySupplier(
                         () -> ImageTool.SELECTION.getState() != DragTool.NONE));
         statusBar.add(new UILabel(() -> {
             int[] mouseImagePos = app.getMouseImagePosition();
@@ -291,10 +317,10 @@ public class MainUI extends AppUI<MainApp> {
                 ret += " %d, %d".formatted(mouseImagePos[0], mouseImagePos[1]);
             }
             return ret;
-        }, true));
+        }, UIText.SMALL));
         statusBar.add(new UIContainer(0, 0).setHFillSize().noOutline());
-        statusBar.add(new UILabel(() -> String.format("Frame %d", app.getFrameCount()), true));
-        statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate()), true));
+        statusBar.add(new UILabel(() -> String.format("Frame %d", app.getFrameCount()), UIText.SMALL));
+        statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate()), UIText.SMALL));
 
         root.add(statusBar);
     }
@@ -335,7 +361,7 @@ public class MainUI extends AppUI<MainApp> {
         // fill.setVFillSize().zeroMargin().noOutline();
         // options.add(fill);
 
-        options.add(new UIText(name, true));
+        options.add(new UIText(name, UIText.SMALL));
 
         topRow.add(options);
         return optionButtons;

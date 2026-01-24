@@ -27,11 +27,11 @@ public class ResizeUI extends AppUI<ResizeApp> {
 
         root.setMarginScale(2.0);
         root.setPaddingScale(1.0);
-        root.setAlignment(UIContainer.CENTER);
+        root.setAlignment(UIContainer.LEFT);
 
         UIRadioButtonList resizeMode = new UIRadioButtonList(
-                UIContainer.HORIZONTAL,
-                new String[] { "Scale image", "Crop image" },
+                UIContainer.VERTICAL,
+                new String[] { "Resize (scale) image", "Crop image" },
                 app::getResizeMode,
                 app::setResizeMode);
         resizeMode.setMarginScale(1.0).setPaddingScale(2.0);

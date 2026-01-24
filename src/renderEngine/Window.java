@@ -164,6 +164,10 @@ public class Window {
         GLFW.glfwSetInputMode(windowHandle, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
     }
 
+    public void setTitle(String title) {
+        GLFW.glfwSetWindowTitle(windowHandle, title);
+    }
+
     public int[] getDisplaySize() {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer pWidth = stack.mallocInt(1); // int*

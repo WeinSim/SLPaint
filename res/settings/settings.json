@@ -1,5 +1,5 @@
 {
-    "transparentSelection" : false,
+    "transparentSelection" : true,
     "customUIColors" : {
         "capacity" : 10,
         "values" : []
@@ -12,5 +12,5 @@
     ],
     "hslColorSpace" : true,
     "hueSatCircle" : true,
-    "lockSelectionRatio" : false
+    "lockSelectionRatio" : true
 }

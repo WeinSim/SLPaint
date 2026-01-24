@@ -8,13 +8,24 @@ public class UIFloatMenu extends UIFloatContainer {
 
     private final UIContainer contents;
 
+    private final Supplier<Double> textSizeUpdater;
+
     protected CMLabel expandedLabel;
 
-    public UIFloatMenu(boolean scroll) {
-        this(null, scroll);
+    protected Runnable closeAction = () -> {
+    };
+
+    public UIFloatMenu() {
+        this(false);
     }
 
-    public UIFloatMenu(Supplier<Boolean> visibilitySupplier, boolean scroll) {
+    public UIFloatMenu(boolean scroll) {
+        this(scroll, null, UIText.SMALL);
+    }
+
+    public UIFloatMenu(boolean scroll, Supplier<Boolean> visibilitySupplier, Supplier<Double> textSizeUpdater) {
+        this.textSizeUpdater = textSizeUpdater;
+
         super(VERTICAL, LEFT);
 
         setVisibilitySupplier(visibilitySupplier);
@@ -35,6 +46,32 @@ public class UIFloatMenu extends UIFloatContainer {
         }
     }
 
+    @Override
+    public void mousePressed(int mouseButton, int mods) {
+        super.mousePressed(mouseButton, mods);
+
+        // Kind of a dumb hack.
+        // The first check is neccessary because it prevents the following situation:
+        // A UIContextMenu and one of its attached float menues are open.
+        // The user clicks somewhere in the parent menu. Because the mouse is not abovew
+        // the child menu, it closes (and also causes the parent to close).
+        if (!(parent instanceof UIFloatContainer) && shouldClose(this)) {
+            close();
+        }
+    }
+
+    private boolean shouldClose(UIElement element) {
+        if (element.mouseAbove)
+            return false;
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getChildren()) {
+                if (!shouldClose(child))
+                    return false;
+            }
+        }
+        return true;
+    }
+
     private void add(UIElement child, boolean normalAdd) {
         if (normalAdd) {
             super.add(child);
@@ -48,13 +85,16 @@ public class UIFloatMenu extends UIFloatContainer {
         add(child, contents == this || contents == null);
     }
 
-    public UILabel addLabel(String text, Runnable clickAction) {
+    public void addLabel(String text, Runnable clickAction) {
         CMLabel label = new CMLabel(text, this);
         label.backgroundHighlight = true;
-        label.setLeftClickAction(clickAction);
+        label.setLeftClickAction(() -> {
+            if (clickAction != null)
+                clickAction.run();
+            close();
+        });
         label.setHFillSize();
         add(label);
-        return label;
     }
 
     public void addNestedContextMenu(String text, UIFloatMenu contextMenu) {
@@ -80,15 +120,35 @@ public class UIFloatMenu extends UIFloatContainer {
             return bgColor;
         });
 
+        contextMenu.setCloseAction(() -> {
+            expandedLabel = null;
+            close();
+        });
+
         add(contextMenu);
     }
 
-    private static class CMLabel extends UILabel {
+    public void addSeparator() {
+        UIContainer container = new UIContainer(VERTICAL, 0);
+        container.setVMarginScale(1.0).setHMarginScale(0.0).setHFillSize().noOutline();
+        container.add(new UISeparator());
+        add(container);
+    }
+
+    public void close() {
+        closeAction.run();
+    }
+
+    public void setCloseAction(Runnable closeAction) {
+        this.closeAction = closeAction;
+    }
+
+    private class CMLabel extends UILabel {
 
         final UIFloatMenu contextMenu;
 
         CMLabel(String text, UIFloatMenu contextMenu) {
-            super(text);
+            super(text, textSizeUpdater);
 
             this.contextMenu = contextMenu;
         }
