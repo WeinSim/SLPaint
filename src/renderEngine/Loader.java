@@ -23,10 +23,11 @@ import renderEngine.shaders.bufferobjects.FrameBufferObject;
 import renderEngine.shaders.bufferobjects.UniformBufferObject;
 import renderEngine.shaders.bufferobjects.VBOData;
 import sutil.SUtil;
+import sutil.ui.UI;
 
 public class Loader {
 
-    public static final String FONT_DIRECTORY = "res/fonts/";
+    public static final String FONT_DIRECTORY = "res/fonts";
 
     private ArrayList<Integer> vaos;
     private ArrayList<Integer> vbos;
@@ -92,7 +93,8 @@ public class Loader {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture);
         GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE,
                 (int[]) null);
-        // GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR_MIPMAP_NEAREST);
+        // GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER,
+        // GL30.GL_LINEAR_MIPMAP_NEAREST);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         // unbind texture
@@ -127,10 +129,17 @@ public class Loader {
         }
 
         // actually load font
-        String directoryName = String.format("%s%s/", Loader.FONT_DIRECTORY, name);
+
+        // this is just a hack for now
+        int fontSize = UI.getUIScale() > 1.5 ? 36 : 18;
+
+        // String directory = String.format("%s/%s", Loader.FONT_DIRECTORY, name);
         ArrayList<FontChar> chars = new ArrayList<>();
         int size = 0, lineHeight = 0, base = 0, pages = 0, textureWidth = 0, textureHeight = 0;
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(directoryName + "output.fnt"))) {
+        String directory = String.format("%s/%s", Loader.FONT_DIRECTORY, name);
+        String filename = String.format("%s/output_%d.fnt", directory, fontSize);
+        String[] textureFilenames = null;
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(filename))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 ArrayList<String> parts = new ArrayList<>();
@@ -139,9 +148,10 @@ public class Loader {
                         parts.add(string);
                     }
                 }
-                if (parts.isEmpty()) {
+
+                if (parts.isEmpty())
                     continue;
-                }
+
                 String lineType = parts.get(0);
                 HashMap<String, Object> properties = new HashMap<>();
                 for (int i = 1; i < parts.size(); i++) {
@@ -159,8 +169,24 @@ public class Loader {
                         }
                     }
                 }
+
                 switch (lineType) {
-                    case "char" ->
+                    case "info" -> {
+                        size = Math.abs((int) properties.get("size"));
+                    }
+                    case "common" -> {
+                        lineHeight = (int) properties.get("lineHeight");
+                        base = (int) properties.get("base");
+                        pages = (int) properties.get("pages");
+                        textureFilenames = new String[pages];
+                        textureWidth = (int) properties.get("scaleW");
+                        textureHeight = (int) properties.get("scaleH");
+                    }
+                    case "page" -> {
+                        int id = (int) properties.get("id");
+                        textureFilenames[id] = (String) properties.get("file");
+                    }
+                    case "char" -> {
                         chars.add(new FontChar(
                                 (int) properties.get("id"),
                                 (pages > 1) ? (int) properties.get("page") : 0,
@@ -171,15 +197,6 @@ public class Loader {
                                 (int) properties.get("xoffset"),
                                 (int) properties.get("yoffset"),
                                 (int) properties.get("xadvance")));
-                    case "info" -> {
-                        size = Math.abs((int) properties.get("size"));
-                    }
-                    case "common" -> {
-                        lineHeight = (int) properties.get("lineHeight");
-                        base = (int) properties.get("base");
-                        pages = (int) properties.get("pages");
-                        textureWidth = (int) properties.get("scaleW");
-                        textureHeight = (int) properties.get("scaleH");
                     }
                 }
             }
@@ -195,10 +212,14 @@ public class Loader {
             final String baseString = "Font \"%s\" has too many texture atlasses (%d). Maximum is %d.";
             throw new RuntimeException(String.format(baseString, name, pages, UIRenderMaster.MAX_FONT_ATLASSES));
         }
+        if (textureFilenames == null) {
+            final String baseString = "Unable to find texture filenames for font \"%s\"!";
+            throw new RuntimeException(String.format(baseString, name));
+        }
 
         int[] textureIDs = new int[pages];
         for (int i = 0; i < pages; i++) {
-            textureIDs[i] = loadTexture(String.format("%soutput_%d.png", directoryName, i));
+            textureIDs[i] = loadTexture(String.format("%s/%s", directory, textureFilenames[i]));
         }
 
         TextFont font = new TextFont(name, size, lineHeight, base, textureIDs, textureWidth, textureHeight);
@@ -227,7 +248,7 @@ public class Loader {
         // deleteArgs.add("output*");
         // MainApp.runCommand(String.format("%s%s", FONT_DIRECTORY, name), deleteArgs);
 
-        String directoryName = String.format("%s%s/", FONT_DIRECTORY, name);
+        String directoryName = String.format("%s/%s/", FONT_DIRECTORY, name);
         MainApp.runCommand(directoryName,
                 getFontGenerationCommand(name, 2, 256, 256, textSize, new int[] { 32, 126, 160, 255 },
                         new int[] { 9633 }, 0));
@@ -249,7 +270,7 @@ public class Loader {
         // commands.add("/home/simon/code/executables/fontbm/fontbm");
         commands.add("fontbm");
         addArgument(commands, "font-file", "%s.ttf".formatted(fontName));
-        addArgument(commands, "output", "output");
+        addArgument(commands, "output", "output_%s".formatted(fontSize));
         addArgument(commands, "padding-up", padding);
         addArgument(commands, "padding-down", padding);
         addArgument(commands, "padding-left", padding);

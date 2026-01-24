@@ -43,6 +43,7 @@ public class UIContainer extends UIElement {
     private final int scrollMode;
     private SVector scrollOffset;
     private SVector areaOvershoot;
+    protected boolean clipChildren;
 
     protected SizeType hSizeType, vSizeType;
 
@@ -74,12 +75,14 @@ public class UIContainer extends UIElement {
 
         hSizeType = SizeType.MINIMAL;
         vSizeType = SizeType.MINIMAL;
-        if (isHScroll()) {
+
+        if (isHScroll())
             setHFillSize();
-        }
-        if (isVScroll()) {
+
+        if (isVScroll())
             setVFillSize();
-        }
+
+        clipChildren = isHScroll() || isVScroll();
 
         minSize = new SVector();
 
@@ -153,19 +156,24 @@ public class UIContainer extends UIElement {
     }
 
     @Override
-    public boolean updateMouseAbove(boolean valid, boolean insideParent, int currentLayer, final int targetLayer) {
-        boolean ret = super.updateMouseAbove(valid, insideParent, currentLayer, targetLayer);
-
+    public boolean updateMouseAbove(boolean valid, int currentLayer, final int targetLayer) {
+        boolean ret = super.updateMouseAbove(valid, currentLayer, targetLayer);
         currentLayer += relativeLayer;
+
         // This is a bit ugly. But it is neccessary because a scroll container's
         // children should not have mouseAbove set if the mouse is not above the scroll
         // container, regardles of the layers.
-        insideParent &= calculateMouseAbove(mousePosition);
+        boolean ownMouseAbove = clipChildren ? calculateMouseAbove(mousePosition) : true;
+
+        boolean childMouseAbove = false;
         for (UIElement child : getChildren()) {
-            ret |= child.updateMouseAbove(valid, insideParent, currentLayer, targetLayer);
+            boolean childValid = valid && !childMouseAbove;
+            if (clipChildren && !child.ignoreParentClipArea())
+                childValid &= ownMouseAbove;
+            childMouseAbove |= child.updateMouseAbove(childValid, currentLayer, targetLayer);
         }
 
-        return ret;
+        return ret || childMouseAbove;
     }
 
     @Override
@@ -536,6 +544,21 @@ public class UIContainer extends UIElement {
         return ret;
     }
 
+    @Override
+    public Integer getCursorShape() {
+        Integer shape = super.getCursorShape();
+        if (shape != null)
+            return shape;
+
+        for (UIElement child : getChildren()) {
+            shape = child.getCursorShape();
+            if (shape != null)
+                return shape;
+        }
+
+        return null;
+    }
+
     /**
      * 
      * @return the space around the outside (left and right).
@@ -758,6 +781,10 @@ public class UIContainer extends UIElement {
         };
     }
 
+    public boolean clipChildren() {
+        return clipChildren;
+    }
+
     public UIContainer addScrollbars() {
         UIContainer ret = this;
         if (isHScroll()) {
@@ -935,8 +962,6 @@ public class UIContainer extends UIElement {
             addAnchor(Anchor.TOP_LEFT, this::getPos);
 
             relativeLayer = 0;
-            clipToRoot = false;
-            ignoreClipArea = false;
         }
 
         private SVector getPos() {

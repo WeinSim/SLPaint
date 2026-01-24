@@ -1,12 +1,12 @@
 package ui.components.toolContainers;
 
+import java.util.function.Supplier;
+
 import org.lwjgl.glfw.GLFW;
 
 import main.apps.MainApp;
 import main.tools.DragTool;
-import main.tools.ImageTool;
 import sutil.math.SVector;
-import sutil.ui.UI;
 import sutil.ui.UIColors;
 import sutil.ui.UISizes;
 import ui.components.SizeKnob;
@@ -18,40 +18,33 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
     private SVector dragStartMouseCoords;
     private int dragStartX, dragStartY;
 
-    // RESIZING
-    private SizeKnob dragKnob;
-    private SVector dragStartPos;
-    private SVector dragStartSize;
-    private SVector dragStartMouse;
-
     public DragToolContainer(T tool, MainApp app) {
         super(tool, app);
 
-        clipToRoot = false;
         relativeLayer = 2;
 
         style.setStrokeCheckerboard(UIColors.SELECTION_BORDER_1, UIColors.SELECTION_BORDER_2, UISizes.CHECKERBOARD);
         style.setStrokeWeight(2.0);
 
-        // setMarginScale(1.0);
-
         addAnchor(Anchor.TOP_LEFT, this::getPos);
 
+        final int visibleStates = DragTool.IDLE | DragTool.IDLE_DRAG;
+        Supplier<Boolean> sizeKnobVis = () -> (tool.getState() & visibleStates) != 0;
         for (int dy = 0; dy <= 2; dy++) {
             for (int dx = 0; dx <= 2; dx++) {
                 if (dx == 1 && dy == 1)
                     continue;
 
-                add(new SizeKnob(this, tool, dx, dy));
+                add(new SizeKnob(dx, dy, this, tool, sizeKnobVis, app));
             }
         }
 
         setLeftClickAction(this::startIdleDrag);
 
-        dragKnob = null;
-        dragStartPos = new SVector();
-        dragStartSize = new SVector();
-        dragStartMouse = new SVector();
+        setCursorShape(
+                () -> mouseAbove && ((tool.getState() & (DragTool.IDLE | DragTool.IDLE_DRAG)) != 0)
+                        ? GLFW.GLFW_POINTING_HAND_CURSOR
+                        : null);
     }
 
     @Override
@@ -89,18 +82,6 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
                 tool.setX(x);
                 tool.setY(y);
             }
-            case DragTool.RESIZING -> {
-                if (!UI.isLeftMousePressed()) {
-                    dragKnob = null;
-                    tool.setState(DragTool.IDLE);
-                    break;
-                }
-                if (dragKnob != null) {
-                    SVector mouseDelta = app.getMouseImagePosVec().sub(dragStartMouse);
-                    boolean lockRatio = tool == ImageTool.SELECTION ? MainApp.isLockSelectionRatio() : false;
-                    dragKnob.updateSelection(dragStartPos, dragStartSize, mouseDelta, lockRatio);
-                }
-            }
         }
 
         double zoom = app.getImageZoom();
@@ -129,29 +110,16 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
     }
 
     private void startIdleDrag() {
-        if (canStartIdleDrag()) {
-            dragStartMouseCoords = app.getMouseImagePosVec();
-            dragStartX = tool.getX();
-            dragStartY = tool.getY();
+        dragStartMouseCoords = app.getMouseImagePosVec();
+        dragStartX = tool.getX();
+        dragStartY = tool.getY();
 
-            tool.setState(DragTool.IDLE_DRAG);
-        }
-    }
-
-    protected abstract boolean canStartIdleDrag();
-
-    public void startSizeDrag(SizeKnob knob) {
-        dragKnob = knob;
-        dragStartPos.set(tool.getX(), tool.getY());
-        dragStartSize.set(tool.getWidth(), tool.getHeight());
-        dragStartMouse.set(app.getMouseImagePosVec());
-
-        tool.setState(DragTool.RESIZING);
+        tool.setState(DragTool.IDLE_DRAG);
     }
 
     @Override
     protected int getVisibleStates() {
-        return DragTool.INITIAL_DRAG | DragTool.IDLE | DragTool.IDLE_DRAG | DragTool.RESIZING;
+        return DragTool.INITIAL_DRAG | DragTool.IDLE | DragTool.IDLE_DRAG;
     }
 
     private SVector getPos() {

@@ -12,7 +12,6 @@ import renderEngine.AppRenderer;
 import renderEngine.Loader;
 import renderEngine.Window;
 import sutil.math.SVector;
-import sutil.ui.UIAction;
 import sutil.ui.UI;
 import sutil.ui.UIRoot;
 import sutil.ui.UITextInput;
@@ -40,11 +39,11 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     protected double avgFrameTime = -1;
     protected int frameCount = 0;
 
-    private LinkedList<UIAction> eventQueue;
+    private LinkedList<Runnable> eventQueue;
 
     private ArrayList<KeyboardShortcut> keyboardShortcuts;
 
-    private AppUI<?> ui;
+    protected AppUI<?> ui;
     protected boolean adjustSizeOnInit = false;
 
     protected AppRenderer renderer;
@@ -130,18 +129,17 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     }
 
     public void update(double deltaT) {
-        // UI loading happens here because the UI might need some things set up by the
-        // child class' constructor.
-        if (ui == null)
-            loadUI();
-
-
         if (avgFrameTime < 0) {
             avgFrameTime = deltaT;
         } else {
             avgFrameTime = (1 - FRAME_TIME_GAMMA) * avgFrameTime + FRAME_TIME_GAMMA * deltaT;
         }
         frameCount++;
+
+        // UI loading happens here because the UI might need some things set up by the
+        // child class' constructor.
+        if (ui == null)
+            loadUI();
 
         if (prevMousePos == null) {
             mousePos = window.getMousePosition();
@@ -234,11 +232,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
         ui.update(mousePos, focus);
 
-        if (ui.mouseAboveTextInput()) {
-            window.setIBeamCursor();
-        } else {
-            window.setArrowCursor();
-        }
+        window.setCursor(ui.getCursorShape());
     }
 
     protected void charInput(char c) {
@@ -312,7 +306,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         return mods;
     }
 
-    public void queueEvent(UIAction action) {
+    public void queueEvent(Runnable action) {
         eventQueue.add(action);
     }
 

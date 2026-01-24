@@ -22,13 +22,42 @@ public class Window {
 
     public static final int NORMAL = 0, MAXIMIZED = 1, FULLSCREEN = 2;
 
+    private enum Cursor {
+
+        ARROW(GLFW.GLFW_ARROW_CURSOR),
+        IBEAM(GLFW.GLFW_IBEAM_CURSOR),
+        CROSSHAIR(GLFW.GLFW_CROSSHAIR_CURSOR),
+        POINTING_HAND(GLFW.GLFW_POINTING_HAND_CURSOR),
+        RESIZE_EW(GLFW.GLFW_RESIZE_EW_CURSOR),
+        RESIZE_NS(GLFW.GLFW_RESIZE_NS_CURSOR),
+        RESIZE_NWSE(GLFW.GLFW_RESIZE_NWSE_CURSOR),
+        RESIZE_NESW(GLFW.GLFW_RESIZE_NESW_CURSOR),
+        RESIZE_ALL(GLFW.GLFW_RESIZE_ALL_CURSOR),
+        NOT_ALLOWED(GLFW.GLFW_NOT_ALLOWED_CURSOR);
+
+        public final int shape;
+        private long cursor;
+
+        private Cursor(int shape) {
+            this.shape = shape;
+        }
+
+        public void setCursor(long cursor) {
+            this.cursor = cursor;
+        }
+
+        public static Cursor get(long shape) {
+            for (Cursor cursor : values()) {
+                if (cursor.shape == shape)
+                    return cursor;
+            }
+            return null;
+        }
+    }
+
     private static HashMap<Long, Window> windows = new HashMap<>();
 
     private long windowHandle;
-
-    private static long arrowCursor;
-    private static long handCursor;
-    private static long iBeamCursor;
 
     private SVector mousePos;
 
@@ -87,10 +116,6 @@ public class Window {
         // Integer.MAX_VALUE);
         GLFW.glfwSetWindowSizeLimits(windowHandle, 200, 200, GLFW.GLFW_DONT_CARE, GLFW.GLFW_DONT_CARE);
 
-        arrowCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
-        handCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);
-        iBeamCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_IBEAM_CURSOR);
-
         // Make the window visible
         GLFW.glfwShowWindow(windowHandle);
 
@@ -102,6 +127,12 @@ public class Window {
         keyPressInfos = new ArrayList<>();
         mouseButtonInfos = new ArrayList<>();
         scrollInfos = new ArrayList<>();
+    }
+
+    public static void createCursors() {
+        for (Cursor cursor : Cursor.values()) {
+            cursor.setCursor(GLFW.glfwCreateStandardCursor(cursor.shape));
+        }
     }
 
     public void makeContextCurrent() {
@@ -174,16 +205,13 @@ public class Window {
         GLFW.glfwSetInputMode(windowHandle, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
     }
 
-    public void setArrowCursor() {
-        GLFW.glfwSetCursor(windowHandle, arrowCursor);
-    }
-
-    public void setHandCursor() {
-        GLFW.glfwSetCursor(windowHandle, handCursor);
-    }
-
-    public void setIBeamCursor() {
-        GLFW.glfwSetCursor(windowHandle, iBeamCursor);
+    public void setCursor(int cursorShape) {
+        Cursor cursor = Cursor.get(cursorShape);
+        if (cursor == null) {
+            final String baseString = "Invalid cursor shape (%d)!";
+            throw new RuntimeException(baseString.formatted(cursorShape));
+        }
+        GLFW.glfwSetCursor(windowHandle, cursor.cursor);
     }
 
     public boolean isFocused() {

@@ -22,7 +22,13 @@ public final class ResizeApp extends App {
     private double widthPercentage = 0, heightPercentage = 0;
     private int resizeMode;
 
+    private boolean lockRatio = false;
+
     private final int initialWidth, initialHeight;
+    private final double initialRatio;
+
+    private final double minWidthPercentage, minHeightPercentage,
+            maxWidthPercentage, maxHeightPercentage;
 
     public ResizeApp(MainApp mainApp) {
         super(500, 500, Window.NORMAL, false, true, "Resize Image", mainApp);
@@ -33,6 +39,12 @@ public final class ResizeApp extends App {
         initialHeight = mainApp.getImage().getHeight();
         setWidthPixels(initialWidth);
         setHeightPixels(initialHeight);
+        initialRatio = (double) initialWidth / initialHeight;
+
+        minWidthPercentage = 100.0 * MainApp.MIN_IMAGE_SIZE / initialWidth;
+        minHeightPercentage = 100.0 * MainApp.MIN_IMAGE_SIZE / initialHeight;
+        maxWidthPercentage = 100.0 * MainApp.MAX_IMAGE_SIZE / initialWidth;
+        maxHeightPercentage = 100.0 * MainApp.MAX_IMAGE_SIZE / initialHeight;
 
         resizeMode = SCALE;
 
@@ -78,68 +90,126 @@ public final class ResizeApp extends App {
         window.requestClose();
     }
 
-    public int getWidthPixels() {
-        return widthPixels;
+    public void setWidthPixels(int widthPixels) {
+        this.widthPixels = widthPixels;
+        if (lockRatio) {
+            heightPixels = (int) (widthPixels / initialRatio);
+        }
+        setSizePixels();
     }
 
-    public void setWidthPixels(int widthPixels) {
-        // this.widthPixels = Math.min(Math.max(MainApp.MIN_IMAGE_SIZE, widthPixels),
-        // MainApp.MAX_IMAGE_SIZE);
-        this.widthPixels = widthPixels;
-        clampWidthPixels();
+    public void setHeightPixels(int heightPixels) {
+        this.heightPixels = heightPixels;
+        if (lockRatio) {
+            widthPixels = (int) (heightPixels * initialRatio);
+        }
+        setSizePixels();
+    }
 
-        widthPercentage = 100.0 * this.widthPixels / initialWidth;
+    private void setSizePixels() {
+        int[] clamped = clamp(
+                widthPixels, heightPixels,
+                MainApp.MIN_IMAGE_SIZE, MainApp.MAX_IMAGE_SIZE,
+                1 / initialRatio);
+        clamped = clamp(
+                clamped[1], clamped[0],
+                MainApp.MIN_IMAGE_SIZE, MainApp.MAX_IMAGE_SIZE,
+                initialRatio);
+        widthPixels = clamped[1];
+        heightPixels = clamped[0];
+
+        widthPercentage = 100.0 * widthPixels / initialWidth;
+        heightPercentage = 100.0 * heightPixels / initialHeight;
+    }
+
+    /*
+     * Pixels:
+     * set px
+     * apply ratio (px)
+     * limit px
+     * update perc
+     * 
+     * Percentage:
+     * set perc
+     * apply ratio (perc)
+     * limit perc
+     * update px
+     */
+
+    public void setWidthPercentage(int widthPercentage) {
+        this.widthPercentage = widthPercentage;
+        if (lockRatio) {
+            heightPercentage = widthPercentage;
+        }
+        setSizePercentage();
+    }
+
+    public void setHeightPercentage(int heightPercentage) {
+        this.heightPercentage = heightPercentage;
+        if (lockRatio) {
+            widthPercentage = heightPercentage;
+        }
+        setSizePercentage();
+    }
+
+    private void setSizePercentage() {
+        double[] clamped = clamp(
+                widthPercentage, heightPercentage,
+                minWidthPercentage, maxWidthPercentage,
+                1);
+        clamped = clamp(
+                clamped[1], clamped[0],
+                minHeightPercentage, maxHeightPercentage,
+                1);
+        widthPercentage = clamped[1];
+        heightPercentage = clamped[0];
+
+        widthPixels = (int) (widthPercentage / 100 * initialWidth);
+        heightPixels = (int) (heightPercentage / 100 * initialHeight);
+    }
+
+    private int[] clamp(int dim1, int dim2, int min, int max, double ratio) {
+        if (dim1 < min) {
+            dim1 = min;
+            if (lockRatio)
+                dim2 = (int) (dim1 * ratio);
+        } else if (dim1 > max) {
+            dim1 = max;
+            if (lockRatio)
+                dim2 = (int) (dim1 * ratio);
+        }
+
+        return new int[] { dim1, dim2 };
+    }
+
+    private double[] clamp(double dim1, double dim2, double min, double max, double ratio) {
+        if (dim1 < min) {
+            dim1 = min;
+            if (lockRatio)
+                dim2 = (dim1 * ratio);
+        } else if (dim1 > max) {
+            dim1 = max;
+            if (lockRatio)
+                dim2 = (dim1 * ratio);
+        }
+
+        return new double[] { dim1, dim2 };
+    }
+
+    public int getWidthPixels() {
+        return widthPixels;
     }
 
     public int getHeightPixels() {
         return heightPixels;
     }
 
-    public void setHeightPixels(int heightPixels) {
-        // this.heightPixels = Math.min(Math.max(MainApp.MIN_IMAGE_SIZE, heightPixels),
-        // MainApp.MAX_IMAGE_SIZE);
-        this.heightPixels = heightPixels;
-        clampHeightPixels();
-
-        heightPercentage = 100.0 * this.heightPixels / initialHeight;
-    }
-
     public int getWidthPercentage() {
         return (int) widthPercentage;
     }
 
-    public void setWidthPercentage(int widthPercentage) {
-        this.widthPercentage = widthPercentage;
-
-        widthPixels = (int) (this.widthPercentage / 100.0 * initialWidth);
-        clampWidthPixels();
-    }
-
     public int getHeightPercentage() {
         return (int) heightPercentage;
-    }
-
-    public void setHeightPercentage(int heightPercentage) {
-        this.heightPercentage = heightPercentage;
-
-        heightPixels = (int) (this.heightPercentage / 100.0 * initialHeight);
-        clampHeightPixels();
-    }
-
-    private void clampWidthPixels() {
-        if (widthPixels < MainApp.MIN_IMAGE_SIZE) {
-            setWidthPixels(MainApp.MIN_IMAGE_SIZE);
-        } else if (widthPixels > MainApp.MAX_IMAGE_SIZE) {
-            setWidthPixels(MainApp.MAX_IMAGE_SIZE);
-        }
-    }
-
-    private void clampHeightPixels() {
-        if (heightPixels < MainApp.MIN_IMAGE_SIZE) {
-            setHeightPixels(MainApp.MIN_IMAGE_SIZE);
-        } else if (heightPixels > MainApp.MAX_IMAGE_SIZE) {
-            setHeightPixels(MainApp.MAX_IMAGE_SIZE);
-        }
     }
 
     public int getResizeMode() {
@@ -148,5 +218,13 @@ public final class ResizeApp extends App {
 
     public void setResizeMode(int resizeMode) {
         this.resizeMode = resizeMode;
+    }
+
+    public boolean isLockRatio() {
+        return lockRatio;
+    }
+
+    public void setLockRatio(boolean lockRatio) {
+        this.lockRatio = lockRatio;
     }
 }

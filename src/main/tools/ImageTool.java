@@ -4,11 +4,6 @@ import java.util.ArrayList;
 
 import main.apps.MainApp;
 
-/**
- * The {@code ImageTool} class is a subclass of {@code UIFloatContainer} such
- * that it can be placed inside the {@code ImageCanvas} and automatically get
- * the user inptus (key presses, mouse presses, mouse movement).
- */
 public abstract sealed class ImageTool permits PencilTool, DragTool, FillBucketTool, PipetteTool {
 
     public static final PencilTool PENCIL = PencilTool.INSTANCE;
@@ -24,6 +19,10 @@ public abstract sealed class ImageTool permits PencilTool, DragTool, FillBucketT
             SELECTION,
             TEXT
     };
+
+    public record KeyboardShortcut(int key, int modifiers, int initialState, Runnable action) {
+
+    }
 
     public static final int NONE = 0x01;
 
@@ -63,9 +62,6 @@ public abstract sealed class ImageTool permits PencilTool, DragTool, FillBucketT
 
     protected void addKeyboardShortcut(KeyboardShortcut shortcut) {
         keyboardShortcuts.add(shortcut);
-    }
-
-    public record KeyboardShortcut(int key, int modifiers, int initialState, Runnable action) {
     }
 
     public ArrayList<KeyboardShortcut> getKeyboardShortcuts() {

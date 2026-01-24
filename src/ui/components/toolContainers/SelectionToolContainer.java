@@ -16,11 +16,6 @@ public final class SelectionToolContainer extends DragToolContainer<SelectionToo
         add(new SelectionImage());
     }
 
-    @Override
-    protected boolean canStartIdleDrag() {
-        return true;
-    }
-
     private class SelectionImage extends UIImage {
 
         SelectionImage() {

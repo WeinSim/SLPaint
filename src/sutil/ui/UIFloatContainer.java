@@ -39,28 +39,15 @@ public class UIFloatContainer extends UIContainer {
 
     protected boolean clipToRoot;
 
-    /**
-     * When set to {@code true}, the float container will ignore its parent's clip
-     * area.
-     */
-    protected boolean ignoreClipArea;
-
     public UIFloatContainer(int orientation, int alignment) {
         super(orientation, alignment);
 
         withBackground();
 
         relativeLayer = 1;
-        clipToRoot = true;
-        ignoreClipArea = true;
+        clipToRoot = false;
 
         positionSuppliers = new ArrayList<>();
-    }
-
-    @Override
-    public boolean updateMouseAbove(boolean valid, boolean insideParent, int currentLayer, int targetLayer) {
-        // A FloatContainer does not need to be inside its parent.
-        return super.updateMouseAbove(valid, true, currentLayer, targetLayer);
     }
 
     public void clipToRoot(boolean clipToRoot) {
@@ -126,10 +113,6 @@ public class UIFloatContainer extends UIContainer {
     @Override
     public UIContainer setVFillSize() {
         throw new IllegalArgumentException("A UIFloatContainer's sizeType must be either MINIMAL or FIXED");
-    }
-
-    public boolean ignoreClipArea() {
-        return ignoreClipArea;
     }
 
     private class PositionSupplier {

@@ -12,11 +12,6 @@ public abstract class UI {
 
     private static UI context = null;
 
-    /**
-     * Mouse buttons
-     */
-    public static final int LEFT = 0, RIGHT = 1;
-
     private double uiScale = 1.0;
 
     protected String defaultFontName = "Courier New";
@@ -35,7 +30,7 @@ public abstract class UI {
     private boolean leftMousePressed;
     private boolean rightMousePressed;
 
-    private LinkedList<UIAction> eventQueue;
+    private LinkedList<Runnable> eventQueue;
 
     public UI(double uiScale, SVector initialRootSize) {
         setContext(this);
@@ -102,9 +97,7 @@ public abstract class UI {
     }
 
     public void charInput(char c) {
-        queueEvent(() -> {
-            root.charInput(c);
-        });
+        queueEvent(() -> root.charInput(c));
     }
 
     public void keyPressed(int key, int mods) {
@@ -114,7 +107,7 @@ public abstract class UI {
                 case GLFW.GLFW_KEY_CAPS_LOCK -> select(null);
                 case GLFW.GLFW_KEY_ENTER -> {
                     if (selectedElement != null) {
-                        UIAction clickAction = selectedElement.getLeftClickAction();
+                        Runnable clickAction = selectedElement.getLeftClickAction();
                         if (clickAction != null) {
                             clickAction.run();
                         }
@@ -133,7 +126,7 @@ public abstract class UI {
         root.setFixedSize(new SVector(width, height));
     }
 
-    private void queueEvent(UIAction action) {
+    private void queueEvent(Runnable action) {
         eventQueue.add(action);
     }
 
@@ -186,22 +179,9 @@ public abstract class UI {
         return elements;
     }
 
-    public boolean mouseAboveTextInput() {
-        return mouseAboveTextInput(root);
-    }
-
-    private boolean mouseAboveTextInput(UIElement element) {
-        if (element instanceof UITextInput && element.mouseAbove()) {
-            return true;
-        }
-        if (element instanceof UIContainer container) {
-            for (UIElement child : container.getChildren()) {
-                if (mouseAboveTextInput(child)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    public int getCursorShape() {
+        Integer shape = root.getCursorShape();
+        return shape == null ? GLFW.GLFW_ARROW_CURSOR : shape;
     }
 
     static void confirmSelectedElement() {
@@ -212,7 +192,7 @@ public abstract class UI {
      * During the updateVisibility() step of update(), the currently selected
      * element has to report to the UIPanel that it is still visible.
      */
-    void confirmSelectedElementImpl() {
+    protected void confirmSelectedElementImpl() {
         selectedElementVisible = true;
     }
 
@@ -220,7 +200,7 @@ public abstract class UI {
         context.setDraggingImpl();
     }
 
-    void setDraggingImpl() {
+    protected void setDraggingImpl() {
         dragging = true;
     }
 

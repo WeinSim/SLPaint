@@ -15,7 +15,6 @@ import sutil.ui.UI;
 import sutil.ui.UIColors;
 import sutil.ui.UIContainer;
 import sutil.ui.UIElement;
-import sutil.ui.UIFloatContainer;
 import sutil.ui.UIImage;
 import sutil.ui.UIShape;
 import sutil.ui.UISizes;
@@ -108,8 +107,8 @@ public class AppRenderer {
         SVector size = element.getSize();
         UIShape shape = element.shape();
 
-        boolean ignoreClipArea = element instanceof UIFloatContainer f && f.ignoreClipArea();
-        if (ignoreClipArea) {
+        boolean ignoreParentClipArea = element.ignoreParentClipArea();
+        if (ignoreParentClipArea) {
             uiMaster.pushClipArea();
             uiMaster.noClipArea();
         }
@@ -179,8 +178,8 @@ public class AppRenderer {
 
         // children
         if (element instanceof UIContainer container) {
-            boolean isScrollable = container.isHScroll() || container.isVScroll();
-            if (isScrollable) {
+            boolean clipChildren = container.clipChildren();
+            if (clipChildren) {
                 uiMaster.pushClipArea();
                 uiMaster.clipArea(position, size);
             }
@@ -194,7 +193,7 @@ public class AppRenderer {
             division--;
 
             uiMaster.popMatrix();
-            if (isScrollable) {
+            if (clipChildren) {
                 uiMaster.popClipArea();
             }
         }
@@ -245,7 +244,7 @@ public class AppRenderer {
                     App.isHSLColorSpace());
         }
 
-        if (ignoreClipArea) {
+        if (ignoreParentClipArea) {
             uiMaster.popClipArea();
         }
 

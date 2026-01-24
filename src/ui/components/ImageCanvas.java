@@ -6,33 +6,21 @@ import main.Image;
 import main.apps.MainApp;
 import main.tools.ImageTool;
 import main.tools.ImageTool.KeyboardShortcut;
+import main.tools.Resizable;
 import sutil.math.SVector;
+import sutil.ui.UI;
 import sutil.ui.UIColors;
 import sutil.ui.UIContainer;
-import sutil.ui.UIElement;
 import sutil.ui.UIFloatContainer;
 import sutil.ui.UIImage;
-import sutil.ui.UI;
 import sutil.ui.UISizes;
 import ui.components.toolContainers.FillBucketToolContainer;
 import ui.components.toolContainers.PencilToolContainer;
 import ui.components.toolContainers.PipetteToolContainer;
 import ui.components.toolContainers.SelectionToolContainer;
 import ui.components.toolContainers.TextToolContainer;
-import ui.components.toolContainers.ToolContainer;
 
 public class ImageCanvas extends UIContainer {
-
-    /**
-     * The number of layers that a {@code ImageCanvas} needs.
-     * <p>
-     * 
-     * 0 = image
-     * 1 = selection image
-     * 2 = selection border, text input
-     * 3 = size knobs
-     */
-    public static final int NUM_UI_LAYERS = 4;
 
     private static final int MIN_ZOOM_LEVEL = -4;
     private static final int MAX_ZOOM_LEVEL = 8;
@@ -44,6 +32,9 @@ public class ImageCanvas extends UIContainer {
     private int imageZoomLevel;
     private boolean draggingImage;
 
+    private int newX, newY, newWidth, newHeight;
+    private boolean resizing;
+
     public ImageCanvas(int orientation, int hAlignment, int vAlignment, MainApp app) {
         super(orientation, hAlignment, vAlignment);
 
@@ -54,19 +45,28 @@ public class ImageCanvas extends UIContainer {
         setFillSize();
         zeroMargin();
 
+        setLeftClickAction(this::leftClick);
+        setRightClickAction(this::rightClick);
+
+        setCursorShape(() -> draggingImage ? GLFW.GLFW_POINTING_HAND_CURSOR : null);
+
         style.setBackgroundColor(UIColors.CANVAS);
 
-        resetImageTransform();
+        clipChildren = true;
 
-        draggingImage = false;
-
-        add(new ImageContainer());
+        add(new ImageResize());
+        add(new ImageDisplay());
 
         add(new PencilToolContainer(app));
         add(new PipetteToolContainer(app));
         add(new FillBucketToolContainer(app));
         add(new TextToolContainer(app));
         add(new SelectionToolContainer(app));
+
+        resetImageTransform();
+
+        draggingImage = false;
+        resizing = false;
     }
 
     @Override
@@ -117,28 +117,30 @@ public class ImageCanvas extends UIContainer {
         }
     }
 
-    @Override
-    public void mousePressed(int mouseButton, int mods) {
-        super.mousePressed(mouseButton, mods);
+    private void leftClick() {
+        int mods = app.getModifierKeys();
+        toolClick(GLFW.GLFW_MOUSE_BUTTON_LEFT, mods);
+    }
 
-        // tool click
-        if (mouseAbove()) {
-            if ((mods & (GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SHIFT)) == 0) {
-                int[] mousePosition = app.getMouseImagePosition();
-                int mouseX = mousePosition[0],
-                        mouseY = mousePosition[1];
-
-                app.getActiveTool().click(mouseX, mouseY, mouseButton);
-            }
-        }
+    private void rightClick() {
+        int mods = app.getModifierKeys();
+        toolClick(GLFW.GLFW_MOUSE_BUTTON_RIGHT, mods);
 
         if (canDoScrollZoom()) {
             // dragging image
-            if (mouseButton == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                if ((mods & GLFW.GLFW_MOD_CONTROL) != 0) {
-                    draggingImage = true;
-                }
+            if ((mods & GLFW.GLFW_MOD_CONTROL) != 0) {
+                draggingImage = true;
             }
+        }
+    }
+
+    private void toolClick(int mouseButton, int mods) {
+        if ((mods & (GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SHIFT)) == 0) {
+            int[] mousePosition = app.getMouseImagePosition();
+            int mouseX = mousePosition[0],
+                    mouseY = mousePosition[1];
+
+            app.getActiveTool().click(mouseX, mouseY, mouseButton);
         }
     }
 
@@ -156,7 +158,6 @@ public class ImageCanvas extends UIContainer {
                 double zoom = getImageZoom();
                 mousePos = new SVector(mousePos).sub(position);
                 imageTranslation.sub(mousePos).scale(zoom / prevZoom).add(mousePos);
-                app.getWindow().setHandCursor();
             } else {
                 // scroll
                 if ((mods & GLFW.GLFW_MOD_SHIFT) != 0) {
@@ -172,17 +173,20 @@ public class ImageCanvas extends UIContainer {
     }
 
     public boolean canDoScrollZoom() {
-        if (mouseAbove())
-            return true;
+        // (this is kind of ugly)
+        return calculateMouseAbove(mousePosition);
 
-        for (UIElement child : getChildren()) {
-            if (child instanceof ToolContainer) {
-                if (child.mouseAbove())
-                    return true;
-            }
-        }
+        // if (mouseAbove())
+        // return true;
 
-        return false;
+        // for (UIElement child : getChildren()) {
+        // if (child instanceof ToolContainer) {
+        // if (child.mouseAbove())
+        // return true;
+        // }
+        // }
+
+        // return false;
     }
 
     public void resetImageTransform() {
@@ -206,9 +210,25 @@ public class ImageCanvas extends UIContainer {
         return imagePos.copy().scale(getImageZoom()).add(getAbsolutePosition().add(imageTranslation));
     }
 
-    private class ImageContainer extends UIFloatContainer {
+    public void translateImage(SVector delta) {
+        imageTranslation.add(delta.scale(getImageZoom()));
+    }
 
-        public ImageContainer() {
+    public boolean isImageResizing() {
+        return resizing;
+    }
+
+    public int getNewImageWidth() {
+        return newWidth;
+    }
+
+    public int getNewImageHeight() {
+        return newHeight;
+    }
+
+    private class ImageDisplay extends UIFloatContainer {
+
+        ImageDisplay() {
             super(0, 0);
 
             noOutline();
@@ -217,17 +237,17 @@ public class ImageCanvas extends UIContainer {
 
             addAnchor(Anchor.TOP_LEFT, ImageCanvas.this::getImageTranslation);
 
-            add(new ImageContainerChild());
-
             relativeLayer = 0;
-            clipToRoot = false;
-            ignoreClipArea = false;
+
+            add(new ImageContainerChild());
         }
 
-        // horrible name but whatever
+        // Horrible name but whatever.
+        // This needs to be its own class because it is a UIImage (and ImageContainer is
+        // a subclass of UIFloatContainer).
         private class ImageContainerChild extends UIImage {
 
-            public ImageContainerChild() {
+            ImageContainerChild() {
                 super(() -> app.getImage().getTextureID(), new SVector());
 
                 style.setBackgroundCheckerboard(UIColors.TRANSPARENCY_1, UIColors.TRANSPARENCY_2, UISizes.CHECKERBOARD);
@@ -240,6 +260,113 @@ public class ImageCanvas extends UIContainer {
                 size.set(image.getWidth(), image.getHeight());
                 size.scale(app.getImageZoom());
             }
+        }
+    }
+
+    private class ImageResize extends UIFloatContainer implements Resizable {
+
+        ImageResize() {
+            super(0, 0);
+
+            noOutline();
+            noBackground();
+            zeroMargin();
+
+            style.setStrokeCheckerboard(
+                    () -> resizing,
+                    UIColors.SELECTION_BORDER_1,
+                    UIColors.SELECTION_BORDER_2,
+                    () -> UISizes.CHECKERBOARD.get());
+            style.setStrokeWeight(() -> 2 * UISizes.STROKE_WEIGHT.get());
+
+            addAnchor(Anchor.TOP_LEFT, this::getPos);
+
+            relativeLayer = 0;
+
+            for (int dy = 0; dy <= 2; dy++) {
+                for (int dx = 0; dx <= 2; dx++) {
+                    if (dx == 1 && dy == 1)
+                        continue;
+
+                    add(new SizeKnob(dx, dy, this, this, () -> true, app));
+                }
+            }
+        }
+
+        @Override
+        public void update() {
+            newX = 0;
+            newY = 0;
+            newWidth = app.getImage().getWidth();
+            newHeight = app.getImage().getHeight();
+
+            super.update();
+
+            setFixedSize(new SVector(newWidth, newHeight).scale(getImageZoom()));
+        }
+
+        private SVector getPos() {
+            SVector pos = getImageTranslation().copy();
+            double zoom = getImageZoom();
+            pos.x += newX * zoom;
+            pos.y += newY * zoom;
+            return pos;
+        }
+
+        @Override
+        public void startResizing() {
+            resizing = true;
+        }
+
+        @Override
+        public void finishResizing() {
+            app.cropImage(newX, newY, newWidth, newHeight);
+            resizing = false;
+        }
+
+        @Override
+        public boolean lockRatio() {
+            return false;
+        }
+
+        @Override
+        public int getX() {
+            return newX;
+        }
+
+        @Override
+        public void setX(int x) {
+            newX = x;
+        }
+
+        @Override
+        public int getY() {
+            return newY;
+        }
+
+        @Override
+        public void setY(int y) {
+            newY = y;
+        }
+
+        @Override
+        public int getWidth() {
+            return newWidth;
+        }
+
+        @Override
+        public void setWidth(int width) {
+            newWidth = Math.min(Math.max(MainApp.MIN_IMAGE_SIZE, width), MainApp.MAX_IMAGE_SIZE);
+        }
+
+        @Override
+        public int getHeight() {
+            return newHeight;
+        }
+
+        @Override
+        public void setHeight(int height) {
+            newHeight = Math.min(Math.max(MainApp.MIN_IMAGE_SIZE, height), MainApp.MAX_IMAGE_SIZE);
         }
     }
 }

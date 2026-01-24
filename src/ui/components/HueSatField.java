@@ -36,6 +36,8 @@ public class HueSatField extends UIDragContainer {
         setFixedSize(UISizes.HUE_SAT_FIELD.getWidthHeight());
 
         nextX = 0;
+
+        handCursorAbove = true;
     }
 
     @Override
@@ -125,9 +127,7 @@ public class HueSatField extends UIDragContainer {
                 add(new CursorLine(i % 2 == 0));
             }
 
-            clipToRoot = false;
             relativeLayer = 0;
-            ignoreClipArea = false;
         }
 
         @Override

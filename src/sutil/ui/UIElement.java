@@ -24,8 +24,14 @@ public abstract class UIElement {
     protected SVector mousePosition;
     protected boolean mouseAbove = false;
 
-    protected UIAction leftClickAction = null,
-            rightClickAction = null;
+    protected boolean handCursorAbove = false;
+    protected Supplier<Integer> cursorShapeSupplier = () -> handCursorAbove && mouseAbove
+            ? GLFW.GLFW_POINTING_HAND_CURSOR
+            : null;
+
+    protected boolean ignoreParentClipArea = false;
+
+    protected Runnable leftClickAction = null, rightClickAction = null;
     protected boolean selectOnClick = false;
     protected boolean selectable = false;
 
@@ -54,12 +60,12 @@ public abstract class UIElement {
         mousePosition.set(mouse);
     }
 
-    public boolean updateMouseAbove(boolean valid, boolean insideParent, int currentLayer, final int targetLayer) {
+    public boolean updateMouseAbove(boolean valid, int currentLayer, final int targetLayer) {
         currentLayer += relativeLayer;
         if (currentLayer != targetLayer)
             return false;
 
-        mouseAbove = valid && insideParent ? calculateMouseAbove(mousePosition) : false;
+        mouseAbove = valid ? calculateMouseAbove(mousePosition) : false;
 
         return mouseAbove;
     }
@@ -75,11 +81,11 @@ public abstract class UIElement {
         if (!mouseAbove)
             return;
 
-        if ((mods & (GLFW.GLFW_MOD_SHIFT | GLFW.GLFW_MOD_CONTROL)) != 0)
-            return;
+        // if ((mods & (GLFW.GLFW_MOD_SHIFT | GLFW.GLFW_MOD_CONTROL)) != 0)
+        // return;
 
         switch (mouseButton) {
-            case UI.LEFT -> {
+            case GLFW.GLFW_MOUSE_BUTTON_LEFT -> {
                 if (leftClickAction != null) {
                     leftClickAction.run();
                 }
@@ -88,7 +94,7 @@ public abstract class UIElement {
                     UI.select(this, mousePosition);
                 }
             }
-            case UI.RIGHT -> {
+            case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> {
                 if (rightClickAction != null) {
                     rightClickAction.run();
                 }
@@ -137,6 +143,10 @@ public abstract class UIElement {
         this.selectable = selectable;
     }
 
+    public boolean ignoreParentClipArea() {
+        return ignoreParentClipArea;
+    }
+
     public SVector getPosition() {
         return position;
     }
@@ -167,24 +177,41 @@ public abstract class UIElement {
         return mouseAbove;
     }
 
-    public void setLeftClickAction(UIAction leftClickAction) {
+    public void setLeftClickAction(Runnable leftClickAction) {
         this.leftClickAction = leftClickAction;
     }
 
-    public UIAction getLeftClickAction() {
+    public Runnable getLeftClickAction() {
         return leftClickAction;
     }
 
-    public void setRightClickAction(UIAction rightClickAction) {
+    public void setRightClickAction(Runnable rightClickAction) {
         this.rightClickAction = rightClickAction;
     }
 
-    public UIAction getRightClickAction() {
+    public Runnable getRightClickAction() {
         return rightClickAction;
     }
 
     public SVector getAbsolutePosition() {
         return parent.getAbsolutePosition().add(position);
+    }
+
+    public UIElement setHandCursor() {
+        handCursorAbove = true;
+        return this;
+    }
+
+    public void setCursorShape(Integer cursorShape) {
+        setCursorShape(() -> cursorShape);
+    }
+
+    public void setCursorShape(Supplier<Integer> cursorShapeSupplier) {
+        this.cursorShapeSupplier = cursorShapeSupplier;
+    }
+
+    public Integer getCursorShape() {
+        return cursorShapeSupplier.get();
     }
 
     public Vector4f backgroundColor() {

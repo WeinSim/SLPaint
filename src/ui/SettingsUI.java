@@ -80,7 +80,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         gap.noOutline();
         baseColorHeading.add(gap);
         UIColorElement baseColorButton = new UIColorElement(
-                () -> MainApp.toInt(AppUI.getBaseColorStatic()),
+                () -> MainApp.toInt(AppUI.getBaseColor()),
                 UISizes.COLOR_BUTTON);
         baseColorHeading.add(baseColorButton);
         baseColorHeading.setLeftClickAction(() -> colorSelectionExpanded = !colorSelectionExpanded);
@@ -141,7 +141,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         container.add(new UIText("Theme:"));
         container.add(new UIDropdown(
                 new String[] { "Dark", "Light" },
-                () -> AppUI.isDarkModeStatic() ? 0 : 1,
+                () -> AppUI.isDarkMode() ? 0 : 1,
                 i -> app.setDarkMode(i == 0)));
         return container;
     }

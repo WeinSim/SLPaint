@@ -22,6 +22,9 @@ public class UIFloatMenu extends UIFloatContainer {
         zeroMargin();
         zeroPadding();
 
+        ignoreParentClipArea = true;
+        clipToRoot = true;
+
         if (scroll) {
             UIContainer scrollArea = new UIContainer(VERTICAL, LEFT, TOP, UIContainer.VERTICAL);
             scrollArea.setVFixedSize(400).zeroMargin().zeroPadding();
@@ -45,7 +48,7 @@ public class UIFloatMenu extends UIFloatContainer {
         add(child, contents == this || contents == null);
     }
 
-    public UILabel addLabel(String text, UIAction clickAction) {
+    public UILabel addLabel(String text, Runnable clickAction) {
         CMLabel label = new CMLabel(text, this);
         label.backgroundHighlight = true;
         label.setLeftClickAction(clickAction);

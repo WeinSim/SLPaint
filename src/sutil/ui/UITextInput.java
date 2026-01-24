@@ -36,6 +36,8 @@ public class UITextInput extends UIContainer {
 
         setHFillSize();
 
+        setCursorShape(() -> mouseAbove ? GLFW.GLFW_IBEAM_CURSOR : null);
+
         selectable = true;
         selectOnClick = true;
 

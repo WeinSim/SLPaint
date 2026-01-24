@@ -81,7 +81,10 @@ public class Image {
         }
     }
 
-    public void crop(int newWidth, int newHeight, int backgroundColor) {
+    public void crop(int startX, int startY, int newWidth, int newHeight, int backgroundColor) {
+        if (newWidth == width && newHeight == height)
+            return;
+
         BufferedImage oldImage = bufferedImage,
                 newImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
 
@@ -91,22 +94,24 @@ public class Image {
         int[] oldPixels = ((DataBufferInt) oldImage.getRaster().getDataBuffer()).getData(),
                 newPixels = ((DataBufferInt) newImage.getRaster().getDataBuffer()).getData();
 
-        if (newWidth > oldWidth || newHeight > oldHeight)
+        // if (newWidth > oldWidth || newHeight > oldHeight)
+        if (startX < 0 || startX + newWidth > oldWidth || startY < 0 || startY + newHeight > oldHeight)
             Arrays.fill(newPixels, backgroundColor);
 
-        int copyWidth = Math.min(oldWidth, newWidth),
-                copyHeight = Math.min(oldHeight, newHeight);
+        // int copyWidth = Math.min(oldWidth, newWidth),
+        // copyHeight = Math.min(oldHeight, newHeight);
 
-        for (int y = 0; y < newHeight; y++) {
-            int x0 = 0;
-            if (y < copyHeight) {
-                System.arraycopy(oldPixels, y * oldWidth, newPixels, y * newWidth, copyWidth);
-                x0 = copyWidth;
-            }
+        // all coordinates are w.r.t. the new image
+        int copyStartX = Math.max(0, -startX),
+                copyStartY = Math.max(0, -startY);
+        int copyEndX = Math.min(oldWidth - startX, newWidth),
+                copyEndY = Math.min(oldHeight - startY, newHeight);
+        int copyWidth = copyEndX - copyStartX;
 
-            for (int x = x0; x < newWidth; x++) {
-                newPixels[y * newWidth + x] = backgroundColor;
-            }
+        for (int y = copyStartY; y < copyEndY; y++) {
+            int oldIndex = (y + startY) * oldWidth + (copyStartX + startX),
+                    newIndex = y * newWidth + copyStartX;
+            System.arraycopy(oldPixels, oldIndex, newPixels, newIndex, copyWidth);
         }
 
         setBufferedImage(newImage);

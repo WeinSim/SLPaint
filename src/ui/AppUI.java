@@ -113,20 +113,20 @@ public abstract class AppUI<T extends App> extends UI {
         return ret;
     }
 
-    public static boolean isDarkModeStatic() {
+    public static boolean isDarkMode() {
         return darkMode.get();
     }
 
     @Override
     protected boolean isDarkModeImpl() {
-        return isDarkModeStatic();
+        return isDarkMode();
     }
 
     public static void setDarkMode(boolean darkMode) {
         AppUI.darkMode.set(darkMode);
     }
 
-    public static Vector4f getBaseColorStatic() {
+    public static Vector4f getBaseColor() {
         int rgb = baseColor.get().getRGB();
 
         int red = SUtil.red(rgb);
@@ -138,11 +138,11 @@ public abstract class AppUI<T extends App> extends UI {
 
     @Override
     protected Vector4f getBaseColorImpl() {
-        return getBaseColorStatic();
+        return getBaseColor();
     }
 
     public static Vector4f[] getDefaultUIColors() {
-        return isDarkModeStatic() ? DEFAULT_UI_COLORS_DARK : DEFAULT_UI_COLORS_LIGHT;
+        return isDarkMode() ? DEFAULT_UI_COLORS_DARK : DEFAULT_UI_COLORS_LIGHT;
     }
 
     public static int getNumDefaultUIColors() {
@@ -152,97 +152,4 @@ public abstract class AppUI<T extends App> extends UI {
     public static ColorPicker getBaseColorPicker() {
         return baseColor.get();
     }
-
-    // @Override
-    // public Vector4f defaultTextColor() {
-    // return Colors.text();
-    // }
-
-    // @Override
-    // public Vector4f backgroundNormalColor() {
-    // return Colors.backgroundNormal();
-    // }
-
-    // @Override
-    // public Vector4f backgroundHighlightColor() {
-    // return Colors.backgroundHighlight();
-    // }
-
-    // @Override
-    // public Vector4f strokeNormalColor() {
-    // return Colors.outlineNormal();
-    // }
-
-    // @Override
-    // public Vector4f strokeHighlightColor() {
-    // return Colors.outlineHighlight();
-    // }
-
-    // @Override
-    // public Vector4f separatorColor() {
-    // return Colors.separator();
-    // }
-
-    // public SVector mainAppSize() {
-    // return getWidthHeight(Sizes.MAIN_APP);
-    // }
-
-    // public SVector settingsAppSize() {
-    // return getWidthHeight(Sizes.SETTINGS_APP);
-    // }
-
-    // @Override
-    // public double strokeWeightSize() {
-    // return getSize(UISizes.STROKE_WEIGHT);
-    // }
-
-    // @Override
-    // public double defaultTextSize() {
-    // return getSize(UISizes.TEXT);
-    // }
-
-    // @Override
-    // public double smallTextSize() {
-    // return getSize(UISizes.TEXT_SMALL);
-    // }
-
-    // public double marginSize() {
-    // return getSize(Sizes.MARGIN);
-    // }
-
-    // public double paddingSize() {
-    // return getSize(Sizes.PADDING);
-    // }
-
-    // public double scaleSize() {
-    // return getSize(Sizes.SCALE);
-    // }
-
-    // public double colorButtonSize() {
-    // return getSize(Sizes.COLOR_BUTTON);
-    // }
-
-    // public double bigColorButtonSize() {
-    // return getSize(Sizes.BIG_COLOR_BUTTON);
-    // }
-
-    // public SVector colorPickerPreviewSize() {
-    // return getWidthHeight(Sizes.COLOR_PICKER_PREVIEW);
-    // }
-
-    // public double checkerboardSize() {
-    // return getSize(Sizes.CHECKERBOARD);
-    // }
-
-    // public double colorPickerPanelSize() {
-    // return getSize(Sizes.COLOR_PICKER_PANEL);
-    // }
-
-    // public double colorPickerExtraWindowSize() {
-    // return getSize(Sizes.COLOR_PICKER_EXTRA_WINDOW);
-    // }
-
-    // public double sizeKnobSize() {
-    // return getSize(Sizes.SIZE_KNOB);
-    // }
 }

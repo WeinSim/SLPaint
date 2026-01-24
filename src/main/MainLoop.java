@@ -28,6 +28,8 @@ public class MainLoop {
         testImports();
 
         // Loader.createFontAtlas("Courier New", 36);
+        // Loader.createFontAtlas("Courier New", 18);
+        // Loader.createFontAtlas("Courier New Bold", 36);
         // Loader.createFontAtlas("Courier New Bold", 18);
 
         // Disables the message
@@ -90,13 +92,23 @@ public class MainLoop {
     }
 
     private static void initGLFW() {
-        // Setup an error callback. The default implementation
-        // will print the error message in System.err.
-        GLFWErrorCallback.createPrint(System.err).set();
+        GLFWErrorCallback err = GLFWErrorCallback.createPrint(System.err);
+        new GLFWErrorCallback() {
+
+            @Override
+            public void invoke(int error, long description) {
+                if (error == GLFW.GLFW_CURSOR_UNAVAILABLE)
+                    return;
+
+                err.invoke(error, description);
+            }
+        }.set();
 
         // Initialize GLFW. Most GLFW functions will not work before doing this.
         if (!GLFW.glfwInit())
             throw new IllegalStateException("Unable to initialize GLFW");
+
+        Window.createCursors();
     }
 
     private static void terminateGLFW() {

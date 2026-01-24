@@ -29,7 +29,7 @@ public enum UISizes implements Supplier<Double> {
     HUE_SAT_FIELD(200),
     COLOR_PICKER_EXTRA_WINDOW(300),
     COLOR_PICKER_PREVIEW(96, 60),
-    SIZE_KNOB(15);
+    SIZE_KNOB(12);
 
     public final double size;
     public final double width;

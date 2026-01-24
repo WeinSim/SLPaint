@@ -32,7 +32,7 @@ public class UIDropdown extends UIContainer {
         dropdown = new UIFloatMenu(this::isExpanded, scroll);
         dropdown.addAnchor(UIFloatContainer.Anchor.TOP_LEFT, this, UIFloatContainer.Anchor.BOTTOM_LEFT);
         dropdown.addAnchor(UIFloatContainer.Anchor.BOTTOM_LEFT, this, UIFloatContainer.Anchor.TOP_LEFT);
-        UIAction[] clickActions = new UIAction[options.length];
+        Runnable[] clickActions = new Runnable[options.length];
         for (int i = 0; i < clickActions.length; i++) {
             final int j = i;
             dropdown.addLabel(options[i], () -> {

@@ -2,9 +2,9 @@ package main.tools;
 
 import org.lwjgl.glfw.GLFW;
 
-public abstract sealed class DragTool extends ImageTool permits SelectionTool, TextTool {
+public abstract sealed class DragTool extends ImageTool implements Resizable permits SelectionTool, TextTool {
 
-    public static final int INITIAL_DRAG = 0x02, IDLE = 0x04, IDLE_DRAG = 0x08, RESIZING = 0x10;
+    public static final int INITIAL_DRAG = 0x02, IDLE = 0x04, IDLE_DRAG = 0x08;
 
     // INITIAL_DRAG
     private int startX, startY;
@@ -46,38 +46,6 @@ public abstract sealed class DragTool extends ImageTool permits SelectionTool, T
 
     public abstract int getMargin();
 
-    public int getX() {
-        return x;
-    }
-
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
-    }
-
     public int getState() {
         return state;
     }
@@ -89,4 +57,53 @@ public abstract sealed class DragTool extends ImageTool permits SelectionTool, T
     public int getStartY() {
         return startY;
     }
+
+    @Override
+    public void startResizing() {
+    }
+
+    @Override
+    public void finishResizing() {
+    }
+
+    @Override
+    public int getX() {
+        return x;
+    }
+
+    @Override
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    @Override
+    public int getY() {
+        return y;
+    }
+
+    @Override
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    @Override
+    public int getWidth() {
+        return width;
+    }
+
+    @Override
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    @Override
+    public int getHeight() {
+        return height;
+    }
+
+    @Override
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
 }

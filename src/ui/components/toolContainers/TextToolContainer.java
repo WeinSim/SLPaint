@@ -19,12 +19,8 @@ public final class TextToolContainer extends DragToolContainer<TextTool> {
 
     private boolean showChildren() {
         int state = tool.getState();
-        return state == DragTool.IDLE || state == DragTool.IDLE_DRAG;
-    }
-
-    @Override
-    protected boolean canStartIdleDrag() {
-        return !textInput.mouseAbove();
+        final int visibleStates = DragTool.IDLE | DragTool.IDLE_DRAG;
+        return (state & visibleStates) != 0;
     }
 
     private class TextInput extends UITextInput {
@@ -38,6 +34,8 @@ public final class TextToolContainer extends DragToolContainer<TextTool> {
 
             hAlignment = LEFT;
             vAlignment = TOP;
+
+            relativeLayer = 1;
 
             setVisibilitySupplier(TextToolContainer.this::showChildren);
 

@@ -25,14 +25,14 @@ public final class SettingsApp extends App {
     }
 
     public void setDarkMode(boolean darkMode) {
-        if (AppUI.isDarkModeStatic() == darkMode)
+        if (AppUI.isDarkMode() == darkMode)
             return;
 
         Vector4f[] oldColors = AppUI.getDefaultUIColors();
         AppUI.setDarkMode(darkMode);
         Vector4f[] newColors = AppUI.getDefaultUIColors();
 
-        int baseRGB = MainApp.toInt(AppUI.getBaseColorStatic());
+        int baseRGB = MainApp.toInt(AppUI.getBaseColor());
 
         // this is a bit of a hack
         for (int i = 0; i < oldColors.length; i++) {

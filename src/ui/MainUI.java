@@ -3,32 +3,30 @@ package ui;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.lwjgl.glfw.GLFW;
+
 import main.Image;
 import main.ImageFormat;
 import main.apps.MainApp;
 import main.tools.DragTool;
 import main.tools.ImageTool;
 import main.tools.PencilTool;
-import main.tools.SelectionTool;
 import main.tools.TextTool;
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UIButton;
 import sutil.ui.UIContainer;
 import sutil.ui.UIDropdown;
-import sutil.ui.UIElement;
 import sutil.ui.UIImage;
 import sutil.ui.UILabel;
 import sutil.ui.UINumberInput;
 import sutil.ui.UIScale;
-import sutil.ui.UISeparator;
 import sutil.ui.UISizes;
 import sutil.ui.UIText;
 import sutil.ui.UIToggle;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.ImageCanvas;
-import ui.components.ToolButton;
 import ui.components.UIColorElement;
 
 public class MainUI extends AppUI<MainApp> {
@@ -37,7 +35,7 @@ public class MainUI extends AppUI<MainApp> {
 
     private String debugString = "";
 
-    // private int test = 0;
+    private int cursor = 0;
 
     public MainUI(MainApp app) {
         super(app);
@@ -47,7 +45,7 @@ public class MainUI extends AppUI<MainApp> {
     protected void init() {
         root.setOrientation(UIContainer.VERTICAL);
         root.setHAlignment(UIContainer.LEFT);
-        // root.withSeparators(false).noOutline();
+        root.withSeparators(false);
 
         UIContainer topRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER,
                 UIContainer.HORIZONTAL);
@@ -74,7 +72,10 @@ public class MainUI extends AppUI<MainApp> {
 
         UIContainer toolbox = addTopRowSection(topRow, "Tools");
         for (ImageTool tool : ImageTool.INSTANCES) {
-            toolbox.add(new ToolButton(app, tool));
+            UIButton toolButton = new UIButton(tool.getName().charAt(0) + "", () -> app.setActiveTool(tool));
+            toolButton.setHandCursor();
+            setSelectableButtonStyle(toolButton, () -> app.getActiveTool() == tool);
+            toolbox.add(toolButton);
         }
 
         UIContainer pencilTools = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
@@ -181,6 +182,7 @@ public class MainUI extends AppUI<MainApp> {
             final int color = MainApp.DEFAULT_COLORS[i];
             UIColorElement button = new UIColorElement(() -> color, UISizes.COLOR_BUTTON);
             button.setLeftClickAction(() -> app.selectColor(color));
+            button.setCursorShape(() -> button.mouseAbove() ? GLFW.GLFW_POINTING_HAND_CURSOR : null);
             currentRow.add(button);
 
             if ((i + 1) % NUM_COLOR_BUTTONS_PER_ROW == 0 || i + 1 == MainApp.DEFAULT_COLORS.length) {
@@ -193,9 +195,7 @@ public class MainUI extends AppUI<MainApp> {
         allColors.add(ccc);
         topRow.add(allColors);
 
-        addToRoot(topRow.addScrollbars().setHFillSize());
-
-        addToRoot(new UISeparator().zeroMargin());
+        root.add(topRow.addScrollbars().setHFillSize());
 
         UIContainer mainRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
         mainRow.withSeparators(false).noBackground().noOutline();
@@ -214,12 +214,6 @@ public class MainUI extends AppUI<MainApp> {
                 UIContainer.VERTICAL,
                 true,
                 false));
-
-        // sidePanel.add(new UIRadioButtonList(
-        // UIContainer.VERTICAL,
-        // new String[] { "Option 1", "Option 2", "Option 3", "Option 4" },
-        // this::getTest,
-        // this::setTest));
 
         UIContainer debugPanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
                 UIContainer.VERTICAL);
@@ -249,11 +243,9 @@ public class MainUI extends AppUI<MainApp> {
 
         // sidePanel.add(debugPanel.addScrollbars());
 
-        mainRow.add(sidePanel.addScrollbars().setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
+        mainRow.add(sidePanel.addScrollbars());
 
         root.add(mainRow);
-
-        addToRoot(new UISeparator().zeroMargin());
 
         UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
         statusBar.withSeparators(false).withBackground().noOutline();
@@ -274,11 +266,23 @@ public class MainUI extends AppUI<MainApp> {
             return ret;
         }, true));
         statusBar.add(new UILabel(() -> {
-            Image image = app.getImage();
-            int width = image.getWidth();
-            int height = image.getHeight();
-            return "Size: %d x %d px".formatted(width, height);
+            int width, height;
+            if (app.isImageResizing()) {
+                width = app.getNewImageWidth();
+                height = app.getNewImageHeight();
+            } else {
+                Image image = app.getImage();
+                width = image.getWidth();
+                height = image.getHeight();
+            }
+            return "Image Size: %d x %d px".formatted(width, height);
         }, true));
+        statusBar.add(new UILabel(
+                () -> String.format("Selection size: %d x %d px",
+                        ImageTool.SELECTION.getWidth(),
+                        ImageTool.SELECTION.getHeight()),
+                true).setVisibilitySupplier(
+                        () -> ImageTool.SELECTION.getState() != DragTool.NONE));
         statusBar.add(new UILabel(() -> {
             int[] mouseImagePos = app.getMouseImagePosition();
             boolean inside = app.getImage().isInside(mouseImagePos[0], mouseImagePos[1]);
@@ -288,24 +292,11 @@ public class MainUI extends AppUI<MainApp> {
             }
             return ret;
         }, true));
-        statusBar.add(new UILabel(() -> {
-            String ret = "Selection size:";
-            SelectionTool selection = ImageTool.SELECTION;
-            if (app.getActiveTool() == selection
-                    && selection.getState() != DragTool.NONE) {
-                ret += " %d x %d px".formatted(ImageTool.SELECTION.getWidth(), ImageTool.SELECTION.getHeight());
-            }
-            return ret;
-        }, true));
         statusBar.add(new UIContainer(0, 0).setHFillSize().noOutline());
         statusBar.add(new UILabel(() -> String.format("Frame %d", app.getFrameCount()), true));
         statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate()), true));
 
-        addToRoot(statusBar);
-    }
-
-    private void addToRoot(UIElement element) {
-        root.add(element.setRelativeLayer(ImageCanvas.NUM_UI_LAYERS));
+        root.add(statusBar);
     }
 
     private UIContainer createToggleContainer(String label, Supplier<Boolean> getter, Consumer<Boolean> setter) {
@@ -353,12 +344,16 @@ public class MainUI extends AppUI<MainApp> {
     private UIContainer createIntPicker(Supplier<Integer> sizeGetter, Consumer<Integer> sizeSetter) {
         UIContainer container = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
         container.zeroMargin().zeroPadding().noOutline();
-        container.add(new UIButton("-", () -> sizeSetter.accept(sizeGetter.get() - 1)));
+        UIButton minusButton = new UIButton("-", () -> sizeSetter.accept(sizeGetter.get() - 1));
+        minusButton.setCursorShape(() -> minusButton.mouseAbove() ? GLFW.GLFW_POINTING_HAND_CURSOR : null);
+        container.add(minusButton);
         UINumberInput textSizeInput = new UINumberInput(sizeGetter, sizeSetter);
         textSizeInput.setVFillSize();
         textSizeInput.setHAlignment(UIContainer.CENTER);
         container.add(textSizeInput);
-        container.add(new UIButton("+", () -> sizeSetter.accept(sizeGetter.get() + 1)));
+        UIButton plusButton = new UIButton("+", () -> sizeSetter.accept(sizeGetter.get() + 1));
+        plusButton.setCursorShape(() -> plusButton.mouseAbove() ? GLFW.GLFW_POINTING_HAND_CURSOR : null);
+        container.add(plusButton);
         return container;
     }
 
@@ -370,11 +365,11 @@ public class MainUI extends AppUI<MainApp> {
         this.debugString = debugString;
     }
 
-    // public int getTest() {
-    // return test;
-    // }
+    public int getCursor() {
+        return cursor;
+    }
 
-    // public void setTest(int index) {
-    // this.test = index;
-    // }
+    public void setCursor(int cursor) {
+        this.cursor = cursor;
+    }
 }

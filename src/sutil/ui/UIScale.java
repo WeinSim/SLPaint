@@ -40,6 +40,8 @@ public class UIScale extends UIDragContainer {
         add(new Filler());
         add(getVisuals(orientation));
         add(new Slider(orientation));
+
+        handCursorAbove = true;
     }
 
     protected Visuals getVisuals(int orientation) {
@@ -123,8 +125,6 @@ public class UIScale extends UIDragContainer {
             }
 
             relativeLayer = 0;
-            clipToRoot = false;
-            ignoreClipArea = false;
         }
     }
 

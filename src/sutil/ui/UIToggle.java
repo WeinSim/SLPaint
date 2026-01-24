@@ -23,6 +23,8 @@ public class UIToggle extends UIContainer {
         style.setBackgroundColor(UIColors.BACKGROUND_HIGHLIGHT_2);
         style.setShape(UIShape.ROUND_RECTANGLE);
 
+        setHandCursor();
+
         setFixedSize(new SVector(UISizes.TOGGLE_WIDTH.get(), UISizes.RADIO.get()));
 
         add(new ToggleInside());

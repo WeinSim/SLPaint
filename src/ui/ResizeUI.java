@@ -9,6 +9,7 @@ import sutil.ui.UIContainer;
 import sutil.ui.UINumberInput;
 import sutil.ui.UIRadioButtonList;
 import sutil.ui.UIText;
+import sutil.ui.UIToggle;
 
 public class ResizeUI extends AppUI<ResizeApp> {
 
@@ -27,8 +28,6 @@ public class ResizeUI extends AppUI<ResizeApp> {
         root.setMarginScale(2.0);
         root.setPaddingScale(1.0);
         root.setAlignment(UIContainer.CENTER);
-
-        // root.add(new UILabel("Resize"));
 
         UIRadioButtonList resizeMode = new UIRadioButtonList(
                 UIContainer.HORIZONTAL,
@@ -78,6 +77,13 @@ public class ResizeUI extends AppUI<ResizeApp> {
             row.add(percentageInput);
             inner.add(row);
         }
+
+        UIContainer ratioContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        ratioContainer.setHFillSize().noOutline();
+        ratioContainer.add(new UIText("Lock ratio"));
+        ratioContainer.add(new UIContainer(0, 0).setHFillSize().noOutline());
+        ratioContainer.add(new UIToggle(app::isLockRatio, app::setLockRatio));
+        inner.add(ratioContainer);
 
         root.add(inner);
 

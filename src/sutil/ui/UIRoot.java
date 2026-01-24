@@ -40,10 +40,7 @@ public class UIRoot extends UIContainer {
         // System.out.format("min = %d, max = %d\n", minLayer, maxLayer);
         valid = true;
         for (int targetLayer = maxLayer; targetLayer >= minLayer; targetLayer--) {
-            valid &= !super.updateMouseAbove(valid, true, currentLayer, targetLayer);
-
-            // SVector relativeMouse =
-            // floatContainer.parent.getAbsolutePosition().scale(-1).add(mouse);
+            valid &= !super.updateMouseAbove(valid, currentLayer, targetLayer);
         }
     }
 

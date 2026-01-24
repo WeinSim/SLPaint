@@ -34,12 +34,8 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Image resizing
- *     Size knobs
  * 
  * App:
- *   Selection tool
- *     Selection Ctrl+Shift+X
  *   Line tool
  *   Undo / redo
  *   Pencil tool
@@ -48,12 +44,34 @@ import ui.components.ImageCanvas;
  *       pixels are drawn multiple times on consecutive frames, resulting in
  *       the wrong opacity
  *       => Make the pencil tool also use the temp framebuffer?
+ *   Keyboard shortcuts
+ *     Selection one of the radio buttons in the resize ui and pressing enter
+ *       closes the resize window. => add option for keyboard shortcut to not
+ *       run if something is currently selected (similar to text input).
+ *   Dialogs
+ *     Save dialog
+ *       Keep track of unsaved changes, ask user to save before quitting if
+ *       there are unsaved changes
+ *     Keep track of all file locks in one centralized place to avoid leaking
  *   Transparency
+ *     Selecting a semi-transparent area and pasting it over a completely
+ *       transparent area messes up the pixel colors: the semi-transparent area
+ *       picks up the "color" (RGB values) of the transparent background.
  *     Simply selecting a transparent area and unselecting it causes the
  *       transparency to go away. Reason: selecting the area replaces that part
  *       of the image with the secondary color. Placing the transparent
  *       selection back onto the opaque background leaves the background
  *       unaffected. What is the expected behavior here?
+ *     Pixels with an alpha value of 0 are considered different if they differ
+ *       in their color information. What is the expected behavior here?
+ *     Pixels with an alpha value of 0 lose color information when saving and
+ *       reopening. (This is a property of the .png file format that can be
+ *       changed I think (?). Also, what is the expected behavior?)
+ *     Pasting / drawing a half-transparent red pixel over a fully opaque green
+ *       one results in brown overlap instead of yellow (see MinutePhysics
+ *         video)
+ *       => Add correct gamma blending? (as a setting?)
+ *         Have OpenGL also do correct gamma blending?
  *   Text input
  *     TextTool.MIN_TEXT_SIZE should be set to 1, not 0. However, currently the
  *       UI doesn't allow to input single-digit values if the minimum is not 0.
@@ -63,28 +81,8 @@ import ui.components.ImageCanvas;
  *     Multi-line text input
  *       Would require a variable number of UITexts as children (which is
  *         currently not possible. Why?)
- *   Keyboard shortcuts
- *     Selection one of the radio buttons in the resize ui and pressing enter
- *       closes the resize window. => add option for keyboard shortcut to not
- *       run if something is currently selected (similar to text input).
- *   Dialogs
- *     Save dialog
- *       Keep track of unsaved changes, ask user to save before quitting if
- *       there are unsaved changes
- *     Only one at a time
- *     Keep track of all file locks in one centralized place to avoid leaking
  *   Recognize remapping from CAPS_LOCK to ESCAPE
  *   (When parent app closes, children should also close)
- *   Fully-transparent pixels
- *     Pixels with an alpha value of 0 are considered different if they differ
- *       in their color information. What is the expected behavior here?
- *     Pixels with an alpha value of 0 lose color information when saving and
- *       reopening. (This is a property of the .png file format that can be
- *       changed I think (?). Also, what is the expected behavior?)
- *   Pasting / drawing a half-transparent red pixel over a fully opaque green
- *     one results in brown overlap instead of yellow (see MinutePhysics video)
- *     => Add correct gamma blending? (as a setting?)
- *       Have OpenGL also do correct gamma blending?
  * 
  * UI:
  *   Make the pencil size UI prettier
@@ -92,10 +90,7 @@ import ui.components.ImageCanvas;
  *   Fix bug in UILabel: when the textUpdater returns text containig newline
  *     characters, the text is not properly split across multiple lines
  *   Tool icons & cursors
- *   Make side panel collapsable
- *   Instead of the ImageCanvas being on layer 0 and everything else on layer
- *     ImageCanvas.NUM_UI_LAYERS, put everything on layer 0 and turn on the
- *     clip area for the ImageCanvas?
+ *   Make side panel collapsable?
  * 
  * Rendering:
  *   Improve UITextInput cursor visibility
@@ -105,7 +100,6 @@ import ui.components.ImageCanvas;
  *       How to handle big font sizes?
  *         Generate texture atlas using fontbm on demand?
  *         Use SDFs (either in addition to or instead of regular bitmap fonts)?
- *     Have different subdirectories for different sizes of the same font
  *     Reloading the shaders with Shift+S breaks text rendering
  *       Likely reason: the textData UBO isn't being updated
  *     Glitchy pixels: when using Courier New (size 36), the lowecase 'u' has a
@@ -122,8 +116,7 @@ import ui.components.ImageCanvas;
  *     (glfwWindowHint(GLFW_SAMPLES, 4) and glEnable(GL_MULTISAMPLE))
  *   Fix stuttering artifact when resizing windows on Linux
  *     (see https://www.glfw.org/docs/latest/window.html#window_refresh)
- *     Rename transformationMatrix to uiMatrix
- *   Maximized windows don't show up correctly on Windows 11
+ *   Rename transformationMatrix to uiMatrix
  *   Extras (optional):
  *     3D view
  *     Debug view
@@ -351,13 +344,27 @@ public final class MainApp extends App {
         };
     }
 
+    public boolean isImageResizing() {
+        return canvas.isImageResizing();
+    }
+
+    public int getNewImageWidth() {
+        return canvas.getNewImageWidth();
+    }
+
+    public int getNewImageHeight() {
+        return canvas.getNewImageHeight();
+    }
+
     /**
      * Stretches / squishes the image.
      * Not to be confused with {@link MainApp#cropImage(int, int)}.
      */
     public void resizeImage(int newWidth, int newHeight) {
-        renderer.setTempFBOSize(newWidth, newHeight);
+        newWidth = Math.min(Math.max(MIN_IMAGE_SIZE, newWidth), MAX_IMAGE_SIZE);
+        newHeight = Math.min(Math.max(MIN_IMAGE_SIZE, newHeight), MAX_IMAGE_SIZE);
 
+        renderer.setTempFBOSize(newWidth, newHeight);
         renderer.resizeImage(getImage(), newWidth, newHeight);
     }
 
@@ -366,8 +373,18 @@ public final class MainApp extends App {
      * {@link MainApp#resizeImage(int, int)}.
      */
     public void cropImage(int newWidth, int newHeight) {
-        getImage().crop(newWidth, newHeight, secondaryColor);
+        cropImage(0, 0, newWidth, newHeight);
+    }
+
+    public void cropImage(int x, int y, int newWidth, int newHeight) {
+        newWidth = Math.min(Math.max(MIN_IMAGE_SIZE, newWidth), MAX_IMAGE_SIZE);
+        newHeight = Math.min(Math.max(MIN_IMAGE_SIZE, newHeight), MAX_IMAGE_SIZE);
+
+        getImage().crop(x, y, newWidth, newHeight, secondaryColor);
         renderer.setTempFBOSize(newWidth, newHeight);
+        // If the top left corner of the image changes, its translation should change in
+        // the opposite way such that the rest of the image stays in the same place.
+        canvas.translateImage(new SVector(x, y));
     }
 
     public void openImage() {

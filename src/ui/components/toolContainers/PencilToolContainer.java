@@ -14,6 +14,8 @@ public final class PencilToolContainer extends ToolContainer<PencilTool> {
 
     @Override
     public void update() {
+        super.update();
+
         int state = tool.getState();
         if (state != PencilTool.NONE) {
             int[] mousePosition = app.getMouseImagePosition();
