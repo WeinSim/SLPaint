@@ -34,8 +34,10 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Image resizing
- *     Size knobs
+ *   Rework rendering infrastructure
+ *     Use instanced rendering (along with pre-generated VAOs for each of the
+ *       shapes) instead of geometry shaders
+ *   Make the loader statically accessible? (similar to UI)
  * 
  * App:
  *   Selection tool
@@ -203,6 +205,8 @@ public final class MainApp extends App {
 
     public MainApp() {
         super(1280, 720, Window.MAXIMIZED, "SLPaint");
+
+        // System.out.println(GL11.glGetInteger(GL31.GL_MAX_UNIFORM_BLOCK_SIZE));
 
         customColorButtonArray = new ColorArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
 

@@ -3,87 +3,83 @@ package renderEngine.shaders;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.FloatBuffer;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL32;
 
 import renderEngine.Loader;
-import renderEngine.shaders.bufferobjects.UniformBufferObject;
+import renderEngine.bufferobjects.UniformBufferObject;
 
 public class ShaderProgram {
 
-    private int programID;
-    private int vertexShaderID;
-    private int geometryShaderID;
-    private int fragmentShaderID;
+    private final String name;
 
-    private boolean hasGemoetryShader;
+    private final int programID;
+    private final int vertexShaderID;
+    private final int geometryShaderID;
+    private final int fragmentShaderID;
 
-    private HashMap<String, UniformVariable> uniformVariables;
-    private HashMap<String, UniformBufferObject> uniformBufferObjects;
+    private final ShaderType type;
 
-    private String uboName;
-    private int numUBOArrays;
+    private final HashMap<String, UniformVariable> uniformVariables;
+    private final HashMap<String, UniformBufferObject> uniformBufferObjects;
 
-    public ShaderProgram(String name) {
-        this(name, true);
-    }
+    private Loader loader;
 
-    public ShaderProgram(String name, boolean hasGemoetryShader) {
-        this.hasGemoetryShader = hasGemoetryShader;
+    public ShaderProgram(String name, ShaderType type, Loader loader) {
+        this.type = type;
+        this.name = name;
+        this.loader = loader;
 
         uniformVariables = new HashMap<>();
         uniformBufferObjects = new HashMap<>();
 
-        uboName = null;
-        numUBOArrays = 0;
-
         ArrayList<String> attributeNames = new ArrayList<>();
         ArrayList<Integer> attributeSizes = new ArrayList<>();
+        boolean hasGeometry = type.hasGeometry();
+        String vertexName, geometryName = null, fragmentName;
 
-        vertexShaderID = loadShader("res/shaders/" + name + "/vertexShader.glsl", GL20.GL_VERTEX_SHADER, attributeNames,
-                attributeSizes);
-        if (hasGemoetryShader) {
-            geometryShaderID = loadShader("res/shaders/" + name + "/geometryShader.glsl", GL32.GL_GEOMETRY_SHADER);
-        }
-        fragmentShaderID = loadShader("res/shaders/" + name + "/fragmentShader.glsl", GL20.GL_FRAGMENT_SHADER);
+        vertexName = String.format(type.vertexPath, name);
+        if (hasGeometry)
+            geometryName = String.format(type.geometryPath, name);
+        fragmentName = String.format(type.fragmentPath, name);
+
+        vertexShaderID = loadShader(vertexName, GL20.GL_VERTEX_SHADER, attributeNames, attributeSizes);
+        geometryShaderID = hasGeometry ? loadShader(geometryName, GL32.GL_GEOMETRY_SHADER) : 0;
+        fragmentShaderID = loadShader(fragmentName, GL20.GL_FRAGMENT_SHADER);
 
         programID = GL20.glCreateProgram();
 
         GL20.glAttachShader(programID, vertexShaderID);
-        if (hasGemoetryShader) {
+        if (hasGeometry)
             GL20.glAttachShader(programID, geometryShaderID);
-        }
         GL20.glAttachShader(programID, fragmentShaderID);
 
-        if (attributeNames != null) {
-            int attributeNumber = 0;
-            for (int i = 0; i < attributeNames.size(); i++) {
-                bindAttribute(attributeNumber, attributeNames.get(i));
-                attributeNumber += attributeSizes.get(i);
-            }
+        int attributeNumber = 0;
+        for (int i = 0; i < attributeNames.size(); i++) {
+            bindAttribute(attributeNumber, attributeNames.get(i));
+            attributeNumber += attributeSizes.get(i);
         }
 
         GL20.glLinkProgram(programID);
         if (GL20.glGetProgrami(programID, GL20.GL_LINK_STATUS) == GL11.GL_FALSE) {
             System.out.format("Could not link shader \"%s\"!\n", name);
             System.out.println(GL20.glGetProgramInfoLog(programID));
-            System.exit(-1);
+            System.exit(1);
         }
         GL20.glValidateProgram(programID);
+        if (GL20.glGetProgrami(programID, GL20.GL_VALIDATE_STATUS) == GL11.GL_FALSE) {
+            System.out.format("Could not validate shader \"%s\"!\n", name);
+            System.out.println(GL20.glGetProgramInfoLog(programID));
+            System.exit(1);
+        }
 
         for (UniformVariable uniform : uniformVariables.values()) {
             uniform.setLocation(GL20.glGetUniformLocation(programID, uniform.getName()));
-        }
-
-        for (UniformBufferObject ubo : uniformBufferObjects.values()) {
-            int blockIndex = GL31.glGetUniformBlockIndex(programID, ubo.getName());
-            GL31.glUniformBlockBinding(programID, blockIndex, ubo.getBinding());
         }
     }
 
@@ -102,53 +98,50 @@ public class ShaderProgram {
     public void cleanUp() {
         stop();
 
+        boolean hasGeometry = type.hasGeometry();
+
         GL20.glDetachShader(programID, vertexShaderID);
-        if (hasGemoetryShader) {
+        if (hasGeometry)
             GL20.glDetachShader(programID, geometryShaderID);
-        }
         GL20.glDetachShader(programID, fragmentShaderID);
 
         GL20.glDeleteShader(vertexShaderID);
-        if (hasGemoetryShader) {
+        if (hasGeometry)
             GL20.glDeleteShader(geometryShaderID);
-        }
         GL20.glDeleteShader(fragmentShaderID);
 
         GL20.glDeleteProgram(programID);
     }
 
+    // public float[] createGroupAttributeArray() {
+    // UniformBufferObject groupAttributes = getUniformBlock("GroupAttributes");
+    // return new float[groupAttributes.getNumVec4Arrays() * 4 *
+    // UniformBufferObject.UBO_ARRAY_LENGTH];
+    // }
+
     public void loadUniform(String name, Object value) {
         UniformVariable uniform = uniformVariables.get(name);
-        if (uniform == null) {
-            throw new RuntimeException(String.format("Uniform variable \"%s\" doesn't exist!\n", name));
-        }
+
+        if (uniform == null)
+            throw new RuntimeException(
+                    String.format("Shader \"%s\": uniform variable \"%s\" doesn't exist!\n", this.name, name));
+
         uniform.load(value);
     }
 
-    public void setUniformBlockData(String name, FloatBuffer data) {
-        UniformBufferObject ubo = getUniformBlock(name);
-        ubo.setData(data);
-    }
-
-    public void syncUniformBlock(String name, Loader loader) {
-        UniformBufferObject ubo = getUniformBlock(name);
-        ubo.syncData(loader);
+    public void loadUBOData(String uboName, ByteBuffer buffer) {
+        UniformBufferObject groupAttributes = getUniformBlock(uboName);
+        groupAttributes.setData(buffer);
+        groupAttributes.syncData(loader);
     }
 
     private UniformBufferObject getUniformBlock(String name) {
         UniformBufferObject ubo = uniformBufferObjects.get(name);
-        if (ubo == null) {
+
+        if (ubo == null)
             throw new RuntimeException(String.format("Uniform block \"%s\" doesn't exist!\n", name));
-        }
+
         return ubo;
-    }
-
-    public String getUBOName() {
-        return uboName;
-    }
-
-    public int getNumUBOArrays() {
-        return numUBOArrays;
     }
 
     private int loadShader(String filename, int type) {
@@ -160,83 +153,105 @@ public class ShaderProgram {
 
         StringBuilder shaderSource = new StringBuilder();
 
-        boolean insideFirstUBO = false;
-
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filename));
             String line;
+
+            boolean insideUBO = false;
+            String uboName = null;
+            int uboBinding = 0;
+            // int vec4Arrays = 0;
             while ((line = reader.readLine()) != null) {
                 shaderSource.append(line).append("\n");
 
-                if (insideFirstUBO) {
-                    String trimmed = line.trim();
-                    if (trimmed.startsWith("vec4["))
-                        numUBOArrays++;
-
-                    if (trimmed.startsWith("}"))
-                        insideFirstUBO = false;
-                }
-
-                String[] parts = line.split(" ");
-
-                if (parts.length != 3)
+                // ignore comments
+                String trimmed = line.trim();
+                if (trimmed.startsWith("//"))
                     continue;
 
-                switch (parts[0]) {
-                    case "in" -> {
-                        if (attributeNames == null)
-                            continue;
+                // count vec4 arrays
+                // finish UBO
+                if (insideUBO) {
+                    // if (line.contains("vec4") && line.contains("["))
+                    //     vec4Arrays++;
 
-                        attributeNames.add(parts[2].substring(0, parts[2].length() - 1));
-                        attributeSizes.add(parts[1].startsWith("mat") ? (int) (parts[1].charAt(3) - '0') : 1);
+                    if (line.contains("}")) {
+                        UniformBufferObject ubo = new UniformBufferObject(uboName, uboBinding);
+                        uniformBufferObjects.put(uboName, ubo);
+                        insideUBO = false;
                     }
-                    case "uniform" -> {
-                        if (parts[2].equals("{")) {
-                            // uniform buffer object
-                            UniformBufferObject ubo = new UniformBufferObject(parts[1], uniformBufferObjects.size());
-                            uniformBufferObjects.put(parts[1], ubo);
-                            if (uboName == null) {
-                                uboName = parts[1];
-                                insideFirstUBO = true;
+                }
+
+                // attributes
+                if (line.startsWith("in")) {
+                    String[] parts = line.split(" ");
+
+                    if (parts.length != 3)
+                        continue;
+                    if (attributeNames == null)
+                        continue;
+
+                    attributeNames.add(parts[2].substring(0, parts[2].length() - 1));
+                    attributeSizes.add(parts[1].startsWith("mat") ? (int) (parts[1].charAt(3) - '0') : 1);
+                }
+
+                // uniform variables
+                // uniform blocks
+                int uniformIndex = line.indexOf("uniform");
+                if (uniformIndex != -1) {
+                    if (line.contains("{")) {
+                        // uniform buffer object
+                        insideUBO = true;
+                        uboName = line.substring(uniformIndex + 8, line.length() - 2);
+                        // vec4Arrays = 0;
+                        int bindingStrIndex = line.indexOf("binding = ");
+                        if (bindingStrIndex == -1) {
+                            System.err.println("Couldn't find UBO binding!");
+                            continue;
+                        }
+                        // (only works for bindings between 0 and 9)
+                        uboBinding = (int) (line.charAt(bindingStrIndex + 10) - '0');
+                    } else {
+                        // normal uniform variable
+                        String[] parts = line.split(" ");
+                        int datatype = -1;
+                        for (int i = 0; i < UniformVariable.TYPE_NAMES.length; i++) {
+                            if (parts[1].equals(UniformVariable.TYPE_NAMES[i])) {
+                                datatype = i;
+                                break;
                             }
-                        } else {
-                            // normal uniform variable
-                            int datatype = -1;
-                            for (int i = 0; i < UniformVariable.TYPE_NAMES.length; i++) {
-                                if (parts[1].equals(UniformVariable.TYPE_NAMES[i])) {
-                                    datatype = i;
-                                    break;
-                                }
-                            }
-                            if (datatype == -1) {
-                                System.out.format("Invalid datatype: \"%s\"!\n", parts[1]);
-                                continue;
-                            }
-                            String name = parts[2].replaceAll(";", "");
-                            int openIndex = name.indexOf('[');
-                            if (openIndex != -1) {
-                                int closeIndex = name.indexOf(']');
-                                String baseName = name.substring(0, openIndex);
-                                int len = Integer.parseInt(name.substring(openIndex + 1, closeIndex));
-                                for (int i = 0; i < len; i++) {
-                                    name = String.format("%s[%d]", baseName, i);
-                                    uniformVariables.put(name, new UniformVariable(datatype, name));
-                                }
-                            } else {
+                        }
+                        if (datatype == -1) {
+                            System.err.format("Invalid datatype: \"%s\"!\n", parts[1]);
+                            continue;
+                        }
+                        String name = parts[2].replaceAll(";", "");
+                        int openIndex = name.indexOf('[');
+                        if (openIndex != -1) {
+                            int closeIndex = name.indexOf(']');
+                            String baseName = name.substring(0, openIndex);
+                            int len = Integer.parseInt(name.substring(openIndex + 1, closeIndex));
+                            for (int i = 0; i < len; i++) {
+                                name = String.format("%s[%d]", baseName, i);
                                 uniformVariables.put(name, new UniformVariable(datatype, name));
                             }
+                        } else {
+                            uniformVariables.put(name, new UniformVariable(datatype, name));
                         }
                     }
                 }
             }
             reader.close();
-        } catch (IOException e) {
+        } catch (
+
+        IOException e) {
             System.out.format("Could not read file \"%s\"\n!", filename);
             e.printStackTrace();
             System.exit(1);
         }
 
-        int shaderID = GL20.glCreateShader(type);
+        int shaderID = GL20.glCreateShader(
+                type);
         GL20.glShaderSource(shaderID, shaderSource);
         GL20.glCompileShader(shaderID);
         if (GL20.glGetShaderi(shaderID, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE) {

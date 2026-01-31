@@ -8,8 +8,8 @@ import org.lwjglx.util.vector.Vector4f;
 import main.Image;
 import main.apps.App;
 import main.apps.MainApp;
+import renderEngine.bufferobjects.FrameBufferObject;
 import renderEngine.fonts.TextFont;
-import renderEngine.shaders.bufferobjects.FrameBufferObject;
 import sutil.math.SVector;
 import sutil.ui.UI;
 import sutil.ui.UIColors;
@@ -126,8 +126,8 @@ public class AppRenderer {
             uiMaster.noStroke();
             drawShape(shape, position, size);
 
-            // this is just a hack for now to guarantee that semi transparent colors render
-            // correctly
+            // TODO: This is just a hack for now to guarantee that semi transparent colors
+            // render correctly
             uiMaster.render();
         }
 
@@ -382,7 +382,7 @@ public class AppRenderer {
     }
 
     private void renderDebug() {
-        uiMaster.setBGColor(new Vector4f(0.2f, 0.2f, 0.2f, 1));
+        uiMaster.setBGColor(new Vector4f(0.15f, 0.15f, 0.15f, 1));
 
         SVector p1 = new SVector(500, 100),
                 p2 = new SVector(600, 100),
@@ -398,30 +398,40 @@ public class AppRenderer {
 
         // uiMaster.image(app.getImage().getTextureID(), p2, s2);
 
-        uiMaster.fill(c1);
-        uiMaster.ellipse(p1, s1);
+        // uiMaster.fill(c1);
+        // uiMaster.ellipse(p1, s1);
 
-        uiMaster.fill(c2);
-        uiMaster.ellipse(p2, s2);
+        // uiMaster.fill(c2);
+        // uiMaster.ellipse(p2, s2);
 
-        uiMaster.hueSatField(p3, new SVector(200, 200), true, true);
+        // uiMaster.hueSatField(p3, new SVector(200, 200), true, true);
+
+        uiMaster.noClipArea();
 
         uiMaster.noStroke();
-
         uiMaster.fill(c1);
         uiMaster.rect(p1, s1);
 
-        uiMaster.checkerboardFill(new Vector4f[] { new Vector4f(0, 0, 0, 1), new Vector4f(1, 1, 1, 1) }, 15);
-        uiMaster.depth(getDepth(0));
-        uiMaster.rect(p2, s2);
-
-        p2.x += 50;
-
+        uiMaster.noStroke();
         uiMaster.fill(c2);
-        uiMaster.depth(getDepth(1));
         uiMaster.rect(p2, s2);
 
+        uiMaster.noStroke();
         uiMaster.fill(c3);
         uiMaster.rect(p3, s3);
+
+        // uiMaster.checkerboardFill(new Vector4f[] { new Vector4f(0, 0, 0, 1), new
+        // Vector4f(1, 1, 1, 1) }, 15);
+        // uiMaster.depth(getDepth(0));
+        // uiMaster.rect(p2, s2);
+
+        // p2.x += 50;
+
+        // uiMaster.fill(c2);
+        // uiMaster.depth(getDepth(1));
+        // uiMaster.rect(p2, s2);
+
+        // uiMaster.fill(c3);
+        // uiMaster.rect(p3, s3);
     }
 }

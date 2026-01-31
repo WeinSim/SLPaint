@@ -5,7 +5,6 @@ import java.util.LinkedList;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjglx.util.vector.Matrix3f;
 import org.lwjglx.util.vector.Vector3f;
@@ -14,22 +13,22 @@ import org.lwjglx.util.vector.Vector4f;
 import main.Image;
 import main.apps.App;
 import main.apps.MainApp;
+import renderEngine.bufferobjects.FrameBufferObject;
+import renderEngine.drawcalls.ClipAreaInfo;
+import renderEngine.drawcalls.EllipseDrawCall;
+import renderEngine.drawcalls.HSLDrawCall;
+import renderEngine.drawcalls.ImageDrawCall;
+import renderEngine.drawcalls.RectFillDrawCall;
+import renderEngine.drawcalls.RectOutlineDrawCall;
+import renderEngine.drawcalls.TextDrawCall;
 import renderEngine.fonts.TextFont;
-import renderEngine.shaders.ShaderProgram;
-import renderEngine.shaders.bufferobjects.FrameBufferObject;
-import renderEngine.shaders.drawcalls.EllipseCollector;
-import renderEngine.shaders.drawcalls.EllipseDrawCall;
-import renderEngine.shaders.drawcalls.HSLCollector;
-import renderEngine.shaders.drawcalls.HSLDrawCall;
-import renderEngine.shaders.drawcalls.ImageCollector;
-import renderEngine.shaders.drawcalls.ImageDrawCall;
-import renderEngine.shaders.drawcalls.RectFillCollector;
-import renderEngine.shaders.drawcalls.RectFillDrawCall;
-import renderEngine.shaders.drawcalls.RectOutlineCollector;
-import renderEngine.shaders.drawcalls.RectOutlineDrawCall;
-import renderEngine.shaders.drawcalls.ShapeCollector;
-import renderEngine.shaders.drawcalls.TextCollector;
-import renderEngine.shaders.drawcalls.TextDrawCall;
+import renderEngine.renderers.EllipseRenderer;
+import renderEngine.renderers.HSLRenderer;
+import renderEngine.renderers.ImageRenderer;
+import renderEngine.renderers.RectFillRenderer;
+import renderEngine.renderers.RectOutlineRenderer;
+import renderEngine.renderers.ShapeRenderer;
+import renderEngine.renderers.TextRenderer;
 import sutil.math.SVector;
 
 public class UIRenderMaster {
@@ -43,13 +42,13 @@ public class UIRenderMaster {
     private App app;
     private Loader loader;
 
-    private ArrayList<ShapeCollector<?>> shapeCollectors;
-    private RectFillCollector rectFillCollector;
-    private RectOutlineCollector rectOutlineCollector;
-    private HSLCollector hslCollector;
-    private EllipseCollector ellipseCollector;
-    private TextCollector textCollector;
-    private ImageCollector imageCollector;
+    private ArrayList<ShapeRenderer<?>> shapeRenderes;
+    private RectFillRenderer rectFillRenderer;
+    private RectOutlineRenderer rectOutlineRenderer;
+    private HSLRenderer hslRenderer;
+    private EllipseRenderer ellipseRenderer;
+    private TextRenderer textRenderer;
+    private ImageRenderer imageRenderer;
 
     /**
      * Used for drawing text and selected parts of the image first onto this texture
@@ -85,25 +84,14 @@ public class UIRenderMaster {
         this.app = app;
         this.loader = loader;
 
-        shapeCollectors = new ArrayList<>();
+        shapeRenderes = new ArrayList<>();
 
-        rectFillCollector = new RectFillCollector();
-        shapeCollectors.add(rectFillCollector);
-
-        rectOutlineCollector = new RectOutlineCollector();
-        shapeCollectors.add(rectOutlineCollector);
-
-        hslCollector = new HSLCollector();
-        shapeCollectors.add(hslCollector);
-
-        ellipseCollector = new EllipseCollector();
-        shapeCollectors.add(ellipseCollector);
-
-        textCollector = new TextCollector(loader);
-        shapeCollectors.add(textCollector);
-
-        imageCollector = new ImageCollector();
-        shapeCollectors.add(imageCollector);
+        shapeRenderes.add(rectFillRenderer = new RectFillRenderer(loader));
+        shapeRenderes.add(rectOutlineRenderer = new RectOutlineRenderer(loader));
+        shapeRenderes.add(hslRenderer = new HSLRenderer(loader));
+        shapeRenderes.add(ellipseRenderer = new EllipseRenderer(loader));
+        shapeRenderes.add(textRenderer = new TextRenderer(loader));
+        shapeRenderes.add(imageRenderer = new ImageRenderer(loader));
 
         createTempFBO();
 
@@ -155,29 +143,9 @@ public class UIRenderMaster {
      */
     public void render() {
         Matrix3f viewMatrix = createViewMatrix();
-        for (ShapeCollector<?> shapeCollector : shapeCollectors) {
-            ShaderProgram shader = shapeCollector.getShaderProgram();
-            shader.start();
-            shader.loadUniform("viewMatrix", viewMatrix);
 
-            RawModel model;
-            while ((model = shapeCollector.getNextRawModel(loader)) != null) {
-                GL30.glBindVertexArray(model.vaoID());
-
-                for (int i = 0; i < model.numAttributes(); i++)
-                    GL20.glEnableVertexAttribArray(i);
-
-                shapeCollector.prepare();
-
-                GL11.glDrawArrays(GL11.GL_POINTS, 0, model.vertexCount());
-
-                for (int i = 0; i < model.numAttributes(); i++)
-                    GL20.glDisableVertexAttribArray(i);
-            }
-
-            shapeCollector.finish();
-
-            shader.stop();
+        for (ShapeRenderer<?> shapeCollector : shapeRenderes) {
+            shapeCollector.render(viewMatrix);
         }
 
         loader.tempCleanUp();
@@ -237,7 +205,7 @@ public class UIRenderMaster {
         }
 
         if (fillMode > 0)
-            rectFillCollector.addShape(
+            rectFillRenderer.addShape(
                     new RectFillDrawCall(position, depth, size,
                             new Matrix3f().load(uiMatrix),
                             new ClipAreaInfo(clipAreaInfo),
@@ -245,7 +213,7 @@ public class UIRenderMaster {
                             new Vector4f(checkerboardColors[1]), checkerboardSize, fillMode == CHECKERBOARD));
 
         if (strokeMode > 0)
-            rectOutlineCollector.addShape(
+            rectOutlineRenderer.addShape(
                     new RectOutlineDrawCall(position, depth, size,
                             new Matrix3f().load(uiMatrix),
                             new ClipAreaInfo(clipAreaInfo),
@@ -257,7 +225,7 @@ public class UIRenderMaster {
         if (fillMode != NORMAL)
             return;
 
-        ellipseCollector.addShape(new EllipseDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
+        ellipseRenderer.addShape(new EllipseDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
                 new ClipAreaInfo(clipAreaInfo), new Vector4f(fill)));
     }
 
@@ -268,13 +236,13 @@ public class UIRenderMaster {
         if (fillMode != NORMAL)
             return;
 
-        textCollector.addShape(
+        textRenderer.addShape(
                 new TextDrawCall(position, depth, textSize / textFont.getSize(), new Matrix3f().load(uiMatrix),
                         new ClipAreaInfo(clipAreaInfo), new Vector4f(fill), text, textFont));
     }
 
     public void image(int textureID, SVector position, SVector size) {
-        imageCollector.addShape(new ImageDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
+        imageRenderer.addShape(new ImageDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
                 new ClipAreaInfo(clipAreaInfo), textureID));
     }
 
@@ -282,7 +250,7 @@ public class UIRenderMaster {
         int flags = (circular ? HSLDrawCall.HUE_SAT_FIELD_CIRC : HSLDrawCall.HUE_SAT_FIELD_RECT)
                 | (hsl ? HSLDrawCall.HSL : HSLDrawCall.HSV);
         // System.out.println(depth);
-        hslCollector.addShape(new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
+        hslRenderer.addShape(new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
                 new ClipAreaInfo(clipAreaInfo), new SVector(), flags));
     }
 
@@ -292,14 +260,14 @@ public class UIRenderMaster {
         int flags = HSLDrawCall.LIGHTNESS_SCALE
                 | (hsl ? HSLDrawCall.HSL : HSLDrawCall.HSV)
                 | (vertical ? HSLDrawCall.VERTICAL : HSLDrawCall.HORIZONTAL);
-        hslCollector.addShape(new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
+        hslRenderer.addShape(new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
                 new ClipAreaInfo(clipAreaInfo), new SVector(hue, saturation, 0), flags));
     }
 
     public void alphaScale(SVector position, SVector size, boolean vertical) {
         int flags = HSLDrawCall.ALPHA_SCALE
                 | (vertical ? HSLDrawCall.VERTICAL : HSLDrawCall.HORIZONTAL);
-        hslCollector.addShape(new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
+        hslRenderer.addShape(new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
                 new ClipAreaInfo(clipAreaInfo), new SVector(fill.x, fill.y, fill.z), flags));
     }
 

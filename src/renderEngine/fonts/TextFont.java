@@ -1,12 +1,12 @@
 package renderEngine.fonts;
 
-import java.nio.FloatBuffer;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import renderEngine.shaders.bufferobjects.VBOFloatData;
-import renderEngine.shaders.bufferobjects.VBOIntData;
-import renderEngine.shaders.drawcalls.TextDrawCall;
+import renderEngine.bufferobjects.VBOFloatData;
+import renderEngine.bufferobjects.VBOIntData;
+import renderEngine.drawcalls.TextDrawCall;
 import sutil.math.SVector;
 
 public class TextFont {
@@ -15,7 +15,7 @@ public class TextFont {
 
     private HashMap<Character, Integer> charIDs;
     private FontChar[] fontChars;
-    private FloatBuffer uboData;
+    private ByteBuffer uboData;
 
     private int unknownCharIndex;
 
@@ -156,11 +156,11 @@ public class TextFont {
         return fontChars;
     }
 
-    public FloatBuffer getUBOData() {
+    public ByteBuffer getUBOData() {
         return uboData;
     }
 
-    public void setUBOData(FloatBuffer uboData) {
+    public void setUBOData(ByteBuffer uboData) {
         this.uboData = uboData;
     }
 }

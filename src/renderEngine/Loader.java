@@ -4,7 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.FloatBuffer;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -17,16 +18,18 @@ import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
 import main.apps.MainApp;
+import renderEngine.bufferobjects.FrameBufferObject;
+import renderEngine.bufferobjects.UniformBufferObject;
+import renderEngine.bufferobjects.VBOData;
 import renderEngine.fonts.FontChar;
 import renderEngine.fonts.TextFont;
-import renderEngine.shaders.bufferobjects.FrameBufferObject;
-import renderEngine.shaders.bufferobjects.UniformBufferObject;
-import renderEngine.shaders.bufferobjects.VBOData;
 import sutil.SUtil;
 
 public class Loader {
 
     public static final String FONT_DIRECTORY = "res/fonts/";
+
+    // TODO: add list for UBOS?
 
     private ArrayList<Integer> vaos;
     private ArrayList<Integer> vbos;
@@ -53,30 +56,50 @@ public class Loader {
     }
 
     public RawModel loadToVAO(VBOData[] vboData, int vertexCount) {
+        return loadToVAO(vboData, null, vertexCount);
+    }
+
+    public RawModel loadToVAO(VBOData[] vboData, int[] indices) {
+        return loadToVAO(vboData, indices, indices.length);
+    }
+
+    private RawModel loadToVAO(VBOData[] vboData, int[] indices, int vertexCount) {
         int vaoID = createVAO();
+
+        // VBOs
         int attributeNumber = 0;
         for (VBOData vbo : vboData) {
             vbos.add(vbo.storeDataInAttributeList(attributeNumber));
             attributeNumber += vbo.getNumAttributes();
         }
+
+        // Index buffer
+        if (indices != null) {
+            int vboID = GL15.glGenBuffers();
+            vbos.add(vboID);
+            GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboID);
+            IntBuffer buffer = BufferUtils.createIntBuffer(indices.length);
+            buffer.put(indices);
+            buffer.flip();
+            GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
+        }
+
         GL30.glBindVertexArray(0);
         return new RawModel(vaoID, vertexCount, attributeNumber);
     }
 
-    public void loadToUBO(UniformBufferObject ubo, FloatBuffer data) {
+    public void loadToUBO(UniformBufferObject ubo, ByteBuffer data) {
         data.flip();
         int bufferID = ubo.getBufferID();
-        if (bufferID != 0) {
-            GL15.glDeleteBuffers(bufferID);
+
+        if (bufferID == 0) {
+            bufferID = GL15.glGenBuffers();
+            ubo.setBufferID(bufferID);
         }
-        bufferID = GL15.glGenBuffers();
-        ubo.setBufferID(bufferID);
 
         GL15.glBindBuffer(GL31.GL_UNIFORM_BUFFER, bufferID);
-        GL15.glBufferData(GL31.GL_UNIFORM_BUFFER, data, GL15.GL_STATIC_DRAW);
+        GL15.glBufferData(GL31.GL_UNIFORM_BUFFER, data, GL15.GL_DYNAMIC_DRAW);
         GL15.glBindBuffer(GL31.GL_UNIFORM_BUFFER, 0);
-
-        GL31.glBindBufferBase(GL31.GL_UNIFORM_BUFFER, ubo.getBinding(), bufferID);
     }
 
     // https://learnopengl.com/Advanced-OpenGL/Framebuffers
@@ -92,7 +115,8 @@ public class Loader {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture);
         GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE,
                 (int[]) null);
-        // GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR_MIPMAP_NEAREST);
+        // GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER,
+        // GL30.GL_LINEAR_MIPMAP_NEAREST);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         // unbind texture
@@ -206,13 +230,13 @@ public class Loader {
         loadedFonts.put(name, font);
 
         // load ubo
-        FloatBuffer uboData = BufferUtils.createFloatBuffer(UIRenderMaster.MAX_FONT_CHARS * 4);
+        ByteBuffer uboData = BufferUtils.createByteBuffer(UIRenderMaster.MAX_FONT_CHARS * Float.BYTES * 4);
         FontChar[] fontChars = font.getFontChars();
         for (int i = 0; i < fontChars.length; i++) {
-            uboData.put(fontChars[i].x() + font.getTextureWidth() * fontChars[i].page());
-            uboData.put(fontChars[i].y());
-            uboData.put(fontChars[i].width());
-            uboData.put(fontChars[i].height());
+            uboData.putFloat(fontChars[i].x() + font.getTextureWidth() * fontChars[i].page());
+            uboData.putFloat(fontChars[i].y());
+            uboData.putFloat(fontChars[i].width());
+            uboData.putFloat(fontChars[i].height());
         }
         font.setUBOData(uboData);
 
