@@ -18,7 +18,7 @@ layout(std140, binding = 0) uniform GroupAttributes {
 uniform mat3 viewMatrix;
 
 // per vertex
-in vec2 offset;
+in vec2 cornerPos;
 // per instance
 in int gIndex; // index into groupAttributes
 in mat3 transformationMatrix;
@@ -47,21 +47,17 @@ vec3 vecToInt(vec3 v) {
 void main(void) {
     GroupData gData = groupAttributes[gIndex];
 
-    vec3 position3 = vec3(position, 1.0);
-    vec3 pos = transformationMatrix * (position3 + vec3(size * offset, 0.0));
-    vec2 basePos = (transformationMatrix * position3).xy;
-    relativePos = pos.xy - basePos;
+    color1 = color1_in;
+    color2 = gData.color2;
+    checkerboardSize = gData.checkerboardSize;
 
-    // basePos = position_in;
-    // relativePos = size * offset;
-    vec2 screenPos = (viewMatrix * pos).xy;
+    vec3 basePos = transformationMatrix * vec3(position, 1.0);
+    relativePos = (transformationMatrix * vec3(size * cornerPos, 0.0)).xy;
+
+    vec2 screenPos = (viewMatrix * (basePos + vec3(relativePos, 0.0))).xy;
 
     gl_Position = vec4(screenPos, depth, 1.0);
 
     relativeBoundingBoxMin = gData.boundingBoxMin - basePos.xy;
     relativeBoundingBoxMax = gData.boundingBoxMax - basePos.xy;
-
-    color1 = color1_in;
-    color2 = gData.color2;
-    checkerboardSize = gData.checkerboardSize;
 }

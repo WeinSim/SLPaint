@@ -42,15 +42,14 @@ public class RectFillRenderer extends InstanceShapeRenderer<RectFillDrawCall> {
 
     @Override
     protected void initRawModel() {
-        FloatVBO offset = model.getFloatVBO("offset");
-        model.bind();
-        offset.createBuffer(4);
-        offset.putData(new Vector2f(0f, 0f));
-        offset.putData(new Vector2f(1f, 0f));
-        offset.putData(new Vector2f(0f, 1f));
-        offset.putData(new Vector2f(1f, 1f));
-        offset.storeDataInAttributeList();
+        model.initVertexVBOs(4);
 
-        // model.setIndices(0, 1, 3, 3, 1, 2);
+        FloatVBO cornerPos = model.getFloatVBO("cornerPos");
+        cornerPos.putData(new Vector2f(0f, 0f));
+        cornerPos.putData(new Vector2f(1f, 0f));
+        cornerPos.putData(new Vector2f(0f, 1f));
+        cornerPos.putData(new Vector2f(1f, 1f));
+        
+        model.finishVertexVBOs();
     }
 }

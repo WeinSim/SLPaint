@@ -69,10 +69,9 @@ public abstract class ShapeRenderer<C extends DrawCall> {
             Batch batch = batches.removeLast();
             uboBuffer.put(batch.getGroupAttributes().getBuffer());
             nextBatches.add(batch);
-            // lastRemovedBatch = batch;
             instanceCount += getNumInstances(batch);
         }
-
+        uboBuffer.flip();
         shaderProgram.loadUBOData("GroupAttributes", uboBuffer);
 
         model.initInstanceVBOs(instanceCount);

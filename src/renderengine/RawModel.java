@@ -7,7 +7,6 @@ import org.lwjgl.opengl.GL30;
 
 import renderengine.bufferobjects.AttributeVBO;
 import renderengine.bufferobjects.FloatVBO;
-import renderengine.bufferobjects.IndexVBO;
 import renderengine.bufferobjects.IntVBO;
 import renderengine.bufferobjects.MatrixVBO;
 import renderengine.bufferobjects.VBO;
@@ -18,9 +17,8 @@ public class RawModel {
     private final int vaoID;
 
     private final HashMap<String, AttributeVBO> vbos;
-    private IndexVBO indexVBO;
 
-    private int indexCount = -1;
+    private int vertexCount = -1;
     private int instanceCount = -1;
 
     public RawModel(Loader loader, ArrayList<AttributeVBO> vbos) {
@@ -34,27 +32,35 @@ public class RawModel {
         }
 
         unbind();
-
-        indexVBO = null;
     }
 
-    public void setIndices(int... indices) {
-        bind();
-        indexVBO = new IndexVBO(indices);
-        indexCount = indexVBO.indexCount();
-        unbind();
+    public void initVertexVBOs(int vertexCount) {
+        this.vertexCount = vertexCount;
+        initVBOs(vertexCount, VBOType.VERTEX);
     }
 
     public void initInstanceVBOs(int instanceCount) {
         this.instanceCount = instanceCount;
-        for (AttributeVBO vbo : vbos())
-            if (vbo.type() == VBOType.INSTANCE)
-                vbo.createBuffer(instanceCount);
+        initVBOs(instanceCount, VBOType.INSTANCE);
+    }
+
+    public void finishVertexVBOs() {
+        finishVBOs(VBOType.VERTEX);
     }
 
     public void finishInstanceVBOs() {
+        finishVBOs(VBOType.INSTANCE);
+    }
+
+    private void initVBOs(int count, VBOType type) {
         for (AttributeVBO vbo : vbos())
-            if (vbo.type() == VBOType.INSTANCE)
+            if (vbo.type() == type)
+                vbo.createBuffer(count);
+    }
+
+    private void finishVBOs(VBOType type) {
+        for (AttributeVBO vbo : vbos())
+            if (vbo.type() == type)
                 vbo.storeDataInAttributeList();
     }
 
@@ -100,14 +106,12 @@ public class RawModel {
     public void cleanUp() {
         for (VBO vbo : vbos())
             vbo.cleanUp();
-        if (indexVBO != null)
-            indexVBO.cleanUp();
 
         GL30.glDeleteVertexArrays(vaoID);
     }
 
-    public int indexCount() {
-        return indexCount;
+    public int vertexCount() {
+        return vertexCount;
     }
 
     public int instanceCount() {

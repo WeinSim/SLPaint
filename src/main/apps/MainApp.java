@@ -34,11 +34,11 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   I think EBOs are rather unneccessary. They only save two vertices for the
- *     rect outline
  *   Rework rendering infrastructure
- *     Use instanced rendering (along with pre-generated VAOs for each of the
- *       shapes) instead of geometry shaders
+ *     HSL
+ *     Ellipse
+ *     Image
+ *     Text
  *   Make the loader statically accessible? (similar to UI)
  *     Or even better: remove it entirely
  * 
@@ -111,8 +111,6 @@ import ui.components.ImageCanvas;
  *         Generate texture atlas using fontbm on demand?
  *         Use SDFs (either in addition to or instead of regular bitmap fonts)?
  *     Have different subdirectories for different sizes of the same font
- *     Reloading the shaders with Shift+S breaks text rendering
- *       Likely reason: the textData UBO isn't being updated
  *     Glitchy pixels: when using Courier New (size 36), the lowecase 'u' has a
  *       diagonal line of flickering pixels going bottom-left to top-right.
  *     Text renders inconsistently: some letters are blurry and other are not.

@@ -1,7 +1,9 @@
 package renderengine.renderers;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjglx.util.vector.Matrix3f;
@@ -46,8 +48,18 @@ public class TextRenderer extends GeometryShapeRenderer<TextDrawCall> {
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         }
 
+        // This looks a little wasteful, but it only takes ~3 microseconds
+        // long startTime = System.nanoTime();
+        float[] uboData = font.getUBOData();
+        ByteBuffer uboBuffer = BufferUtils.createByteBuffer(uboData.length * Float.BYTES);
+        for (float f : uboData)
+            uboBuffer.putFloat(f);
+        uboBuffer.flip();
+        // long duration = System.nanoTime() - startTime;
+        // System.out.format("Text data upload: %.3f µs\n", duration * 1e-3);
+
         shaderProgram.start();
-        shaderProgram.loadUBOData("FontData", font.getUBOData());
+        shaderProgram.loadUBOData("FontData", uboBuffer);
         shaderProgram.loadUniform("textureSize", new SVector(font.getTextureWidth(), font.getTextureHeight()));
 
         super.render(viewMatrix);
@@ -55,7 +67,6 @@ public class TextRenderer extends GeometryShapeRenderer<TextDrawCall> {
 
     @Override
     protected void loadVBOs(ArrayList<Batch> batches, int vertexCount) {
-
         IntVBO dataIndex = model.getIntVBO("dataIndex");
         FloatVBO position = model.getFloatVBO("position");
         FloatVBO depth = model.getFloatVBO("depth");

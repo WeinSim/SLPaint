@@ -189,7 +189,7 @@ public class ShaderProgram {
                     String attributeName = parts[2].substring(0, parts[2].length() - 1);
                     // very crude detection for now
                     VBOType attributeType = switch (attributeName) {
-                        case "offset" -> VBOType.VERTEX;
+                        case "cornerPos", "offset" -> VBOType.VERTEX;
                         default -> VBOType.INSTANCE;
                     };
                     AttributeVBO vbo = switch (parts[1]) {

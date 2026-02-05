@@ -24,7 +24,7 @@ public abstract class InstanceShapeRenderer<C extends DrawCall> extends ShapeRen
         model.bind();
         model.enableVBOs();
         while (prepareNextDrawcall())
-            GL31.glDrawArraysInstanced(GL11.GL_TRIANGLE_STRIP, 0, 4, model.instanceCount());
+            GL31.glDrawArraysInstanced(GL11.GL_TRIANGLE_STRIP, 0, model.vertexCount(), model.instanceCount());
         model.disableVBOs();
 
         shaderProgram.stop();

@@ -8,7 +8,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL30;
@@ -47,7 +46,6 @@ public class Loader {
     }
 
     public void loadToUBO(UniformBufferObject ubo, ByteBuffer data) {
-        data.flip();
         int bufferID = ubo.getBufferID();
 
         if (bufferID == 0) {
@@ -188,13 +186,14 @@ public class Loader {
         loadedFonts.put(name, font);
 
         // load ubo
-        ByteBuffer uboData = BufferUtils.createByteBuffer(UIRenderMaster.MAX_FONT_CHARS * Float.BYTES * 4);
+        float[] uboData = new float[UIRenderMaster.MAX_FONT_CHARS  * 4];
         FontChar[] fontChars = font.getFontChars();
+        int arrayIndex = 0;
         for (int i = 0; i < fontChars.length; i++) {
-            uboData.putFloat(fontChars[i].x() + font.getTextureWidth() * fontChars[i].page());
-            uboData.putFloat(fontChars[i].y());
-            uboData.putFloat(fontChars[i].width());
-            uboData.putFloat(fontChars[i].height());
+            uboData[arrayIndex++] = fontChars[i].x() + font.getTextureWidth() * fontChars[i].page();
+            uboData[arrayIndex++] = fontChars[i].y();
+            uboData[arrayIndex++] = fontChars[i].width();
+            uboData[arrayIndex++] = fontChars[i].height();
         }
         font.setUBOData(uboData);
 

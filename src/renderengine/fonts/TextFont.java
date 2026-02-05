@@ -1,6 +1,5 @@
 package renderengine.fonts;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -15,7 +14,7 @@ public class TextFont {
 
     private HashMap<Character, Integer> charIDs;
     private FontChar[] fontChars;
-    private ByteBuffer uboData;
+    private float[] uboData;
 
     private int unknownCharIndex;
 
@@ -156,11 +155,11 @@ public class TextFont {
         return fontChars;
     }
 
-    public ByteBuffer getUBOData() {
+    public float[] getUBOData() {
         return uboData;
     }
 
-    public void setUBOData(ByteBuffer uboData) {
+    public void setUBOData(float[] uboData) {
         this.uboData = uboData;
     }
 }
