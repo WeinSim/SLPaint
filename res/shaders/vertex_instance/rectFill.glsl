@@ -2,7 +2,9 @@
 
 struct GroupData {
     // (x_min, y_min, x_max, y_max)
-    vec4 boundingBox;
+    // vec4 boundingBox;
+    vec2 boundingBoxMin;
+    vec2 boundingBoxMax;
     vec4 color2;
     // If size == -1, then no checkerboard at all
     float checkerboardSize;
@@ -20,7 +22,7 @@ in vec2 offset;
 // per instance
 in int gIndex; // index into groupAttributes
 in mat3 transformationMatrix;
-in vec2 position_in;
+in vec2 position;
 in float depth;
 in vec2 size;
 in vec4 color1_in;
@@ -45,16 +47,21 @@ vec3 vecToInt(vec3 v) {
 void main(void) {
     GroupData gData = groupAttributes[gIndex];
 
-    vec2 basePos = (transformationMatrix * vec3(position_in, 1.0)).xy;
-    relativePos = (transformationMatrix * vec3(size, 0.0)).xy;
-    vec2 position = basePos + relativePos;
+    vec3 position3 = vec3(position, 1.0);
+    vec3 pos = transformationMatrix * (position3 + vec3(size * offset, 0.0));
+    vec2 basePos = (transformationMatrix * position3).xy;
+    relativePos = pos.xy - basePos;
 
-    relativeBoundingBoxMin = gData.boundingBox.xy - basePos;
-    relativeBoundingBoxMax = gData.boundingBox.zw - basePos;
+    // basePos = position_in;
+    // relativePos = size * offset;
+    vec2 screenPos = (viewMatrix * pos).xy;
+
+    gl_Position = vec4(screenPos, depth, 1.0);
+
+    relativeBoundingBoxMin = gData.boundingBoxMin - basePos.xy;
+    relativeBoundingBoxMax = gData.boundingBoxMax - basePos.xy;
 
     color1 = color1_in;
     color2 = gData.color2;
-    checkerboardSize = gData.checkerboardSize.x;
-
-    gl_Position = vec4(position, depth, 1.0);
+    checkerboardSize = gData.checkerboardSize;
 }

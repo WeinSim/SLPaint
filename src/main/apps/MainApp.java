@@ -22,8 +22,8 @@ import main.settings.BooleanSetting;
 import main.settings.ColorArraySetting;
 import main.settings.Settings;
 import main.tools.ImageTool;
-import renderEngine.Window;
-import renderEngine.fonts.TextFont;
+import renderengine.Window;
+import renderengine.fonts.TextFont;
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UITextInput;
@@ -34,10 +34,13 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
+ *   I think EBOs are rather unneccessary. They only save two vertices for the
+ *     rect outline
  *   Rework rendering infrastructure
  *     Use instanced rendering (along with pre-generated VAOs for each of the
  *       shapes) instead of geometry shaders
  *   Make the loader statically accessible? (similar to UI)
+ *     Or even better: remove it entirely
  * 
  * App:
  *   Selection tool

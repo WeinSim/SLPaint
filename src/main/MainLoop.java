@@ -12,7 +12,7 @@ import org.newdawn.slick.util.Log;
 
 import main.apps.App;
 import main.apps.MainApp;
-import renderEngine.Window;
+import renderengine.Window;
 import sutil.SUtil;
 
 public class MainLoop {
@@ -48,9 +48,11 @@ public class MainLoop {
             for (int i = apps.size() - 1; i >= 0; i--) {
                 App app = apps.get(i);
 
+                // For some reason, with the new rendering system I have to call
+                // makeContextCurrent() twice. I have absolutely no idea why.
                 app.makeContextCurrent();
-
                 app.update(deltaT);
+                app.makeContextCurrent();
                 app.render();
 
                 Window window = app.getWindow();

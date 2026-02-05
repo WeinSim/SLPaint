@@ -8,7 +8,7 @@ flat in int samplerID;
 
 out vec4 outColor;
 
-uniform sampler2D textureSamplers[16];
+uniform sampler2D textureSamplers[32];
 
 void main(void) {
 
@@ -26,6 +26,10 @@ void main(void) {
     }
 
     vec4 sampleColor = texture(textureSamplers[samplerID], uvCoords);
+    // sampleColor = texture(textureSamplers[0], uvCoords);
 
     outColor = sampleColor;
+    // outColor.a = 1;
+    // outColor = vec4(0.5 * (1 + samplerID), 0.5, 0.5, 1);
+    // outColor.xy = uvCoords;
 }

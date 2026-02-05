@@ -8,9 +8,9 @@ import org.lwjgl.glfw.GLFW;
 
 import main.MainLoop;
 import main.settings.BooleanSetting;
-import renderEngine.AppRenderer;
-import renderEngine.Loader;
-import renderEngine.Window;
+import renderengine.AppRenderer;
+import renderengine.Loader;
+import renderengine.Window;
 import sutil.math.SVector;
 import sutil.ui.UIAction;
 import sutil.ui.UI;
