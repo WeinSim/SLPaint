@@ -34,11 +34,8 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Rework rendering infrastructure
- *     Image
- *     Text
- *   Make the loader statically accessible? (similar to UI)
- *     Or even better: remove it entirely
+ *   Remove Loader
+ *   Clean up render engine code (literally)
  * 
  * App:
  *   Selection tool

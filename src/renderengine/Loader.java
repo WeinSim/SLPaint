@@ -1,32 +1,21 @@
 package renderengine;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
-import org.newdawn.slick.opengl.Texture;
-import org.newdawn.slick.opengl.TextureLoader;
 
 import main.apps.MainApp;
 import renderengine.bufferobjects.FrameBufferObject;
 import renderengine.bufferobjects.UniformBufferObject;
-import renderengine.fonts.FontChar;
-import renderengine.fonts.TextFont;
 import sutil.SUtil;
 
 public class Loader {
 
     public static final String FONT_DIRECTORY = "res/fonts/";
-
-    // TODO: add list for UBOS?
 
     private ArrayList<Integer> vaos;
     private ArrayList<Integer> vbos;
@@ -34,15 +23,11 @@ public class Loader {
     private ArrayList<Integer> textures;
     private ArrayList<Integer> fbos;
 
-    private HashMap<String, TextFont> loadedFonts;
-
     public Loader() {
         vaos = new ArrayList<>();
         vbos = new ArrayList<>();
         textures = new ArrayList<>();
         fbos = new ArrayList<>();
-
-        loadedFonts = new HashMap<>();
     }
 
     public void loadToUBO(UniformBufferObject ubo, ByteBuffer data) {
@@ -82,122 +67,6 @@ public class Loader {
         GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, texture, 0);
 
         return new FrameBufferObject(fbo, texture, width, height);
-    }
-
-    public int loadTexture(String path) {
-        Texture texture = null;
-        try {
-            texture = TextureLoader.getTexture("PNG", new FileInputStream(path));
-        } catch (Exception e) {
-            System.err.format("Could not load texture \"%s\"!\n", path);
-            e.printStackTrace();
-            System.exit(-1);
-        }
-        // GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
-        int textureID = texture.getTextureID();
-        textures.add(textureID);
-        return textureID;
-    }
-
-    public TextFont loadFont(String name) {
-        // try returning already loaded font
-        TextFont loadedFont = loadedFonts.get(name);
-        if (loadedFont != null) {
-            return loadedFont;
-        }
-
-        // actually load font
-        String directoryName = String.format("%s%s/", Loader.FONT_DIRECTORY, name);
-        ArrayList<FontChar> chars = new ArrayList<>();
-        int size = 0, lineHeight = 0, base = 0, pages = 0, textureWidth = 0, textureHeight = 0;
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(directoryName + "output.fnt"))) {
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                ArrayList<String> parts = new ArrayList<>();
-                for (String string : line.split(" ")) {
-                    if (!string.isEmpty()) {
-                        parts.add(string);
-                    }
-                }
-                if (parts.isEmpty()) {
-                    continue;
-                }
-                String lineType = parts.get(0);
-                HashMap<String, Object> properties = new HashMap<>();
-                for (int i = 1; i < parts.size(); i++) {
-                    String[] keyValue = parts.get(i).split("=");
-                    if (keyValue.length != 2) {
-                        continue;
-                    }
-                    String key = keyValue[0];
-                    if (keyValue[1].startsWith("\"")) {
-                        properties.put(key, keyValue[1].replaceAll("\"", ""));
-                    } else {
-                        try {
-                            properties.put(key, Integer.parseInt(keyValue[1]));
-                        } catch (NumberFormatException e) {
-                        }
-                    }
-                }
-                switch (lineType) {
-                    case "char" ->
-                        chars.add(new FontChar(
-                                (int) properties.get("id"),
-                                (pages > 1) ? (int) properties.get("page") : 0,
-                                (int) properties.get("x"),
-                                (int) properties.get("y"),
-                                (int) properties.get("width"),
-                                (int) properties.get("height"),
-                                (int) properties.get("xoffset"),
-                                (int) properties.get("yoffset"),
-                                (int) properties.get("xadvance")));
-                    case "info" -> {
-                        size = Math.abs((int) properties.get("size"));
-                    }
-                    case "common" -> {
-                        lineHeight = (int) properties.get("lineHeight");
-                        base = (int) properties.get("base");
-                        pages = (int) properties.get("pages");
-                        textureWidth = (int) properties.get("scaleW");
-                        textureHeight = (int) properties.get("scaleH");
-                    }
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(String.format("Could not load font \"%s\"!\n", name));
-        }
-
-        if (chars.size() > UIRenderMaster.MAX_FONT_CHARS) {
-            final String baseString = "Font \"%s\" has too many characters (%d). Maximum is %d.";
-            throw new RuntimeException(String.format(baseString, chars.size(), UIRenderMaster.MAX_FONT_CHARS));
-        }
-        if (pages > UIRenderMaster.MAX_FONT_ATLASSES) {
-            final String baseString = "Font \"%s\" has too many texture atlasses (%d). Maximum is %d.";
-            throw new RuntimeException(String.format(baseString, name, pages, UIRenderMaster.MAX_FONT_ATLASSES));
-        }
-
-        int[] textureIDs = new int[pages];
-        for (int i = 0; i < pages; i++) {
-            textureIDs[i] = loadTexture(String.format("%soutput_%d.png", directoryName, i));
-        }
-
-        TextFont font = new TextFont(name, size, lineHeight, base, textureIDs, textureWidth, textureHeight);
-        font.loadChars(chars);
-        loadedFonts.put(name, font);
-
-        // load ubo
-        float[] uboData = new float[UIRenderMaster.MAX_FONT_CHARS  * 4];
-        FontChar[] fontChars = font.getFontChars();
-        int arrayIndex = 0;
-        for (int i = 0; i < fontChars.length; i++) {
-            uboData[arrayIndex++] = fontChars[i].x() + font.getTextureWidth() * fontChars[i].page();
-            uboData[arrayIndex++] = fontChars[i].y();
-            uboData[arrayIndex++] = fontChars[i].width();
-            uboData[arrayIndex++] = fontChars[i].height();
-        }
-        font.setUBOData(uboData);
-
-        return font;
     }
 
     public static void createFontAtlas(String name, int textSize) {

@@ -12,8 +12,8 @@ import renderengine.AppRenderer;
 import renderengine.Loader;
 import renderengine.Window;
 import sutil.math.SVector;
-import sutil.ui.UIAction;
 import sutil.ui.UI;
+import sutil.ui.UIAction;
 import sutil.ui.UIRoot;
 import sutil.ui.UITextInput;
 import ui.AppUI;
@@ -134,7 +134,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         // child class' constructor.
         if (ui == null)
             loadUI();
-
 
         if (avgFrameTime < 0) {
             avgFrameTime = deltaT;
@@ -316,10 +315,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         eventQueue.add(action);
     }
 
-    public Window getWindow() {
-        return window;
-    }
-
     public SVector getWindowSize() {
         int[] size = window.getDisplaySize();
         return new SVector(size[0], size[1]);
@@ -327,6 +322,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
     public Loader getLoader() {
         return loader;
+    }
+
+    public Window getWindow() {
+        return window;
     }
 
     public AppUI<?> getUI() {

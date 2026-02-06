@@ -60,14 +60,14 @@ public abstract class AppUI<T extends App> extends UI {
 
     @Override
     public double textWidthImpl(String text, double textSize, String fontName, int len) {
-        TextFont font = app.getLoader().loadFont(fontName);
-        return font.textWidth(text, len) * textSize / font.getSize();
+        TextFont font = TextFont.getFont(fontName);
+        return font.textWidth(text, len) * textSize / font.size;
     }
 
     @Override
     public int getCharIndexImpl(String text, double textSize, String fontName, double x) {
-        TextFont font = app.getLoader().loadFont(fontName);
-        return font.getCharIndex(text, x / textSize * font.getSize());
+        TextFont font = TextFont.getFont(fontName);
+        return font.getCharIndex(text, x / textSize * font.size);
     }
 
     /**

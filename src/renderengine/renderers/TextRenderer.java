@@ -1,5 +1,6 @@
 package renderengine.renderers;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
@@ -17,12 +18,20 @@ import sutil.math.SVector;
 
 public class TextRenderer extends InstanceShapeRenderer<TextDrawCall> {
 
-    private TextFont font;
+    private final TextFont font;
+    private int[] textureIDs;
 
-    public TextRenderer(Loader loader) {
+    public TextRenderer(Loader loader, TextFont font) {
         super("text", loader);
 
         this.loader = loader;
+        this.font = font;
+        try {
+            textureIDs = font.loadTextures();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
 
         shaderProgram.start();
         for (int i = 0; i < 4; i++) {
@@ -33,14 +42,7 @@ public class TextRenderer extends InstanceShapeRenderer<TextDrawCall> {
     }
 
     @Override
-    public void addShape(TextDrawCall drawCall) {
-        font = drawCall.font;
-        super.addShape(drawCall);
-    }
-
-    @Override
     public void render(Matrix3f viewMatrix) {
-        int[] textureIDs = font.getTextureIDs();
         for (int i = 0; i < textureIDs.length; i++) {
             GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureIDs[i]);
@@ -60,7 +62,7 @@ public class TextRenderer extends InstanceShapeRenderer<TextDrawCall> {
 
         shaderProgram.start();
         shaderProgram.loadUBOData("FontData", uboBuffer);
-        shaderProgram.loadUniform("textureSize", new SVector(font.getTextureWidth(), font.getTextureHeight()));
+        shaderProgram.loadUniform("textureSize", new SVector(font.textureWidth, font.textureHeight));
 
         super.render(viewMatrix);
     }

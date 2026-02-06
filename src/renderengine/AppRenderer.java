@@ -205,7 +205,7 @@ public class AppRenderer {
         if (element instanceof UIText text) {
             String fontName = text.getFontName();
             double textSize = text.getTextSize();
-            TextFont font = app.getLoader().loadFont(fontName);
+            TextFont font = TextFont.getFont(fontName);
             uiMaster.textFont(font);
             uiMaster.textSize(textSize);
             uiMaster.fill(text.getColor());

@@ -2,6 +2,7 @@ package main.tools;
 
 import org.lwjgl.glfw.GLFW;
 
+import renderengine.fonts.TextFont;
 import sutil.math.SVector;
 import sutil.ui.UI;
 
@@ -34,7 +35,8 @@ public final class TextTool extends DragTool {
 
         FONT_NAMES = new String[] { "Courier New" };
 
-        DEFAULT_FONT_NAME = "Courier New";
+        // DEFAULT_FONT_NAME = "Courier New";
+        DEFAULT_FONT_NAME = TextFont.DEFAULT_FONT_NAME;
         // DEFAULT_FONT_NAME = (new Font("Courier", Font.PLAIN, 1)).getFamily();
 
         INSTANCE = new TextTool();
@@ -66,7 +68,7 @@ public final class TextTool extends DragTool {
     public void finish() {
         if (!text.isEmpty()) {
             SVector position = app.getImagePosition(app.getTextToolInput().getAbsolutePosition());
-            app.renderTextToImage(text, position.x, position.y, size, app.getLoader().loadFont(font));
+            app.renderTextToImage(text, position.x, position.y, size, TextFont.getFont(font));
             text = "";
         }
 

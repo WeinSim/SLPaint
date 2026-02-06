@@ -90,7 +90,7 @@ public class UIRenderMaster {
         shapeRenderes.add(rectOutlineRenderer = new RectOutlineRenderer(loader));
         shapeRenderes.add(hslRenderer = new HSLRenderer(loader));
         shapeRenderes.add(ellipseRenderer = new EllipseRenderer(loader));
-        shapeRenderes.add(textRenderer = new TextRenderer(loader));
+        shapeRenderes.add(textRenderer = new TextRenderer(loader, TextFont.getDefaultFont()));
         shapeRenderes.add(imageRenderer = new ImageRenderer(loader));
 
         createTempFBO();
@@ -236,7 +236,7 @@ public class UIRenderMaster {
             return;
 
         textRenderer.addShape(
-                new TextDrawCall(position, depth, textSize / textFont.getSize(), new Matrix3f().load(uiMatrix),
+                new TextDrawCall(position, depth, textSize / textFont.size, new Matrix3f().load(uiMatrix),
                         new ClipAreaInfo(clipAreaInfo), new Vector4f(fill), text, textFont));
     }
 
@@ -482,7 +482,7 @@ public class UIRenderMaster {
 
     public void textFont(TextFont font) {
         textFont = font;
-        textSize = font.getSize();
+        textSize = font.size;
     }
 
     public void textSize(double textSize) {
