@@ -3,8 +3,10 @@ package renderengine.renderers;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL31;
 import org.lwjglx.util.vector.Matrix3f;
+import org.lwjglx.util.vector.Vector2f;
 
 import renderengine.Loader;
+import renderengine.bufferobjects.FloatVBO;
 import renderengine.drawcalls.DrawCall;
 import renderengine.shaders.ShaderType;
 
@@ -30,5 +32,19 @@ public abstract class InstanceShapeRenderer<C extends DrawCall> extends ShapeRen
         shaderProgram.stop();
     }
 
-    protected abstract void initRawModel();
+    protected void initRawModel() {
+        initQuad();
+    }
+
+    protected void initQuad() {
+        model.initVertexVBOs(4);
+
+        FloatVBO cornerPos = model.getFloatVBO("cornerPos");
+        cornerPos.putData(new Vector2f(0f, 0f));
+        cornerPos.putData(new Vector2f(1f, 0f));
+        cornerPos.putData(new Vector2f(0f, 1f));
+        cornerPos.putData(new Vector2f(1f, 1f));
+        
+        model.finishVertexVBOs();
+    }
 }

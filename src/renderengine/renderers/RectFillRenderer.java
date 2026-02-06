@@ -2,8 +2,6 @@ package renderengine.renderers;
 
 import java.util.ArrayList;
 
-import org.lwjglx.util.vector.Vector2f;
-
 import renderengine.Loader;
 import renderengine.bufferobjects.FloatVBO;
 import renderengine.bufferobjects.IntVBO;
@@ -38,18 +36,5 @@ public class RectFillRenderer extends InstanceShapeRenderer<RectFillDrawCall> {
             }
             i++;
         }
-    }
-
-    @Override
-    protected void initRawModel() {
-        model.initVertexVBOs(4);
-
-        FloatVBO cornerPos = model.getFloatVBO("cornerPos");
-        cornerPos.putData(new Vector2f(0f, 0f));
-        cornerPos.putData(new Vector2f(1f, 0f));
-        cornerPos.putData(new Vector2f(0f, 1f));
-        cornerPos.putData(new Vector2f(1f, 1f));
-        
-        model.finishVertexVBOs();
     }
 }

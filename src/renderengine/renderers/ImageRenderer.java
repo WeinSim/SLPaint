@@ -12,7 +12,7 @@ import renderengine.bufferobjects.IntVBO;
 import renderengine.bufferobjects.MatrixVBO;
 import renderengine.drawcalls.ImageDrawCall;
 
-public class ImageRenderer extends GeometryShapeRenderer<ImageDrawCall> {
+public class ImageRenderer extends InstanceShapeRenderer<ImageDrawCall> {
 
     private static final int NO_TEXTURE = -1;
 
@@ -89,7 +89,7 @@ public class ImageRenderer extends GeometryShapeRenderer<ImageDrawCall> {
 
     @Override
     protected void loadVBOs(ArrayList<Batch> batches, int vertexCount) {
-        IntVBO dataIndex = model.getIntVBO("dataIndex");
+        IntVBO gIndex = model.getIntVBO("gIndex");
         MatrixVBO transformationMatrix = model.getMatrixVBO("transformationMatrix");
         FloatVBO position = model.getFloatVBO("position");
         FloatVBO depth = model.getFloatVBO("depth");
@@ -98,7 +98,7 @@ public class ImageRenderer extends GeometryShapeRenderer<ImageDrawCall> {
         int batchIndex = 0;
         for (Batch batch : batches) {
             for (ImageDrawCall drawCall : batch.getDrawCalls()) {
-                dataIndex.putData(batchIndex);
+                gIndex.putData(batchIndex);
                 transformationMatrix.putData(drawCall.uiMatrix);
                 position.putData(drawCall.position);
                 depth.putData(drawCall.depth);

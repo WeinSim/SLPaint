@@ -8,7 +8,7 @@ import renderengine.bufferobjects.IntVBO;
 import renderengine.bufferobjects.MatrixVBO;
 import renderengine.drawcalls.HSLDrawCall;
 
-public class HSLRenderer extends GeometryShapeRenderer<HSLDrawCall> {
+public class HSLRenderer extends InstanceShapeRenderer<HSLDrawCall> {
 
     public HSLRenderer(Loader loader) {
         super("hsl", loader);
@@ -16,19 +16,18 @@ public class HSLRenderer extends GeometryShapeRenderer<HSLDrawCall> {
 
     @Override
     protected void loadVBOs(ArrayList<Batch> batches, int vertexCount) {
-        IntVBO dataIndex = model.getIntVBO("dataIndex");
+        IntVBO gIndex = model.getIntVBO("gIndex");
         MatrixVBO transformationMatrix = model.getMatrixVBO("transformationMatrix");
         FloatVBO position = model.getFloatVBO("position");
         FloatVBO depth = model.getFloatVBO("depth");
         FloatVBO size = model.getFloatVBO("size");
-
-        FloatVBO color = model.getFloatVBO("color");
-        IntVBO flags = model.getIntVBO("flags");
+        FloatVBO color = model.getFloatVBO("color_in");
+        IntVBO flags = model.getIntVBO("flags_in");
 
         int batchIndex = 0;
         for (Batch batch : batches) {
             for (HSLDrawCall drawCall : batch.getDrawCalls()) {
-                dataIndex.putData(batchIndex);
+                gIndex.putData(batchIndex);
                 transformationMatrix.putData(drawCall.uiMatrix);
                 position.putData(drawCall.position);
                 depth.putData(drawCall.depth);

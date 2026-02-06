@@ -1,8 +1,6 @@
 #version 420 core
 
 struct GroupData {
-    // (x_min, y_min, x_max, y_max)
-    // vec4 boundingBox;
     vec2 boundingBoxMin;
     vec2 boundingBoxMax;
     vec4 color2;
@@ -34,29 +32,27 @@ out vec4 color1;
 out vec4 color2;
 out float checkerboardSize;
 
-/* Before screen space coordinates ([0, 1920] x [0, 1080]) are converted
- * to OpenGL coordinates ([-1, 1] x [-1, 1]), they are rounded to integer
- * values. This is to avoid inconsistent stroke weights of rectangles (a
- * stroke weight of 1px could appear as 0, 1 or 2 pixels without
- * rounding).
- */
-vec3 vecToInt(vec3 v) {
-    return vec3(floor(v.x), floor(v.y), v.z);
+vec4 getGLPos(vec3 screenPos, float depth) {
+    screenPos.x = floor(screenPos.x);
+    screenPos.y = floor(screenPos.y);
+    return vec4(
+        (viewMatrix * screenPos).xy,
+        depth,
+        1.0
+    );
 }
 
 void main(void) {
-    GroupData gData = groupAttributes[gIndex];
-
-    color1 = color1_in;
-    color2 = gData.color2;
-    checkerboardSize = gData.checkerboardSize;
-
     vec3 basePos = transformationMatrix * vec3(position, 1.0);
     relativePos = (transformationMatrix * vec3(size * cornerPos, 0.0)).xy;
+    gl_Position = getGLPos(basePos + vec3(relativePos, 0.0), depth);
 
-    vec2 screenPos = (viewMatrix * (basePos + vec3(relativePos, 0.0))).xy;
+    GroupData gData = groupAttributes[gIndex];
 
-    gl_Position = vec4(screenPos, depth, 1.0);
+    float scale = sqrt(transformationMatrix[0].x * transformationMatrix[1].y);
+    color1 = color1_in;
+    color2 = gData.color2;
+    checkerboardSize = scale * gData.checkerboardSize;
 
     relativeBoundingBoxMin = gData.boundingBoxMin - basePos.xy;
     relativeBoundingBoxMax = gData.boundingBoxMax - basePos.xy;

@@ -35,8 +35,6 @@ import ui.components.ImageCanvas;
  * <pre>
  * TODO continue:
  *   Rework rendering infrastructure
- *     HSL
- *     Ellipse
  *     Image
  *     Text
  *   Make the loader statically accessible? (similar to UI)

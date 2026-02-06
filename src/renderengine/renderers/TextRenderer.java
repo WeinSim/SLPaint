@@ -15,7 +15,7 @@ import renderengine.drawcalls.TextDrawCall;
 import renderengine.fonts.TextFont;
 import sutil.math.SVector;
 
-public class TextRenderer extends GeometryShapeRenderer<TextDrawCall> {
+public class TextRenderer extends InstanceShapeRenderer<TextDrawCall> {
 
     private TextFont font;
 
@@ -67,7 +67,7 @@ public class TextRenderer extends GeometryShapeRenderer<TextDrawCall> {
 
     @Override
     protected void loadVBOs(ArrayList<Batch> batches, int vertexCount) {
-        IntVBO dataIndex = model.getIntVBO("dataIndex");
+        IntVBO gIndex = model.getIntVBO("gIndex");
         FloatVBO position = model.getFloatVBO("position");
         FloatVBO depth = model.getFloatVBO("depth");
         IntVBO charIndex = model.getIntVBO("charIndex");
@@ -75,7 +75,7 @@ public class TextRenderer extends GeometryShapeRenderer<TextDrawCall> {
         int batchIndex = 0;
         for (Batch batch : batches) {
             for (TextDrawCall drawCall : batch.getDrawCalls()) {
-                drawCall.font.putCharsIntoVBOs(drawCall, dataIndex, position, depth, charIndex, batchIndex);
+                drawCall.font.putCharsIntoVBOs(drawCall, gIndex, position, depth, charIndex, batchIndex);
             }
             batchIndex++;
         }

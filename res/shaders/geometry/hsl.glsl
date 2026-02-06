@@ -71,7 +71,7 @@ void main(void) {
         return;
     }
 
-    size = pass_size[0];
+    // size = pass_size[0];
     color = pass_color[0];
     flags = pass_flags[0];
 

@@ -10,7 +10,7 @@ import renderengine.bufferobjects.IntVBO;
 import renderengine.bufferobjects.MatrixVBO;
 import renderengine.drawcalls.EllipseDrawCall;
 
-public class EllipseRenderer extends GeometryShapeRenderer<EllipseDrawCall> {
+public class EllipseRenderer extends InstanceShapeRenderer<EllipseDrawCall> {
 
     public EllipseRenderer(Loader loader) {
         super("ellipse", loader);
@@ -18,17 +18,17 @@ public class EllipseRenderer extends GeometryShapeRenderer<EllipseDrawCall> {
 
     @Override
     protected void loadVBOs(ArrayList<Batch> batches, int vertexCount) {
-        IntVBO dataIndex = model.getIntVBO("dataIndex");
+        IntVBO gIndex = model.getIntVBO("gIndex");
         MatrixVBO transformationMatrix = model.getMatrixVBO("transformationMatrix");
         FloatVBO position = model.getFloatVBO("position");
         FloatVBO depth = model.getFloatVBO("depth");
         FloatVBO size = model.getFloatVBO("size");
-        FloatVBO color = model.getFloatVBO("color");
+        FloatVBO color = model.getFloatVBO("color_in");
 
         int batchIndex = 0;
         for (Batch batch : batches) {
             for (EllipseDrawCall drawCall : batch.getDrawCalls()) {
-                dataIndex.putData(batchIndex);
+                gIndex.putData(batchIndex);
                 transformationMatrix.putData(drawCall.uiMatrix);
                 position.putData(drawCall.position);
                 depth.putData(drawCall.depth);

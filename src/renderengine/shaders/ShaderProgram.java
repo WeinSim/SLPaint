@@ -178,33 +178,37 @@ public class ShaderProgram {
                 }
 
                 // attributes
-                if (line.startsWith("in")) {
+                if (vbos != null) {
                     String[] parts = line.split(" ");
-
-                    if (parts.length < 3)
-                        continue;
-                    if (vbos == null)
-                        continue;
-
-                    String attributeName = parts[2].substring(0, parts[2].length() - 1);
-                    // very crude detection for now
-                    VBOType attributeType = switch (attributeName) {
-                        case "cornerPos", "offset" -> VBOType.VERTEX;
-                        default -> VBOType.INSTANCE;
-                    };
-                    AttributeVBO vbo = switch (parts[1]) {
-                        case "int" -> new IntVBO(attributeName, attributeNumber, 1, attributeType);
-                        case "float" -> new FloatVBO(attributeName, attributeNumber, 1, attributeType);
-                        case "vec2" -> new FloatVBO(attributeName, attributeNumber, 2, attributeType);
-                        case "vec3" -> new FloatVBO(attributeName, attributeNumber, 3, attributeType);
-                        case "vec4" -> new FloatVBO(attributeName, attributeNumber, 4, attributeType);
-                        case "mat2" -> new MatrixVBO(attributeName, attributeNumber, 2, attributeType);
-                        case "mat3" -> new MatrixVBO(attributeName, attributeNumber, 3, attributeType);
-                        case "mat4" -> new MatrixVBO(attributeName, attributeNumber, 4, attributeType);
-                        default -> throw new RuntimeException("Invalid attribute datatype: " + parts[1]);
-                    };
-                    attributeNumber += vbo.getNumAttributes();
-                    vbos.add(vbo);
+                    int inIndex = -1;
+                    for (int i = 0; i < parts.length; i++) {
+                        if (parts[i].equals("in")) {
+                            inIndex = i;
+                            break;
+                        }
+                    }
+                    if (inIndex != -1) {
+                        String attributeName = parts[inIndex + 2];
+                        attributeName = attributeName.substring(0, attributeName.indexOf(';'));
+                        // very crude detection for now
+                        VBOType attributeType = switch (attributeName) {
+                            case "cornerPos", "offset" -> VBOType.VERTEX;
+                            default -> VBOType.INSTANCE;
+                        };
+                        AttributeVBO vbo = switch (parts[inIndex + 1]) {
+                            case "int" -> new IntVBO(attributeName, attributeNumber, 1, attributeType);
+                            case "float" -> new FloatVBO(attributeName, attributeNumber, 1, attributeType);
+                            case "vec2" -> new FloatVBO(attributeName, attributeNumber, 2, attributeType);
+                            case "vec3" -> new FloatVBO(attributeName, attributeNumber, 3, attributeType);
+                            case "vec4" -> new FloatVBO(attributeName, attributeNumber, 4, attributeType);
+                            case "mat2" -> new MatrixVBO(attributeName, attributeNumber, 2, attributeType);
+                            case "mat3" -> new MatrixVBO(attributeName, attributeNumber, 3, attributeType);
+                            case "mat4" -> new MatrixVBO(attributeName, attributeNumber, 4, attributeType);
+                            default -> throw new RuntimeException("Invalid attribute datatype: " + parts[1]);
+                        };
+                        attributeNumber += vbo.getNumAttributes();
+                        vbos.add(vbo);
+                    }
                 }
 
                 // uniform variables
@@ -266,7 +270,7 @@ public class ShaderProgram {
         GL20.glCompileShader(shaderID);
         if (GL20.glGetShaderi(shaderID, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE) {
             System.out.format("Could not compile shader \"%s\"!\n", filename);
-            System.out.println(GL20.glGetShaderInfoLog(shaderID));
+            // System.out.println(GL20.glGetShaderInfoLog(shaderID));
             System.exit(-1);
         }
         return shaderID;

@@ -1,8 +1,6 @@
 #version 420 core
 
 struct GroupData {
-    // (x_min, y_min, x_max, y_max)
-    // vec4 boundingBox;
     vec2 boundingBoxMin;
     vec2 boundingBoxMax;
     vec4 color2;
@@ -44,25 +42,29 @@ out float strokeWeight;
  * stroke weight of 1px could appear as 0, 1 or 2 pixels without
  * rounding).
  */
-vec3 vecToInt(vec3 v) {
-    return vec3(floor(v.x), floor(v.y), floor(v.z));
+vec4 getGLPos(vec3 screenPos, float depth) {
+    screenPos.x = floor(screenPos.x);
+    screenPos.y = floor(screenPos.y);
+    return vec4(
+        (viewMatrix * screenPos).xy,
+        depth,
+        1.0
+    );
 }
 
 void main(void) {
+    vec3 basePos = transformationMatrix * vec3(position, 1.0);
+    relativePos = (transformationMatrix * vec3(size_in * cornerPos + strokeWeight_in * offset, 0.0)).xy;
+    gl_Position = getGLPos(basePos + vec3(relativePos, 0.0), depth);
+
     GroupData gData = groupAttributes[gIndex];
 
-    strokeWeight = strokeWeight_in;
-    size = size_in;
+    float scale = sqrt(transformationMatrix[0].x * transformationMatrix[1].y);
     color1 = color1_in;
     color2 = gData.color2;
-    checkerboardSize = gData.checkerboardSize;
-
-    vec3 basePos = transformationMatrix * vec3(position, 1.0);
-    relativePos = (transformationMatrix * vec3(size * cornerPos + strokeWeight * offset, 0.0)).xy;
-
-    vec2 screenPos = (viewMatrix * (basePos + vec3(relativePos, 0.0))).xy;
-
-    gl_Position = vec4(screenPos, depth, 1.0);
+    checkerboardSize = scale * gData.checkerboardSize;
+    strokeWeight = scale * strokeWeight_in;
+    size = (transformationMatrix * vec3(size_in, 0.0)).xy;
 
     relativeBoundingBoxMin = gData.boundingBoxMin - basePos.xy;
     relativeBoundingBoxMax = gData.boundingBoxMax - basePos.xy;
