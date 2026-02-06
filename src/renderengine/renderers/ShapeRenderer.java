@@ -8,15 +8,15 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjglx.util.vector.Matrix3f;
 
-import renderengine.Loader;
 import renderengine.RawModel;
+import renderengine.bufferobjects.Cleanable;
 import renderengine.bufferobjects.UBOEntry;
 import renderengine.bufferobjects.UniformBufferObject;
 import renderengine.drawcalls.DrawCall;
 import renderengine.shaders.ShaderProgram;
 import renderengine.shaders.ShaderType;
 
-public abstract class ShapeRenderer<C extends DrawCall> {
+public abstract class ShapeRenderer<C extends DrawCall> implements Cleanable {
 
     protected static final int NUM_TEXTURE_UNITS = GL11.glGetInteger(GL20.GL_MAX_TEXTURE_IMAGE_UNITS);
 
@@ -25,12 +25,8 @@ public abstract class ShapeRenderer<C extends DrawCall> {
 
     protected ArrayList<Batch> batches;
 
-    protected Loader loader;
-
-    public ShapeRenderer(String shaderName, ShaderType shaderType, Loader loader) {
-        this.loader = loader;
-
-        shaderProgram = new ShaderProgram(shaderName, shaderType, loader);
+    public ShapeRenderer(String shaderName, ShaderType shaderType) {
+        shaderProgram = new ShaderProgram(shaderName, shaderType);
         model = shaderProgram.getRawModel();
         batches = new ArrayList<>();
     }
@@ -87,6 +83,12 @@ public abstract class ShapeRenderer<C extends DrawCall> {
 
     protected int getNumInstances(Batch batch) {
         return batch.getDrawCalls().size();
+    }
+
+    @Override
+    public void cleanUp() {
+        model.cleanUp();
+        shaderProgram.cleanUp();
     }
 
     /**

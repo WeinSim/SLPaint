@@ -11,16 +11,16 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL32;
 
-import renderengine.Loader;
 import renderengine.RawModel;
 import renderengine.bufferobjects.AttributeVBO;
+import renderengine.bufferobjects.Cleanable;
 import renderengine.bufferobjects.FloatVBO;
 import renderengine.bufferobjects.IntVBO;
 import renderengine.bufferobjects.MatrixVBO;
 import renderengine.bufferobjects.UniformBufferObject;
 import renderengine.bufferobjects.VBOType;
 
-public class ShaderProgram {
+public class ShaderProgram implements Cleanable {
 
     private final String name;
     private final ShaderType type;
@@ -35,12 +35,9 @@ public class ShaderProgram {
     private final HashMap<String, UniformVariable> uniformVariables;
     private final HashMap<String, UniformBufferObject> uniformBufferObjects;
 
-    private Loader loader;
-
-    public ShaderProgram(String name, ShaderType type, Loader loader) {
+    public ShaderProgram(String name, ShaderType type) {
         this.type = type;
         this.name = name;
-        this.loader = loader;
 
         uniformVariables = new HashMap<>();
         uniformBufferObjects = new HashMap<>();
@@ -70,7 +67,7 @@ public class ShaderProgram {
             GL20.glBindAttribLocation(programID, attributeNumber, vbo.attributeName());
             attributeNumber += vbo.getNumAttributes();
         }
-        rawModel = new RawModel(loader, vbos);
+        rawModel = new RawModel(vbos);
 
         GL20.glLinkProgram(programID);
         if (GL20.glGetProgrami(programID, GL20.GL_LINK_STATUS) == GL11.GL_FALSE) {
@@ -98,6 +95,7 @@ public class ShaderProgram {
         GL20.glUseProgram(0);
     }
 
+    @Override
     public void cleanUp() {
         stop();
 
@@ -121,7 +119,7 @@ public class ShaderProgram {
 
         if (uniform == null)
             throw new RuntimeException(
-                    String.format("Shader \"%s\": uniform variable \"%s\" doesn't exist!\n", this.name, name));
+                    String.format("Shader \"%s\": uniform variable \"%s\" doesn't exist!", this.name, name));
 
         uniform.load(value);
     }
@@ -129,14 +127,14 @@ public class ShaderProgram {
     public void loadUBOData(String uboName, ByteBuffer buffer) {
         UniformBufferObject groupAttributes = getUniformBlock(uboName);
         groupAttributes.setData(buffer);
-        groupAttributes.syncData(loader);
+        groupAttributes.syncData();
     }
 
     private UniformBufferObject getUniformBlock(String name) {
         UniformBufferObject ubo = uniformBufferObjects.get(name);
 
         if (ubo == null)
-            throw new RuntimeException(String.format("Uniform block \"%s\" doesn't exist!\n", name));
+            throw new RuntimeException(String.format("Uniform block \"%s\" doesn't exist", name));
 
         return ubo;
     }
@@ -195,15 +193,14 @@ public class ShaderProgram {
                             case "cornerPos", "offset" -> VBOType.VERTEX;
                             default -> VBOType.INSTANCE;
                         };
-                        AttributeVBO vbo = switch (parts[inIndex + 1]) {
-                            case "int" -> new IntVBO(attributeName, attributeNumber, 1, attributeType);
-                            case "float" -> new FloatVBO(attributeName, attributeNumber, 1, attributeType);
-                            case "vec2" -> new FloatVBO(attributeName, attributeNumber, 2, attributeType);
-                            case "vec3" -> new FloatVBO(attributeName, attributeNumber, 3, attributeType);
-                            case "vec4" -> new FloatVBO(attributeName, attributeNumber, 4, attributeType);
-                            case "mat2" -> new MatrixVBO(attributeName, attributeNumber, 2, attributeType);
-                            case "mat3" -> new MatrixVBO(attributeName, attributeNumber, 3, attributeType);
-                            case "mat4" -> new MatrixVBO(attributeName, attributeNumber, 4, attributeType);
+                        Datatype datatype = Datatype.fromIdentifier(parts[inIndex + 1]);
+                        AttributeVBO vbo = switch (datatype) {
+                            case INT ->
+                                new IntVBO(attributeName, attributeNumber, datatype.coordinateSize, attributeType);
+                            case FLOAT, VEC2, VEC3, VEC4 ->
+                                new FloatVBO(attributeName, attributeNumber, datatype.coordinateSize, attributeType);
+                            case MAT2, MAT3, MAT4 ->
+                                new MatrixVBO(attributeName, attributeNumber, datatype.coordinateSize, attributeType);
                             default -> throw new RuntimeException("Invalid attribute datatype: " + parts[1]);
                         };
                         attributeNumber += vbo.getNumAttributes();
@@ -229,14 +226,8 @@ public class ShaderProgram {
                     } else {
                         // normal uniform variable
                         String[] parts = line.split(" ");
-                        int datatype = -1;
-                        for (int i = 0; i < UniformVariable.TYPE_NAMES.length; i++) {
-                            if (parts[1].equals(UniformVariable.TYPE_NAMES[i])) {
-                                datatype = i;
-                                break;
-                            }
-                        }
-                        if (datatype == -1) {
+                        Datatype datatype = Datatype.fromIdentifier(parts[1]);
+                        if (datatype == null) {
                             System.err.format("Invalid datatype: \"%s\"!\n", parts[1]);
                             continue;
                         }

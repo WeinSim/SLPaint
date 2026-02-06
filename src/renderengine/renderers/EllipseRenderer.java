@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import org.lwjglx.util.vector.Vector4f;
 
-import renderengine.Loader;
 import renderengine.bufferobjects.FloatVBO;
 import renderengine.bufferobjects.IntVBO;
 import renderengine.bufferobjects.MatrixVBO;
@@ -12,8 +11,8 @@ import renderengine.drawcalls.EllipseDrawCall;
 
 public class EllipseRenderer extends InstanceShapeRenderer<EllipseDrawCall> {
 
-    public EllipseRenderer(Loader loader) {
-        super("ellipse", loader);
+    public EllipseRenderer() {
+        super("ellipse");
     }
 
     @Override

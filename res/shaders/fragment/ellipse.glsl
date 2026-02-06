@@ -1,6 +1,5 @@
 #version 400 core
 
-in vec2 relativePos;
 in vec2 relativeBoundingBoxMin;
 in vec2 relativeBoundingBoxMax;
 in float radius;
@@ -11,16 +10,16 @@ out vec4 outColor;
 
 void main(void) {
 
-    if (relativePos.x < relativeBoundingBoxMin.x) {
+    if (relativeBoundingBoxMin.x > 0) {
         discard;
     }
-    if (relativePos.y < relativeBoundingBoxMin.y) {
+    if (relativeBoundingBoxMin.y > 0) {
         discard;
     }
-    if (relativePos.x > relativeBoundingBoxMax.x) {
+    if (relativeBoundingBoxMax.x < 0) {
         discard;
     }
-    if (relativePos.y > relativeBoundingBoxMax.y) {
+    if (relativeBoundingBoxMax.y < 0) {
         discard;
     }
 

@@ -31,9 +31,8 @@ public abstract class AttributeVBO extends VBO {
         this.vertexCount = vertexCount;
     }
 
-    // TODO: unify this method with UBOEntry.put()
     public void putData(Object data) {
-        UBOEntry.put(data, coordinateSize, buffer, false);
+        put(data, coordinateSize, buffer, false);
     }
 
     public void storeDataInAttributeList() {

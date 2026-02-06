@@ -2,7 +2,6 @@ package renderengine.renderers;
 
 import java.util.ArrayList;
 
-import renderengine.Loader;
 import renderengine.bufferobjects.FloatVBO;
 import renderengine.bufferobjects.IntVBO;
 import renderengine.bufferobjects.MatrixVBO;
@@ -10,8 +9,8 @@ import renderengine.drawcalls.RectFillDrawCall;
 
 public class RectFillRenderer extends InstanceShapeRenderer<RectFillDrawCall> {
 
-    public RectFillRenderer(Loader loader) {
-        super("rectFill", loader);
+    public RectFillRenderer() {
+        super("rectFill");
     }
 
     @Override

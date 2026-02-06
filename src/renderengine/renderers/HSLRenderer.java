@@ -2,7 +2,6 @@ package renderengine.renderers;
 
 import java.util.ArrayList;
 
-import renderengine.Loader;
 import renderengine.bufferobjects.FloatVBO;
 import renderengine.bufferobjects.IntVBO;
 import renderengine.bufferobjects.MatrixVBO;
@@ -10,8 +9,8 @@ import renderengine.drawcalls.HSLDrawCall;
 
 public class HSLRenderer extends InstanceShapeRenderer<HSLDrawCall> {
 
-    public HSLRenderer(Loader loader) {
-        super("hsl", loader);
+    public HSLRenderer() {
+        super("hsl");
     }
 
     @Override

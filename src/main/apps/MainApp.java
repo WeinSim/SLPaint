@@ -34,8 +34,6 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Remove Loader
- *   Clean up render engine code (literally)
  * 
  * App:
  *   Selection tool

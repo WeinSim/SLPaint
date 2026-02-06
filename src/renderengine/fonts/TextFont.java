@@ -11,14 +11,17 @@ import java.util.List;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
-import renderengine.Loader;
+import main.apps.MainApp;
 import renderengine.UIRenderMaster;
 import renderengine.bufferobjects.FloatVBO;
 import renderengine.bufferobjects.IntVBO;
 import renderengine.drawcalls.TextDrawCall;
+import sutil.SUtil;
 import sutil.math.SVector;
 
 public class TextFont {
+
+    private static final String FONT_DIRECTORY = "res/fonts/";
 
     public static final String DEFAULT_FONT_NAME = "Courier New";
 
@@ -132,22 +135,25 @@ public class TextFont {
 
         FontChar[] fontChars = new FontChar[chars.size()];
         HashMap<Character, Integer> charIDs = new HashMap<>();
-        float[] uboData = new float[UIRenderMaster.MAX_FONT_CHARS * 4];
+        float[] uboData = new float[UIRenderMaster.MAX_FONT_CHARS * 4 + 2];
         int unknownCharIndex = -1;
         int i = 0;
-        int arrayIndex = 0;
+        int uboIndex = 0;
         for (FontChar fontChar : chars) {
             char c = (char) fontChar.id();
             if (c == UNKNOWN_CHAR)
                 unknownCharIndex = i;
             charIDs.put(c, i);
-            uboData[arrayIndex++] = fontChar.x() + textureWidth * fontChar.page();
-            uboData[arrayIndex++] = fontChar.y();
-            uboData[arrayIndex++] = fontChar.width();
-            uboData[arrayIndex++] = fontChar.height();
+            uboData[uboIndex++] = fontChar.x() + textureWidth * fontChar.page();
+            uboData[uboIndex++] = fontChar.y();
+            uboData[uboIndex++] = fontChar.width();
+            uboData[uboIndex++] = fontChar.height();
 
             fontChars[i++] = fontChar;
         }
+        uboIndex = UIRenderMaster.MAX_FONT_CHARS * 4;
+        uboData[uboIndex++] = textureWidth;
+        uboData[uboIndex++] = textureHeight;
 
         if (unknownCharIndex == -1)
             loadFail("\"Unknown character\" (\"\u9633\", id %d) missing", name, UNKNOWN_CHAR);
@@ -157,13 +163,74 @@ public class TextFont {
     }
 
     private static String getDirectoryName(String name) {
-        return String.format("%s%s/", Loader.FONT_DIRECTORY, name);
+        return String.format("%s%s/", FONT_DIRECTORY, name);
     }
 
     private static void loadFail(String message, String name, Object... params) throws IOException {
         message = String.format(message, params);
         message = String.format("Could not load font \"%s\": ", name);
         throw new IOException(message);
+    }
+
+    public static void createFontAtlas(String name, int textSize) {
+        // doesn't work, don't know why
+        // delete old files
+        // ArrayList<String> deleteArgs = new ArrayList<>();
+        // deleteArgs.add("rm");
+        // deleteArgs.add("output*");
+        // MainApp.runCommand(String.format("%s%s", FONT_DIRECTORY, name), deleteArgs);
+
+        String directoryName = String.format("%s%s/", FONT_DIRECTORY, name);
+        MainApp.runCommand(directoryName,
+                getFontGenerationCommand(name, 2, 256, 256, textSize, new int[] { 32, 126, 160, 255 },
+                        new int[] { 9633 }, 0));
+    }
+
+    private static void addArgument(ArrayList<String> commands, String argument, int value) {
+        addArgument(commands, argument, Integer.toString(value));
+    }
+
+    private static void addArgument(ArrayList<String> commands, String argument, String value) {
+        commands.add("--" + argument);
+        commands.add(value);
+    }
+
+    private static ArrayList<String> getFontGenerationCommand(String fontName, int padding, int textureWidth,
+            int textureHeight, int fontSize, int[] charRanges, int[] extraChars, int bgColor) {
+
+        ArrayList<String> commands = new ArrayList<>();
+        // commands.add("/home/simon/code/executables/fontbm/fontbm");
+        commands.add("fontbm");
+        addArgument(commands, "font-file", "%s.ttf".formatted(fontName));
+        addArgument(commands, "output", "output");
+        addArgument(commands, "padding-up", padding);
+        addArgument(commands, "padding-down", padding);
+        addArgument(commands, "padding-left", padding);
+        addArgument(commands, "padding-right", padding);
+        addArgument(commands, "texture-size", "%dx%d".formatted(textureWidth, textureHeight));
+        addArgument(commands, "font-size", fontSize);
+        StringBuilder charsBuilder = new StringBuilder();
+        for (int i = 0; i < charRanges.length / 2; i++) {
+            charsBuilder.append("%d-%d,".formatted(charRanges[2 * i], charRanges[2 * i + 1]));
+        }
+        for (int extraChar : extraChars) {
+            charsBuilder.append("%d,".formatted(extraChar));
+        }
+        int len = charsBuilder.length();
+        if (len > 0) {
+            charsBuilder.deleteCharAt(len - 1);
+        }
+        addArgument(commands, "chars", charsBuilder.toString());
+        addArgument(commands, "background-color", "%d,%d,%d".formatted(
+                SUtil.red(bgColor), SUtil.green(bgColor), SUtil.blue(bgColor)));
+
+        // System.out.print("Generated command: ");
+        // for (String str : commands) {
+        // System.out.print(str + " ");
+        // }
+        // System.out.println();
+
+        return commands;
     }
 
     public static TextFont getFont(String name) {

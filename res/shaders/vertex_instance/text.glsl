@@ -13,14 +13,18 @@ layout(std140, binding = 1) uniform GroupAttributes {
     GroupData groupAttributes[256];
 };
 
+struct Glyph {
+    vec2 position;
+    vec2 size;
+};
+
 layout(std140, binding = 0) uniform FontData {
-    // (x, y, w, h)
-    vec4[256] fontData;
+    Glyph[256] glyphs;
+    vec2 textureSize;
+    // 2 * 4 bytes padding
 };
 
 uniform mat3 viewMatrix;
-// TODO: why isn't this part of FontData?
-uniform vec2 textureSize;
 
 // per vertex
 in vec2 cornerPos;
@@ -37,8 +41,6 @@ out vec2 relativeBoundingBoxMin;
 out vec2 relativeBoundingBoxMax;
 
 vec4 getGLPos(vec3 screenPos, float depth) {
-    screenPos.x = floor(screenPos.x);
-    screenPos.y = floor(screenPos.y);
     return vec4(
         (viewMatrix * screenPos).xy,
         depth,
@@ -48,18 +50,15 @@ vec4 getGLPos(vec3 screenPos, float depth) {
 
 void main(void) {
     GroupData gData = groupAttributes[gIndex];
+    Glyph glyph = glyphs[charIndex];
 
-    vec2 textureOffset = fontData[charIndex].zw;
-    vec3 basePos = gData.transformationMatrix * vec3(position, 1.0);
-    relativePos = (
-        gData.transformationMatrix * vec3(
-            cornerPos * textureOffset * gData.relativeTextSize,
-        0.0)
-    ).xy;
-    gl_Position = getGLPos(basePos + vec3(relativePos, 0.0), depth);
+    vec3 basePos = gData.transformationMatrix * vec3(
+        position + cornerPos * glyph.size * gData.relativeTextSize,
+        1.0);
+    gl_Position = getGLPos(basePos, depth);
 
     color = gData.color;
-    textureCoords = (fontData[charIndex].xy + cornerPos * textureOffset) / textureSize;
+    textureCoords = (glyph.position + cornerPos * glyph.size) / textureSize;
 
     relativeBoundingBoxMin = gData.boundingBoxMin - basePos.xy;
     relativeBoundingBoxMax = gData.boundingBoxMax - basePos.xy;

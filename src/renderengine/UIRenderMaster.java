@@ -40,9 +40,8 @@ public class UIRenderMaster {
     private static final int NONE = 0, NORMAL = 1, CHECKERBOARD = 2;
 
     private App app;
-    private Loader loader;
 
-    private ArrayList<ShapeRenderer<?>> shapeRenderes;
+    private ArrayList<ShapeRenderer<?>> renderers;
     private RectFillRenderer rectFillRenderer;
     private RectOutlineRenderer rectOutlineRenderer;
     private HSLRenderer hslRenderer;
@@ -80,18 +79,17 @@ public class UIRenderMaster {
     private TextFont textFont;
     private double textSize;
 
-    public UIRenderMaster(App app, Loader loader) {
+    public UIRenderMaster(App app) {
         this.app = app;
-        this.loader = loader;
 
-        shapeRenderes = new ArrayList<>();
+        renderers = new ArrayList<>();
 
-        shapeRenderes.add(rectFillRenderer = new RectFillRenderer(loader));
-        shapeRenderes.add(rectOutlineRenderer = new RectOutlineRenderer(loader));
-        shapeRenderes.add(hslRenderer = new HSLRenderer(loader));
-        shapeRenderes.add(ellipseRenderer = new EllipseRenderer(loader));
-        shapeRenderes.add(textRenderer = new TextRenderer(loader, TextFont.getDefaultFont()));
-        shapeRenderes.add(imageRenderer = new ImageRenderer(loader));
+        renderers.add(rectFillRenderer = new RectFillRenderer());
+        renderers.add(rectOutlineRenderer = new RectOutlineRenderer());
+        renderers.add(hslRenderer = new HSLRenderer());
+        renderers.add(ellipseRenderer = new EllipseRenderer());
+        renderers.add(textRenderer = new TextRenderer(TextFont.getDefaultFont()));
+        renderers.add(imageRenderer = new ImageRenderer());
 
         createTempFBO();
 
@@ -144,10 +142,10 @@ public class UIRenderMaster {
     public void render() {
         Matrix3f viewMatrix = createViewMatrix();
 
-        for (ShapeRenderer<?> shapeRenderer : shapeRenderes)
+        for (ShapeRenderer<?> shapeRenderer : renderers)
             shapeRenderer.render(viewMatrix);
 
-        loader.tempCleanUp();
+        // loader.tempCleanUp();
     }
 
     private void createTempFBO() {
@@ -158,11 +156,11 @@ public class UIRenderMaster {
     }
 
     private void createTempFBO(int width, int height) {
-        tempFBO = loader.createFBO(width, height);
+        tempFBO = new FrameBufferObject(width, height);
     }
 
     public void setTempFBOSize(int width, int height) {
-        loader.cleanUpFBO(tempFBO);
+        tempFBO.cleanUp();
         createTempFBO(width, height);
     }
 
@@ -175,12 +173,12 @@ public class UIRenderMaster {
     }
 
     public void framebuffer(FrameBufferObject framebuffer) {
-        int fboID = framebuffer == null ? 0 : framebuffer.fboID();
+        int fboID = framebuffer == null ? 0 : framebuffer.fboID;
         GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, fboID);
 
         int[] size = framebuffer == null
                 ? app.getWindow().getDisplaySize()
-                : new int[] { framebuffer.width(), framebuffer.height() };
+                : new int[] { framebuffer.width, framebuffer.height };
         GL11.glViewport(0, 0, size[0], size[1]);
 
         currentFramebuffer = framebuffer;
@@ -498,8 +496,8 @@ public class UIRenderMaster {
             width = displaySize[0];
             height = displaySize[1];
         } else {
-            width = currentFramebuffer.width();
-            height = currentFramebuffer.height();
+            width = currentFramebuffer.width;
+            height = currentFramebuffer.height;
         }
         matrix.m00 = 2f / width;
         matrix.m11 = sign * 2f / height;
@@ -510,5 +508,10 @@ public class UIRenderMaster {
 
     public FrameBufferObject getTempFBO() {
         return tempFBO;
+    }
+
+    public void cleanUp() {
+        for (ShapeRenderer<?> renderer : renderers)
+            renderer.cleanUp();
     }
 }

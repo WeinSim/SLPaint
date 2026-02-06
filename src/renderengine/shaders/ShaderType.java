@@ -2,11 +2,6 @@ package renderengine.shaders;
 
 public enum ShaderType {
 
-    GEOMETRY(
-            "res/shaders/vertex_blank/%s.glsl",
-            "res/shaders/geometry/%s.glsl",
-            "res/shaders/fragment/%s.glsl"),
-
     INSTANCE(
             "res/shaders/vertex_instance/%s.glsl",
             null,

@@ -7,26 +7,21 @@ import org.lwjgl.opengl.GL20;
 import org.lwjglx.util.vector.Matrix2f;
 import org.lwjglx.util.vector.Matrix3f;
 import org.lwjglx.util.vector.Matrix4f;
+import org.lwjglx.util.vector.Vector4f;
 
 import sutil.math.SVector;
 
 public class UniformVariable {
 
-    // TODO: convert this into an enum
-    public static final int INT = 0, FLOAT = 1, VEC2 = 2, VEC3 = 3, VEC4 = 4, MAT2 = 5, MAT3 = 6, MAT4 = 7,
-            SAMPLER_2D = 8;
-    public static final String[] TYPE_NAMES = { "int", "float", "vec2", "vec3", "vec4", "mat2", "mat3", "mat4",
-            "sampler2D" };
-
     private static FloatBuffer matrixBuffer16 = BufferUtils.createFloatBuffer(16);
     private static FloatBuffer matrixBuffer9 = BufferUtils.createFloatBuffer(9);
     private static FloatBuffer matrixBuffer4 = BufferUtils.createFloatBuffer(4);
 
-    private int type;
+    private Datatype type;
     private String name;
     private int location;
 
-    public UniformVariable(int type, String name) {
+    public UniformVariable(Datatype type, String name) {
         this.type = type;
         this.name = name;
     }
@@ -47,6 +42,10 @@ public class UniformVariable {
                 SVector v = (SVector) value;
                 GL20.glUniform3f(location, (float) v.x, (float) v.y, (float) v.z);
             }
+            case VEC4 -> {
+                Vector4f v = (Vector4f) value;
+                GL20.glUniform4f(location,  v.x,  v.y,  v.z, v.w);
+            }
             case MAT2 -> {
                 Matrix2f matrix = (Matrix2f) value;
                 matrix.store(matrixBuffer4);
@@ -64,9 +63,6 @@ public class UniformVariable {
                 matrix.store(matrixBuffer16);
                 matrixBuffer16.flip();
                 GL20.glUniformMatrix4fv(location, false, matrixBuffer16);
-            }
-            default -> {
-                throw new UnsupportedOperationException(String.format("%s not yet supported!", TYPE_NAMES[type]));
             }
         }
     }

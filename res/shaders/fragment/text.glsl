@@ -1,10 +1,10 @@
 #version 400 core
 
 in vec2 relativePos;
-in vec2 textureCoords;
-in vec4 color;
 in vec2 relativeBoundingBoxMin;
 in vec2 relativeBoundingBoxMax;
+in vec2 textureCoords;
+in vec4 color;
 
 out vec4 outColor;
 
@@ -12,16 +12,16 @@ uniform sampler2D textureSamplers[4];
 
 void main(void) {
 
-    if (relativePos.x < relativeBoundingBoxMin.x) {
+    if (relativeBoundingBoxMin.x > 0) {
         discard;
     }
-    if (relativePos.x > relativeBoundingBoxMax.x) {
+    if (relativeBoundingBoxMin.y > 0) {
         discard;
     }
-    if (relativePos.y < relativeBoundingBoxMin.y) {
+    if (relativeBoundingBoxMax.x < 0) {
         discard;
     }
-    if (relativePos.y > relativeBoundingBoxMax.y) {
+    if (relativeBoundingBoxMax.y < 0) {
         discard;
     }
 

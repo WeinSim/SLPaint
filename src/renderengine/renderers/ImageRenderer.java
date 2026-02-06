@@ -6,7 +6,6 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjglx.util.vector.Matrix3f;
 
-import renderengine.Loader;
 import renderengine.bufferobjects.FloatVBO;
 import renderengine.bufferobjects.IntVBO;
 import renderengine.bufferobjects.MatrixVBO;
@@ -21,8 +20,8 @@ public class ImageRenderer extends InstanceShapeRenderer<ImageDrawCall> {
      */
     private int[] textureIDs;
 
-    public ImageRenderer(Loader loader) {
-        super("image", loader);
+    public ImageRenderer() {
+        super("image");
 
         textureIDs = new int[NUM_TEXTURE_UNITS];
         clearTextureIDs();
@@ -106,5 +105,12 @@ public class ImageRenderer extends InstanceShapeRenderer<ImageDrawCall> {
             }
             batchIndex++;
         }
+    }
+
+    @Override
+    public void cleanUp() {
+        super.cleanUp();
+
+        GL11.glDeleteTextures(textureIDs);
     }
 }

@@ -2,7 +2,6 @@ package renderengine.renderers;
 
 import java.util.ArrayList;
 
-import renderengine.Loader;
 import renderengine.bufferobjects.FloatVBO;
 import renderengine.bufferobjects.IntVBO;
 import renderengine.bufferobjects.MatrixVBO;
@@ -13,8 +12,8 @@ public class RectOutlineRenderer extends InstanceShapeRenderer<RectOutlineDrawCa
 
     private static final boolean INSET_OUTLINES = false;
 
-    public RectOutlineRenderer(Loader loader) {
-        super("rectOutline", loader);
+    public RectOutlineRenderer() {
+        super("rectOutline");
     }
 
     @Override

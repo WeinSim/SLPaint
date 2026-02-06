@@ -8,6 +8,7 @@ import org.lwjglx.util.vector.Vector4f;
 import main.Image;
 import main.apps.App;
 import main.apps.MainApp;
+import renderengine.bufferobjects.Cleanable;
 import renderengine.bufferobjects.FrameBufferObject;
 import renderengine.fonts.TextFont;
 import sutil.math.SVector;
@@ -25,7 +26,7 @@ import ui.components.AlphaScale;
 import ui.components.HueSatField;
 import ui.components.LightnessScale;
 
-public class AppRenderer {
+public class AppRenderer implements Cleanable {
 
     /**
      * 
@@ -57,7 +58,7 @@ public class AppRenderer {
 
     public AppRenderer(App app) {
         this.app = app;
-        uiMaster = new UIRenderMaster(app, app.getLoader());
+        uiMaster = new UIRenderMaster(app);
     }
 
     public void render() {
@@ -294,7 +295,8 @@ public class AppRenderer {
     }
 
     public void reloadShaders() {
-        uiMaster = new UIRenderMaster(app, app.getLoader());
+        uiMaster.cleanUp();
+        uiMaster = new UIRenderMaster(app);
     }
 
     public void renderImageToImage(Image srcImage, int x, int y, int width, int height, Image dstImage) {
@@ -311,10 +313,10 @@ public class AppRenderer {
         GL11.glEnable(GL11.GL_BLEND);
 
         FrameBufferObject fbo = uiMaster.getTempFBO();
-        int fboWidth = fbo.width(), fboHeight = fbo.height();
+        int fboWidth = fbo.width, fboHeight = fbo.height;
 
         int[] array = new int[fboWidth * fboHeight];
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID());
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID);
         GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, array);
 
         dstImage.drawSubImage(0, 0, fboWidth, fboHeight, array);
@@ -344,10 +346,10 @@ public class AppRenderer {
         uiMaster.render();
 
         FrameBufferObject fbo = uiMaster.getTempFBO();
-        int width = fbo.width(), height = fbo.height();
+        int width = fbo.width, height = fbo.height;
 
         int[] array = new int[width * height];
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID());
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID);
         GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, array);
 
         image.drawSubImage(0, 0, width, height, array);
@@ -368,10 +370,10 @@ public class AppRenderer {
         uiMaster.render();
 
         FrameBufferObject fbo = uiMaster.getTempFBO();
-        int width = fbo.width(), height = fbo.height();
+        int width = fbo.width, height = fbo.height;
 
         int[] array = new int[width * height];
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID());
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID);
         GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, array);
 
         image.resize(newWidth, newHeight, array);
@@ -379,6 +381,11 @@ public class AppRenderer {
 
     public void setTempFBOSize(int width, int height) {
         uiMaster.setTempFBOSize(width, height);
+    }
+
+    @Override
+    public void cleanUp() {
+        uiMaster.cleanUp();
     }
 
     private void renderDebug() {

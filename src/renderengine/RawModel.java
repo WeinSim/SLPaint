@@ -6,13 +6,14 @@ import java.util.HashMap;
 import org.lwjgl.opengl.GL30;
 
 import renderengine.bufferobjects.AttributeVBO;
+import renderengine.bufferobjects.Cleanable;
 import renderengine.bufferobjects.FloatVBO;
 import renderengine.bufferobjects.IntVBO;
 import renderengine.bufferobjects.MatrixVBO;
 import renderengine.bufferobjects.VBO;
 import renderengine.bufferobjects.VBOType;
 
-public class RawModel {
+public class RawModel implements Cleanable {
 
     private final int vaoID;
 
@@ -21,7 +22,7 @@ public class RawModel {
     private int vertexCount = -1;
     private int instanceCount = -1;
 
-    public RawModel(Loader loader, ArrayList<AttributeVBO> vbos) {
+    public RawModel(ArrayList<AttributeVBO> vbos) {
         vaoID = GL30.glGenVertexArrays();
         bind();
 
@@ -103,6 +104,7 @@ public class RawModel {
         GL30.glBindVertexArray(0);
     }
 
+    @Override
     public void cleanUp() {
         for (VBO vbo : vbos())
             vbo.cleanUp();

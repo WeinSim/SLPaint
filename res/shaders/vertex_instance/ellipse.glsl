@@ -21,7 +21,6 @@ in float depth;
 in vec2 size;
 in vec4 color_in;
 
-out vec2 relativePos;
 out vec2 relativeBoundingBoxMin;
 out vec2 relativeBoundingBoxMax;
 out float radius;
@@ -39,9 +38,8 @@ vec4 getGLPos(vec3 screenPos, float depth) {
 }
 
 void main(void) {
-    vec3 basePos = transformationMatrix * vec3(position, 1.0);
-    relativePos = (transformationMatrix * vec3(size * cornerPos, 0.0)).xy;
-    gl_Position = getGLPos(basePos + vec3(relativePos, 0.0), depth);
+    vec3 basePos = transformationMatrix * vec3(position + size * cornerPos, 1.0);
+    gl_Position = getGLPos(basePos, depth);
 
     GroupData gData = groupAttributes[gIndex];
 

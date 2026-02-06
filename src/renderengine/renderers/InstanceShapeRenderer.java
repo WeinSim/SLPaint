@@ -5,15 +5,14 @@ import org.lwjgl.opengl.GL31;
 import org.lwjglx.util.vector.Matrix3f;
 import org.lwjglx.util.vector.Vector2f;
 
-import renderengine.Loader;
 import renderengine.bufferobjects.FloatVBO;
 import renderengine.drawcalls.DrawCall;
 import renderengine.shaders.ShaderType;
 
 public abstract class InstanceShapeRenderer<C extends DrawCall> extends ShapeRenderer<C> {
 
-    public InstanceShapeRenderer(String name, Loader loader) {
-        super(name, ShaderType.INSTANCE, loader);
+    public InstanceShapeRenderer(String name) {
+        super(name, ShaderType.INSTANCE);
 
         initRawModel();
     }

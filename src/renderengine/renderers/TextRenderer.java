@@ -9,22 +9,19 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjglx.util.vector.Matrix3f;
 
-import renderengine.Loader;
 import renderengine.bufferobjects.FloatVBO;
 import renderengine.bufferobjects.IntVBO;
 import renderengine.drawcalls.TextDrawCall;
 import renderengine.fonts.TextFont;
-import sutil.math.SVector;
 
 public class TextRenderer extends InstanceShapeRenderer<TextDrawCall> {
 
     private final TextFont font;
     private int[] textureIDs;
 
-    public TextRenderer(Loader loader, TextFont font) {
-        super("text", loader);
+    public TextRenderer(TextFont font) {
+        super("text");
 
-        this.loader = loader;
         this.font = font;
         try {
             textureIDs = font.loadTextures();
@@ -62,7 +59,6 @@ public class TextRenderer extends InstanceShapeRenderer<TextDrawCall> {
 
         shaderProgram.start();
         shaderProgram.loadUBOData("FontData", uboBuffer);
-        shaderProgram.loadUniform("textureSize", new SVector(font.textureWidth, font.textureHeight));
 
         super.render(viewMatrix);
     }

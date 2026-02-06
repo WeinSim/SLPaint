@@ -12,16 +12,16 @@ uniform sampler2D textureSamplers[32];
 
 void main(void) {
 
-    if (relativePos.x < relativeBoundingBoxMin.x) {
+    if (relativeBoundingBoxMin.x > 0) {
         discard;
     }
-    if (relativePos.y < relativeBoundingBoxMin.y) {
+    if (relativeBoundingBoxMin.y > 0) {
         discard;
     }
-    if (relativePos.x > relativeBoundingBoxMax.x) {
+    if (relativeBoundingBoxMax.x < 0) {
         discard;
     }
-    if (relativePos.y > relativeBoundingBoxMax.y) {
+    if (relativeBoundingBoxMax.y < 0) {
         discard;
     }
 
