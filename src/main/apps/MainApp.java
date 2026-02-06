@@ -34,6 +34,7 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
+ *   Merge into main
  * 
  * App:
  *   Selection tool
@@ -120,6 +121,12 @@ import ui.components.ImageCanvas;
  *     (see https://www.glfw.org/docs/latest/window.html#window_refresh)
  *     Rename transformationMatrix to uiMatrix
  *   Maximized windows don't show up correctly on Windows 11
+ *   Possible ideas for future rendering improvements:
+ *     Currently, all fragment shaders are quite similarly. => Combine all
+ *       fragment shaders into a single one (that gets an int containing various
+ *       flags as an input)?
+ *     Perhaps even combine all vertex shaders into one? (Would allow for just a
+ *       single draw call, though it would probably also be a massive pain).
  *   Extras (optional):
  *     3D view
  *     Debug view

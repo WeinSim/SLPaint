@@ -8,11 +8,6 @@ import sutil.math.SVector;
 
 public abstract sealed class RectDrawCall extends DrawCall permits RectFillDrawCall, RectOutlineDrawCall {
 
-    public final SVector position;
-    public final double depth;
-    public final SVector size;
-    public final Matrix3f uiMatrix;
-    public final ClipAreaInfo clipAreaInfo;
     public final Vector4f color1;
     public final Vector4f color2;
     public final double checkerboardSize;
@@ -21,11 +16,8 @@ public abstract sealed class RectDrawCall extends DrawCall permits RectFillDrawC
     public RectDrawCall(SVector position, double depth, SVector size, Matrix3f uiMatrix, ClipAreaInfo clipAreaInfo,
             Vector4f color1, Vector4f color2, double checkerboardSize, boolean applyCheckerboard) {
 
-        this.position = position;
-        this.depth = depth;
-        this.size = size;
-        this.uiMatrix = uiMatrix;
-        this.clipAreaInfo = clipAreaInfo;
+        super(position, depth, size, clipAreaInfo, uiMatrix);
+
         this.color1 = color1;
         this.color2 = color2;
         this.checkerboardSize = checkerboardSize;
@@ -53,5 +45,14 @@ public abstract sealed class RectDrawCall extends DrawCall permits RectFillDrawC
         ubo.put(applyCheckerboard ? (float) checkerboardSize : -1);
         ubo.putPadding(3 * Float.BYTES);
         return ubo.finish();
+    }
+
+    @Override
+    public boolean usesAlpha() {
+        if (applyCheckerboard) {
+            return color1.w < 1 || color2.w < 1;
+        } else {
+            return color1.w < 1;
+        }
     }
 }

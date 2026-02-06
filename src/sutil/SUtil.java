@@ -103,6 +103,30 @@ public class SUtil {
         }
     }
 
+    /**
+     * <pre>
+     * Random r = new Random();
+     * for (int i = 0; i < 20; i++) {
+     *     int i1 = r.nextInt(),
+     *             i2 = r.nextInt();
+     *     long l = SUtil.hilo(i1, i2);
+     *     System.out.format("Original     : %08x, %08x\n", i1, i2);
+     *     System.out.format("Reconstructed: %08x, %08x\n\n", SUtil.hi(l), SUtil.lo(l));
+     * }
+     * </pre>
+     */
+    public static long hilo(int hi, int lo) {
+        return ((hi & 0xFFFFFFFFL) << 32) | (lo & 0xFFFFFFFFL);
+    }
+
+    public static int hi(long l) {
+        return (int) ((l >> 32) & 0xFFFFFFFFL);
+    }
+
+    public static int lo(long l) {
+        return (int) (l & 0xFFFFFFFFL);
+    }
+
     public static int toARGB(double grey) {
         return toARGB(grey, grey, grey, 255);
     }

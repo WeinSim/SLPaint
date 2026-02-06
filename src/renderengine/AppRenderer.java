@@ -126,10 +126,6 @@ public class AppRenderer implements Cleanable {
             uiMaster.checkerboardFill(new Vector4f[] { c1, c2 }, s);
             uiMaster.noStroke();
             drawShape(shape, position, size);
-
-            // TODO: This is just a hack for now to guarantee that semi transparent colors
-            // render correctly
-            uiMaster.render();
         }
 
         // background
@@ -221,11 +217,6 @@ public class AppRenderer implements Cleanable {
         }
         if (element instanceof UIImage image) {
             uiMaster.image(image.getTextureID(), position, size);
-            // incredibly ugly but it works for now.
-            // This causes the main image to render first and a (transparent) selection can
-            // render above it. Otherwise, the selection would render first and the image
-            // would not render behind transparent parts of the selection.
-            uiMaster.render();
         }
         if (element instanceof LightnessScale.LSVisuals l) {
             uiMaster.lightnessScale(position, size, l.getHue(), l.getSaturation(),

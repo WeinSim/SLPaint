@@ -1,5 +1,6 @@
 package renderengine.drawcalls;
 
+import sutil.SUtil;
 import sutil.math.SVector;
 
 public class ClipAreaInfo {
@@ -28,6 +29,13 @@ public class ClipAreaInfo {
         enabled = false;
         position = new SVector();
         size = new SVector();
+    }
+
+    public boolean overlaps(ClipAreaInfo other) {
+        if (!isEnabled() || !other.isEnabled())
+            return true;
+
+        return SUtil.rectsOverlap(position, size, other.position, other.size);
     }
 
     @Override

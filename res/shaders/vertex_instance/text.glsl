@@ -34,11 +34,10 @@ in vec2 position;
 in float depth;
 in int charIndex;
 
-out vec2 relativePos;
-out vec2 textureCoords;
-out vec4 color;
 out vec2 relativeBoundingBoxMin;
 out vec2 relativeBoundingBoxMax;
+out vec2 textureCoords;
+out vec4 color;
 
 vec4 getGLPos(vec3 screenPos, float depth) {
     return vec4(

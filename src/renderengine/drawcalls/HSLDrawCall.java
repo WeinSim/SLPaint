@@ -18,23 +18,13 @@ public final class HSLDrawCall extends DrawCall {
     public static final int VERTICAL = 0,
             HORIZONTAL = 8;
 
-    public final SVector position;
-    public final double depth;
-    public final SVector size;
-    public final Matrix3f uiMatrix;
-    public final ClipAreaInfo clipAreaInfo;
-
     public final SVector color;
     public final int flags;
 
     public HSLDrawCall(SVector position, double depth, SVector size, Matrix3f uiMatrix, ClipAreaInfo clipAreaInfo,
             SVector color, int flags) {
 
-        this.position = position;
-        this.depth = depth;
-        this.size = size;
-        this.uiMatrix = uiMatrix;
-        this.clipAreaInfo = clipAreaInfo;
+        super(position, depth, size, clipAreaInfo, uiMatrix);
 
         this.color = color;
         this.flags = flags;
@@ -58,5 +48,11 @@ public final class HSLDrawCall extends DrawCall {
             ubo.put(Float.MAX_VALUE);
         }
         return ubo.finish();
+    }
+
+    @Override
+    public boolean usesAlpha() {
+        return ((flags & 0x03) == HUE_SAT_FIELD_CIRC) |
+                ((flags & 0x03) == ALPHA_SCALE);
     }
 }

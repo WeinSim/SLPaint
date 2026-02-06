@@ -84,7 +84,7 @@ public class Window {
         // Note: this limits the application to 60fps, which can make very fast paint
         // strokes look jagged. To improve this, the rendering logic could be separated
         // onto its own thread. For now though, this is not neccessary.
-        // GLFW.glfwSwapInterval(1);
+        GLFW.glfwSwapInterval(0);
 
         // GLFW.glfwSetWindowSizeLimits(windowHandle, 200, 200, Integer.MAX_VALUE,
         // Integer.MAX_VALUE);

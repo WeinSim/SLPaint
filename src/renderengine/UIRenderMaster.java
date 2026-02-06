@@ -1,6 +1,7 @@
 package renderengine;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import org.lwjgl.opengl.GL11;
@@ -15,6 +16,7 @@ import main.apps.App;
 import main.apps.MainApp;
 import renderengine.bufferobjects.FrameBufferObject;
 import renderengine.drawcalls.ClipAreaInfo;
+import renderengine.drawcalls.DrawCall;
 import renderengine.drawcalls.EllipseDrawCall;
 import renderengine.drawcalls.HSLDrawCall;
 import renderengine.drawcalls.ImageDrawCall;
@@ -29,6 +31,7 @@ import renderengine.renderers.RectFillRenderer;
 import renderengine.renderers.RectOutlineRenderer;
 import renderengine.renderers.ShapeRenderer;
 import renderengine.renderers.TextRenderer;
+import sutil.SUtil;
 import sutil.math.SVector;
 
 public class UIRenderMaster {
@@ -40,6 +43,8 @@ public class UIRenderMaster {
     private static final int NONE = 0, NORMAL = 1, CHECKERBOARD = 2;
 
     private App app;
+
+    private ArrayList<DrawCall> drawCalls;
 
     private ArrayList<ShapeRenderer<?>> renderers;
     private RectFillRenderer rectFillRenderer;
@@ -100,6 +105,8 @@ public class UIRenderMaster {
         stroke = new Vector4f(0, 0, 0, 1);
 
         checkerboardColors = new Vector4f[] { new Vector4f(0, 0, 0, 1), new Vector4f(0, 0, 0, 1) };
+
+        drawCalls = new ArrayList<>();
     }
 
     public void start() {
@@ -136,16 +143,66 @@ public class UIRenderMaster {
         textSize = 1;
     }
 
-    /**
-     * Renders all currently stored shapes.
-     */
+    // We automatically look for alpha-conflicting shapes, i.e. pairs of shapes that
+    // (partially) overlap where the shape in front uses transparency. We have to
+    // make sure to first render the shape in the back.
     public void render() {
         Matrix3f viewMatrix = createViewMatrix();
 
-        for (ShapeRenderer<?> shapeRenderer : renderers)
-            shapeRenderer.render(viewMatrix);
+        // drawcall at index LO must come before drawcall at index HI
+        ArrayList<Long> orderRequirements = new ArrayList<>();
+        DrawCall[] array = new DrawCall[drawCalls.size()];
+        for (int i = 0; i < array.length; i++) {
+            DrawCall c = drawCalls.get(i);
+            array[i] = c;
 
-        // loader.tempCleanUp();
+            for (int j = 0; j < i; j++) {
+                int conflict = DrawCall.alphaConflicts(c, array[j]);
+                if (conflict == -1)
+                    orderRequirements.add(SUtil.hilo(j, i));
+                if (conflict == 1)
+                    orderRequirements.add(SUtil.hilo(i, j));
+            }
+        }
+
+        boolean[] ready = new boolean[array.length];
+        boolean[] rendered = new boolean[array.length];
+        boolean done = false;
+        while (!done) {
+            // determine all drawcalls that can (should) be handled immediately
+            done = orderRequirements.isEmpty();
+            Arrays.fill(ready, true);
+            for (Long c : orderRequirements) {
+                ready[SUtil.hi(c)] = false;
+            }
+            for (int i = 0; i < array.length; i++) {
+                if (ready[i] && !rendered[i]) {
+                    addShape(array[i]);
+                    rendered[i] = true;
+                }
+            }
+            for (int i = orderRequirements.size() - 1; i >= 0; i--) {
+                if (rendered[SUtil.lo(orderRequirements.get(i))])
+                    orderRequirements.remove(i);
+            }
+
+            for (ShapeRenderer<?> shapeRenderer : renderers)
+                shapeRenderer.render(viewMatrix);
+        }
+
+        drawCalls.clear();
+    }
+
+    private void addShape(DrawCall d) {
+        switch (d) {
+            case RectFillDrawCall r -> rectFillRenderer.addShape(r);
+            case RectOutlineDrawCall r -> rectOutlineRenderer.addShape(r);
+            case EllipseDrawCall e -> ellipseRenderer.addShape(e);
+            case HSLDrawCall h -> hslRenderer.addShape(h);
+            case ImageDrawCall i -> imageRenderer.addShape(i);
+            case TextDrawCall t -> textRenderer.addShape(t);
+            default -> System.err.format("Unknown drawcall: %s\n", d.getClass().getName());
+        }
     }
 
     private void createTempFBO() {
@@ -202,7 +259,8 @@ public class UIRenderMaster {
         }
 
         if (fillMode > 0)
-            rectFillRenderer.addShape(
+            // rectFillRenderer.addShape(
+            drawCalls.add(
                     new RectFillDrawCall(position, depth, size,
                             new Matrix3f().load(uiMatrix),
                             new ClipAreaInfo(clipAreaInfo),
@@ -210,7 +268,8 @@ public class UIRenderMaster {
                             new Vector4f(checkerboardColors[1]), checkerboardSize, fillMode == CHECKERBOARD));
 
         if (strokeMode > 0)
-            rectOutlineRenderer.addShape(
+            // rectOutlineRenderer.addShape(
+            drawCalls.add(
                     new RectOutlineDrawCall(position, depth, size,
                             new Matrix3f().load(uiMatrix),
                             new ClipAreaInfo(clipAreaInfo),
@@ -222,8 +281,10 @@ public class UIRenderMaster {
         if (fillMode != NORMAL)
             return;
 
-        ellipseRenderer.addShape(new EllipseDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
-                new ClipAreaInfo(clipAreaInfo), new Vector4f(fill)));
+        // ellipseRenderer.addShape(
+        drawCalls.add(
+                new EllipseDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
+                        new ClipAreaInfo(clipAreaInfo), new Vector4f(fill)));
     }
 
     public void text(String text, SVector position) {
@@ -233,22 +294,26 @@ public class UIRenderMaster {
         if (fillMode != NORMAL)
             return;
 
-        textRenderer.addShape(
+        // textRenderer.addShape(
+        drawCalls.add(
                 new TextDrawCall(position, depth, textSize / textFont.size, new Matrix3f().load(uiMatrix),
                         new ClipAreaInfo(clipAreaInfo), new Vector4f(fill), text, textFont));
     }
 
     public void image(int textureID, SVector position, SVector size) {
-        imageRenderer.addShape(new ImageDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
-                new ClipAreaInfo(clipAreaInfo), textureID));
+        // imageRenderer.addShape(
+        drawCalls.add(
+                new ImageDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
+                        new ClipAreaInfo(clipAreaInfo), textureID));
     }
 
     public void hueSatField(SVector position, SVector size, boolean circular, boolean hsl) {
         int flags = (circular ? HSLDrawCall.HUE_SAT_FIELD_CIRC : HSLDrawCall.HUE_SAT_FIELD_RECT)
                 | (hsl ? HSLDrawCall.HSL : HSLDrawCall.HSV);
-        // System.out.println(depth);
-        hslRenderer.addShape(new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
-                new ClipAreaInfo(clipAreaInfo), new SVector(), flags));
+        // hslRenderer.addShape(
+        drawCalls.add(
+                new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
+                        new ClipAreaInfo(clipAreaInfo), new SVector(), flags));
     }
 
     public void lightnessScale(SVector position, SVector size, double hue, double saturation, boolean vertical,
@@ -257,8 +322,10 @@ public class UIRenderMaster {
         int flags = HSLDrawCall.LIGHTNESS_SCALE
                 | (hsl ? HSLDrawCall.HSL : HSLDrawCall.HSV)
                 | (vertical ? HSLDrawCall.VERTICAL : HSLDrawCall.HORIZONTAL);
-        hslRenderer.addShape(new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
-                new ClipAreaInfo(clipAreaInfo), new SVector(hue, saturation, 0), flags));
+        // hslRenderer.addShape(
+        drawCalls.add(
+                new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
+                        new ClipAreaInfo(clipAreaInfo), new SVector(hue, saturation, 0), flags));
     }
 
     public void alphaScale(SVector position, SVector size, boolean vertical) {

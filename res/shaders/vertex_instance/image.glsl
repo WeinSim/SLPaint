@@ -22,7 +22,6 @@ in vec2 position;
 in float depth;
 in vec2 size;
 
-out vec2 relativePos;
 out vec2 relativeBoundingBoxMin;
 out vec2 relativeBoundingBoxMax;
 out vec2 uvCoords;

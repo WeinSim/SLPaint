@@ -7,22 +7,14 @@ import sutil.math.SVector;
 
 public final class ImageDrawCall extends DrawCall {
 
-    public final SVector position;
-    public final double depth;
-    public final SVector size;
-    public final Matrix3f uiMatrix;
-    public final ClipAreaInfo clipAreaInfo;
     public final int textureID;
     public int samplerID;
 
     public ImageDrawCall(SVector position, double depth, SVector size, Matrix3f uiMatrix, ClipAreaInfo clipAreaInfo,
             int textureID) {
 
-        this.position = position;
-        this.depth = depth;
-        this.size = size;
-        this.uiMatrix = uiMatrix;
-        this.clipAreaInfo = clipAreaInfo;
+        super(position, depth, size, clipAreaInfo, uiMatrix);
+
         this.textureID = textureID;
     }
 
@@ -46,5 +38,10 @@ public final class ImageDrawCall extends DrawCall {
         ubo.put(samplerID);
         ubo.putPadding(3 * Integer.BYTES);
         return ubo.finish();
+    }
+
+    @Override
+    public boolean usesAlpha() {
+        return true;
     }
 }

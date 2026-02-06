@@ -9,24 +9,17 @@ import sutil.math.SVector;
 
 public final class TextDrawCall extends DrawCall {
 
-    public final SVector position;
-    public final double depth;
     public final double relativeSize;
-    public final Matrix3f uiMatrix;
-    public final ClipAreaInfo clipAreaInfo;
     public final Vector4f color;
-
     public final String text;
     public final TextFont font;
 
     public TextDrawCall(SVector position, double depth, double relativeSize, Matrix3f uiMatrix,
             ClipAreaInfo clipAreaInfo, Vector4f color, String text, TextFont font) {
 
-        this.position = position;
+        super(position, depth, new SVector(), clipAreaInfo, uiMatrix);
+
         this.relativeSize = relativeSize;
-        this.depth = depth;
-        this.uiMatrix = uiMatrix;
-        this.clipAreaInfo = clipAreaInfo;
         this.color = color;
         this.text = text;
         this.font = font;
@@ -54,5 +47,11 @@ public final class TextDrawCall extends DrawCall {
         ubo.put(relativeSize);
         ubo.putPadding(3 * Float.BYTES);
         return ubo.finish();
+    }
+
+    @Override
+    public boolean usesAlpha() {
+        // This is not true, but I will leave text out of the system for now.
+        return false;
     }
 }

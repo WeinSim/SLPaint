@@ -8,21 +8,13 @@ import sutil.math.SVector;
 
 public final class EllipseDrawCall extends DrawCall {
 
-    public final SVector position;
-    public final double depth;
-    public final SVector size;
-    public final Matrix3f uiMatrix;
-    public final ClipAreaInfo clipAreaInfo;
     public final Vector4f color;
 
     public EllipseDrawCall(SVector position, double depth, SVector size, Matrix3f uiMatrix, ClipAreaInfo clipAreaInfo,
             Vector4f color) {
 
-        this.position = position;
-        this.depth = depth;
-        this.size = size;
-        this.uiMatrix = uiMatrix;
-        this.clipAreaInfo = clipAreaInfo;
+        super(position, depth, size, clipAreaInfo, uiMatrix);
+
         this.color = color;
     }
 
@@ -44,5 +36,10 @@ public final class EllipseDrawCall extends DrawCall {
             ubo.put(Float.MAX_VALUE);
         }
         return ubo.finish();
+    }
+
+    @Override
+    public boolean usesAlpha() {
+        return true;
     }
 }

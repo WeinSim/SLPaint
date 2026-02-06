@@ -1,6 +1,5 @@
 #version 400 core
 
-in vec2 relativePos;
 in vec2 relativeBoundingBoxMin;
 in vec2 relativeBoundingBoxMax;
 in vec2 uvCoords;
