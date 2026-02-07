@@ -8,12 +8,11 @@ import java.util.function.BooleanSupplier;
 
 import main.MainLoop;
 import main.settings.BooleanSetting;
-import renderEngine.AppRenderer;
-import renderEngine.Loader;
-import renderEngine.Window;
+import renderengine.AppRenderer;
+import renderengine.Window;
 import sutil.math.SVector;
-import sutil.ui.KeyboardShortcut;
 import sutil.ui.UI;
+import sutil.ui.KeyboardShortcut;
 import sutil.ui.UIRoot;
 import sutil.ui.UITextInput;
 import sutil.ui.UserAction;
@@ -43,7 +42,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     protected boolean adjustSizeOnInit = false;
 
     protected AppRenderer renderer;
-    private Loader loader;
 
     /**
      * Only used if this app is the child app of another app.
@@ -73,7 +71,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         window = new Window(width, height, windowMode, resizable, title);
         childApps = new HashMap<>();
         keyboardShortcuts = new HashMap<>();
-        loader = new Loader();
         eventQueue = new LinkedList<>();
 
         mouseButtons = new boolean[2];
@@ -238,7 +235,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     }
 
     public void finish() {
-        loader.cleanUp();
+        renderer.cleanUp();
 
         if (parent != null) {
             parent.clearChildApp(dialogType);
@@ -312,10 +309,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     public SVector getWindowSize() {
         int[] size = window.getDisplaySize();
         return new SVector(size[0], size[1]);
-    }
-
-    public Loader getLoader() {
-        return loader;
     }
 
     public AppUI<?> getUI() {

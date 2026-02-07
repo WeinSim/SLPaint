@@ -24,8 +24,8 @@ import main.settings.BooleanSetting;
 import main.settings.ColorArraySetting;
 import main.settings.Settings;
 import main.tools.ImageTool;
-import renderEngine.Window;
-import renderEngine.fonts.TextFont;
+import renderengine.Window;
+import renderengine.fonts.TextFont;
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UITextInput;
@@ -36,7 +36,6 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Automatic shortcut display in UIFloatContainer
  * 
  * App:
  *   Image rotating / flipping
@@ -48,7 +47,7 @@ import ui.components.ImageCanvas;
  *       the wrong opacity
  *       => Make the pencil tool also use the temp framebuffer?
  *   Keyboard shortcuts
- *     Selection one of the radio buttons in the resize ui and pressing enter
+ *     Selecting one of the radio buttons in the resize ui and pressing enter
  *       closes the resize window. => add option for keyboard shortcut to not
  *       run if something is currently selected (similar to text input).
  *   Dialogs
@@ -103,8 +102,7 @@ import ui.components.ImageCanvas;
  *       How to handle big font sizes?
  *         Generate texture atlas using fontbm on demand?
  *         Use SDFs (either in addition to or instead of regular bitmap fonts)?
- *     Reloading the shaders with Shift+S breaks text rendering
- *       Likely reason: the textData UBO isn't being updated
+ *     Have different subdirectories for different sizes of the same font
  *     Glitchy pixels: when using Courier New (size 36), the lowecase 'u' has a
  *       diagonal line of flickering pixels going bottom-left to top-right.
  *     Text renders inconsistently: some letters are blurry and other are not.
@@ -119,7 +117,14 @@ import ui.components.ImageCanvas;
  *     (glfwWindowHint(GLFW_SAMPLES, 4) and glEnable(GL_MULTISAMPLE))
  *   Fix stuttering artifact when resizing windows on Linux
  *     (see https://www.glfw.org/docs/latest/window.html#window_refresh)
- *   Rename transformationMatrix to uiMatrix
+ *     Rename transformationMatrix to uiMatrix
+ *   Maximized windows don't show up correctly on Windows 11
+ *   Possible ideas for future rendering improvements:
+ *     Currently, all fragment shaders are quite similarly. => Combine all
+ *       fragment shaders into a single one (that gets an int containing various
+ *       flags as an input)?
+ *     Perhaps even combine all vertex shaders into one? (Would allow for just a
+ *       single draw call, though it would probably also be a massive pain).
  *   Extras (optional):
  *     3D view
  *     Debug view
@@ -129,7 +134,7 @@ import ui.components.ImageCanvas;
  *     Move things that should not be part of sutil.ui into ui package
  *   GLFW key input: automatically recognize keyboard layout and remappings to
  *     avoid manual conversion between Y/Z and Esc/CapsLock (see Window.KEY_MAP)
- *   Performance: only ~40fps on Microsoft Surface
+ *   Performance: only ~50fps on Microsoft Surface
  *   Proper package names / structure
  *   Error handling
  * </pre>

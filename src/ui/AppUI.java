@@ -13,7 +13,7 @@ import main.ColorPicker;
 import main.apps.App;
 import main.settings.BooleanSetting;
 import main.settings.ColorSetting;
-import renderEngine.fonts.TextFont;
+import renderengine.fonts.TextFont;
 import sutil.SUtil;
 import sutil.ui.UI;
 import sutil.ui.UIColors;
@@ -62,14 +62,14 @@ public abstract class AppUI<T extends App> extends UI {
 
     @Override
     public double textWidthImpl(String text, double textSize, String fontName, int len) {
-        TextFont font = app.getLoader().loadFont(fontName);
-        return font.textWidth(text, len) * textSize / font.getSize();
+        TextFont font = TextFont.getFont(fontName);
+        return font.textWidth(text, len) * textSize / font.size;
     }
 
     @Override
     public int getCharIndexImpl(String text, double textSize, String fontName, double x) {
-        TextFont font = app.getLoader().loadFont(fontName);
-        return font.getCharIndex(text, x / textSize * font.getSize());
+        TextFont font = TextFont.getFont(fontName);
+        return font.getCharIndex(text, x / textSize * font.size);
     }
 
     /**

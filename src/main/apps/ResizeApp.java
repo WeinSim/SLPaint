@@ -2,7 +2,7 @@ package main.apps;
 
 import org.lwjgl.glfw.GLFW;
 
-import renderEngine.Window;
+import renderengine.Window;
 import sutil.ui.UI;
 import sutil.ui.UINumberInput;
 import ui.AppUI;

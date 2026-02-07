@@ -1,7 +1,7 @@
 package main.apps;
 
 import main.ColorPicker;
-import renderEngine.Window;
+import renderengine.Window;
 import ui.AppUI;
 import ui.ColorEditorUI;
 

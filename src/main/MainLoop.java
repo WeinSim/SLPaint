@@ -12,7 +12,7 @@ import org.newdawn.slick.util.Log;
 
 import main.apps.App;
 import main.apps.MainApp;
-import renderEngine.Window;
+import renderengine.Window;
 import sutil.SUtil;
 
 public class MainLoop {
@@ -27,14 +27,12 @@ public class MainLoop {
 
         testImports();
 
-        // // String font1 = "Courier New";
-        // // String font2 = "Courier New Bold";
         // String font1 = "FreeMono";
         // String font2 = "FreeMonoBold";
-        // Loader.createFontAtlas(font1, 36);
-        // Loader.createFontAtlas(font1, 18);
-        // Loader.createFontAtlas(font2, 36);
-        // Loader.createFontAtlas(font2, 18);
+        // TextFont.createFontAtlas(font1, 36);
+        // TextFont.createFontAtlas(font1, 18);
+        // TextFont.createFontAtlas(font2, 36);
+        // TextFont.createFontAtlas(font2, 18);
 
         // Disables the message
         // "INFO:Use Java PNG Loader = true"
@@ -54,11 +52,14 @@ public class MainLoop {
             for (int i = apps.size() - 1; i >= 0; i--) {
                 App app = apps.get(i);
 
+                // For some reason, with the new rendering system I have to call
+                // makeContextCurrent() twice. I have absolutely no idea why.
                 app.makeContextCurrent();
 
                 GLFW.glfwPollEvents();
 
                 app.update(deltaT);
+                app.makeContextCurrent();
                 app.render();
 
                 Window window = app.getWindow();

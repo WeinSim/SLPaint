@@ -4,7 +4,7 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector4f;
 
 import main.ColorPicker;
-import renderEngine.Window;
+import renderengine.Window;
 import ui.AppUI;
 import ui.SettingsUI;
 

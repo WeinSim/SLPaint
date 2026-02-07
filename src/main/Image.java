@@ -11,9 +11,10 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
+import renderengine.bufferobjects.Cleanable;
 import sutil.SUtil;
 
-public class Image {
+public class Image implements Cleanable {
 
     private int textureID;
 
@@ -334,6 +335,7 @@ public class Image {
         dirty = true;
     }
 
+    @Override
     public void cleanUp() {
         GL11.glDeleteTextures(textureID);
     }

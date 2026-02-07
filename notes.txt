@@ -1,3 +1,6 @@
+!!! Parts of this description are outdated !!!
+
+
 Render system
 
 
@@ -41,9 +44,6 @@ that arrive first will be executed first.
 
 Some attributes are common to all shapes. They are:
     bounding box (4, g)
-    /*
-     * not for text (position data is premultiplied with transformation matrix)
-     */
     transformation matrix (9)
     position (2, i)
     depth (1, i)

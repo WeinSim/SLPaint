@@ -1,6 +1,6 @@
 package main.apps;
 
-import renderEngine.Window;
+import renderengine.Window;
 import ui.AboutUI;
 import ui.AppUI;
 
