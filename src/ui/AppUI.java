@@ -3,6 +3,8 @@ package ui;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import org.lwjglx.util.vector.Vector4f;
@@ -13,9 +15,9 @@ import main.settings.BooleanSetting;
 import main.settings.ColorSetting;
 import renderEngine.fonts.TextFont;
 import sutil.SUtil;
+import sutil.ui.UI;
 import sutil.ui.UIColors;
 import sutil.ui.UIElement;
-import sutil.ui.UI;
 import sutil.ui.UISizes;
 import sutil.ui.UIStyle;
 
@@ -46,14 +48,14 @@ public abstract class AppUI<T extends App> extends UI {
         super(Math.sqrt(scale[0] * scale[1]), app.getWindowSize());
     }
 
-    public static <E extends UIElement> E setSelectableButtonStyle(E element, Supplier<Boolean> selectedSupplier) {
-        Supplier<Vector4f> backgroundColorSupplier = () -> selectedSupplier.get()
-                ? UIColors.BACKGROUND_HIGHLIGHT_2.get()
+    public static <E extends UIElement> E setSelectableButtonStyle(E element, BooleanSupplier selectedSupplier) {
+        Supplier<Vector4f> backgroundColorSupplier = () -> selectedSupplier.getAsBoolean()
+                ? UIColors.BACKGROUND_2.get()
                 : null;
         Supplier<Vector4f> outlineColorSupplier = () -> element.mouseAbove()
-                ? UIColors.OUTLINE_NORMAL.get()
+                ? UIColors.OUTLINE.get()
                 : null;
-        Supplier<Double> strokeWeightSupplier = UISizes.STROKE_WEIGHT;
+        DoubleSupplier strokeWeightSupplier = UISizes.STROKE_WEIGHT;
         element.setStyle(new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier));
         return element;
     }

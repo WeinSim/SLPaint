@@ -1,7 +1,7 @@
 package sutil.ui;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 
 public class UIDropdown extends UIContainer {
 
@@ -9,11 +9,11 @@ public class UIDropdown extends UIContainer {
 
     private final UIFloatMenu dropdown;
 
-    public UIDropdown(String[] options, Supplier<Integer> valueSupplier, Consumer<Integer> valueSetter) {
+    public UIDropdown(String[] options, IntSupplier valueSupplier, IntConsumer valueSetter) {
         this(options, valueSupplier, valueSetter, false);
     }
 
-    public UIDropdown(String[] options, Supplier<Integer> valueSupplier, Consumer<Integer> valueSetter,
+    public UIDropdown(String[] options, IntSupplier valueSupplier, IntConsumer valueSetter,
             boolean scroll) {
 
         super(0, 0);
@@ -23,7 +23,7 @@ public class UIDropdown extends UIContainer {
         zeroPadding();
         backgroundHighlight = true;
 
-        add(new UIText(() -> options[valueSupplier.get()]));
+        add(new UIText(() -> options[valueSupplier.getAsInt()]));
 
         setLeftClickAction(() -> {
             expanded = !expanded;

@@ -3,7 +3,7 @@ package ui;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.function.Supplier;
+import java.util.function.DoubleSupplier;
 
 import main.apps.AboutApp;
 import sutil.ui.UIContainer;
@@ -23,12 +23,12 @@ public class AboutUI extends AppUI<AboutApp> {
         root.setMarginScale(2.0);
         root.setPaddingScale(0.5);
 
-        root.setAlignment(UIContainer.LEFT);
+        root.setAlignment(LEFT);
 
         // root.add(new UILabel("SLPaint"));
 
-        // UIContainer textContainer = new UIContainer(UIContainer.VERTICAL,
-        // UIContainer.LEFT);
+        // UIContainer textContainer = new UIContainer(VERTICAL,
+        // LEFT);
         // textContainer.noOutline();
         String aboutText = null;
         try (BufferedReader reader = new BufferedReader(new FileReader(ABOUT_TEXT_FILE))) {
@@ -40,14 +40,14 @@ public class AboutUI extends AppUI<AboutApp> {
             aboutText = "[unable to load about]";
 
         for (String line : aboutText.split("\n")) {
-            int alignment = UIContainer.LEFT;
-            Supplier<Double> textSize = UIText.NORMAL;
+            int alignment = LEFT;
+            DoubleSupplier textSize = UIText.NORMAL;
             if (line.startsWith("<")) {
                 char[] charArray = line.toCharArray();
                 int endIndex = -1;
                 for (int i = 0; i < charArray.length; i++) {
                     switch (charArray[i]) {
-                        case 'c' -> alignment = UIContainer.CENTER;
+                        case 'c' -> alignment = CENTER;
                         case 's' -> textSize = UIText.SMALL;
                         case '>' -> {
                             endIndex = i;
@@ -57,7 +57,7 @@ public class AboutUI extends AppUI<AboutApp> {
                 }
                 line = line.substring(endIndex + 1);
             }
-            UIContainer textContainer = new UIContainer(UIContainer.VERTICAL, alignment);
+            UIContainer textContainer = new UIContainer(VERTICAL, alignment);
             textContainer.zeroMargin().setHFillSize().noOutline();
             textContainer.add(new UIText(line, textSize));
             root.add(textContainer);

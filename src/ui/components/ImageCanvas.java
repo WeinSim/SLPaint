@@ -1,11 +1,9 @@
 package ui.components;
 
-import org.lwjgl.glfw.GLFW;
+import static org.lwjgl.glfw.GLFW.*;
 
 import main.Image;
 import main.apps.MainApp;
-import main.tools.ImageTool;
-import main.tools.ImageTool.KeyboardShortcut;
 import main.tools.Resizable;
 import sutil.math.SVector;
 import sutil.ui.UI;
@@ -48,7 +46,7 @@ public class ImageCanvas extends UIContainer {
         setLeftClickAction(this::leftClick);
         setRightClickAction(this::rightClick);
 
-        setCursorShape(() -> draggingImage ? GLFW.GLFW_POINTING_HAND_CURSOR : null);
+        setCursorShape(() -> draggingImage ? GLFW_POINTING_HAND_CURSOR : null);
 
         style.setBackgroundColor(UIColors.CANVAS);
 
@@ -74,11 +72,9 @@ public class ImageCanvas extends UIContainer {
         super.update();
 
         // stop dragging image
-        // TODO: this is kind of ugly that I have to get keyboard input (and mouse
-        // position too, see below) from the app directly rather than through the UI
         if (draggingImage) {
-            int mods = app.getModifierKeys();
-            boolean control = (mods & GLFW.GLFW_MOD_CONTROL) != 0;
+            int mods = UI.getModifiers();
+            boolean control = (mods & GLFW_MOD_CONTROL) != 0;
             if (!UI.isRightMousePressed() || !control) {
                 draggingImage = false;
             }
@@ -91,51 +87,25 @@ public class ImageCanvas extends UIContainer {
         }
     }
 
-    @Override
-    public void keyPressed(int key, int mods) {
-        super.keyPressed(key, mods);
-
-        // tools
-        ImageTool shortcutTool = null;
-        for (ImageTool tool : ImageTool.INSTANCES) {
-            for (KeyboardShortcut shortcut : tool.getKeyboardShortcuts()) {
-                if (shortcut.key() == key
-                        && (shortcut.initialState() & tool.getState()) != 0
-                        && shortcut.modifiers() == mods) {
-
-                    if (shortcutTool != null) {
-                        System.err.format(
-                                "Found conflicting image tool keyboard shortcuts! tool 1 = %s, tool 2 = %s, key = %d, mods = %d\n",
-                                shortcutTool, tool, key, mods);
-                    }
-
-                    app.setActiveTool(tool);
-                    shortcut.action().run();
-                    shortcutTool = tool;
-                }
-            }
-        }
-    }
-
     private void leftClick() {
-        int mods = app.getModifierKeys();
-        toolClick(GLFW.GLFW_MOUSE_BUTTON_LEFT, mods);
+        int mods = UI.getModifiers();
+        toolClick(GLFW_MOUSE_BUTTON_LEFT, mods);
     }
 
     private void rightClick() {
-        int mods = app.getModifierKeys();
-        toolClick(GLFW.GLFW_MOUSE_BUTTON_RIGHT, mods);
+        int mods = UI.getModifiers();
+        toolClick(GLFW_MOUSE_BUTTON_RIGHT, mods);
 
         if (canDoScrollZoom()) {
             // dragging image
-            if ((mods & GLFW.GLFW_MOD_CONTROL) != 0) {
+            if ((mods & GLFW_MOD_CONTROL) != 0) {
                 draggingImage = true;
             }
         }
     }
 
     private void toolClick(int mouseButton, int mods) {
-        if ((mods & (GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SHIFT)) == 0) {
+        if ((mods & (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT)) == 0) {
             int[] mousePosition = app.getMouseImagePosition();
             int mouseX = mousePosition[0],
                     mouseY = mousePosition[1];
@@ -150,7 +120,7 @@ public class ImageCanvas extends UIContainer {
             return true;
 
         if (canDoScrollZoom()) {
-            if ((mods & GLFW.GLFW_MOD_CONTROL) != 0) {
+            if ((mods & GLFW_MOD_CONTROL) != 0) {
                 // zoom
                 double prevZoom = getImageZoom();
                 imageZoomLevel += (int) Math.signum(scroll.y);
@@ -160,7 +130,7 @@ public class ImageCanvas extends UIContainer {
                 imageTranslation.sub(mousePos).scale(zoom / prevZoom).add(mousePos);
             } else {
                 // scroll
-                if ((mods & GLFW.GLFW_MOD_SHIFT) != 0) {
+                if ((mods & GLFW_MOD_SHIFT) != 0) {
                     double temp = scroll.x;
                     scroll.x = scroll.y;
                     scroll.y = temp;

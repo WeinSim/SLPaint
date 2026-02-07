@@ -30,26 +30,32 @@ public class Image {
     public Image(BufferedImage image) {
         textureID = GL11.glGenTextures();
 
-        setBufferedImage(toARGB(image));
+        setBufferedImage(image);
     }
 
-    private static BufferedImage toARGB(BufferedImage src) {
-        if (src.getType() == BufferedImage.TYPE_INT_ARGB)
-            return src;
-
-        BufferedImage dst = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_ARGB);
-
-        Graphics2D g = dst.createGraphics();
-        g.setComposite(AlphaComposite.Src); // IMPORTANT: no blending
-        g.drawImage(src, 0, 0, null);
-        g.dispose();
-
-        return dst;
+    public void setBufferedImage(BufferedImage image) {
+        setBufferedImage(image, false);
     }
 
-    private void setBufferedImage(BufferedImage image) {
+    /**
+     * 
+     * @param image
+     * @param copy  Wether to copy the underlying image data.
+     */
+    public void setBufferedImage(BufferedImage image, boolean copy) {
+        // convert image to ARGB format
         if (image.getType() != BufferedImage.TYPE_INT_ARGB) {
-            throw new RuntimeException("Wrong image type! Only TYPE_INT_ARGB is supported.");
+            BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(),
+                    BufferedImage.TYPE_INT_ARGB);
+
+            Graphics2D g = newImage.createGraphics();
+            g.setComposite(AlphaComposite.Src);
+            g.drawImage(image, 0, 0, null);
+            g.dispose();
+
+            image = newImage;
+        } else if (copy) {
+            image = copyBufferedImage(image);
         }
 
         bufferedImage = image;
@@ -95,6 +101,23 @@ public class Image {
             GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, height, 0, GL12.GL_BGRA,
                     GL12.GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
         }
+    }
+
+    private static BufferedImage copyBufferedImage(BufferedImage oldImage) {
+        int width = oldImage.getWidth(),
+                height = oldImage.getHeight();
+        int[] oldPixels = ((DataBufferInt) oldImage.getRaster().getDataBuffer()).getData();
+
+        BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        int[] newPixels = ((DataBufferInt) newImage.getRaster().getDataBuffer()).getData();
+
+        System.arraycopy(oldPixels, 0, newPixels, 0, oldPixels.length);
+
+        return newImage;
+    }
+
+    public BufferedImage createBufferedImageCopy() {
+        return copyBufferedImage(bufferedImage);
     }
 
     public void crop(int startX, int startY, int newWidth, int newHeight, int backgroundColor) {
@@ -315,8 +338,18 @@ public class Image {
         GL11.glDeleteTextures(textureID);
     }
 
+    /**
+     * 
+     * @param copy Wether to return a copy of the underlying {@code BufferedImage}
+     *             or the {@code BufferedImage} itself
+     * @return
+     */
+    public BufferedImage getBufferedImage(boolean copy) {
+        return copy ? copyBufferedImage(bufferedImage) : bufferedImage;
+    }
+
     public BufferedImage getBufferedImage() {
-        return bufferedImage;
+        return getBufferedImage(false);
     }
 
     public int getTextureID() {

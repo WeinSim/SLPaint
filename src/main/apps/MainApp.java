@@ -1,12 +1,13 @@
 package main.apps;
 
+import static org.lwjgl.glfw.GLFW.*;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector4f;
 
 import main.ColorArray;
@@ -15,13 +16,13 @@ import main.Image;
 import main.ImageFile;
 import main.ImageFileManager;
 import main.ImageFormat;
+import main.ImageHistory;
 import main.dialogs.SaveDialog;
 import main.dialogs.UnableToSaveImageDialog;
 import main.dialogs.UnimplementedDialog;
 import main.settings.BooleanSetting;
 import main.settings.ColorArraySetting;
 import main.settings.Settings;
-import main.tools.DragTool;
 import main.tools.ImageTool;
 import renderEngine.Window;
 import renderEngine.fonts.TextFont;
@@ -35,11 +36,11 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
+ *   Automatic shortcut display in UIFloatContainer
  * 
  * App:
- *   Line tool
- *   Undo / redo
  *   Image rotating / flipping
+ *   Line tool
  *   Pencil tool
  *     Sizes 1 & 2 and 3 & 4 look the same
  *     Drawing with a semi-transparent color has weird artifacts because some
@@ -83,7 +84,6 @@ import ui.components.ImageCanvas;
  *     Multi-line text input
  *       Would require a variable number of UITexts as children (which is
  *         currently not possible. Why?)
- *   Recognize remapping from CAPS_LOCK to ESCAPE
  *   (When parent app closes, children should also close)
  * 
  * UI:
@@ -93,6 +93,7 @@ import ui.components.ImageCanvas;
  *     characters, the text is not properly split across multiple lines
  *   Tool icons & cursors
  *   Make side panel collapsable?
+ *   Selection are area right-click? (Same menu as "Selection" in menu bar)
  * 
  * Rendering:
  *   Improve UITextInput cursor visibility
@@ -126,6 +127,8 @@ import ui.components.ImageCanvas;
  * Backend:
  *   Sizes
  *     Move things that should not be part of sutil.ui into ui package
+ *   GLFW key input: automatically recognize keyboard layout and remappings to
+ *     avoid manual conversion between Y/Z and Esc/CapsLock (see Window.KEY_MAP)
  *   Performance: only ~40fps on Microsoft Surface
  *   Proper package names / structure
  *   Error handling
@@ -164,6 +167,7 @@ public final class MainApp extends App {
             SETTINGS_DIALOG = 10, CROP_DIALOG = 11, ABOUT_DIALOG = 12;
 
     public static final int PRIMARY_COLOR = 0, SECONDARY_COLOR = 1;
+    public static final int INITIAL_PRIMARY_COLOR = SUtil.toARGB(0), INITIAL_SECONDARY_COLOR = SUtil.toARGB(255);
 
     public static final int MIN_IMAGE_SIZE = 1, MAX_IMAGE_SIZE = 65535;
 
@@ -172,7 +176,9 @@ public final class MainApp extends App {
 
     private static ColorArraySetting customUIBaseColors = new ColorArraySetting("customUIColors");
 
-    private ImageFileManager imageFileManager;
+    private final ImageFileManager imageFileManager;
+
+    private final ImageHistory imageHistory;
 
     /**
      * used for restoring the tool that was selected before the color picker
@@ -199,28 +205,41 @@ public final class MainApp extends App {
     public MainApp() {
         super(1280, 720, Window.MAXIMIZED, "SLPaint");
 
+        imageFileManager = new ImageFileManager(this, "test.png");
+        imageHistory = new ImageHistory(getImage());
+
         customColorButtonArray = new ColorArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
 
-        imageFileManager = new ImageFileManager(this, "test.png");
-
-        primaryColor = SUtil.toARGB(0);
-        secondaryColor = SUtil.toARGB(255);
+        primaryColor = INITIAL_PRIMARY_COLOR;
+        secondaryColor = INITIAL_SECONDARY_COLOR;
         colorSelection = PRIMARY_COLOR;
         selectedColorPicker = new ColorPicker(getSelectedColor());
 
         setActiveTool(ImageTool.PENCIL);
         prevTool = ImageTool.PENCIL;
 
-        // R -> reset image transform
-        addKeyboardShortcut(GLFW.GLFW_KEY_R, 0, this::resetImageTransform, false);
-
+        // Ctrl + N -> new image
+        addKeyboardShortcut("new", GLFW_KEY_N, GLFW_MOD_CONTROL, this::newImage, true);
+        // Ctrl + O -> new image
+        addKeyboardShortcut("open", GLFW_KEY_O, GLFW_MOD_CONTROL, this::openImage, true);
         // Ctrl + S -> save
-        addKeyboardShortcut(GLFW.GLFW_KEY_S, GLFW.GLFW_MOD_CONTROL, this::saveImage, true);
+        addKeyboardShortcut("save", GLFW_KEY_S, GLFW_MOD_CONTROL, this::saveImage, true);
+        // Ctrl + Shift + S -> save as
+        addKeyboardShortcut("save_as", GLFW_KEY_S, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT, this::saveImageAs, true);
+        // Ctrl + Z -> undo
+        addKeyboardShortcut("undo", GLFW_KEY_Z, GLFW_MOD_CONTROL, imageHistory::undo, imageHistory::canUndo);
+        // Ctrl + Y -> redo
+        addKeyboardShortcut("redo", GLFW_KEY_Y, GLFW_MOD_CONTROL, imageHistory::redo, imageHistory::canRedo);
+        // R -> reset image transform
+        addKeyboardShortcut("reset_transform", GLFW_KEY_R, 0, this::resetImageTransform, false);
 
-        // Ctrl + Shift + S -> save
-        addKeyboardShortcut(GLFW.GLFW_KEY_S, GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SHIFT, this::saveImageAs, true);
+        // all tool shortcuts
+        for (ImageTool tool : ImageTool.INSTANCES) {
+            tool.setApp(this);
+            tool.createKeyboardShortcuts();
+        }
 
-        addKeyboardShortcut(GLFW.GLFW_KEY_A, 0, () -> getImage().updateOpenGLTexture(false), true);
+        loadUI();
     }
 
     @Override
@@ -249,25 +268,102 @@ public final class MainApp extends App {
         return new MainUI(this);
     }
 
+    public void showDialog(int type) {
+        super.showDialog(type);
+        switch (type) {
+            case SAVE_DIALOG -> (new SaveDialog(this)).start();
+            case UNABLE_TO_SAVE_IMAGE_DIALOG -> (new UnableToSaveImageDialog(this)).start();
+            case NEW_COLOR_DIALOG, SETTINGS_DIALOG, RESIZE_DIALOG, CROP_DIALOG, ABOUT_DIALOG -> {
+            }
+            default -> (new UnimplementedDialog(this, type)).start();
+        }
+    }
+
+    @Override
+    protected App createChildApp(int dialogType) {
+        return switch (dialogType) {
+            case NEW_COLOR_DIALOG -> new ColorEditorApp(this, getSelectedColor());
+            case SETTINGS_DIALOG -> new SettingsApp(this);
+            case CROP_DIALOG -> new ResizeApp(this, ResizeApp.CROP);
+            case RESIZE_DIALOG -> new ResizeApp(this, ResizeApp.SCALE);
+            case ABOUT_DIALOG -> new AboutApp(this);
+            default -> null;
+        };
+    }
+
+    public void openImage() {
+        imageFileManager.open();
+    }
+
+    public void newImage() {
+        Image image = imageFileManager.getImage();
+        imageFileManager.newImage(image.getWidth(), image.getHeight());
+    }
+
+    /**
+     * Gets called when Ctrl+S is pressed
+     */
+    public void saveImage() {
+        imageFileManager.save();
+    }
+
+    /**
+     * Gets called when Ctrl+Shift+S is pressed
+     * 
+     */
+    public void saveImageAs() {
+        imageFileManager.saveAs();
+    }
+
+    public void addImageSnapshot() {
+        imageHistory.addSnapshot();
+    }
+
+    /**
+     * Stretches / squishes the image.
+     * Not to be confused with {@link MainApp#cropImage(int, int)}.
+     */
+    public void resizeImage(int newWidth, int newHeight) {
+        newWidth = Math.min(Math.max(MIN_IMAGE_SIZE, newWidth), MAX_IMAGE_SIZE);
+        newHeight = Math.min(Math.max(MIN_IMAGE_SIZE, newHeight), MAX_IMAGE_SIZE);
+
+        renderer.setTempFBOSize(newWidth, newHeight);
+        renderer.resizeImage(getImage(), newWidth, newHeight);
+
+        addImageSnapshot();
+    }
+
+    /**
+     * Crops the image. Not to be confused with
+     * {@link MainApp#resizeImage(int, int)}.
+     */
+    public void cropImage(int newWidth, int newHeight) {
+        cropImage(0, 0, newWidth, newHeight);
+    }
+
+    /**
+     * Crops the image. Not to be confused with
+     * {@link MainApp#resizeImage(int, int)}.
+     */
+    public void cropImage(int x, int y, int newWidth, int newHeight) {
+        newWidth = Math.min(Math.max(MIN_IMAGE_SIZE, newWidth), MAX_IMAGE_SIZE);
+        newHeight = Math.min(Math.max(MIN_IMAGE_SIZE, newHeight), MAX_IMAGE_SIZE);
+
+        getImage().crop(x, y, newWidth, newHeight, secondaryColor);
+        renderer.setTempFBOSize(newWidth, newHeight);
+        // If the top left corner of the image changes, its translation should change in
+        // the opposite way such that the rest of the image stays in the same place.
+        canvas.translateImage(new SVector(x, y));
+
+        addImageSnapshot();
+    }
+
     public void renderImageToImage(Image image, int x, int y, int width, int height) {
         renderer.renderImageToImage(image, x, y, width, height, getImage());
     }
 
     public void renderTextToImage(String text, double x, double y, double size, TextFont font) {
         renderer.renderTextToImage(text, x, y, size, toVector4f(primaryColor), font, getImage());
-    }
-
-    public void selectColor(int color) {
-        if (colorSelection == PRIMARY_COLOR) {
-            setPrimaryColor(color);
-        } else {
-            setSecondaryColor(color);
-        }
-    }
-
-    public void addCustomColor(int color) {
-        selectColor(color);
-        customColorButtonArray.addColor(color);
     }
 
     public void drawLine(int x0, int y0, int x1, int y1, int size, int color) {
@@ -325,29 +421,6 @@ public final class MainApp extends App {
         }
     }
 
-    public void showDialog(int type) {
-        super.showDialog(type);
-        switch (type) {
-            case SAVE_DIALOG -> (new SaveDialog(this)).start();
-            case UNABLE_TO_SAVE_IMAGE_DIALOG -> (new UnableToSaveImageDialog(this)).start();
-            case NEW_COLOR_DIALOG, SETTINGS_DIALOG, RESIZE_DIALOG, CROP_DIALOG, ABOUT_DIALOG -> {
-            }
-            default -> (new UnimplementedDialog(this, type)).start();
-        }
-    }
-
-    @Override
-    protected App createChildApp(int dialogType) {
-        return switch (dialogType) {
-            case NEW_COLOR_DIALOG -> new ColorEditorApp(this, getSelectedColor());
-            case SETTINGS_DIALOG -> new SettingsApp(this);
-            case CROP_DIALOG -> new ResizeApp(this, ResizeApp.CROP);
-            case RESIZE_DIALOG -> new ResizeApp(this, ResizeApp.SCALE);
-            case ABOUT_DIALOG -> new AboutApp(this);
-            default -> null;
-        };
-    }
-
     public boolean isImageResizing() {
         return canvas.isImageResizing();
     }
@@ -358,85 +431,6 @@ public final class MainApp extends App {
 
     public int getNewImageHeight() {
         return canvas.getNewImageHeight();
-    }
-
-    /**
-     * Stretches / squishes the image.
-     * Not to be confused with {@link MainApp#cropImage(int, int)}.
-     */
-    public void resizeImage(int newWidth, int newHeight) {
-        newWidth = Math.min(Math.max(MIN_IMAGE_SIZE, newWidth), MAX_IMAGE_SIZE);
-        newHeight = Math.min(Math.max(MIN_IMAGE_SIZE, newHeight), MAX_IMAGE_SIZE);
-
-        renderer.setTempFBOSize(newWidth, newHeight);
-        renderer.resizeImage(getImage(), newWidth, newHeight);
-    }
-
-    /**
-     * Crops the image. Not to be confused with
-     * {@link MainApp#resizeImage(int, int)}.
-     */
-    public void cropImage(int newWidth, int newHeight) {
-        cropImage(0, 0, newWidth, newHeight);
-    }
-
-    public void cropImage(int x, int y, int newWidth, int newHeight) {
-        newWidth = Math.min(Math.max(MIN_IMAGE_SIZE, newWidth), MAX_IMAGE_SIZE);
-        newHeight = Math.min(Math.max(MIN_IMAGE_SIZE, newHeight), MAX_IMAGE_SIZE);
-
-        getImage().crop(x, y, newWidth, newHeight, secondaryColor);
-        renderer.setTempFBOSize(newWidth, newHeight);
-        // If the top left corner of the image changes, its translation should change in
-        // the opposite way such that the rest of the image stays in the same place.
-        canvas.translateImage(new SVector(x, y));
-    }
-
-    public void openImage() {
-        imageFileManager.open();
-    }
-
-    public void newImage() {
-        Image image = imageFileManager.getImage();
-        imageFileManager.newImage(image.getWidth(), image.getHeight());
-    }
-
-    /**
-     * Gets called when Ctrl+S is pressed
-     */
-    public void saveImage() {
-        imageFileManager.save();
-    }
-
-    /**
-     * Gets called when Ctrl+Shift+S is pressed
-     * 
-     */
-    public void saveImageAs() {
-        imageFileManager.saveAs();
-    }
-
-    public void copySelection() {
-        if (ImageTool.SELECTION.getState() == DragTool.IDLE) {
-            ImageTool.SELECTION.copyToClipboard();
-        }
-    }
-
-    public void cutSelection() {
-        if (ImageTool.SELECTION.getState() == DragTool.IDLE) {
-            ImageTool.SELECTION.cutToClipboard();
-        }
-    }
-
-    public void pasteSelection() {
-        if ((ImageTool.SELECTION.getState() & (DragTool.NONE | DragTool.IDLE)) != 0) {
-            ImageTool.SELECTION.pasteFromClipboard();
-        }
-    }
-
-    public void cropImageToSelection() {
-        if (ImageTool.SELECTION.getState() == DragTool.IDLE) {
-            ImageTool.SELECTION.cropImageToSelection();
-        }
     }
 
     public static ColorArray getCustomUIBaseColors() {
@@ -479,8 +473,16 @@ public final class MainApp extends App {
         return selectedColorPicker;
     }
 
+    public void selectColor(int color) {
+        if (colorSelection == PRIMARY_COLOR) {
+            setPrimaryColor(color);
+        } else {
+            setSecondaryColor(color);
+        }
+    }
+
     public void setPrimaryColor(int primaryColor) {
-        if (colorSelection == 0) {
+        if (colorSelection == PRIMARY_COLOR) {
             selectedColorPicker.setRGB(primaryColor);
         } else {
             this.primaryColor = primaryColor;
@@ -517,10 +519,6 @@ public final class MainApp extends App {
         selectedColorPicker.setRGB(getSelectedColor());
     }
 
-    public ImageTool getActiveTool() {
-        return this.activeTool;
-    }
-
     public void setActiveTool(ImageTool tool) {
         if (activeTool == tool)
             return;
@@ -538,6 +536,15 @@ public final class MainApp extends App {
 
     public void switchBackToPreviousTool() {
         queueEvent(() -> setActiveTool(prevTool));
+    }
+
+    public ImageTool getActiveTool() {
+        return this.activeTool;
+    }
+
+    public void addCustomColor(int color) {
+        selectColor(color);
+        customColorButtonArray.addColor(color);
     }
 
     public static boolean isTransparentSelection() {
@@ -665,6 +672,9 @@ public final class MainApp extends App {
             while ((line = reader.readLine()) != null) {
                 output.append(line + "\n");
             }
+
+            if (!output.isEmpty())
+                System.out.print(output);
 
             exitVal = process.waitFor();
             // if (exitVal == 0) {

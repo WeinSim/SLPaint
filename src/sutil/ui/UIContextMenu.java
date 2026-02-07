@@ -20,7 +20,7 @@ public class UIContextMenu extends UIFloatMenu {
             expandedLabel = null;
             visible = true;
             clearAnchors();
-            SVector basePos = new SVector(container.mousePosition);
+            SVector basePos = new SVector(container.mousePosition).sub(container.position);
             addAnchor(Anchor.TOP_LEFT, basePos);
             addAnchor(Anchor.TOP_RIGHT, basePos);
             addAnchor(Anchor.BOTTOM_LEFT, basePos);

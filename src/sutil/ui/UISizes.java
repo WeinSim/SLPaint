@@ -1,10 +1,10 @@
 package sutil.ui;
 
-import java.util.function.Supplier;
+import java.util.function.DoubleSupplier;
 
 import sutil.math.SVector;
 
-public enum UISizes implements Supplier<Double> {
+public enum UISizes implements DoubleSupplier {
 
     MAIN_APP(1280, 720),
     SETTINGS_APP(900, 650),
@@ -60,8 +60,12 @@ public enum UISizes implements Supplier<Double> {
     }
 
     @Override
-    public Double get() {
+    public double getAsDouble() {
         return get(this);
+    }
+
+    public double get() {
+        return getAsDouble();
     }
 
     public SVector getWidthHeight() {
@@ -74,9 +78,8 @@ public enum UISizes implements Supplier<Double> {
 
     private static double getSize(double s, boolean forceInteger) {
         double size = s * UI.getUIScale();
-        if (forceInteger) {
+        if (forceInteger)
             size = (int) Math.round(size);
-        }
         return size;
     }
 }

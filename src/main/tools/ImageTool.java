@@ -1,8 +1,8 @@
 package main.tools;
 
-import java.util.ArrayList;
-
 import main.apps.MainApp;
+import sutil.ui.KeyboardShortcut;
+import sutil.ui.UserAction;
 
 public abstract sealed class ImageTool permits PencilTool, DragTool, FillBucketTool, PipetteTool {
 
@@ -20,23 +20,17 @@ public abstract sealed class ImageTool permits PencilTool, DragTool, FillBucketT
             TEXT
     };
 
-    public record KeyboardShortcut(int key, int modifiers, int initialState, Runnable action) {
-
-    }
-
     public static final int NONE = 0x01;
 
     protected MainApp app;
 
     protected int state;
 
-    private ArrayList<KeyboardShortcut> keyboardShortcuts;
-
     protected ImageTool() {
         state = NONE;
-
-        keyboardShortcuts = new ArrayList<>();
     }
+
+    public abstract void createKeyboardShortcuts();
 
     public abstract void click(int x, int y, int mouseButton);
 
@@ -56,15 +50,15 @@ public abstract sealed class ImageTool permits PencilTool, DragTool, FillBucketT
         this.state = state;
     }
 
-    protected void addKeyboardShortcut(int key, int modifiers, int initialState, Runnable action) {
-        keyboardShortcuts.add(new KeyboardShortcut(key, modifiers, initialState, action));
-    }
+    protected void addShortcut(String identifier, int key, int modifiers,
+            int possibleStates, Runnable action) {
 
-    protected void addKeyboardShortcut(KeyboardShortcut shortcut) {
-        keyboardShortcuts.add(shortcut);
-    }
-
-    public ArrayList<KeyboardShortcut> getKeyboardShortcuts() {
-        return keyboardShortcuts;
+        UserAction userAction = new UserAction(
+                () -> {
+                    app.setActiveTool(this);
+                    action.run();
+                },
+                () -> (getState() & possibleStates) != 0);
+        app.addKeyboardShortcut(new KeyboardShortcut(identifier, key, modifiers, userAction));
     }
 }

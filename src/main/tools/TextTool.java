@@ -32,7 +32,7 @@ public final class TextTool extends DragTool {
         // System.out.format("getFontFamilyNames: %.3fms\n", (System.nanoTime() -
         // startTime) * 1e-6);
 
-        DEFAULT_FONT_NAME = "FreeMono";
+        DEFAULT_FONT_NAME = "FreeMonoBold";
 
         FONT_NAMES = new String[] { DEFAULT_FONT_NAME };
         // DEFAULT_FONT_NAME = (new Font("Courier", Font.PLAIN, 1)).getFamily();
@@ -50,8 +50,11 @@ public final class TextTool extends DragTool {
         size = DEFAULT_TEXT_SIZE;
 
         text = "";
+    }
 
-        addKeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, IDLE, this::finish);
+    @Override
+    public void createKeyboardShortcuts() {
+        addShortcut("text_finish", GLFW.GLFW_KEY_ESCAPE, 0, IDLE, this::finish);
     }
 
     @Override
@@ -68,6 +71,7 @@ public final class TextTool extends DragTool {
             SVector position = app.getImagePosition(app.getTextToolInput().getAbsolutePosition());
             app.renderTextToImage(text, position.x, position.y, size, app.getLoader().loadFont(font));
             text = "";
+            app.addImageSnapshot();
         }
 
         state = NONE;

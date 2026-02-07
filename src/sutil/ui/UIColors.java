@@ -6,13 +6,15 @@ import org.lwjglx.util.vector.Vector4f;
 
 public enum UIColors implements Supplier<Vector4f> {
 
-    BACKGROUND_NORMAL(0.24, 0.95),
+    BACKGROUND(0.24, 0.95),
+    BACKGROUND_2(0.7, 0.82),
     BACKGROUND_HIGHLIGHT(0.5, 0.9),
-    BACKGROUND_HIGHLIGHT_2(0.7, 0.82),
-    OUTLINE_NORMAL(1.1, 0.45),
-    OUTLINE_HIGHLIGHT(0.9, 0.6),
+    OUTLINE(1.1, 0.45),
+    SCROLLBAR_HIGHLIGHT(0.9, 0.6),
     SEPARATOR(0.56, 0.7),
-    TEXT(new Vector4f(1f, 1f, 1f, 1f), new Vector4f(0f, 0f, 0f, 1f)),
+    HIGHLIGHT(new Vector4f(1f, 1f, 1f, 1f), new Vector4f(0f, 0f, 0f, 1f)),
+    TEXT(new Vector4f(0.7f, 0.7f, 0.7f, 1f), new Vector4f(0f, 0f, 0f, 1f)),
+    TEXT_INVALID(new Vector4f(0.45f, 0.45f, 0.45f, 1f), new Vector4f(0.35f, 0.35f, 0.35f, 1f)),
     CANVAS(0.4, 0.85),
     TRANSPARENCY_1(0.6, 1),
     TRANSPARENCY_2(0.0, 0.85),

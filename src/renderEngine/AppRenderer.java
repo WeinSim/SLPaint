@@ -1,5 +1,7 @@
 package renderEngine;
 
+import static sutil.ui.UI.VERTICAL;
+
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL30;
@@ -74,7 +76,7 @@ public class AppRenderer {
     }
 
     protected void setDefaultBGColor() {
-        uiMaster.setBGColor(UIColors.BACKGROUND_NORMAL.get());
+        uiMaster.setBGColor(UIColors.BACKGROUND.get());
     }
 
     protected void renderUI() {
@@ -203,6 +205,8 @@ public class AppRenderer {
 
         if (element instanceof UIText text) {
             String fontName = text.getFontName();
+            if (fontName == null)
+                fontName = UI.getDefaultFontName();
             double textSize = text.getTextSize();
             TextFont font = app.getLoader().loadFont(fontName);
             uiMaster.textFont(font);
@@ -227,7 +231,7 @@ public class AppRenderer {
         }
         if (element instanceof LightnessScale.LSVisuals l) {
             uiMaster.lightnessScale(position, size, l.getHue(), l.getSaturation(),
-                    l.getOrientation() == UIContainer.VERTICAL, App.isHSLColorSpace());
+                    l.getOrientation() == VERTICAL, App.isHSLColorSpace());
         }
         if (element instanceof AlphaScale.ASVisuals a) {
             // checkerboard background
@@ -237,7 +241,7 @@ public class AppRenderer {
             uiMaster.rect(position, size);
             // color gradient
             uiMaster.fill(MainApp.toVector4f(a.getRGB()));
-            uiMaster.alphaScale(position, size, a.getOrientation() == UIContainer.VERTICAL);
+            uiMaster.alphaScale(position, size, a.getOrientation() == VERTICAL);
         }
         if (element instanceof HueSatField) {
             uiMaster.hueSatField(position, size, App.isCircularHueSatField(),

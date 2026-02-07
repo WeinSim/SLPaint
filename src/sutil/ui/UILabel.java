@@ -1,5 +1,6 @@
 package sutil.ui;
 
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class UILabel extends UIContainer {
@@ -8,8 +9,8 @@ public class UILabel extends UIContainer {
 
     private UIText firstChild;
 
-    public UILabel(String[] text, Supplier<Double> textSizeUpdater) {
-        super(VERTICAL, LEFT);
+    public UILabel(String[] text, DoubleSupplier textSizeUpdater) {
+        super(UI.VERTICAL, UI.LEFT);
 
         outlineNormal = false;
         zeroPadding();
@@ -34,7 +35,7 @@ public class UILabel extends UIContainer {
         this(text, UIText.NORMAL);
     }
 
-    public UILabel(String text, Supplier<Double> textSizeUpdater) {
+    public UILabel(String text, DoubleSupplier textSizeUpdater) {
         this(text.split("\n"), textSizeUpdater);
     }
 
@@ -42,7 +43,7 @@ public class UILabel extends UIContainer {
         this(textUpdater, UIText.NORMAL);
     }
 
-    public UILabel(Supplier<String> textUpdater, Supplier<Double> textSizeUpdater) {
+    public UILabel(Supplier<String> textUpdater, DoubleSupplier textSizeUpdater) {
         this("", textSizeUpdater);
         this.textUpdater = textUpdater;
     }

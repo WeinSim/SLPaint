@@ -1,6 +1,6 @@
 package ui.components.toolContainers;
 
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
 
 import org.lwjgl.glfw.GLFW;
 
@@ -29,7 +29,7 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
         addAnchor(Anchor.TOP_LEFT, this::getPos);
 
         final int visibleStates = DragTool.IDLE | DragTool.IDLE_DRAG;
-        Supplier<Boolean> sizeKnobVis = () -> (tool.getState() & visibleStates) != 0;
+        BooleanSupplier sizeKnobVis = () -> (tool.getState() & visibleStates) != 0;
         for (int dy = 0; dy <= 2; dy++) {
             for (int dx = 0; dx <= 2; dx++) {
                 if (dx == 1 && dy == 1)

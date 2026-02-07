@@ -1,12 +1,13 @@
 package renderEngine;
 
+import static org.lwjgl.glfw.GLFW.*;
+
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.Callbacks;
-import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWCharCallbackI;
 import org.lwjgl.glfw.GLFWKeyCallbackI;
 import org.lwjgl.glfw.GLFWMouseButtonCallbackI;
@@ -20,20 +21,18 @@ import sutil.math.SVector;
 
 public class Window {
 
-    public static final int NORMAL = 0, MAXIMIZED = 1, FULLSCREEN = 2;
-
     private enum Cursor {
 
-        ARROW(GLFW.GLFW_ARROW_CURSOR),
-        IBEAM(GLFW.GLFW_IBEAM_CURSOR),
-        CROSSHAIR(GLFW.GLFW_CROSSHAIR_CURSOR),
-        POINTING_HAND(GLFW.GLFW_POINTING_HAND_CURSOR),
-        RESIZE_EW(GLFW.GLFW_RESIZE_EW_CURSOR),
-        RESIZE_NS(GLFW.GLFW_RESIZE_NS_CURSOR),
-        RESIZE_NWSE(GLFW.GLFW_RESIZE_NWSE_CURSOR),
-        RESIZE_NESW(GLFW.GLFW_RESIZE_NESW_CURSOR),
-        RESIZE_ALL(GLFW.GLFW_RESIZE_ALL_CURSOR),
-        NOT_ALLOWED(GLFW.GLFW_NOT_ALLOWED_CURSOR);
+        ARROW(GLFW_ARROW_CURSOR),
+        IBEAM(GLFW_IBEAM_CURSOR),
+        CROSSHAIR(GLFW_CROSSHAIR_CURSOR),
+        POINTING_HAND(GLFW_POINTING_HAND_CURSOR),
+        RESIZE_EW(GLFW_RESIZE_EW_CURSOR),
+        RESIZE_NS(GLFW_RESIZE_NS_CURSOR),
+        RESIZE_NWSE(GLFW_RESIZE_NWSE_CURSOR),
+        RESIZE_NESW(GLFW_RESIZE_NESW_CURSOR),
+        RESIZE_ALL(GLFW_RESIZE_ALL_CURSOR),
+        NOT_ALLOWED(GLFW_NOT_ALLOWED_CURSOR);
 
         public final int shape;
         private long cursor;
@@ -55,7 +54,23 @@ public class Window {
         }
     }
 
+    public static final int NORMAL = 0, MAXIMIZED = 1, FULLSCREEN = 2;
+
+    /**
+     * Incoming keys from key events are first put through this map to adjust for my
+     * German keybaord layout / Esc + CapsLock swap.
+     */
+    private static final HashMap<Integer, Integer> KEY_MAP = new HashMap<>();
+
     private static HashMap<Long, Window> windows = new HashMap<>();
+
+    static {
+        KEY_MAP.put(GLFW_KEY_ESCAPE, GLFW_KEY_CAPS_LOCK);
+        KEY_MAP.put(GLFW_KEY_CAPS_LOCK, GLFW_KEY_ESCAPE);
+
+        KEY_MAP.put(GLFW_KEY_Z, GLFW_KEY_Y);
+        KEY_MAP.put(GLFW_KEY_Y, GLFW_KEY_Z);
+    }
 
     private long windowHandle;
 
@@ -68,27 +83,27 @@ public class Window {
 
     public Window(int width, int height, int windowMode, boolean resizable, String title) {
         // Configure GLFW
-        GLFW.glfwDefaultWindowHints(); // optional, the current window hints are already the default
-        GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE); // the window will stay hidden after creation
-        GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, resizable ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
+        glfwDefaultWindowHints(); // optional, the current window hints are already the default
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
+        glfwWindowHint(GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE);
 
         // anti-aliasing
-        // GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4);
+        // glfwWindowHint(GLFW_SAMPLES, 4);
 
         if (windowMode == MAXIMIZED) {
-            GLFW.glfwWindowHint(GLFW.GLFW_MAXIMIZED, GLFW.GLFW_TRUE);
+            glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
         }
 
         // Create the window
-        // window = GLFW.glfwCreateWindow(width, height, "Hello World!",
+        // window = glfwCreateWindow(width, height, "Hello World!",
         // MemoryUtil.NULL, MemoryUtil.NULL);
-        long primaryMonitor = GLFW.glfwGetPrimaryMonitor();
-        GLFWVidMode pmVideoMode = GLFW.glfwGetVideoMode(primaryMonitor);
+        long primaryMonitor = glfwGetPrimaryMonitor();
+        GLFWVidMode pmVideoMode = glfwGetVideoMode(primaryMonitor);
         if (windowMode == FULLSCREEN) {
             width = pmVideoMode.width();
             height = pmVideoMode.height();
         }
-        windowHandle = GLFW.glfwCreateWindow(width, height, title,
+        windowHandle = glfwCreateWindow(width, height, title,
                 windowMode == FULLSCREEN ? primaryMonitor : MemoryUtil.NULL,
                 MemoryUtil.NULL);
         windows.put(windowHandle, this);
@@ -97,10 +112,10 @@ public class Window {
 
         // Setup a key callback. It will be called every time a key is pressed, repeated
         // or released.
-        GLFW.glfwSetCharCallback(windowHandle, new CharCallback());
-        GLFW.glfwSetKeyCallback(windowHandle, new KeyCallback());
-        GLFW.glfwSetMouseButtonCallback(windowHandle, new MouseButtonCallback());
-        GLFW.glfwSetScrollCallback(windowHandle, new ScrollCallback());
+        glfwSetCharCallback(windowHandle, new CharCallback());
+        glfwSetKeyCallback(windowHandle, new KeyCallback());
+        glfwSetMouseButtonCallback(windowHandle, new MouseButtonCallback());
+        glfwSetScrollCallback(windowHandle, new ScrollCallback());
 
         center();
 
@@ -110,14 +125,14 @@ public class Window {
         // Note: this limits the application to 60fps, which can make very fast paint
         // strokes look jagged. To improve this, the rendering logic could be separated
         // onto its own thread. For now though, this is not neccessary.
-        GLFW.glfwSwapInterval(1);
+        glfwSwapInterval(1);
 
-        // GLFW.glfwSetWindowSizeLimits(windowHandle, 200, 200, Integer.MAX_VALUE,
+        // glfwSetWindowSizeLimits(windowHandle, 200, 200, Integer.MAX_VALUE,
         // Integer.MAX_VALUE);
-        GLFW.glfwSetWindowSizeLimits(windowHandle, 200, 200, GLFW.GLFW_DONT_CARE, GLFW.GLFW_DONT_CARE);
+        glfwSetWindowSizeLimits(windowHandle, 200, 200, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
         // Make the window visible
-        GLFW.glfwShowWindow(windowHandle);
+        glfwShowWindow(windowHandle);
 
         GL.createCapabilities();
 
@@ -131,41 +146,41 @@ public class Window {
 
     public static void createCursors() {
         for (Cursor cursor : Cursor.values()) {
-            cursor.setCursor(GLFW.glfwCreateStandardCursor(cursor.shape));
+            cursor.setCursor(glfwCreateStandardCursor(cursor.shape));
         }
     }
 
     public void makeContextCurrent() {
-        GLFW.glfwMakeContextCurrent(windowHandle);
+        glfwMakeContextCurrent(windowHandle);
     }
 
     public void updateDisplay() {
         mousePos = null;
         charBuffer = "";
 
-        GLFW.glfwSwapBuffers(windowHandle);
+        glfwSwapBuffers(windowHandle);
     }
 
     public boolean isCloseRequested() {
-        return GLFW.glfwWindowShouldClose(windowHandle);
+        return glfwWindowShouldClose(windowHandle);
     }
 
     public void requestClose() {
-        GLFW.glfwSetWindowShouldClose(windowHandle, true); // We will detect this in the rendering loop
+        glfwSetWindowShouldClose(windowHandle, true); // We will detect this in the rendering loop
     }
 
     public void closeDisplay() {
         // Free the window callbacks and destroy the window
         Callbacks.glfwFreeCallbacks(windowHandle);
-        GLFW.glfwDestroyWindow(windowHandle);
+        glfwDestroyWindow(windowHandle);
     }
 
     public void hideCursor() {
-        GLFW.glfwSetInputMode(windowHandle, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+        glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 
     public void setTitle(String title) {
-        GLFW.glfwSetWindowTitle(windowHandle, title);
+        glfwSetWindowTitle(windowHandle, title);
     }
 
     public int[] getDisplaySize() {
@@ -174,7 +189,7 @@ public class Window {
             IntBuffer pHeight = stack.mallocInt(1); // int*
 
             // Get the window size passed to glfwCreateWindow
-            GLFW.glfwGetWindowSize(windowHandle, pWidth, pHeight);
+            glfwGetWindowSize(windowHandle, pWidth, pHeight);
 
             return new int[] { pWidth.get(0), pHeight.get(0) };
         }
@@ -183,7 +198,7 @@ public class Window {
     public float[] getWindowContentScale() {
         float[] xScale = new float[1],
                 yScale = new float[1];
-        GLFW.glfwGetWindowContentScale(windowHandle, xScale, yScale);
+        glfwGetWindowContentScale(windowHandle, xScale, yScale);
 
         // System.out.format("GLFW window content scale: x = %.1f, y = %.1f\n",
         // xScale[0], yScale[0]);
@@ -199,14 +214,14 @@ public class Window {
         if (mousePos == null) {
             double[] x = { 0 };
             double[] y = { 0 };
-            GLFW.glfwGetCursorPos(windowHandle, x, y);
+            glfwGetCursorPos(windowHandle, x, y);
             mousePos = new SVector(x[0], y[0]);
         }
         return mousePos;
     }
 
     public void showCursor() {
-        GLFW.glfwSetInputMode(windowHandle, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+        glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
 
     public void setCursor(int cursorShape) {
@@ -215,11 +230,11 @@ public class Window {
             final String baseString = "Invalid cursor shape (%d)!";
             throw new RuntimeException(baseString.formatted(cursorShape));
         }
-        GLFW.glfwSetCursor(windowHandle, cursor.cursor);
+        glfwSetCursor(windowHandle, cursor.cursor);
     }
 
     public boolean isFocused() {
-        return GLFW.glfwGetWindowAttrib(windowHandle, GLFW.GLFW_FOCUSED) == GLFW.GLFW_TRUE;
+        return glfwGetWindowAttrib(windowHandle, GLFW_FOCUSED) == GLFW_TRUE;
     }
 
     public void setSizeAndCenter(int width, int height) {
@@ -229,7 +244,7 @@ public class Window {
     }
 
     public void setSize(int width, int height) {
-        GLFW.glfwSetWindowSize(windowHandle, width, height);
+        glfwSetWindowSize(windowHandle, width, height);
     }
 
     public void center() {
@@ -238,18 +253,18 @@ public class Window {
     }
 
     private void center(int width, int height) {
-        long primaryMonitor = GLFW.glfwGetPrimaryMonitor();
-        GLFWVidMode pmVideoMode = GLFW.glfwGetVideoMode(primaryMonitor);
-        PointerBuffer monitors = GLFW.glfwGetMonitors();
+        long primaryMonitor = glfwGetPrimaryMonitor();
+        GLFWVidMode pmVideoMode = glfwGetVideoMode(primaryMonitor);
+        PointerBuffer monitors = glfwGetMonitors();
         int offset = monitors.capacity() == 2 ? 1920 : 0;
         offset = 0;
-        GLFW.glfwSetWindowPos(windowHandle,
+        glfwSetWindowPos(windowHandle,
                 offset + (pmVideoMode.width() - width) / 2,
                 (pmVideoMode.height() - height) / 2);
     }
 
     public void requestFocus() {
-        GLFW.glfwFocusWindow(windowHandle);
+        glfwFocusWindow(windowHandle);
     }
 
     private void addCharacter(int codepoint) {
@@ -310,6 +325,7 @@ public class Window {
 
         @Override
         public void invoke(long window, int key, int scancode, int action, int mods) {
+            key = KEY_MAP.getOrDefault(key, key);
             windows.get(window).addKeyPressInfo(new KeyPressInfo(key, scancode, action, mods));
         }
     }

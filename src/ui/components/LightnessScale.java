@@ -2,7 +2,7 @@ package ui.components;
 
 import main.ColorPicker;
 import main.apps.App;
-import sutil.ui.UIContainer;
+import sutil.ui.UI;
 import sutil.ui.UIScale;
 
 public class LightnessScale extends UIScale {
@@ -15,12 +15,12 @@ public class LightnessScale extends UIScale {
                     double value = App.isHSLColorSpace()
                             ? colorPicker.getLightness()
                             : colorPicker.getValue();
-                    return (orientation == UIContainer.VERTICAL)
+                    return (orientation == UI.VERTICAL)
                             ? (1 - value)
                             : value;
                 },
                 value -> {
-                    if (orientation == UIContainer.VERTICAL) {
+                    if (orientation == UI.VERTICAL) {
                         value = 1 - value;
                     }
                     if (App.isHSLColorSpace()) {

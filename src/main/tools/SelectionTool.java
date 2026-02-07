@@ -1,8 +1,8 @@
 package main.tools;
 
-import java.awt.image.BufferedImage;
+import static org.lwjgl.glfw.GLFW.*;
 
-import org.lwjgl.glfw.GLFW;
+import java.awt.image.BufferedImage;
 
 import main.ClipboardManager;
 import main.Image;
@@ -17,34 +17,30 @@ public final class SelectionTool extends DragTool {
 
     private SelectionTool() {
         selection = null;
+    }
 
+    @Override
+    public void createKeyboardShortcuts() {
         // Ctrl + A: select everything
-        addKeyboardShortcut(GLFW.GLFW_KEY_A, GLFW.GLFW_MOD_CONTROL, NONE | IDLE, this::selectEverything);
-
+        addShortcut("select_all", GLFW_KEY_A, GLFW_MOD_CONTROL, NONE | IDLE, this::selectEverything);
         // Esc: finish selection
-        addKeyboardShortcut(GLFW.GLFW_KEY_CAPS_LOCK, 0, IDLE, this::finish);
-
+        addShortcut("finish_selection", GLFW_KEY_ESCAPE, 0, IDLE, this::finish);
         // Del: delete selection
-        addKeyboardShortcut(GLFW.GLFW_KEY_DELETE, 0, IDLE, this::clearSelection);
-
+        addShortcut("delete_selection", GLFW_KEY_DELETE, 0, IDLE, this::clearSelection);
         // Ctrl + V: paste
-        addKeyboardShortcut(GLFW.GLFW_KEY_V, GLFW.GLFW_MOD_CONTROL, NONE | IDLE, this::pasteFromClipboard);
-
+        addShortcut("paste", GLFW_KEY_V, GLFW_MOD_CONTROL, NONE | IDLE, this::pasteFromClipboard);
         // Ctrl + C: copy
-        addKeyboardShortcut(GLFW.GLFW_KEY_C, GLFW.GLFW_MOD_CONTROL, IDLE, this::copyToClipboard);
-
+        addShortcut("copy", GLFW_KEY_C, GLFW_MOD_CONTROL, IDLE, this::copyToClipboard);
         // Ctrl + X: cut
-        addKeyboardShortcut(GLFW.GLFW_KEY_X, GLFW.GLFW_MOD_CONTROL, IDLE, this::cutToClipboard);
-
+        addShortcut("cut", GLFW_KEY_X, GLFW_MOD_CONTROL, IDLE, this::cutToClipboard);
         // Ctrl + Shift + X: crop image to selection
-        addKeyboardShortcut(GLFW.GLFW_KEY_X, GLFW.GLFW_MOD_CONTROL | GLFW.GLFW_MOD_SHIFT, IDLE,
+        addShortcut("crop_to_selection", GLFW_KEY_X, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT, IDLE,
                 this::cropImageToSelection);
-
         // Arrow keys: move selection
-        addKeyboardShortcut(GLFW.GLFW_KEY_UP, 0, IDLE, () -> y--);
-        addKeyboardShortcut(GLFW.GLFW_KEY_DOWN, 0, IDLE, () -> y++);
-        addKeyboardShortcut(GLFW.GLFW_KEY_LEFT, 0, IDLE, () -> x--);
-        addKeyboardShortcut(GLFW.GLFW_KEY_RIGHT, 0, IDLE, () -> x++);
+        addShortcut("selection_up", GLFW_KEY_UP, 0, IDLE, () -> y--);
+        addShortcut("selection_down", GLFW_KEY_DOWN, 0, IDLE, () -> y++);
+        addShortcut("selection_left", GLFW_KEY_LEFT, 0, IDLE, () -> x--);
+        addShortcut("selection_right", GLFW_KEY_RIGHT, 0, IDLE, () -> x++);
     }
 
     @Override
@@ -70,12 +66,13 @@ public final class SelectionTool extends DragTool {
         if (selection != null) {
             app.renderImageToImage(selection, x, y, width, height);
             clearSelection();
+            app.addImageSnapshot();
         }
 
         state = NONE;
     }
 
-    private void clearSelection() {
+    public void clearSelection() {
         if (selection != null) {
             selection.cleanUp();
         }
@@ -122,6 +119,11 @@ public final class SelectionTool extends DragTool {
         state = IDLE;
     }
 
+    public void cropImageToSelection() {
+        finish();
+        app.cropImage(x, y, width, height);
+    }
+
     @Override
     public int getMargin() {
         return 0;
@@ -134,16 +136,6 @@ public final class SelectionTool extends DragTool {
 
     public Image getSelection() {
         return selection;
-    }
-
-    public void moveSelection(int dx, int dy) {
-        x += dx;
-        y += dy;
-    }
-
-    public void cropImageToSelection() {
-        finish();
-        app.cropImage(x, y, width, height);
     }
 
     @Override

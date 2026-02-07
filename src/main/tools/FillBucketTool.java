@@ -16,6 +16,10 @@ public final class FillBucketTool extends ImageTool {
     }
 
     @Override
+    public void createKeyboardShortcuts() {
+    }
+
+    @Override
     public void click(int x, int y, int mouseButton) {
         Image image = app.getImage();
 
@@ -24,6 +28,8 @@ public final class FillBucketTool extends ImageTool {
 
         int baseColor = image.getPixel(x, y);
         int replaceColor = mouseButton == 0 ? app.getPrimaryColor() : app.getSecondaryColor();
+        if (baseColor == replaceColor)
+            return;
         LinkedList<Long> boundary = new LinkedList<>();
         boundary.add((x & 0xFFFFFFFFL) << 32 | (y & 0xFFFFFFFFL));
         // No noticeable performance increase with cached bitmap for discovered pixels.
@@ -49,6 +55,8 @@ public final class FillBucketTool extends ImageTool {
                 }
             }
         }
+
+        app.addImageSnapshot();
     }
 
     @Override

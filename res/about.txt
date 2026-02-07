@@ -2,9 +2,9 @@
 
 SLPaint (short for Simon - Linux - Paint) is a simple
 image editing program for Linux, inspired by Microsoft
-Paint. It is still under development and missing many
-key features, such as undo / redo options and proper
-file management.
+Paint. It is still under development and missing key
+features such as proper file handling and support for
+fonts other than the default font.
 
 I started this project in spring or summer of 2024.
 

@@ -1,14 +1,18 @@
 package sutil.ui;
 
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
+import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector4f;
+
+import sutil.SUtil;
 
 public class UIFloatMenu extends UIFloatContainer {
 
     private final UIContainer contents;
 
-    private final Supplier<Double> textSizeUpdater;
+    private final DoubleSupplier textSizeUpdater;
 
     protected CMLabel expandedLabel;
 
@@ -23,7 +27,7 @@ public class UIFloatMenu extends UIFloatContainer {
         this(scroll, null, UIText.SMALL);
     }
 
-    public UIFloatMenu(boolean scroll, Supplier<Boolean> visibilitySupplier, Supplier<Double> textSizeUpdater) {
+    public UIFloatMenu(boolean scroll, BooleanSupplier visibilitySupplier, DoubleSupplier textSizeUpdater) {
         this.textSizeUpdater = textSizeUpdater;
 
         super(VERTICAL, LEFT);
@@ -37,7 +41,7 @@ public class UIFloatMenu extends UIFloatContainer {
         clipToRoot = true;
 
         if (scroll) {
-            UIContainer scrollArea = new UIContainer(VERTICAL, LEFT, TOP, UIContainer.VERTICAL);
+            UIContainer scrollArea = new UIContainer(VERTICAL, LEFT, TOP, UI.VERTICAL);
             scrollArea.setVFixedSize(400).zeroMargin().zeroPadding();
             contents = scrollArea;
             add(scrollArea.addScrollbars(), true);
@@ -86,21 +90,49 @@ public class UIFloatMenu extends UIFloatContainer {
     }
 
     public void addLabel(String text, Runnable clickAction) {
-        CMLabel label = new CMLabel(text, this);
-        label.backgroundHighlight = true;
+        addLabel(text, null, clickAction, () -> true);
+    }
+
+    // public void addLabel(String mainText, String rightText, Runnable clickAction)
+    // {
+    // addLabel(mainText, rightText, clickAction, () -> true);
+    // }
+
+    public void addLabel(String mainText, String rightText, Runnable clickAction, BooleanSupplier active) {
+        CMLabel label = new CMLabel(mainText, rightText, active);
+        label.style.setBackgroundColor(
+                () -> active.getAsBoolean() && label.mouseAbove
+                        ? UIColors.BACKGROUND_HIGHLIGHT.get()
+                        : null);
         label.setLeftClickAction(() -> {
+            if (!active.getAsBoolean())
+                return;
             if (clickAction != null)
                 clickAction.run();
             close();
         });
-        label.setHFillSize();
         add(label);
     }
 
+    public void addLabel(String labelText, KeyboardShortcut shortcut) {
+        int modifiers = shortcut.getModifiers();
+        String rightText = "";
+        if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0)
+            rightText += "Ctrl + ";
+        if ((modifiers & GLFW.GLFW_MOD_SHIFT) != 0)
+            rightText += "Shift + ";
+        if ((modifiers & GLFW.GLFW_MOD_ALT) != 0)
+            rightText += "Alt + ";
+
+        int key = shortcut.getKey();
+        int scancode = GLFW.glfwGetKeyScancode(key);
+        rightText += GLFW.glfwGetKeyName(key, scancode).toUpperCase();
+
+        addLabel(labelText, rightText, shortcut::run, shortcut::isPossible);
+    }
+
     public void addNestedContextMenu(String text, UIFloatMenu contextMenu) {
-        CMLabel label = new CMLabel(text, this);
-        label.backgroundHighlight = true;
-        label.setHFillSize();
+        CMLabel label = new CMLabel(text, ">", null);
         add(label);
 
         contextMenu.addAnchor(Anchor.TOP_LEFT, label, Anchor.TOP_RIGHT);
@@ -111,10 +143,7 @@ public class UIFloatMenu extends UIFloatContainer {
 
         label.style.setBackgroundColor(() -> {
             Vector4f bgColor = null;
-            if (backgroundNormal) {
-                bgColor = UIColors.BACKGROUND_NORMAL.get();
-            }
-            if ((label.mouseAbove() || expandedLabel == label) && label.backgroundHighlight) {
+            if (label.mouseAbove() || expandedLabel == label) {
                 bgColor = UIColors.BACKGROUND_HIGHLIGHT.get();
             }
             return bgColor;
@@ -143,14 +172,27 @@ public class UIFloatMenu extends UIFloatContainer {
         this.closeAction = closeAction;
     }
 
-    private class CMLabel extends UILabel {
+    private class CMLabel extends UIContainer {
 
-        final UIFloatMenu contextMenu;
+        CMLabel(String mainText, String rightText, BooleanSupplier active) {
+            super(HORIZONTAL, LEFT, CENTER);
 
-        CMLabel(String text, UIFloatMenu contextMenu) {
-            super(text, textSizeUpdater);
+            noOutline();
 
-            this.contextMenu = contextMenu;
+            setHMarginScale(2.0);
+
+            setHFillSize();
+
+            UIText text = new UIText(mainText, textSizeUpdater);
+            if (active != null) {
+                text.setColor(SUtil.ifThenElse(active, UIColors.TEXT, UIColors.TEXT_INVALID));
+            }
+            add(text);
+
+            if (rightText != null) {
+                add(new UIContainer(0, 0).setHFillSize().noOutline());
+                add(new UIText(rightText, textSizeUpdater).setColor(UIColors.TEXT_INVALID));
+            }
         }
 
         @Override
@@ -158,7 +200,7 @@ public class UIFloatMenu extends UIFloatContainer {
             super.update();
 
             if (mouseAbove()) {
-                contextMenu.expandedLabel = this;
+                expandedLabel = this;
             }
         }
     }

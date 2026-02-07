@@ -1,21 +1,21 @@
 package sutil.ui;
 
-import java.util.function.Supplier;
+import java.util.function.IntSupplier;
 
 public class UIRadioButton extends UIContainer {
 
-    private Supplier<Integer> stateSupplier;
+    private IntSupplier stateSupplier;
     private int index;
 
-    public UIRadioButton(int index, Supplier<Integer> stateSupplier) {
-        super(VERTICAL, CENTER);
+    public UIRadioButton(int index, IntSupplier stateSupplier) {
+        super(UI.VERTICAL, UI.CENTER);
         this.index = index;
         this.stateSupplier = stateSupplier;
 
         noOutline();
         zeroMargin();
 
-        style.setBackgroundColor(UIColors.BACKGROUND_HIGHLIGHT_2);
+        style.setBackgroundColor(UIColors.BACKGROUND_2);
         style.setShape(UIShape.ELLIPSE);
 
         setFixedSize(UISizes.RADIO.getWidthHeight());
@@ -24,7 +24,7 @@ public class UIRadioButton extends UIContainer {
     }
 
     public boolean getState() {
-        return stateSupplier.get() == index;
+        return stateSupplier.getAsInt() == index;
     }
 
     private class RadioButtonInside extends UIElement {
@@ -32,7 +32,7 @@ public class UIRadioButton extends UIContainer {
         RadioButtonInside() {
             setVisibilitySupplier(UIRadioButton.this::getState);
 
-            style.setBackgroundColor(UIColors.TEXT);
+            style.setBackgroundColor(UIColors.HIGHLIGHT);
             style.setShape(UIShape.ELLIPSE);
 
             size.set(UISizes.RADIO_INSIDE.getWidthHeight());

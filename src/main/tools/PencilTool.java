@@ -19,6 +19,10 @@ public final class PencilTool extends ImageTool {
     }
 
     @Override
+    public void createKeyboardShortcuts() {
+    }
+
+    @Override
     public void click(int x, int y, int mouseButton) {
         if (mouseButton != GLFW.GLFW_MOUSE_BUTTON_LEFT && mouseButton != GLFW.GLFW_MOUSE_BUTTON_RIGHT)
             return;

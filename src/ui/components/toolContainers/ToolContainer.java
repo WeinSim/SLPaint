@@ -16,7 +16,6 @@ public abstract sealed class ToolContainer<T extends ImageTool> extends UIFloatC
 
         this.tool = tool;
         this.app = app;
-        tool.setApp(app);
 
         noOutline();
         noBackground();

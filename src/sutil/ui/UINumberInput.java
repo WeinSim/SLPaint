@@ -1,13 +1,13 @@
 package sutil.ui;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 
 public class UINumberInput extends UITextInput {
 
-    public UINumberInput(Supplier<Integer> getter, Consumer<Integer> setter) {
+    public UINumberInput(IntSupplier getter, IntConsumer setter) {
         super(
-                () -> Integer.toString(getter.get()),
+                () -> Integer.toString(getter.getAsInt()),
                 (String s) -> {
                     int i = 0;
                     if (s.length() > 0) {

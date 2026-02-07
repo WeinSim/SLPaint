@@ -7,7 +7,7 @@ public class UIMenuBar extends UIContainer {
     private UIFloatMenu expandedMenu;
 
     public UIMenuBar() {
-        super(HORIZONTAL, LEFT, CENTER);
+        super(UI.HORIZONTAL, UI.LEFT, UI.CENTER);
 
         noOutline();
         setMarginScale(0.5);
@@ -35,7 +35,7 @@ public class UIMenuBar extends UIContainer {
         MenuLabel(String text, UIFloatMenu menu) {
             this.menu = menu;
 
-            super(VERTICAL, CENTER);
+            super(UI.VERTICAL, UI.CENTER);
 
             noOutline();
 

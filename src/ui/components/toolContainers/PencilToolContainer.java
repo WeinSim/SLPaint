@@ -37,11 +37,13 @@ public final class PencilToolContainer extends ToolContainer<PencilTool> {
             case PencilTool.DRAWING_PRIMARY -> {
                 if (mouseButton == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                     tool.setState(PencilTool.NONE);
+                    app.addImageSnapshot();
                 }
             }
             case PencilTool.DRAWING_SECONDARY -> {
                 if (mouseButton == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                     tool.setState(PencilTool.NONE);
+                    app.addImageSnapshot();
                 }
             }
         }

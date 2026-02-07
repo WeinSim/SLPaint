@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 import sutil.math.SVector;
 
@@ -470,5 +472,11 @@ public class SUtil {
             }
         }
         list.add(index, element);
+    }
+
+    public static <T> Supplier<T> ifThenElse(BooleanSupplier predicate, Supplier<? extends T> option1,
+            Supplier<? extends T> option2) {
+
+        return () -> predicate.getAsBoolean() ? option1.get() : option2.get();
     }
 }

@@ -156,7 +156,7 @@ public class HueSatField extends UIDragContainer {
         public CursorLine(boolean vertical) {
             super(0, 0);
 
-            setStyle(new UIStyle(UIColors.TEXT, () -> null, UISizes.STROKE_WEIGHT));
+            setStyle(new UIStyle(UIColors.HIGHLIGHT, () -> null, UISizes.STROKE_WEIGHT));
 
             double len = UISizes.SCALE_SLIDER_LENGTH.get() * CURSOR_LINE_LENGTH;
             double w = UISizes.SCALE_SLIDER_WIDTH.get() * CURSOR_WIDTH;

@@ -11,6 +11,10 @@ public final class PipetteTool extends ImageTool {
     }
 
     @Override
+    public void createKeyboardShortcuts() {
+    }
+
+    @Override
     public void click(int x, int y, int mouseButton) {
         Image image = app.getImage();
 

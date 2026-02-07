@@ -1,8 +1,13 @@
 package sutil.ui;
 
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+import static org.lwjgl.glfw.GLFW.GLFW_POINTING_HAND_CURSOR;
+
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector4f;
 
 import sutil.SUtil;
@@ -26,7 +31,7 @@ public abstract class UIElement {
 
     protected boolean handCursorAbove = false;
     protected Supplier<Integer> cursorShapeSupplier = () -> handCursorAbove && mouseAbove
-            ? GLFW.GLFW_POINTING_HAND_CURSOR
+            ? GLFW_POINTING_HAND_CURSOR
             : null;
 
     protected boolean ignoreParentClipArea = false;
@@ -35,7 +40,7 @@ public abstract class UIElement {
     protected boolean selectOnClick = false;
     protected boolean selectable = false;
 
-    protected Supplier<Boolean> visibilitySupplier = this::isVisible;
+    protected BooleanSupplier visibilitySupplier = this::isVisible;
     private boolean visible = true;
 
     public UIElement() {
@@ -49,7 +54,7 @@ public abstract class UIElement {
     }
 
     public void updateVisibility() {
-        visible = visibilitySupplier.get();
+        visible = visibilitySupplier.getAsBoolean();
 
         if (visible && this == UI.getSelectedElement()) {
             UI.confirmSelectedElement();
@@ -81,11 +86,11 @@ public abstract class UIElement {
         if (!mouseAbove)
             return;
 
-        // if ((mods & (GLFW.GLFW_MOD_SHIFT | GLFW.GLFW_MOD_CONTROL)) != 0)
+        // if ((mods & (GLFW_MOD_SHIFT | GLFW_MOD_CONTROL)) != 0)
         // return;
 
         switch (mouseButton) {
-            case GLFW.GLFW_MOUSE_BUTTON_LEFT -> {
+            case GLFW_MOUSE_BUTTON_LEFT -> {
                 if (leftClickAction != null) {
                     leftClickAction.run();
                 }
@@ -94,7 +99,7 @@ public abstract class UIElement {
                     UI.select(this, mousePosition);
                 }
             }
-            case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> {
+            case GLFW_MOUSE_BUTTON_RIGHT -> {
                 if (rightClickAction != null) {
                     rightClickAction.run();
                 }
@@ -109,8 +114,8 @@ public abstract class UIElement {
     /**
      * @param scroll
      * @param mousePos
-     * @param mods     Only contains the {@code GLFW.GLFW_MOD_CONTROL} and
-     *                 {@code GLFW.GLFW_MOD_SHIFT} modifiers
+     * @param mods     Only contains the {@code GLFW_MOD_CONTROL} and
+     *                 {@code GLFW_MOD_SHIFT} modifiers
      * @return Wether the mouse scroll action has been "used up" by this
      *         {@code UIElement}.
      */
@@ -168,7 +173,7 @@ public abstract class UIElement {
         return visible;
     }
 
-    public UIElement setVisibilitySupplier(Supplier<Boolean> visibilitySupplier) {
+    public UIElement setVisibilitySupplier(BooleanSupplier visibilitySupplier) {
         this.visibilitySupplier = visibilitySupplier;
         return this;
     }
@@ -237,7 +242,7 @@ public abstract class UIElement {
     public final Vector4f strokeColor() {
         Vector4f ol = style.strokeColor();
         if (ol == null && UI.getSelectedElement() == this) {
-            ol = UIColors.OUTLINE_NORMAL.get();
+            ol = UIColors.OUTLINE.get();
         }
         return ol;
     }
@@ -321,25 +326,19 @@ public abstract class UIElement {
     public void setDefaultStyle() {
         Supplier<Vector4f> backgroundColorSupplier = () -> {
             Vector4f bgColor = null;
-            if (backgroundNormal) {
-                bgColor = UIColors.BACKGROUND_NORMAL.get();
-            }
-            if (mouseAbove && backgroundHighlight) {
+            if (backgroundNormal)
+                bgColor = UIColors.BACKGROUND.get();
+            if (backgroundHighlight && mouseAbove)
                 bgColor = UIColors.BACKGROUND_HIGHLIGHT.get();
-            }
             return bgColor;
         };
         Supplier<Vector4f> outlineColorSupplier = () -> {
             Vector4f outlineColor = null;
-            if (outlineNormal) {
-                outlineColor = UIColors.OUTLINE_NORMAL.get();
-            }
-            if (mouseAbove && outlineHighlight) {
-                outlineColor = UIColors.OUTLINE_HIGHLIGHT.get();
-            }
+            if (outlineNormal || (outlineHighlight && mouseAbove))
+                outlineColor = UIColors.OUTLINE.get();
             return outlineColor;
         };
-        Supplier<Double> strokeWeightSupplier = UISizes.STROKE_WEIGHT;
+        DoubleSupplier strokeWeightSupplier = UISizes.STROKE_WEIGHT;
 
         style = new UIStyle(backgroundColorSupplier, outlineColorSupplier, strokeWeightSupplier);
     }

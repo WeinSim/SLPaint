@@ -132,6 +132,7 @@ public class Loader {
 
         // this is just a hack for now
         int fontSize = UI.getUIScale() > 1.5 ? 36 : 18;
+        fontSize = 36;
 
         // String directory = String.format("%s/%s", Loader.FONT_DIRECTORY, name);
         ArrayList<FontChar> chars = new ArrayList<>();
@@ -201,6 +202,7 @@ public class Loader {
                 }
             }
         } catch (IOException e) {
+            e.printStackTrace();
             throw new RuntimeException(String.format("Could not load font \"%s\"!\n", name));
         }
 
@@ -249,9 +251,12 @@ public class Loader {
         // MainApp.runCommand(String.format("%s%s", FONT_DIRECTORY, name), deleteArgs);
 
         String directoryName = String.format("%s/%s/", FONT_DIRECTORY, name);
+        final int[] extraChars = new int[] {
+                0x25A1, // □ (WHITE SQUARE)
+                // 0x2713, // ✓ (CHECK MARK)
+        };
         MainApp.runCommand(directoryName,
-                getFontGenerationCommand(name, 2, 256, 256, textSize, new int[] { 32, 126, 160, 255 },
-                        new int[] { 9633 }, 0));
+                getFontGenerationCommand(name, 2, 256, 256, textSize, new int[] { 32, 126, 160, 255 }, extraChars, 0));
     }
 
     private static void addArgument(ArrayList<String> commands, String argument, int value) {

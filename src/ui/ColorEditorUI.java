@@ -1,7 +1,6 @@
 package ui;
 
 import main.apps.ColorEditorApp;
-import sutil.ui.UIContainer;
 import ui.components.ColorPickContainer;
 
 public class ColorEditorUI extends AppUI<ColorEditorApp> {
@@ -21,7 +20,7 @@ public class ColorEditorUI extends AppUI<ColorEditorApp> {
                     app.getMainApp().addCustomColor(color);
                     app.getWindow().requestClose();
                 },
-                UIContainer.VERTICAL,
+                VERTICAL,
                 true,
                 true));
     }

@@ -56,6 +56,8 @@ public class MainLoop {
 
                 app.makeContextCurrent();
 
+                GLFW.glfwPollEvents();
+
                 app.update(deltaT);
                 app.render();
 
@@ -70,8 +72,6 @@ public class MainLoop {
                     }
                 }
             }
-
-            GLFW.glfwPollEvents();
 
             if (firstLoop) {
                 long duration = System.nanoTime() - programStartTime;
@@ -141,12 +141,15 @@ public class MainLoop {
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 String line = reader.readLine();
                 for (int lineNumber = 1; line != null; line = reader.readLine(), lineNumber++) {
-                    if (!line.startsWith("import ")) {
+                    String[] parts = line.split(" ");
+                    if (parts.length == 0)
                         continue;
-                    }
-                    final int startIndex = "import ".length();
-                    int endIndex = line.indexOf('.');
-                    String importName = line.substring(startIndex, endIndex);
+                    if (!parts[0].equals("import"))
+                        continue;
+
+                    String importName = parts[parts.length - 1];
+                    int endIndex = importName.indexOf('.');
+                    importName = importName.substring(0, endIndex);
                     boolean allowed = false;
                     for (String allowedImport : allowedImports) {
                         if (allowedImport.equals(importName)) {
@@ -154,9 +157,8 @@ public class MainLoop {
                             break;
                         }
                     }
-                    if (allowed) {
+                    if (allowed)
                         continue;
-                    }
                     System.out.format("Illegal import in %s:%d:  %s\n", file.getPath(), lineNumber, line);
                 }
             } catch (IOException e) {

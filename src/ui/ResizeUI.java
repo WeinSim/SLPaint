@@ -1,7 +1,7 @@
 package ui;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 
 import main.apps.ResizeApp;
 import sutil.ui.UIButton;
@@ -27,26 +27,26 @@ public class ResizeUI extends AppUI<ResizeApp> {
 
         root.setMarginScale(2.0);
         root.setPaddingScale(1.0);
-        root.setAlignment(UIContainer.LEFT);
+        root.setAlignment(LEFT);
 
         UIRadioButtonList resizeMode = new UIRadioButtonList(
-                UIContainer.VERTICAL,
+                VERTICAL,
                 new String[] { "Resize (scale) image", "Crop image" },
                 app::getResizeMode,
                 app::setResizeMode);
         resizeMode.setMarginScale(1.0).setPaddingScale(2.0);
         root.add(resizeMode);
 
-        UIContainer inner = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+        UIContainer inner = new UIContainer(VERTICAL, CENTER);
         inner.setHFillSize();
 
-        UIContainer inputMode = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIContainer inputMode = new UIContainer(HORIZONTAL, CENTER);
         inputMode.setHFillSize().noOutline();
         // inputMode.zeroMargin();
         inputMode.add(new UIText("By:"));
         // inputMode.add(new UIContainer(0, 0).zeroMargin().setHFillSize().noOutline());
         UIContainer radioButtons = new UIRadioButtonList(
-                UIContainer.HORIZONTAL,
+                HORIZONTAL,
                 new String[] { "Pixels", "Percentage" },
                 this::getInputMode,
                 this::setInputMode);
@@ -55,14 +55,14 @@ public class ResizeUI extends AppUI<ResizeApp> {
         inner.add(inputMode);
 
         for (int i = 0; i < 2; i++) {
-            UIContainer row = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+            UIContainer row = new UIContainer(HORIZONTAL, CENTER);
             row.setHFillSize().zeroMargin().noOutline();
 
             row.add(new UIText(i == 0 ? "Width:" : "Height:"));
             row.add(new UIContainer(0, 0).setHFillSize().noOutline());
-            Supplier<Integer> pixelGetter = i == 0 ? app::getWidthPixels : app::getHeightPixels,
+            IntSupplier pixelGetter = i == 0 ? app::getWidthPixels : app::getHeightPixels,
                     percentageGetter = i == 0 ? app::getWidthPercentage : app::getHeightPercentage;
-            Consumer<Integer> pixelSetter = i == 0 ? app::setWidthPixels : app::setHeightPixels,
+            IntConsumer pixelSetter = i == 0 ? app::setWidthPixels : app::setHeightPixels,
                     percentageSetter = i == 0 ? app::setWidthPercentage : app::setHeightPercentage;
             UINumberInput pixelInput = new UINumberInput(pixelGetter, pixelSetter),
                     percentageInput = new UINumberInput(percentageGetter, percentageSetter);
@@ -78,7 +78,7 @@ public class ResizeUI extends AppUI<ResizeApp> {
             inner.add(row);
         }
 
-        UIContainer ratioContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIContainer ratioContainer = new UIContainer(HORIZONTAL, CENTER);
         ratioContainer.setHFillSize().noOutline();
         ratioContainer.add(new UIText("Lock ratio"));
         ratioContainer.add(new UIContainer(0, 0).setHFillSize().noOutline());
@@ -87,7 +87,7 @@ public class ResizeUI extends AppUI<ResizeApp> {
 
         root.add(inner);
 
-        UIContainer buttonRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.RIGHT, UIContainer.CENTER);
+        UIContainer buttonRow = new UIContainer(HORIZONTAL, RIGHT, CENTER);
         buttonRow.setHFillSize().zeroMargin().noOutline();
 
         buttonRow.add(new UIButton("OK", app::done));

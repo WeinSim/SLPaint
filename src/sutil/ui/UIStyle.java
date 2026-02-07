@@ -1,5 +1,7 @@
 package sutil.ui;
 
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import org.lwjglx.util.vector.Vector4f;
@@ -16,7 +18,7 @@ public class UIStyle {
      * if stroke checkerboard is active, this field goes unused
      */
     private Supplier<Vector4f> strokeColor;
-    private Supplier<Double> strokeWeight;
+    private DoubleSupplier strokeWeight;
     /**
      * This is the checkerboard that is drawn as the outline (not behind it)
      */
@@ -28,7 +30,7 @@ public class UIStyle {
         this(() -> backgroundColor, () -> strokeColor, () -> strokeWeight);
     }
 
-    public UIStyle(Supplier<Vector4f> backgroundColor, Supplier<Vector4f> strokeColor, Supplier<Double> strokeWeight) {
+    public UIStyle(Supplier<Vector4f> backgroundColor, Supplier<Vector4f> strokeColor, DoubleSupplier strokeWeight) {
         this.backgroundColor = backgroundColor;
         this.strokeColor = strokeColor;
         this.strokeWeight = strokeWeight;
@@ -44,7 +46,7 @@ public class UIStyle {
     }
 
     public boolean doBackgroundCheckerboard() {
-        return backgroundCheckerboard.active().get();
+        return backgroundCheckerboard.active().getAsBoolean();
     }
 
     public Vector4f backgroundCheckerboardColor1() {
@@ -56,7 +58,7 @@ public class UIStyle {
     }
 
     public double backgroundCheckerboardSize() {
-        return backgroundCheckerboard.size().get();
+        return backgroundCheckerboard.size().getAsDouble();
     }
 
     public Vector4f strokeColor() {
@@ -64,11 +66,11 @@ public class UIStyle {
     }
 
     public double strokeWeight() {
-        return strokeWeight.get();
+        return strokeWeight.getAsDouble();
     }
 
     public boolean doStrokeCheckerboard() {
-        return strokeCheckerboard.active().get();
+        return strokeCheckerboard.active().getAsBoolean();
     }
 
     public Vector4f strokeCheckerboardColor1() {
@@ -80,7 +82,7 @@ public class UIStyle {
     }
 
     public double strokeCheckerboardSize() {
-        return strokeCheckerboard.size().get();
+        return strokeCheckerboard.size().getAsDouble();
     }
 
     public UIShape shape() {
@@ -99,12 +101,12 @@ public class UIStyle {
         setBackgroundCheckerboard(() -> color1, () -> color2, () -> size);
     }
 
-    public void setBackgroundCheckerboard(Supplier<Vector4f> color1, Supplier<Vector4f> color2, Supplier<Double> size) {
+    public void setBackgroundCheckerboard(Supplier<Vector4f> color1, Supplier<Vector4f> color2, DoubleSupplier size) {
         setBackgroundCheckerboard(() -> true, color1, color2, size);
     }
 
-    public void setBackgroundCheckerboard(Supplier<Boolean> active, Supplier<Vector4f> color1, Supplier<Vector4f> color2,
-            Supplier<Double> size) {
+    public void setBackgroundCheckerboard(BooleanSupplier active, Supplier<Vector4f> color1, Supplier<Vector4f> color2,
+            DoubleSupplier size) {
 
         backgroundCheckerboard = new CheckerboardInfo(active, color1, color2, size);
     }
@@ -117,12 +119,12 @@ public class UIStyle {
         setStrokeCheckerboard(() -> color1, () -> color2, () -> size);
     }
 
-    public void setStrokeCheckerboard(Supplier<Vector4f> color1, Supplier<Vector4f> color2, Supplier<Double> size) {
+    public void setStrokeCheckerboard(Supplier<Vector4f> color1, Supplier<Vector4f> color2, DoubleSupplier size) {
         setStrokeCheckerboard(() -> true, color1, color2, size);
     }
 
-    public void setStrokeCheckerboard(Supplier<Boolean> active, Supplier<Vector4f> color1, Supplier<Vector4f> color2,
-            Supplier<Double> size) {
+    public void setStrokeCheckerboard(BooleanSupplier active, Supplier<Vector4f> color1, Supplier<Vector4f> color2,
+            DoubleSupplier size) {
 
         strokeCheckerboard = new CheckerboardInfo(active, color1, color2, size);
     }
@@ -143,7 +145,7 @@ public class UIStyle {
         setStrokeWeight(() -> strokeWeight);
     }
 
-    public void setStrokeWeight(Supplier<Double> strokeWeight) {
+    public void setStrokeWeight(DoubleSupplier strokeWeight) {
         this.strokeWeight = strokeWeight;
     }
 
@@ -155,8 +157,8 @@ public class UIStyle {
         this.shape = shape;
     }
 
-    private record CheckerboardInfo(Supplier<Boolean> active, Supplier<Vector4f> color1, Supplier<Vector4f> color2,
-            Supplier<Double> size) {
+    private record CheckerboardInfo(BooleanSupplier active, Supplier<Vector4f> color1, Supplier<Vector4f> color2,
+            DoubleSupplier size) {
 
     }
 }

@@ -3,7 +3,7 @@ package sutil.ui;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
 
 import org.lwjgl.glfw.GLFW;
 
@@ -11,8 +11,16 @@ import sutil.math.SVector;
 
 public class UIContainer extends UIElement {
 
-    public static final int LEFT = 0, TOP = 0, CENTER = 1, RIGHT = 2, BOTTOM = 2;
-    public static final int VERTICAL = 0, HORIZONTAL = 1, NONE = 2, BOTH = 3;
+    protected static final int LEFT = UI.LEFT,
+            TOP = UI.TOP,
+            CENTER = UI.CENTER,
+            RIGHT = UI.RIGHT,
+            BOTTOM = UI.BOTH;
+
+    protected static final int VERTICAL = UI.VERTICAL,
+            HORIZONTAL = UI.HORIZONTAL,
+            NONE = UI.NONE,
+            BOTH = UI.BOTH;
 
     private final double EPSILON = 1e-6;
 
@@ -102,8 +110,8 @@ public class UIContainer extends UIElement {
             }
             if (containsNonFloatChildren) {
                 UISeparator separator = new UISeparator();
-                Supplier<Boolean> childVis = () -> {
-                    if (!child.visibilitySupplier.get())
+                BooleanSupplier childVis = () -> {
+                    if (!child.visibilitySupplier.getAsBoolean())
                         return false;
 
                     // The separator should not be visible if the corresponding child is the first
@@ -953,8 +961,8 @@ public class UIContainer extends UIElement {
 
             UIStyle style = new UIStyle(
                     () -> mouseAbove || scrollbarContainer.isDragging()
-                            ? UIColors.OUTLINE_NORMAL.get()
-                            : UIColors.OUTLINE_HIGHLIGHT.get(),
+                            ? UIColors.OUTLINE.get()
+                            : UIColors.SCROLLBAR_HIGHLIGHT.get(),
                     () -> null, () -> 0.0);
 
             setStyle(style);

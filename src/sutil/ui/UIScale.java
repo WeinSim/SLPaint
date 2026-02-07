@@ -1,22 +1,22 @@
 package sutil.ui;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.DoubleConsumer;
+import java.util.function.DoubleSupplier;
 
 import sutil.math.SVector;
 
 public class UIScale extends UIDragContainer {
 
-    private Supplier<Double> getter;
-    private Consumer<Double> setter;
+    private DoubleSupplier getter;
+    private DoubleConsumer setter;
 
     private boolean narrow;
 
-    public UIScale(int orientation, Supplier<Double> getter, Consumer<Double> setter) {
+    public UIScale(int orientation, DoubleSupplier getter, DoubleConsumer setter) {
         this(orientation, getter, setter, true);
     }
 
-    public UIScale(int orientation, Supplier<Double> getter, Consumer<Double> setter, boolean narrow) {
+    public UIScale(int orientation, DoubleSupplier getter, DoubleConsumer setter, boolean narrow) {
         this.orientation = orientation;
 
         this.getter = getter;
@@ -50,12 +50,12 @@ public class UIScale extends UIDragContainer {
 
     @Override
     public double getRelativeX() {
-        return orientation == VERTICAL ? 0 : getter.get();
+        return orientation == VERTICAL ? 0 : getter.getAsDouble();
     }
 
     @Override
     public double getRelativeY() {
-        return orientation == VERTICAL ? getter.get() : 0;
+        return orientation == VERTICAL ? getter.getAsDouble() : 0;
     }
 
     @Override
@@ -84,7 +84,7 @@ public class UIScale extends UIDragContainer {
         public Visuals(int orientation) {
             super(orientation, 0);
 
-            style.setBackgroundColor(UIColors.OUTLINE_NORMAL);
+            style.setBackgroundColor(UIColors.OUTLINE);
 
             noOutline();
             zeroMargin();
@@ -108,7 +108,7 @@ public class UIScale extends UIDragContainer {
         public Slider(int orientation) {
             super(orientation, 0);
 
-            setStyle(new UIStyle(UIColors.TEXT, () -> null, UISizes.STROKE_WEIGHT));
+            setStyle(new UIStyle(UIColors.HIGHLIGHT, () -> null, UISizes.STROKE_WEIGHT));
 
             addAnchor(
                     orientation == VERTICAL ? Anchor.CENTER_LEFT : Anchor.TOP_CENTER,

@@ -1,13 +1,13 @@
 package sutil.ui;
 
-import java.util.function.Supplier;
+import java.util.function.IntSupplier;
 
 import sutil.math.SVector;
 
 public class UIImage extends UIElement {
 
     protected int textureID;
-    protected Supplier<Integer> textureIDSupplier;
+    protected IntSupplier textureIDSupplier;
 
     public UIImage(int textureID, SVector size) {
         setTextureID(textureID);
@@ -15,7 +15,7 @@ public class UIImage extends UIElement {
         setSize(size);
     }
 
-    public UIImage(Supplier<Integer> textureIDSupplier, SVector size) {
+    public UIImage(IntSupplier textureIDSupplier, SVector size) {
         this.textureIDSupplier = textureIDSupplier;
 
         setSize(size);
@@ -30,7 +30,7 @@ public class UIImage extends UIElement {
     }
 
     public int getTextureID() {
-        return textureIDSupplier != null ? textureIDSupplier.get() : textureID;
+        return textureIDSupplier != null ? textureIDSupplier.getAsInt() : textureID;
     }
 
     public void setTextureID(int textureID) {
@@ -38,7 +38,7 @@ public class UIImage extends UIElement {
         textureIDSupplier = null;
     }
 
-    public void setTextureIDSupplier(Supplier<Integer> textureIDSupplier) {
+    public void setTextureIDSupplier(IntSupplier textureIDSupplier) {
         this.textureIDSupplier = textureIDSupplier;
     }
 }

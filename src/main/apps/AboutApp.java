@@ -8,6 +8,8 @@ public final class AboutApp extends App {
 
     public AboutApp(MainApp app) {
         super(400, 300, Window.NORMAL, false, true, "About SLPaint", app);
+
+        loadUI();
     }
 
     @Override

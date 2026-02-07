@@ -1,9 +1,10 @@
 package sutil.ui;
 
+
+import static org.lwjgl.glfw.GLFW.*;
+
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-
-import org.lwjgl.glfw.GLFW;
 
 import sutil.math.SVector;
 
@@ -36,7 +37,7 @@ public class UITextInput extends UIContainer {
 
         setHFillSize();
 
-        setCursorShape(() -> mouseAbove ? GLFW.GLFW_IBEAM_CURSOR : null);
+        setCursorShape(() -> mouseAbove ? GLFW_IBEAM_CURSOR : null);
 
         selectable = true;
         selectOnClick = true;
@@ -55,7 +56,7 @@ public class UITextInput extends UIContainer {
             String text = uiText.getText();
             boundCursorPosition(text);
             switch (key) {
-                case GLFW.GLFW_KEY_BACKSPACE -> {
+                case GLFW_KEY_BACKSPACE -> {
                     if (cursorPosition > 0) {
                         String newText = text.substring(0, cursorPosition - 1)
                                 + text.substring(cursorPosition);
@@ -65,7 +66,7 @@ public class UITextInput extends UIContainer {
                         resetTimer();
                     }
                 }
-                case GLFW.GLFW_KEY_DELETE -> {
+                case GLFW_KEY_DELETE -> {
                     if (cursorPosition < text.length()) {
                         String newText = text.substring(0, cursorPosition)
                                 + text.substring(cursorPosition + 1);
@@ -74,15 +75,15 @@ public class UITextInput extends UIContainer {
                         resetTimer();
                     }
                 }
-                case GLFW.GLFW_KEY_LEFT -> {
+                case GLFW_KEY_LEFT -> {
                     cursorPosition--;
                     resetTimer();
                 }
-                case GLFW.GLFW_KEY_RIGHT -> {
+                case GLFW_KEY_RIGHT -> {
                     cursorPosition++;
                     resetTimer();
                 }
-                case GLFW.GLFW_KEY_ENTER -> {
+                case GLFW_KEY_ENTER -> {
                     if (multiline) {
                         charInput('\n');
                     } else {

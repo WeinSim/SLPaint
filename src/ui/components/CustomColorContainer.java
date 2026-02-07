@@ -2,20 +2,24 @@ package ui.components;
 
 import java.util.function.Consumer;
 
+import org.lwjglx.util.vector.Vector4f;
+
 import main.ColorArray;
+import main.apps.MainApp;
 import sutil.ui.UIContainer;
 import sutil.ui.UISizes;
 
 public class CustomColorContainer extends UIContainer {
 
-    public CustomColorContainer(ColorArray colors, Consumer<Integer> clickAction) {
+    public CustomColorContainer(ColorArray colors, Consumer<Vector4f> clickAction) {
         super(HORIZONTAL, CENTER);
 
         for (int i = 0; i < colors.getCapacity(); i++) {
             final int j = i;
-            UIColorElement button = new UIColorElement(() -> colors.getColor(j), UISizes.COLOR_BUTTON);
+            UIColorElement button = new UIColorElement(() -> MainApp.toVector4f(colors.getColor(j)),
+                    UISizes.COLOR_BUTTON);
             button.setLeftClickAction(() -> {
-                Integer color = colors.getColor(j);
+                Vector4f color = MainApp.toVector4f(colors.getColor(j));
                 if (color != null) {
                     clickAction.accept(color);
                 }

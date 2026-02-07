@@ -1,8 +1,10 @@
 package ui.components;
 
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import main.apps.MainApp;
+import org.lwjglx.util.vector.Vector4f;
+
 import sutil.math.SVector;
 import sutil.ui.UIColors;
 import sutil.ui.UIElement;
@@ -10,31 +12,31 @@ import sutil.ui.UISizes;
 
 public class UIColorElement extends UIElement {
 
-    private Supplier<Integer> colorSupplier;
+    private Supplier<Vector4f> colorSupplier;
     private Supplier<SVector> sizeSupplier;
 
-    public UIColorElement(Supplier<Integer> colorSupplier, Supplier<Double> sizeSupplier) {
+    public UIColorElement(Supplier<Vector4f> colorSupplier, DoubleSupplier sizeSupplier) {
         this(
                 colorSupplier,
                 () -> {
-                    double wh = sizeSupplier.get();
+                    double wh = sizeSupplier.getAsDouble();
                     return new SVector(wh, wh);
                 },
                 true);
     }
 
-    public UIColorElement(Supplier<Integer> colorSupplier, Supplier<SVector> sizeSupplier, boolean outline) {
+    public UIColorElement(Supplier<Vector4f> colorSupplier, Supplier<SVector> sizeSupplier, boolean outline) {
         this.colorSupplier = colorSupplier;
         this.sizeSupplier = sizeSupplier;
 
-        style.setBackgroundColor(() -> MainApp.toVector4f(getColor()));
+        style.setBackgroundColor(this::getColor);
         style.setBackgroundCheckerboard(
                 () -> getColor() != null,
                 UIColors.TRANSPARENCY_1,
                 UIColors.TRANSPARENCY_2,
                 UISizes.CHECKERBOARD);
         if (outline) {
-            style.setStrokeColor(() -> getColor() == null ? UIColors.INVALID.get() : UIColors.TEXT.get());
+            style.setStrokeColor(() -> getColor() == null ? UIColors.INVALID.get() : UIColors.HIGHLIGHT.get());
         }
     }
 
@@ -43,7 +45,7 @@ public class UIColorElement extends UIElement {
         size.set(sizeSupplier.get());
     }
 
-    public Integer getColor() {
+    public Vector4f getColor() {
         return colorSupplier.get();
     }
 }

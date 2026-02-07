@@ -11,7 +11,7 @@ import sutil.math.SVector;
 
 public class TextFont {
 
-    private static final char UNKNOWN_CHAR = 9633;
+    private static final char UNKNOWN_CHAR = 0x25A1; // □ (WHITE SQUARE)
 
     private HashMap<Character, Integer> charIDs;
     private FontChar[] fontChars;

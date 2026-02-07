@@ -1,9 +1,13 @@
 package ui;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import org.lwjgl.glfw.GLFW;
+import org.lwjglx.util.vector.Vector4f;
 
 import main.Image;
 import main.ImageFormat;
@@ -37,7 +41,7 @@ public class MainUI extends AppUI<MainApp> {
 
     private String debugString = "";
 
-    private int cursor = 0;
+    // private int test = 0;
 
     public MainUI(MainApp app) {
         super(app);
@@ -45,17 +49,17 @@ public class MainUI extends AppUI<MainApp> {
 
     @Override
     protected void init() {
-        root.setOrientation(UIContainer.VERTICAL);
-        root.setHAlignment(UIContainer.LEFT);
+        root.setOrientation(VERTICAL);
+        root.setHAlignment(LEFT);
         root.withSeparators(false);
 
         UIMenuBar menuBar = new UIMenuBar();
 
         UIFloatMenu fileMenu = new UIFloatMenu();
-        fileMenu.addLabel("New", app::newImage);
-        fileMenu.addLabel("Open", app::openImage);
-        fileMenu.addLabel("Save", app::saveImage);
-        fileMenu.addLabel("Save As", app::saveImageAs);
+        fileMenu.addLabel("New", app.getKeyboardShortcut("new"));
+        fileMenu.addLabel("Open", app.getKeyboardShortcut("open"));
+        fileMenu.addLabel("Save", app.getKeyboardShortcut("save"));
+        fileMenu.addLabel("Save As", app.getKeyboardShortcut("save_as"));
         fileMenu.addSeparator();
         fileMenu.addLabel("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG));
         fileMenu.addSeparator();
@@ -63,16 +67,16 @@ public class MainUI extends AppUI<MainApp> {
         menuBar.addMenu("File", fileMenu);
 
         UIFloatMenu editMenu = new UIFloatMenu();
-        editMenu.addLabel("Undo", null);
-        editMenu.addLabel("Redo", null);
+        editMenu.addLabel("Undo", app.getKeyboardShortcut("undo"));
+        editMenu.addLabel("Redo", app.getKeyboardShortcut("redo"));
         menuBar.addMenu("Edit", editMenu);
 
         UIFloatMenu selectionMenu = new UIFloatMenu();
-        selectionMenu.addLabel("Copy", app::copySelection);
-        selectionMenu.addLabel("Cut", app::cutSelection);
-        selectionMenu.addLabel("Paste", app::pasteSelection);
+        selectionMenu.addLabel("Copy", app.getKeyboardShortcut("copy"));
+        selectionMenu.addLabel("Cut", app.getKeyboardShortcut("cut"));
+        selectionMenu.addLabel("Paste", app.getKeyboardShortcut("paste"));
         selectionMenu.addSeparator();
-        selectionMenu.addLabel("Crop image to selection", app::cropImageToSelection);
+        selectionMenu.addLabel("Crop image to selection", app.getKeyboardShortcut("crop_to_selection"));
         menuBar.addMenu("Selection", selectionMenu);
 
         UIFloatMenu imageMenu = new UIFloatMenu();
@@ -86,9 +90,9 @@ public class MainUI extends AppUI<MainApp> {
 
         root.add(menuBar);
 
-        UIContainer topRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER,
-                UIContainer.HORIZONTAL);
-        topRow.withSeparators(true).setHFillSize().setHAlignment(UIContainer.LEFT).withBackground().noOutline();
+        UIContainer topRow = new UIContainer(HORIZONTAL, LEFT, CENTER,
+                HORIZONTAL);
+        topRow.withSeparators(true).setHFillSize().setHAlignment(LEFT).withBackground().noOutline();
 
         UIContainer imageOptions = addTopRowSection(topRow, "Image");
         // imageOptions.add(new UILabel("..."));
@@ -104,18 +108,18 @@ public class MainUI extends AppUI<MainApp> {
             toolbox.add(toolButton);
         }
 
-        UIContainer pencilTools = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+        UIContainer pencilTools = new UIContainer(VERTICAL, CENTER);
         pencilTools.zeroMargin().noOutline();
         pencilTools.setVisibilitySupplier(() -> app.getActiveTool() == ImageTool.PENCIL);
 
         final double min = PencilTool.MIN_SIZE,
                 max = PencilTool.MAX_SIZE;
-        UIScale pencilSizeScale = new UIScale(UIContainer.HORIZONTAL,
+        UIScale pencilSizeScale = new UIScale(HORIZONTAL,
                 () -> SUtil.map(ImageTool.PENCIL.getSize(), min, max, 0, 1),
                 x -> ImageTool.PENCIL.setSize((int) Math.round(SUtil.map(x, 0, 1, min, max))));
         pencilTools.add(pencilSizeScale);
 
-        UIContainer pencilSizeBottomRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIContainer pencilSizeBottomRow = new UIContainer(HORIZONTAL, CENTER);
         pencilSizeBottomRow.zeroMargin().noOutline();
         pencilSizeBottomRow.add(new UIText("Size:"));
         pencilSizeBottomRow.add(new UIContainer(0, 0).setHFillSize().noOutline());
@@ -124,7 +128,7 @@ public class MainUI extends AppUI<MainApp> {
         pencilTools.add(pencilSizeBottomRow);
         topRow.add(pencilTools);
 
-        UIContainer selectionTools = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
+        UIContainer selectionTools = new UIContainer(VERTICAL, LEFT);
         selectionTools.zeroMargin().noOutline();
         selectionTools.setVisibilitySupplier(() -> app.getActiveTool() == ImageTool.SELECTION);
 
@@ -140,20 +144,20 @@ public class MainUI extends AppUI<MainApp> {
 
         topRow.add(selectionTools);
 
-        UIContainer textTools = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIContainer textTools = new UIContainer(HORIZONTAL, CENTER);
         textTools.zeroMargin().setVFillSize().noOutline();
         textTools.setVisibilitySupplier(() -> app.getActiveTool() == ImageTool.TEXT);
         textTools.setPaddingScale(2);
 
-        UIContainer textSizeContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+        UIContainer textSizeContainer = new UIContainer(VERTICAL, CENTER);
         textSizeContainer.zeroMargin().setPaddingScale(2).setVFillSize().noOutline();
         textSizeContainer.add(createIntPicker(ImageTool.TEXT::getSize, ImageTool.TEXT::setSize));
         textSizeContainer.add(new UIText("Size"));
         textTools.add(textSizeContainer);
 
-        UIContainer textFontContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+        UIContainer textFontContainer = new UIContainer(VERTICAL, CENTER);
         textFontContainer.zeroMargin().setPaddingScale(2).setVFillSize().noOutline();
-        UIContainer textFontRow1 = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIContainer textFontRow1 = new UIContainer(HORIZONTAL, CENTER);
         textFontRow1.zeroMargin().noOutline();
         textFontRow1.add(new UIDropdown(
                 TextTool.FONT_NAMES,
@@ -166,24 +170,26 @@ public class MainUI extends AppUI<MainApp> {
 
         topRow.add(textTools);
 
-        UIContainer primSecColorContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
+        UIContainer primSecColorContainer = new UIContainer(HORIZONTAL, TOP);
         primSecColorContainer.zeroMargin().setPaddingScale(1.0).noOutline();
 
         for (int i = 0; i < 2; i++) {
             final int index = i;
-            UIContainer colorContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+            UIContainer colorContainer = new UIContainer(VERTICAL, CENTER);
             // colorContainer.zeroMargin();
             setSelectableButtonStyle(colorContainer, () -> app.getColorSelection() == index);
             colorContainer.setSelectable(true);
 
-            Supplier<Integer> cg = i == 0 ? app::getPrimaryColor : app::getSecondaryColor;
+            Supplier<Vector4f> cg = i == 0
+                    ? () -> MainApp.toVector4f(app.getPrimaryColor())
+                    : () -> MainApp.toVector4f(app.getSecondaryColor());
             colorContainer.add(new UIColorElement(cg, UISizes.BIG_COLOR_BUTTON));
             UILabel label = new UILabel(
                     "%s\nColor".formatted(i == 0 ? "Primary" : "Secondary")
             // "Color %d".formatted(i + 1)
             // i == 0 ? "Primary" : "Secondary"
             );
-            label.setAlignment(UIContainer.CENTER);
+            label.setAlignment(CENTER);
             label.zeroMargin();
             colorContainer.add(label);
 
@@ -196,18 +202,19 @@ public class MainUI extends AppUI<MainApp> {
 
         final double colorPaddingScale = 1.0;
 
-        UIContainer allColors = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
+        UIContainer allColors = new UIContainer(VERTICAL, LEFT);
         allColors.zeroMargin().setPaddingScale(colorPaddingScale).noOutline();
         UIContainer currentRow = null;
         for (int i = 0; i < MainApp.DEFAULT_COLORS.length; i++) {
             if (currentRow == null) {
-                currentRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+                currentRow = new UIContainer(HORIZONTAL, CENTER);
                 currentRow.zeroMargin().setPaddingScale(colorPaddingScale).noOutline();
             }
 
-            final int color = MainApp.DEFAULT_COLORS[i];
+            final int colorInt = MainApp.DEFAULT_COLORS[i];
+            final Vector4f color = MainApp.toVector4f(colorInt);
             UIColorElement button = new UIColorElement(() -> color, UISizes.COLOR_BUTTON);
-            button.setLeftClickAction(() -> app.selectColor(color));
+            button.setLeftClickAction(() -> app.selectColor(colorInt));
             button.setCursorShape(() -> button.mouseAbove() ? GLFW.GLFW_POINTING_HAND_CURSOR : null);
             currentRow.add(button);
 
@@ -216,33 +223,34 @@ public class MainUI extends AppUI<MainApp> {
                 currentRow = null;
             }
         }
-        CustomColorContainer ccc = new CustomColorContainer(app.getCustomColorButtonArray(), app::selectColor);
+        CustomColorContainer ccc = new CustomColorContainer(app.getCustomColorButtonArray(),
+                c -> app.selectColor(MainApp.toInt(c)));
         ccc.zeroMargin().setPaddingScale(colorPaddingScale).noOutline();
         allColors.add(ccc);
         topRow.add(allColors);
 
         root.add(topRow.addScrollbars().setHFillSize());
 
-        UIContainer mainRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
+        UIContainer mainRow = new UIContainer(HORIZONTAL, TOP);
         mainRow.withSeparators(false).noBackground().noOutline();
         mainRow.setFillSize();
 
-        mainRow.add(new ImageCanvas(UIContainer.VERTICAL, UIContainer.RIGHT, UIContainer.TOP, app));
+        mainRow.add(new ImageCanvas(VERTICAL, RIGHT, TOP, app));
 
-        UIContainer sidePanel = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER, UIContainer.TOP,
-                UIContainer.VERTICAL);
+        UIContainer sidePanel = new UIContainer(VERTICAL, CENTER, TOP,
+                VERTICAL);
         sidePanel.withSeparators(true).setVFillSize().withBackground().noOutline();
 
         sidePanel.add(new ColorPickContainer(
                 app.getSelectedColorPicker(),
                 app::addCustomColor,
                 // UISizes.COLOR_PICKER_PANEL,
-                UIContainer.VERTICAL,
+                VERTICAL,
                 true,
                 false));
 
-        UIContainer debugPanel = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
-                UIContainer.VERTICAL);
+        UIContainer debugPanel = new UIContainer(VERTICAL, LEFT, TOP,
+                VERTICAL);
         debugPanel.setFillSize().noOutline();
 
         UIImage debugImage = new UIImage(() -> app.getImage().getTextureID(), new SVector(200, 200));
@@ -273,7 +281,7 @@ public class MainUI extends AppUI<MainApp> {
 
         root.add(mainRow);
 
-        UIContainer statusBar = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
+        UIContainer statusBar = new UIContainer(HORIZONTAL, LEFT, CENTER);
         statusBar.withSeparators(false).withBackground().noOutline();
         statusBar.setHFillSize();
         statusBar.add(new UILabel(() -> {
@@ -325,8 +333,8 @@ public class MainUI extends AppUI<MainApp> {
         root.add(statusBar);
     }
 
-    private UIContainer createToggleContainer(String label, Supplier<Boolean> getter, Consumer<Boolean> setter) {
-        UIContainer container = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+    private UIContainer createToggleContainer(String label, BooleanSupplier getter, Consumer<Boolean> setter) {
+        UIContainer container = new UIContainer(HORIZONTAL, CENTER);
         container.zeroMargin().noOutline();
         container.setHFillSize();
         UIContainer fill = new UIContainer(0, 0);
@@ -343,8 +351,8 @@ public class MainUI extends AppUI<MainApp> {
         return addTopRowSection(topRow, name, null);
     }
 
-    private UIContainer addTopRowSection(UIContainer topRow, String name, Supplier<Boolean> visibilitySupplier) {
-        UIContainer options = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+    private UIContainer addTopRowSection(UIContainer topRow, String name, BooleanSupplier visibilitySupplier) {
+        UIContainer options = new UIContainer(VERTICAL, CENTER);
         options.zeroMargin().noOutline();
         options.setVFillSize();
         options.setPaddingScale(2);
@@ -353,7 +361,7 @@ public class MainUI extends AppUI<MainApp> {
             options.setVisibilitySupplier(visibilitySupplier);
         }
 
-        UIContainer optionButtons = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIContainer optionButtons = new UIContainer(HORIZONTAL, CENTER);
         optionButtons.zeroMargin().noOutline();
         options.add(optionButtons);
 
@@ -367,17 +375,17 @@ public class MainUI extends AppUI<MainApp> {
         return optionButtons;
     }
 
-    private UIContainer createIntPicker(Supplier<Integer> sizeGetter, Consumer<Integer> sizeSetter) {
-        UIContainer container = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+    private UIContainer createIntPicker(IntSupplier sizeGetter, IntConsumer sizeSetter) {
+        UIContainer container = new UIContainer(HORIZONTAL, CENTER);
         container.zeroMargin().zeroPadding().noOutline();
-        UIButton minusButton = new UIButton("-", () -> sizeSetter.accept(sizeGetter.get() - 1));
+        UIButton minusButton = new UIButton("-", () -> sizeSetter.accept(sizeGetter.getAsInt() - 1));
         minusButton.setCursorShape(() -> minusButton.mouseAbove() ? GLFW.GLFW_POINTING_HAND_CURSOR : null);
         container.add(minusButton);
         UINumberInput textSizeInput = new UINumberInput(sizeGetter, sizeSetter);
         textSizeInput.setVFillSize();
-        textSizeInput.setHAlignment(UIContainer.CENTER);
+        textSizeInput.setHAlignment(CENTER);
         container.add(textSizeInput);
-        UIButton plusButton = new UIButton("+", () -> sizeSetter.accept(sizeGetter.get() + 1));
+        UIButton plusButton = new UIButton("+", () -> sizeSetter.accept(sizeGetter.getAsInt() + 1));
         plusButton.setCursorShape(() -> plusButton.mouseAbove() ? GLFW.GLFW_POINTING_HAND_CURSOR : null);
         container.add(plusButton);
         return container;
@@ -391,11 +399,11 @@ public class MainUI extends AppUI<MainApp> {
         this.debugString = debugString;
     }
 
-    public int getCursor() {
-        return cursor;
-    }
+    // public int getTest() {
+    // return test;
+    // }
 
-    public void setCursor(int cursor) {
-        this.cursor = cursor;
-    }
+    // public void setTest(int cursor) {
+    // this.test = cursor;
+    // }
 }

@@ -1,10 +1,10 @@
 package main.apps;
 
-import java.util.ArrayList;
+import static org.lwjgl.glfw.GLFW.*;
+
 import java.util.HashMap;
 import java.util.LinkedList;
-
-import org.lwjgl.glfw.GLFW;
+import java.util.function.BooleanSupplier;
 
 import main.MainLoop;
 import main.settings.BooleanSetting;
@@ -12,9 +12,11 @@ import renderEngine.AppRenderer;
 import renderEngine.Loader;
 import renderEngine.Window;
 import sutil.math.SVector;
+import sutil.ui.KeyboardShortcut;
 import sutil.ui.UI;
 import sutil.ui.UIRoot;
 import sutil.ui.UITextInput;
+import sutil.ui.UserAction;
 import ui.AppUI;
 
 public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp, AboutApp {
@@ -30,20 +32,14 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
     protected Window window;
 
-    protected boolean[] keys;
     protected boolean[] mouseButtons;
     protected SVector mousePos, prevMousePos;
 
-    // protected boolean closeOnEscape = true;
-
-    protected double avgFrameTime = -1;
-    protected int frameCount = 0;
+    private HashMap<String, KeyboardShortcut> keyboardShortcuts;
 
     private LinkedList<Runnable> eventQueue;
 
-    private ArrayList<KeyboardShortcut> keyboardShortcuts;
-
-    protected AppUI<?> ui;
+    private AppUI<?> ui;
     protected boolean adjustSizeOnInit = false;
 
     protected AppRenderer renderer;
@@ -57,8 +53,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
      * The type of dialog in the parent app that this app represents.
      */
     private int dialogType;
-
     private HashMap<Integer, App> childApps;
+
+    protected double avgFrameTime = -1;
+    protected int frameCount = 0;
 
     public App(int width, int height, int windowMode, String title) {
         this(width, height, windowMode, true, false, title, null);
@@ -74,39 +72,23 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
         window = new Window(width, height, windowMode, resizable, title);
         childApps = new HashMap<>();
+        keyboardShortcuts = new HashMap<>();
         loader = new Loader();
         eventQueue = new LinkedList<>();
 
-        keys = new boolean[512];
         mouseButtons = new boolean[2];
         mousePos = new SVector();
         prevMousePos = null;
 
-        keyboardShortcuts = new ArrayList<>();
-
         // Comma -> toggle debug outline
-        keyboardShortcuts.add(new KeyboardShortcut(
-                GLFW.GLFW_KEY_COMMA,
-                0,
-                App::cycleDebugOutline,
-                false));
-
+        addKeyboardShortcut("cycle_debug", GLFW_KEY_COMMA, 0, App::cycleDebugOutline, false);
         // Shift + S -> reload shaders
-        keyboardShortcuts.add(new KeyboardShortcut(
-                GLFW.GLFW_KEY_S,
-                GLFW.GLFW_MOD_SHIFT,
-                () -> renderer.reloadShaders(),
-                true));
-
+        addKeyboardShortcut("reload_shaders", GLFW_KEY_S, GLFW_MOD_SHIFT, () -> renderer.reloadShaders(), true);
         // Shift + R -> reload UI
-        keyboardShortcuts.add(new KeyboardShortcut(
-                GLFW.GLFW_KEY_R,
-                GLFW.GLFW_MOD_SHIFT,
-                this::loadUI,
-                true));
+        addKeyboardShortcut("reload_ui", GLFW_KEY_R, GLFW_MOD_SHIFT, this::loadUI, true);
     }
 
-    private void loadUI() {
+    protected void loadUI() {
         ui = createUI();
 
         if (adjustSizeOnInit) {
@@ -136,10 +118,11 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         }
         frameCount++;
 
-        // UI loading happens here because the UI might need some things set up by the
-        // child class' constructor.
-        if (ui == null)
-            loadUI();
+        if (ui == null) {
+            final String baseStr = "%s has no UI. The UI must be created in the app's constructor using loadUI().\n";
+            System.err.format(baseStr, getClass().getName());
+            System.exit(1);
+        }
 
         if (prevMousePos == null) {
             mousePos = window.getMousePosition();
@@ -166,20 +149,15 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
             int key = keyPressInfo.key();
             int mods = keyPressInfo.mods();
             switch (keyPressInfo.action()) {
-                case GLFW.GLFW_PRESS, GLFW.GLFW_REPEAT -> {
-                    if (0 <= key && key < keys.length) {
-                        keys[key] = true;
-                    }
-
-                    if (focus) {
+                case GLFW_PRESS, GLFW_REPEAT -> {
+                    if (focus)
                         ui.keyPressed(key, mods);
-                    }
+
                     keyPressed(key, mods);
                 }
-                case GLFW.GLFW_RELEASE -> {
-                    if (0 <= key && key < keys.length) {
-                        keys[key] = false;
-                    }
+                case GLFW_RELEASE -> {
+                    if (focus)
+                        ui.keyReleased(key, mods);
 
                     keyReleased(key, mods);
                 }
@@ -192,7 +170,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
             int button = mouseButtonInfo.button();
             int mods = mouseButtonInfo.mods();
             switch (mouseButtonInfo.action()) {
-                case GLFW.GLFW_PRESS -> {
+                case GLFW_PRESS -> {
                     if (0 <= button && button < mouseButtons.length)
                         mouseButtons[button] = true;
 
@@ -201,7 +179,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
                     mousePressed(button, mods);
                 }
-                case GLFW.GLFW_RELEASE -> {
+                case GLFW_RELEASE -> {
                     if (0 <= button && button < mouseButtons.length)
                         mouseButtons[button] = false;
 
@@ -217,7 +195,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         Window.ScrollInfo scrollInfo;
         while ((scrollInfo = window.getNextScrollInfo()) != null) {
             if (focus)
-                ui.mouseWheel(new SVector(scrollInfo.xoffset(), scrollInfo.yoffset()), mousePos, getModifierKeys());
+                ui.mouseWheel(new SVector(scrollInfo.xoffset(), scrollInfo.yoffset()), mousePos);
 
             mouseScroll(scrollInfo.xoffset(), scrollInfo.yoffset());
         }
@@ -239,13 +217,8 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     }
 
     protected void keyPressed(int key, int mods) {
-        for (KeyboardShortcut shortcut : keyboardShortcuts) {
-            if (key == shortcut.key() && mods == shortcut.modifiers()) {
-                if (!shortcut.text() && UI.getSelectedElement() instanceof UITextInput)
-                    continue;
-                shortcut.action().run();
-            }
-        }
+        for (KeyboardShortcut shortcut : keyboardShortcuts.values())
+            shortcut.keyPressed(key, mods);
     }
 
     protected void keyReleased(int key, int mods) {
@@ -298,20 +271,38 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         renderer.render();
     }
 
-    public int getModifierKeys() {
-        int mods = 0;
-
-        if (keys[GLFW.GLFW_KEY_LEFT_SHIFT] || keys[GLFW.GLFW_KEY_RIGHT_SHIFT])
-            mods |= GLFW.GLFW_MOD_SHIFT;
-
-        if (keys[GLFW.GLFW_KEY_LEFT_CONTROL] || keys[GLFW.GLFW_KEY_RIGHT_CONTROL])
-            mods |= GLFW.GLFW_MOD_CONTROL;
-
-        return mods;
-    }
-
     public void queueEvent(Runnable action) {
         eventQueue.add(action);
+    }
+
+    /**
+     * When text is set to false, the shortcut will not run if a text input is
+     * currently active.
+     */
+    public void addKeyboardShortcut(String identifier, int key, int modifiers, Runnable action, boolean text) {
+        UserAction userAction = new UserAction(action,
+                text
+                        ? () -> !(UI.getSelectedElement() instanceof UITextInput)
+                        : () -> true);
+        addKeyboardShortcut(new KeyboardShortcut(identifier, key, modifiers, userAction));
+    }
+
+    public void addKeyboardShortcut(String identifier, int key, int modifiers, Runnable action,
+            BooleanSupplier isPossible) {
+
+        UserAction userAction = new UserAction(action, isPossible);
+        addKeyboardShortcut(new KeyboardShortcut(identifier, key, modifiers, userAction));
+    }
+
+    public void addKeyboardShortcut(KeyboardShortcut shortcut) {
+        keyboardShortcuts.put(shortcut.getIdentifier(), shortcut);
+    }
+
+    public KeyboardShortcut getKeyboardShortcut(String identifier) {
+        KeyboardShortcut k = keyboardShortcuts.get(identifier);
+        if (k == null)
+            throw new RuntimeException(String.format("Keyboard shortcut \"%s\" does not exist", identifier));
+        return k;
     }
 
     public Window getWindow() {
@@ -365,16 +356,5 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
     public void setDialogType(int dialogType) {
         this.dialogType = dialogType;
-    }
-
-    protected void addKeyboardShortcut(int key, int modifiers, Runnable action, boolean text) {
-        keyboardShortcuts.add(new KeyboardShortcut(key, modifiers, action, text));
-    }
-
-    /**
-     * When text is set to false, the shortcut will not run if a text input is
-     * currently active.
-     */
-    protected record KeyboardShortcut(int key, int modifiers, Runnable action, boolean text) {
     }
 }

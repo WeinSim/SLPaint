@@ -1,6 +1,6 @@
 package ui.components;
 
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector4f;
@@ -29,7 +29,7 @@ public class SizeKnob extends UIFloatContainer {
     private SVector dragStartSize;
     private SVector dragStartMouse;
 
-    public SizeKnob(int dx, int dy, UIContainer parent, Resizable resizable, Supplier<Boolean> visibilitySupplier,
+    public SizeKnob(int dx, int dy, UIContainer parent, Resizable resizable, BooleanSupplier visibilitySupplier,
             MainApp app) {
         super(0, 0);
         this.dx = dx;

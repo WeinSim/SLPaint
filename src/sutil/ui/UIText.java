@@ -1,5 +1,6 @@
 package sutil.ui;
 
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import org.lwjglx.util.vector.Vector4f;
@@ -8,15 +9,15 @@ import sutil.math.SVector;
 
 public class UIText extends UIElement {
 
-    public static final Supplier<Double> NORMAL = UISizes.TEXT,
+    public static final DoubleSupplier NORMAL = UISizes.TEXT,
             SMALL = UISizes.TEXT_SMALL;
 
     private String text;
     private Supplier<String> textUpdater = this::getText;
 
     private double textSize;
-    private Supplier<Double> textSizeUpdater;
-    // private Supplier<Double> textSizeUpdater = () -> ;
+    private DoubleSupplier textSizeUpdater;
+    // private DoubleSupplier textSizeUpdater = () -> ;
 
     private String fontName;
     private Supplier<String> fontUpdater = UI::getDefaultFontName;
@@ -28,7 +29,7 @@ public class UIText extends UIElement {
         this(text, NORMAL);
     }
 
-    public UIText(String text, Supplier<Double> textSizeUpdater) {
+    public UIText(String text, DoubleSupplier textSizeUpdater) {
         this.text = text;
         this.textSizeUpdater = textSizeUpdater;
     }
@@ -37,7 +38,7 @@ public class UIText extends UIElement {
         this(textUpdater, NORMAL);
     }
 
-    public UIText(Supplier<String> textUpdater, Supplier<Double> textSizeUpdater) {
+    public UIText(Supplier<String> textUpdater, DoubleSupplier textSizeUpdater) {
         this.textUpdater = textUpdater;
         this.textSizeUpdater = textSizeUpdater;
     }
@@ -58,7 +59,7 @@ public class UIText extends UIElement {
     @Override
     public void update() {
         syncText();
-        textSize = textSizeUpdater.get();
+        textSize = textSizeUpdater.getAsDouble();
         fontName = fontUpdater.get();
         color.set(colorUpdater.get());
     }
@@ -106,7 +107,7 @@ public class UIText extends UIElement {
         textSizeUpdater = this::getTextSize;
     }
 
-    public void setTextSize(Supplier<Double> textSizeUpdater) {
+    public void setTextSize(DoubleSupplier textSizeUpdater) {
         this.textSizeUpdater = textSizeUpdater;
     }
 
@@ -114,12 +115,14 @@ public class UIText extends UIElement {
         return color;
     }
 
-    public void setColor(Vector4f color) {
+    public UIText setColor(Vector4f color) {
         this.color.set(color);
         colorUpdater = this::getColor;
+        return this;
     }
 
-    public void setColor(Supplier<Vector4f> colorUpdater) {
+    public UIText setColor(Supplier<Vector4f> colorUpdater) {
         this.colorUpdater = colorUpdater;
+        return this;
     }
 }

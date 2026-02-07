@@ -1,26 +1,26 @@
 package sutil.ui;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import sutil.math.SVector;
 
 public class UIToggle extends UIContainer {
 
-    private Supplier<Boolean> stateSupplier;
+    private BooleanSupplier stateSupplier;
 
-    public UIToggle(Supplier<Boolean> stateSupplier, Consumer<Boolean> stateConsumer) {
+    public UIToggle(BooleanSupplier stateSupplier, Consumer<Boolean> stateConsumer) {
         super(HORIZONTAL, LEFT);
         this.stateSupplier = stateSupplier;
 
-        setLeftClickAction(() -> stateConsumer.accept(!stateSupplier.get()));
+        setLeftClickAction(() -> stateConsumer.accept(!stateSupplier.getAsBoolean()));
 
         noOutline();
         double yDiff = UISizes.RADIO.get() - UISizes.RADIO_INSIDE.get();
         double margin = UISizes.MARGIN.get();
         setMarginScale(yDiff / 2 / margin);
 
-        style.setBackgroundColor(UIColors.BACKGROUND_HIGHLIGHT_2);
+        style.setBackgroundColor(UIColors.BACKGROUND_2);
         style.setShape(UIShape.ROUND_RECTANGLE);
 
         setHandCursor();
@@ -38,14 +38,14 @@ public class UIToggle extends UIContainer {
     }
 
     private boolean getState() {
-        return stateSupplier.get();
+        return stateSupplier.getAsBoolean();
     }
 
     private class ToggleInside extends UIElement {
 
         ToggleInside() {
             style.setShape(UIShape.ELLIPSE);
-            style.setBackgroundColor(UIColors.TEXT);
+            style.setBackgroundColor(UIColors.HIGHLIGHT);
 
             size.set(UISizes.RADIO_INSIDE.getWidthHeight());
         }

@@ -34,8 +34,8 @@ public class SettingsUI extends AppUI<SettingsApp> {
         root.setMarginScale(1);
         root.setPaddingScale(1);
 
-        UIContainer mainContainer = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT, UIContainer.TOP,
-                UIContainer.BOTH);
+        UIContainer mainContainer = new UIContainer(VERTICAL, LEFT, TOP,
+                BOTH);
         mainContainer.setFillSize();
 
         mainContainer.add(createBaseColor());
@@ -49,14 +49,14 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         UIFloatMenu nestedMenu = new UIFloatMenu(true);
         for (int i = 0; i < 20; i++) {
-            nestedMenu.addLabel(String.format("Nested %d", i), null);
+            nestedMenu.addLabel(String.format("Nested %d", i), (Runnable) null);
         }
         contextMenu.addNestedContextMenu("Nested Menu", nestedMenu);
         contextMenu.attachToContainer(mainContainer);
 
         root.add(mainContainer.addScrollbars());
 
-        UIContainer bottomRow = new UIContainer(UIContainer.HORIZONTAL, UIContainer.TOP);
+        UIContainer bottomRow = new UIContainer(HORIZONTAL, TOP);
         bottomRow.setHFillSize().zeroMargin().noOutline();
         bottomRow.add(new UIButton("Done", () -> app.getWindow().requestClose()));
         UIContainer fill = new UIContainer(0, 0);
@@ -68,10 +68,10 @@ public class SettingsUI extends AppUI<SettingsApp> {
     }
 
     private UIContainer createBaseColor() {
-        UIContainer baseColor = new UIContainer(UIContainer.VERTICAL, UIContainer.LEFT);
+        UIContainer baseColor = new UIContainer(VERTICAL, LEFT);
         baseColor.withSeparators(true);
 
-        UIContainer baseColorHeading = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
+        UIContainer baseColorHeading = new UIContainer(HORIZONTAL, LEFT, CENTER);
         baseColorHeading.zeroMargin().noOutline();
         baseColorHeading.setBackgroundHighlight(true);
         baseColorHeading.setHFillSize();
@@ -79,27 +79,23 @@ public class SettingsUI extends AppUI<SettingsApp> {
         UIContainer gap = new UIContainer(0, 0).zeroMargin().zeroPadding();
         gap.noOutline();
         baseColorHeading.add(gap);
-        UIColorElement baseColorButton = new UIColorElement(
-                () -> MainApp.toInt(AppUI.getBaseColor()),
-                UISizes.COLOR_BUTTON);
+        UIColorElement baseColorButton = new UIColorElement(AppUI::getBaseColor, UISizes.COLOR_BUTTON);
         baseColorHeading.add(baseColorButton);
         baseColorHeading.setLeftClickAction(() -> colorSelectionExpanded = !colorSelectionExpanded);
         baseColor.add(baseColorHeading);
 
-        UIContainer allColorsContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.LEFT, UIContainer.CENTER);
+        UIContainer allColorsContainer = new UIContainer(HORIZONTAL, LEFT, CENTER);
         allColorsContainer.zeroMargin().setPaddingScale(2.0).noOutline();
         allColorsContainer.setVisibilitySupplier(() -> colorSelectionExpanded);
 
-        UIContainer defaultColors = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+        UIContainer defaultColors = new UIContainer(VERTICAL, CENTER);
         defaultColors.zeroMargin().noOutline();
-        UIContainer defaultColorContainer = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIContainer defaultColorContainer = new UIContainer(HORIZONTAL, CENTER);
         defaultColorContainer.zeroMargin().noOutline();
         int numDefaultColors = AppUI.getNumDefaultUIColors();
         for (int i = 0; i < numDefaultColors; i++) {
             final int j = i;
-            UIColorElement button = new UIColorElement(
-                    () -> MainApp.toInt(AppUI.getDefaultUIColors()[j]),
-                    UISizes.COLOR_BUTTON);
+            UIColorElement button = new UIColorElement(() -> AppUI.getDefaultUIColors()[j], UISizes.COLOR_BUTTON);
             button.setLeftClickAction(() -> app.setUIColor(MainApp.toInt(AppUI.getDefaultUIColors()[j])));
             defaultColorContainer.add(button);
         }
@@ -109,9 +105,10 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         allColorsContainer.add(new UISeparator());
 
-        UIContainer customColors = new UIContainer(UIContainer.VERTICAL, UIContainer.CENTER);
+        UIContainer customColors = new UIContainer(VERTICAL, CENTER);
         customColors.zeroMargin().noOutline();
-        CustomColorContainer ccc = new CustomColorContainer(MainApp.getCustomUIBaseColors(), app::setUIColor);
+        CustomColorContainer ccc = new CustomColorContainer(MainApp.getCustomUIBaseColors(),
+                c -> app.setUIColor(MainApp.toInt(c)));
         ccc.zeroMargin().noOutline();
         customColors.add(ccc);
         customColors.add(new UIText("Custom Colors", UIText.SMALL));
@@ -126,7 +123,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
                 colorPicker,
                 MainApp::addCustomUIBaseColor,
                 // UISizes.COLOR_PICKER_PANEL,
-                UIContainer.HORIZONTAL, false, true);
+                HORIZONTAL, false, true);
         colorPickContainer.setVisibilitySupplier(() -> colorSelectionExpanded);
         baseColor.add(colorPickContainer);
 
@@ -134,8 +131,8 @@ public class SettingsUI extends AppUI<SettingsApp> {
     }
 
     private UIContainer createDarkModeDropdown() {
-        UIContainer container = new UIContainer(UIContainer.HORIZONTAL,
-                UIContainer.CENTER);
+        UIContainer container = new UIContainer(HORIZONTAL,
+                CENTER);
         container.zeroMargin().noOutline();
 
         container.add(new UIText("Theme:"));
@@ -147,7 +144,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
     }
 
     private UIContainer createHueSatDropdown() {
-        UIContainer container = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIContainer container = new UIContainer(HORIZONTAL, CENTER);
         container.zeroMargin().noOutline();
 
         container.add(new UIText("Shape of Hue-Saturation Field:"));
@@ -159,7 +156,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
     }
 
     private UIContainer createHSLHSVDropdown() {
-        UIContainer container = new UIContainer(UIContainer.HORIZONTAL, UIContainer.CENTER);
+        UIContainer container = new UIContainer(HORIZONTAL, CENTER);
         container.zeroMargin().noOutline();
 
         container.add(new UIText("Color space:"));
