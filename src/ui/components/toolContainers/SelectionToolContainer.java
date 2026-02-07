@@ -4,7 +4,7 @@ import main.apps.MainApp;
 import main.tools.ImageTool;
 import main.tools.SelectionTool;
 import sutil.math.SVector;
-import sutil.ui.UIImage;
+import sutil.ui.elements.UIImage;
 
 public final class SelectionToolContainer extends DragToolContainer<SelectionTool> {
 

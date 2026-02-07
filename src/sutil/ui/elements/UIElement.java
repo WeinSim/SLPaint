@@ -1,4 +1,4 @@
-package sutil.ui;
+package sutil.ui.elements;
 
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT;
@@ -12,6 +12,11 @@ import org.lwjglx.util.vector.Vector4f;
 
 import sutil.SUtil;
 import sutil.math.SVector;
+import sutil.ui.UI;
+import sutil.ui.UIColors;
+import sutil.ui.UIShape;
+import sutil.ui.UISizes;
+import sutil.ui.UIStyle;
 
 public abstract class UIElement {
 
@@ -65,12 +70,15 @@ public abstract class UIElement {
         mousePosition.set(mouse);
     }
 
-    public boolean updateMouseAbove(boolean valid, int currentLayer, final int targetLayer) {
+    public boolean updateMouseAbove(boolean valid, boolean insideParent, int currentLayer, final int targetLayer) {
         currentLayer += relativeLayer;
         if (currentLayer != targetLayer)
             return false;
 
-        mouseAbove = valid ? calculateMouseAbove(mousePosition) : false;
+        if (!valid || (!insideParent && !ignoreParentClipArea))
+            mouseAbove = false;
+        else
+            mouseAbove = calculateMouseAbove(mousePosition);
 
         return mouseAbove;
     }
@@ -148,10 +156,6 @@ public abstract class UIElement {
         this.selectable = selectable;
     }
 
-    public boolean ignoreParentClipArea() {
-        return ignoreParentClipArea;
-    }
-
     public SVector getPosition() {
         return position;
     }
@@ -167,6 +171,10 @@ public abstract class UIElement {
     public UIElement setRelativeLayer(int relativeLayer) {
         this.relativeLayer = relativeLayer;
         return this;
+    }
+
+    public boolean ignoreParentClipArea() {
+        return ignoreParentClipArea;
     }
 
     public final boolean isVisible() {

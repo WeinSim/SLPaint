@@ -1,10 +1,12 @@
-package sutil.ui;
+package sutil.ui.elements;
 
-import sutil.ui.UIFloatContainer.Anchor;
+import sutil.ui.UI;
+import sutil.ui.UIColors;
+import sutil.ui.elements.UIFloatContainer.Anchor;
 
 public class UIMenuBar extends UIContainer {
 
-    private UIFloatMenu expandedMenu;
+    private MenuLabel expandedMenu;
 
     public UIMenuBar() {
         super(UI.HORIZONTAL, UI.LEFT, UI.CENTER);
@@ -12,54 +14,46 @@ public class UIMenuBar extends UIContainer {
         noOutline();
         setMarginScale(0.5);
         setPaddingScale(0.5);
+        setHFillSize();
 
         expandedMenu = null;
     }
 
-    public void addMenu(String name, UIFloatMenu menu) {
-        add(new MenuLabel(name, menu));
-    }
-
-    public boolean isExpanded() {
-        return expandedMenu != null;
-    }
-
-    public void setExpandedMenu(UIFloatMenu expandedMenu) {
-        this.expandedMenu = expandedMenu;
+    public UIFloatMenu addMenu(String name) {
+        MenuLabel menuLabel = new MenuLabel(name);
+        add(menuLabel);
+        return menuLabel.menu;
     }
 
     private class MenuLabel extends UIContainer {
 
         final UIFloatMenu menu;
 
-        MenuLabel(String text, UIFloatMenu menu) {
-            this.menu = menu;
-
+        MenuLabel(String text) {
             super(UI.VERTICAL, UI.CENTER);
+
+            this.menu = new UIFloatMenu(() -> expandedMenu == this, () -> expandedMenu = null);
+            // TODO: this is just a hack to prevent parts of the image canvas (e.g. size
+            // knobs) to appear above the menu.
+            menu.setRelativeLayer(4);
+            menu.addAnchor(Anchor.TOP_LEFT, this, Anchor.BOTTOM_LEFT);
 
             noOutline();
 
             style.setBackgroundColor(
-                    () -> (mouseAbove || expandedMenu == menu)
+                    () -> (mouseAbove || expandedMenu == this)
                             ? UIColors.BACKGROUND_HIGHLIGHT.get()
                             : null);
 
             setLeftClickAction(() -> {
                 if (expandedMenu == null) {
-                    expandedMenu = menu;
+                    expandedMenu = this;
                 } else {
                     expandedMenu = null;
                 }
             });
 
             add(new UIText(text, UIText.SMALL));
-
-            // TODO: this is just a hack to prevent parts of the image canvas (e.g. size
-            // knobs) to appear above the menu.
-            menu.setRelativeLayer(4);
-            menu.setVisibilitySupplier(() -> expandedMenu == menu);
-            menu.setCloseAction(() -> expandedMenu = null);
-            menu.addAnchor(Anchor.TOP_LEFT, this, Anchor.BOTTOM_LEFT);
             add(menu);
         }
 
@@ -68,7 +62,7 @@ public class UIMenuBar extends UIContainer {
             super.update();
 
             if (mouseAbove && expandedMenu != null) {
-                expandedMenu = menu;
+                expandedMenu = this;
             }
         }
 
@@ -76,7 +70,7 @@ public class UIMenuBar extends UIContainer {
         public void mousePressed(int mouseButton, int mods) {
             super.mousePressed(mouseButton, mods);
 
-            if (expandedMenu == menu) {
+            if (expandedMenu == this) {
                 if (!mouseAbove() && !expandedMenu.mouseAbove()) {
                     expandedMenu = null;
                 }

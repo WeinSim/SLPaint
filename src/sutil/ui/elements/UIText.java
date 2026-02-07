@@ -1,4 +1,4 @@
-package sutil.ui;
+package sutil.ui.elements;
 
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -6,6 +6,9 @@ import java.util.function.Supplier;
 import org.lwjglx.util.vector.Vector4f;
 
 import sutil.math.SVector;
+import sutil.ui.UI;
+import sutil.ui.UIColors;
+import sutil.ui.UISizes;
 
 public class UIText extends UIElement {
 

@@ -2,7 +2,7 @@ package ui.components;
 
 import main.apps.MainApp;
 import main.tools.ImageTool;
-import sutil.ui.UIButton;
+import sutil.ui.elements.UIButton;
 import ui.AppUI;
 
 public class ToolButton extends UIButton {

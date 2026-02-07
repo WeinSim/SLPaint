@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.util.function.DoubleSupplier;
 
 import main.apps.AboutApp;
-import sutil.ui.UIContainer;
-import sutil.ui.UIText;
+import sutil.ui.elements.UIContainer;
+import sutil.ui.elements.UIText;
 
 public class AboutUI extends AppUI<AboutApp> {
 

@@ -1,7 +1,9 @@
-package sutil.ui;
+package sutil.ui.elements;
 
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
+
+import sutil.ui.UI;
 
 public class UIRadioButtonList extends UIContainer {
 

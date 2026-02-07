@@ -4,12 +4,12 @@ import main.ColorPicker;
 import main.apps.App;
 import sutil.math.SVector;
 import sutil.ui.UIColors;
-import sutil.ui.UIContainer;
-import sutil.ui.UIDragContainer;
-import sutil.ui.UIElement;
-import sutil.ui.UIFloatContainer;
 import sutil.ui.UISizes;
 import sutil.ui.UIStyle;
+import sutil.ui.elements.UIContainer;
+import sutil.ui.elements.UIDragContainer;
+import sutil.ui.elements.UIElement;
+import sutil.ui.elements.UIFloatContainer;
 
 public class HueSatField extends UIDragContainer {
 

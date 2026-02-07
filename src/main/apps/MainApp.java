@@ -28,7 +28,7 @@ import renderengine.Window;
 import renderengine.fonts.TextFont;
 import sutil.SUtil;
 import sutil.math.SVector;
-import sutil.ui.UITextInput;
+import sutil.ui.elements.UITextInput;
 import ui.AppUI;
 import ui.MainUI;
 import ui.components.ImageCanvas;
@@ -38,7 +38,6 @@ import ui.components.ImageCanvas;
  * TODO continue:
  * 
  * App:
- *   Image rotating / flipping
  *   Line tool
  *   Pencil tool
  *     Sizes 1 & 2 and 3 & 4 look the same
@@ -168,8 +167,8 @@ public final class MainApp extends App {
     };
 
     public static final int SAVE_DIALOG = 1, NEW_DIALOG = 2, RESIZE_DIALOG = 3, NEW_COLOR_DIALOG = 4,
-            ROTATE_DIALOG = 5, FLIP_DIALOG = 6, UNABLE_TO_SAVE_IMAGE_DIALOG = 7, DISCARD_UNSAVED_CHANGES_DIALOG = 9,
-            SETTINGS_DIALOG = 10, CROP_DIALOG = 11, ABOUT_DIALOG = 12;
+            UNABLE_TO_SAVE_IMAGE_DIALOG = 5, DISCARD_UNSAVED_CHANGES_DIALOG = 6, SETTINGS_DIALOG = 7, CROP_DIALOG = 8,
+            ABOUT_DIALOG = 9;
 
     public static final int PRIMARY_COLOR = 0, SECONDARY_COLOR = 1;
     public static final int INITIAL_PRIMARY_COLOR = SUtil.toARGB(0), INITIAL_SECONDARY_COLOR = SUtil.toARGB(255);
@@ -359,6 +358,39 @@ public final class MainApp extends App {
         // If the top left corner of the image changes, its translation should change in
         // the opposite way such that the rest of the image stays in the same place.
         canvas.translateImage(new SVector(x, y));
+
+        addImageSnapshot();
+    }
+
+    /**
+     * 
+     * @param degrees Must be either 90, -90 or 180.
+     */
+    public void rotateImage(int degrees) {
+        Image image = getImage();
+        switch (degrees) {
+            case 90 -> image.rotateRight();
+            case -90 -> image.rotateLeft();
+            case 180 -> image.rotate180();
+            default -> {
+                final String baseStr = "Illegal image rotation angle (%d). Allowed values are 90, -90 and 180.";
+                throw new IllegalArgumentException(String.format(baseStr, degrees));
+            }
+        }
+
+        renderer.setTempFBOSize(image.getWidth(), image.getHeight());
+
+        addImageSnapshot();
+    }
+
+    public void flipImageHorizontal() {
+        getImage().flipHorizontal();
+
+        addImageSnapshot();
+    }
+
+    public void flipImageVertical() {
+        getImage().flipVertical();
 
         addImageSnapshot();
     }

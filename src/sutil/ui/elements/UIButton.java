@@ -1,4 +1,4 @@
-package sutil.ui;
+package sutil.ui.elements;
 
 import java.util.function.Supplier;
 

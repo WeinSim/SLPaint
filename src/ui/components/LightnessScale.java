@@ -3,7 +3,7 @@ package ui.components;
 import main.ColorPicker;
 import main.apps.App;
 import sutil.ui.UI;
-import sutil.ui.UIScale;
+import sutil.ui.elements.UIScale;
 
 public class LightnessScale extends UIScale {
 

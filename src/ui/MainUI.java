@@ -18,18 +18,19 @@ import main.tools.PencilTool;
 import main.tools.TextTool;
 import sutil.SUtil;
 import sutil.math.SVector;
-import sutil.ui.UIButton;
-import sutil.ui.UIContainer;
-import sutil.ui.UIDropdown;
-import sutil.ui.UIFloatMenu;
-import sutil.ui.UIImage;
-import sutil.ui.UILabel;
-import sutil.ui.UIMenuBar;
-import sutil.ui.UINumberInput;
-import sutil.ui.UIScale;
 import sutil.ui.UISizes;
-import sutil.ui.UIText;
-import sutil.ui.UIToggle;
+import sutil.ui.elements.UIButton;
+import sutil.ui.elements.UIContainer;
+import sutil.ui.elements.UIDropdown;
+import sutil.ui.elements.UIFloatMenu;
+import sutil.ui.elements.UIImage;
+import sutil.ui.elements.UILabel;
+import sutil.ui.elements.UIMenuBar;
+import sutil.ui.elements.UIMenuButton;
+import sutil.ui.elements.UINumberInput;
+import sutil.ui.elements.UIScale;
+import sutil.ui.elements.UIText;
+import sutil.ui.elements.UIToggle;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.ImageCanvas;
@@ -55,7 +56,7 @@ public class MainUI extends AppUI<MainApp> {
 
         UIMenuBar menuBar = new UIMenuBar();
 
-        UIFloatMenu fileMenu = new UIFloatMenu();
+        UIFloatMenu fileMenu = menuBar.addMenu("File");
         fileMenu.addLabel("New", app.getKeyboardShortcut("new"));
         fileMenu.addLabel("Open", app.getKeyboardShortcut("open"));
         fileMenu.addLabel("Save", app.getKeyboardShortcut("save"));
@@ -64,41 +65,49 @@ public class MainUI extends AppUI<MainApp> {
         fileMenu.addLabel("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG));
         fileMenu.addSeparator();
         fileMenu.addLabel("Quit", app::exit);
-        menuBar.addMenu("File", fileMenu);
 
-        UIFloatMenu editMenu = new UIFloatMenu();
+        UIFloatMenu editMenu = menuBar.addMenu("Edit");
         editMenu.addLabel("Undo", app.getKeyboardShortcut("undo"));
         editMenu.addLabel("Redo", app.getKeyboardShortcut("redo"));
-        menuBar.addMenu("Edit", editMenu);
 
-        UIFloatMenu selectionMenu = new UIFloatMenu();
+        UIFloatMenu selectionMenu = menuBar.addMenu("Selection");
         selectionMenu.addLabel("Copy", app.getKeyboardShortcut("copy"));
         selectionMenu.addLabel("Cut", app.getKeyboardShortcut("cut"));
         selectionMenu.addLabel("Paste", app.getKeyboardShortcut("paste"));
         selectionMenu.addSeparator();
         selectionMenu.addLabel("Crop image to selection", app.getKeyboardShortcut("crop_to_selection"));
-        menuBar.addMenu("Selection", selectionMenu);
 
-        UIFloatMenu imageMenu = new UIFloatMenu();
+        UIFloatMenu imageMenu = menuBar.addMenu("Image");
         imageMenu.addLabel("Resize", () -> app.showDialog(MainApp.RESIZE_DIALOG));
         imageMenu.addLabel("Crop", () -> app.showDialog(MainApp.CROP_DIALOG));
-        menuBar.addMenu("Image", imageMenu);
+        imageMenu.addSeparator();
+        UIFloatMenu rotateMenu = imageMenu.addNestedMenu("Rotate");
+        rotateMenu.addLabel("Rotate 90° right", () -> app.rotateImage(90));
+        rotateMenu.addLabel("Rotate 90° left", () -> app.rotateImage(-90));
+        rotateMenu.addLabel("Rotate 180°", () -> app.rotateImage(180));
+        UIFloatMenu flipMenu = imageMenu.addNestedMenu("Flip");
+        flipMenu.addLabel("Flip horizontally", () -> app.flipImageHorizontal());
+        flipMenu.addLabel("Flip vertically", () -> app.flipImageVertical());
 
-        UIFloatMenu helpMenu = new UIFloatMenu();
+        UIFloatMenu helpMenu = menuBar.addMenu("Help");
         helpMenu.addLabel("About", () -> app.showDialog(MainApp.ABOUT_DIALOG));
-        menuBar.addMenu("Help", helpMenu);
 
         root.add(menuBar);
 
-        UIContainer topRow = new UIContainer(HORIZONTAL, LEFT, CENTER,
-                HORIZONTAL);
+        UIContainer topRow = new UIContainer(HORIZONTAL, LEFT, CENTER, HORIZONTAL);
         topRow.withSeparators(true).setHFillSize().setHAlignment(LEFT).withBackground().noOutline();
 
         UIContainer imageOptions = addTopRowSection(topRow, "Image");
-        // imageOptions.add(new UILabel("..."));
         imageOptions.add(new UIButton("Resize", () -> app.showDialog(MainApp.RESIZE_DIALOG)));
-        imageOptions.add(new UIButton("Rotate", () -> app.showDialog(MainApp.ROTATE_DIALOG)));
-        imageOptions.add(new UIButton("Flip", () -> app.showDialog(MainApp.FLIP_DIALOG)));
+        UIMenuButton rotate = new UIMenuButton("Rotate");
+        rotate.addLabel("Rotate 90° right", () -> app.rotateImage(90));
+        rotate.addLabel("Rotate 90° left", () -> app.rotateImage(-90));
+        rotate.addLabel("Rotate 180°", () -> app.rotateImage(180));
+        imageOptions.add(rotate);
+        UIMenuButton flip = new UIMenuButton("Flip");
+        flip.addLabel("Flip horizontally", () -> app.flipImageHorizontal());
+        flip.addLabel("Flip vertically", () -> app.flipImageVertical());
+        imageOptions.add(flip);
 
         UIContainer toolbox = addTopRowSection(topRow, "Tools");
         for (ImageTool tool : ImageTool.INSTANCES) {

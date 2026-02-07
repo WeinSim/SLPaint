@@ -5,14 +5,14 @@ import main.apps.App;
 import main.apps.MainApp;
 import main.apps.SettingsApp;
 import main.settings.Settings;
-import sutil.ui.UIButton;
-import sutil.ui.UIContainer;
-import sutil.ui.UIContextMenu;
-import sutil.ui.UIDropdown;
-import sutil.ui.UIFloatMenu;
-import sutil.ui.UISeparator;
 import sutil.ui.UISizes;
-import sutil.ui.UIText;
+import sutil.ui.elements.UIButton;
+import sutil.ui.elements.UIContainer;
+import sutil.ui.elements.UIContextMenu;
+import sutil.ui.elements.UIDropdown;
+import sutil.ui.elements.UIFloatMenu;
+import sutil.ui.elements.UISeparator;
+import sutil.ui.elements.UIText;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.UIColorElement;
@@ -43,16 +43,14 @@ public class SettingsUI extends AppUI<SettingsApp> {
         mainContainer.add(createHueSatDropdown());
         mainContainer.add(createHSLHSVDropdown());
 
-        UIContextMenu contextMenu = new UIContextMenu(false);
+        UIContextMenu contextMenu = new UIContextMenu(mainContainer, false);
         contextMenu.addLabel("Label 1", () -> System.out.println("Label 1"));
         contextMenu.addSeparator();
-
-        UIFloatMenu nestedMenu = new UIFloatMenu(true);
+        UIFloatMenu nestedMenu = contextMenu.addNestedMenu("Nested Menu", true);
         for (int i = 0; i < 20; i++) {
-            nestedMenu.addLabel(String.format("Nested %d", i), (Runnable) null);
+            nestedMenu.addLabel(String.format("Nested %d", i), () -> {
+            });
         }
-        contextMenu.addNestedContextMenu("Nested Menu", nestedMenu);
-        contextMenu.attachToContainer(mainContainer);
 
         root.add(mainContainer.addScrollbars());
 

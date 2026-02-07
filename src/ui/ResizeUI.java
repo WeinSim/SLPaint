@@ -4,12 +4,12 @@ import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 
 import main.apps.ResizeApp;
-import sutil.ui.UIButton;
-import sutil.ui.UIContainer;
-import sutil.ui.UINumberInput;
-import sutil.ui.UIRadioButtonList;
-import sutil.ui.UIText;
-import sutil.ui.UIToggle;
+import sutil.ui.elements.UIButton;
+import sutil.ui.elements.UIContainer;
+import sutil.ui.elements.UINumberInput;
+import sutil.ui.elements.UIRadioButtonList;
+import sutil.ui.elements.UIText;
+import sutil.ui.elements.UIToggle;
 
 public class ResizeUI extends AppUI<ResizeApp> {
 

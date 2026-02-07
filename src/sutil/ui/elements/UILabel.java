@@ -1,7 +1,9 @@
-package sutil.ui;
+package sutil.ui.elements;
 
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+
+import sutil.ui.UI;
 
 public class UILabel extends UIContainer {
 

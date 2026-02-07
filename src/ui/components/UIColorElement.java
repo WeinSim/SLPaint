@@ -7,8 +7,8 @@ import org.lwjglx.util.vector.Vector4f;
 
 import sutil.math.SVector;
 import sutil.ui.UIColors;
-import sutil.ui.UIElement;
 import sutil.ui.UISizes;
+import sutil.ui.elements.UIElement;
 
 public class UIColorElement extends UIElement {
 

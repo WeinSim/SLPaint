@@ -11,11 +11,11 @@ import main.settings.BooleanSetting;
 import renderengine.AppRenderer;
 import renderengine.Window;
 import sutil.math.SVector;
-import sutil.ui.UI;
 import sutil.ui.KeyboardShortcut;
-import sutil.ui.UIRoot;
-import sutil.ui.UITextInput;
+import sutil.ui.UI;
 import sutil.ui.UserAction;
+import sutil.ui.elements.UIRoot;
+import sutil.ui.elements.UITextInput;
 import ui.AppUI;
 
 public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp, AboutApp {
@@ -292,6 +292,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     }
 
     public void addKeyboardShortcut(KeyboardShortcut shortcut) {
+        String identifier = shortcut.getIdentifier();
+        KeyboardShortcut currentShortcut = keyboardShortcuts.get(identifier);
+        if (currentShortcut != null)
+            System.err.format("Duplicate keyboard shortcut \"%s\" in %s\n", identifier, getClass().getName());
         keyboardShortcuts.put(shortcut.getIdentifier(), shortcut);
     }
 

@@ -1,6 +1,11 @@
-package sutil.ui;
+package sutil.ui.elements;
 
 import java.util.function.IntSupplier;
+
+import sutil.ui.UI;
+import sutil.ui.UIColors;
+import sutil.ui.UIShape;
+import sutil.ui.UISizes;
 
 public class UIRadioButton extends UIContainer {
 

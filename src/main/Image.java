@@ -134,12 +134,8 @@ public class Image implements Cleanable {
         int[] oldPixels = ((DataBufferInt) oldImage.getRaster().getDataBuffer()).getData(),
                 newPixels = ((DataBufferInt) newImage.getRaster().getDataBuffer()).getData();
 
-        // if (newWidth > oldWidth || newHeight > oldHeight)
         if (startX < 0 || startX + newWidth > oldWidth || startY < 0 || startY + newHeight > oldHeight)
             Arrays.fill(newPixels, backgroundColor);
-
-        // int copyWidth = Math.min(oldWidth, newWidth),
-        // copyHeight = Math.min(oldHeight, newHeight);
 
         // all coordinates are w.r.t. the new image
         int copyStartX = Math.max(0, -startX),
@@ -162,6 +158,52 @@ public class Image implements Cleanable {
         int[] imagePixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
         System.arraycopy(pixels, 0, imagePixels, 0, pixels.length);
 
+        setBufferedImage(image);
+    }
+
+    public void rotateLeft() {
+        rotate(false, true);
+    }
+
+    public void rotateRight() {
+        rotate(true, false);
+    }
+
+    private void rotate(boolean invertX, boolean invertY) {
+        int newWidth = height,
+                newHeight = width;
+        BufferedImage image = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+        int[] imagePixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+        for (int y = 0; y < newHeight; y++) {
+            for (int x = 0; x < newWidth; x++) {
+                int oldIndex = (invertX ? height - 1 - x : x) * width + (invertY ? width - 1 - y : y);
+                imagePixels[y * newWidth + x] = pixelArray[oldIndex];
+            }
+        }
+        setBufferedImage(image);
+    }
+
+    public void rotate180() {
+        flip(true, true);
+    }
+
+    public void flipHorizontal() {
+        flip(true, false);
+    }
+
+    public void flipVertical() {
+        flip(false, true);
+    }
+
+    private void flip(boolean flipX, boolean flipY) {
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        int[] imagePixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int oldIndex = (flipY ? height - 1 - y : y) * width + (flipX ? width - 1 - x : x);
+                imagePixels[y * width + x] = pixelArray[oldIndex];
+            }
+        }
         setBufferedImage(image);
     }
 

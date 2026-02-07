@@ -17,9 +17,9 @@ import renderengine.fonts.TextFont;
 import sutil.SUtil;
 import sutil.ui.UI;
 import sutil.ui.UIColors;
-import sutil.ui.UIElement;
 import sutil.ui.UISizes;
 import sutil.ui.UIStyle;
+import sutil.ui.elements.UIElement;
 
 public abstract class AppUI<T extends App> extends UI {
 

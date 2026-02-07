@@ -1,13 +1,29 @@
-package sutil.ui;
+package sutil.ui.elements;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import org.lwjgl.glfw.GLFW;
-import org.lwjglx.util.vector.Vector4f;
 
 import sutil.SUtil;
+import sutil.ui.KeyboardShortcut;
+import sutil.ui.UI;
+import sutil.ui.UIColors;
 
+/*
+ * Appearances of UIFloatMenu:
+ * Child of UIDropdown:
+ *   boolean expanded
+ *   setCloseAction(expanded = !expanded)
+ * Grandhild of UIMenuBar:
+ *   UIFloatMenu expandedMenu
+ *   setCloseAction(expandedMenu = null)
+ * UIContextMenu:
+ *   boolean expanded
+ *     (in the float menu itself!)
+ *   expandedLabel = null;
+ *   close();
+ */
 public class UIFloatMenu extends UIFloatContainer {
 
     private final UIContainer contents;
@@ -16,23 +32,24 @@ public class UIFloatMenu extends UIFloatContainer {
 
     protected CMLabel expandedLabel;
 
-    protected Runnable closeAction = () -> {
-    };
+    protected Runnable closeAction;
 
-    public UIFloatMenu() {
-        this(false);
+    public UIFloatMenu(BooleanSupplier visibilitySupplier, Runnable closeAction) {
+        this(visibilitySupplier, closeAction, false, UIText.SMALL);
     }
 
-    public UIFloatMenu(boolean scroll) {
-        this(scroll, null, UIText.SMALL);
+    public UIFloatMenu(BooleanSupplier visibilitySupplier, Runnable closeAction, boolean scroll) {
+        this(visibilitySupplier, closeAction, scroll, UIText.SMALL);
     }
 
-    public UIFloatMenu(boolean scroll, BooleanSupplier visibilitySupplier, DoubleSupplier textSizeUpdater) {
-        this.textSizeUpdater = textSizeUpdater;
+    public UIFloatMenu(BooleanSupplier visibilitySupplier, Runnable closeAction, boolean scroll,
+            DoubleSupplier textSizeUpdater) {
 
         super(VERTICAL, LEFT);
 
         setVisibilitySupplier(visibilitySupplier);
+        this.closeAction = closeAction;
+        this.textSizeUpdater = textSizeUpdater;
 
         zeroMargin();
         zeroPadding();
@@ -57,13 +74,14 @@ public class UIFloatMenu extends UIFloatContainer {
         // Kind of a dumb hack.
         // The first check is neccessary because it prevents the following situation:
         // A UIContextMenu and one of its attached float menues are open.
-        // The user clicks somewhere in the parent menu. Because the mouse is not abovew
+        // The user clicks somewhere in the parent menu. Because the mouse is not above
         // the child menu, it closes (and also causes the parent to close).
         if (!(parent instanceof UIFloatContainer) && shouldClose(this)) {
             close();
         }
     }
 
+    // returns true if this element of one of its children has mouseAbove set.
     private boolean shouldClose(UIElement element) {
         if (element.mouseAbove)
             return false;
@@ -93,27 +111,6 @@ public class UIFloatMenu extends UIFloatContainer {
         addLabel(text, null, clickAction, () -> true);
     }
 
-    // public void addLabel(String mainText, String rightText, Runnable clickAction)
-    // {
-    // addLabel(mainText, rightText, clickAction, () -> true);
-    // }
-
-    public void addLabel(String mainText, String rightText, Runnable clickAction, BooleanSupplier active) {
-        CMLabel label = new CMLabel(mainText, rightText, active);
-        label.style.setBackgroundColor(
-                () -> active.getAsBoolean() && label.mouseAbove
-                        ? UIColors.BACKGROUND_HIGHLIGHT.get()
-                        : null);
-        label.setLeftClickAction(() -> {
-            if (!active.getAsBoolean())
-                return;
-            if (clickAction != null)
-                clickAction.run();
-            close();
-        });
-        add(label);
-    }
-
     public void addLabel(String labelText, KeyboardShortcut shortcut) {
         int modifiers = shortcut.getModifiers();
         String rightText = "";
@@ -131,30 +128,48 @@ public class UIFloatMenu extends UIFloatContainer {
         addLabel(labelText, rightText, shortcut::run, shortcut::isPossible);
     }
 
-    public void addNestedContextMenu(String text, UIFloatMenu contextMenu) {
+    private void addLabel(String mainText, String rightText, Runnable clickAction, BooleanSupplier active) {
+        CMLabel label = new CMLabel(mainText, rightText, active);
+        label.style.setBackgroundColor(
+                () -> active.getAsBoolean() && label.mouseAbove()
+                        ? UIColors.BACKGROUND_HIGHLIGHT.get()
+                        : null);
+        if (clickAction != null)
+            label.setLeftClickAction(() -> {
+                if (!active.getAsBoolean())
+                    return;
+                clickAction.run();
+                close();
+            });
+        add(label);
+    }
+
+    public UIFloatMenu addNestedMenu(String text) {
+        return addNestedMenu(text, false);
+    }
+
+    public UIFloatMenu addNestedMenu(String text, boolean scroll) {
         CMLabel label = new CMLabel(text, ">", null);
+        label.style.setBackgroundColor(
+                () -> label.mouseAbove() || expandedLabel == label
+                        ? UIColors.BACKGROUND_HIGHLIGHT.get()
+                        : null);
         add(label);
 
-        contextMenu.addAnchor(Anchor.TOP_LEFT, label, Anchor.TOP_RIGHT);
-        contextMenu.addAnchor(Anchor.TOP_RIGHT, label, Anchor.TOP_LEFT);
-        contextMenu.addAnchor(Anchor.BOTTOM_LEFT, label, Anchor.BOTTOM_RIGHT);
-        contextMenu.addAnchor(Anchor.BOTTOM_RIGHT, label, Anchor.BOTTOM_LEFT);
-        contextMenu.setVisibilitySupplier(() -> expandedLabel == label);
+        UIFloatMenu menu = new UIFloatMenu(
+                () -> expandedLabel == label,
+                () -> {
+                    expandedLabel = null;
+                    close();
+                },
+                scroll);
+        menu.addAnchor(Anchor.TOP_LEFT, label, Anchor.TOP_RIGHT);
+        menu.addAnchor(Anchor.TOP_RIGHT, label, Anchor.TOP_LEFT);
+        menu.addAnchor(Anchor.BOTTOM_LEFT, label, Anchor.BOTTOM_RIGHT);
+        menu.addAnchor(Anchor.BOTTOM_RIGHT, label, Anchor.BOTTOM_LEFT);
+        add(menu);
 
-        label.style.setBackgroundColor(() -> {
-            Vector4f bgColor = null;
-            if (label.mouseAbove() || expandedLabel == label) {
-                bgColor = UIColors.BACKGROUND_HIGHLIGHT.get();
-            }
-            return bgColor;
-        });
-
-        contextMenu.setCloseAction(() -> {
-            expandedLabel = null;
-            close();
-        });
-
-        add(contextMenu);
+        return menu;
     }
 
     public void addSeparator() {
@@ -166,10 +181,6 @@ public class UIFloatMenu extends UIFloatContainer {
 
     public void close() {
         closeAction.run();
-    }
-
-    public void setCloseAction(Runnable closeAction) {
-        this.closeAction = closeAction;
     }
 
     private class CMLabel extends UIContainer {

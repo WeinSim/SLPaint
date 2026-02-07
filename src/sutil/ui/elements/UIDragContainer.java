@@ -1,6 +1,7 @@
-package sutil.ui;
+package sutil.ui.elements;
 
 import sutil.math.SVector;
+import sutil.ui.UI;
 
 public abstract class UIDragContainer extends UIContainer {
 

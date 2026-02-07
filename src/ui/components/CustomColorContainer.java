@@ -6,8 +6,8 @@ import org.lwjglx.util.vector.Vector4f;
 
 import main.ColorArray;
 import main.apps.MainApp;
-import sutil.ui.UIContainer;
 import sutil.ui.UISizes;
+import sutil.ui.elements.UIContainer;
 
 public class CustomColorContainer extends UIContainer {
 

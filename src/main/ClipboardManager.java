@@ -51,9 +51,8 @@ public class ClipboardManager {
      * @return The converted BufferedImage
      */
     private static BufferedImage toBufferedImage(java.awt.Image img) {
-        if (img instanceof BufferedImage) {
+        if (img instanceof BufferedImage)
             return (BufferedImage) img;
-        }
 
         // Create a buffered image with transparency
         BufferedImage bimage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);

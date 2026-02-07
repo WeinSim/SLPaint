@@ -8,6 +8,9 @@ import java.util.LinkedList;
 import org.lwjglx.util.vector.Vector4f;
 
 import sutil.math.SVector;
+import sutil.ui.elements.UIContainer;
+import sutil.ui.elements.UIElement;
+import sutil.ui.elements.UIRoot;
 
 public abstract class UI {
 
@@ -220,7 +223,7 @@ public abstract class UI {
      * During the updateVisibility() step of update(), the currently selected
      * element has to report to the UIPanel that it is still visible.
      */
-    static void confirmSelectedElement() {
+    public static void confirmSelectedElement() {
         context.confirmSelectedElementImpl();
     }
 
@@ -228,7 +231,7 @@ public abstract class UI {
         selectedElementVisible = true;
     }
 
-    static void setDragging() {
+    public static void setDragging() {
         context.setDraggingImpl();
     }
 

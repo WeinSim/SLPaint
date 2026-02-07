@@ -4,7 +4,7 @@ import main.apps.MainApp;
 import main.tools.DragTool;
 import main.tools.ImageTool;
 import main.tools.TextTool;
-import sutil.ui.UITextInput;
+import sutil.ui.elements.UITextInput;
 
 public final class TextToolContainer extends DragToolContainer<TextTool> {
 

@@ -1,4 +1,6 @@
-package sutil.ui;
+package sutil.ui.elements;
+
+import sutil.ui.UIColors;
 
 public class UISeparator extends UIContainer {
 

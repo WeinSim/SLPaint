@@ -1,9 +1,12 @@
-package sutil.ui;
+package sutil.ui.elements;
 
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 
 import sutil.math.SVector;
+import sutil.ui.UIColors;
+import sutil.ui.UISizes;
+import sutil.ui.UIStyle;
 
 public class UIScale extends UIDragContainer {
 

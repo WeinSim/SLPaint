@@ -1,9 +1,12 @@
-package sutil.ui;
+package sutil.ui.elements;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 import sutil.math.SVector;
+import sutil.ui.UIColors;
+import sutil.ui.UIShape;
+import sutil.ui.UISizes;
 
 public class UIToggle extends UIContainer {
 

@@ -1,4 +1,4 @@
-package sutil.ui;
+package sutil.ui.elements;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -8,6 +8,10 @@ import java.util.function.BooleanSupplier;
 import org.lwjgl.glfw.GLFW;
 
 import sutil.math.SVector;
+import sutil.ui.UI;
+import sutil.ui.UIColors;
+import sutil.ui.UISizes;
+import sutil.ui.UIStyle;
 
 public class UIContainer extends UIElement {
 
@@ -164,8 +168,8 @@ public class UIContainer extends UIElement {
     }
 
     @Override
-    public boolean updateMouseAbove(boolean valid, int currentLayer, final int targetLayer) {
-        boolean ret = super.updateMouseAbove(valid, currentLayer, targetLayer);
+    public boolean updateMouseAbove(boolean valid, boolean insideParent, int currentLayer, final int targetLayer) {
+        boolean ret = super.updateMouseAbove(valid, insideParent, currentLayer, targetLayer);
         currentLayer += relativeLayer;
 
         // This is a bit ugly. But it is neccessary because a scroll container's
@@ -176,9 +180,7 @@ public class UIContainer extends UIElement {
         boolean childMouseAbove = false;
         for (UIElement child : getChildren()) {
             boolean childValid = valid && !childMouseAbove;
-            if (clipChildren && !child.ignoreParentClipArea())
-                childValid &= ownMouseAbove;
-            childMouseAbove |= child.updateMouseAbove(childValid, currentLayer, targetLayer);
+            childMouseAbove |= child.updateMouseAbove(childValid, ownMouseAbove, currentLayer, targetLayer);
         }
 
         return ret || childMouseAbove;

@@ -1,7 +1,7 @@
 package ui.components;
 
 import main.ColorPicker;
-import sutil.ui.UIScale;
+import sutil.ui.elements.UIScale;
 
 public class AlphaScale extends UIScale {
 

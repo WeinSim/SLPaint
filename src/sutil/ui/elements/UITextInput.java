@@ -1,4 +1,4 @@
-package sutil.ui;
+package sutil.ui.elements;
 
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -7,6 +7,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import sutil.math.SVector;
+import sutil.ui.UI;
+import sutil.ui.UISizes;
 
 public class UITextInput extends UIContainer {
 

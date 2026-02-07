@@ -9,9 +9,9 @@ import main.apps.MainApp;
 import main.tools.Resizable;
 import sutil.math.SVector;
 import sutil.ui.UI;
-import sutil.ui.UIContainer;
-import sutil.ui.UIFloatContainer;
 import sutil.ui.UISizes;
+import sutil.ui.elements.UIContainer;
+import sutil.ui.elements.UIFloatContainer;
 
 public class SizeKnob extends UIFloatContainer {
 

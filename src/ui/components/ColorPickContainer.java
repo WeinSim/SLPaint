@@ -11,14 +11,14 @@ import main.apps.App;
 import main.apps.MainApp;
 import sutil.SUtil;
 import sutil.math.SVector;
-import sutil.ui.UIButton;
 import sutil.ui.UIColors;
-import sutil.ui.UIContainer;
-import sutil.ui.UINumberInput;
-import sutil.ui.UIScale;
 import sutil.ui.UISizes;
 import sutil.ui.UIStyle;
-import sutil.ui.UIText;
+import sutil.ui.elements.UIButton;
+import sutil.ui.elements.UIContainer;
+import sutil.ui.elements.UINumberInput;
+import sutil.ui.elements.UIScale;
+import sutil.ui.elements.UIText;
 
 public class ColorPickContainer extends UIContainer {
 

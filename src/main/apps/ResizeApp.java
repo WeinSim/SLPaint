@@ -4,7 +4,7 @@ import org.lwjgl.glfw.GLFW;
 
 import renderengine.Window;
 import sutil.ui.UI;
-import sutil.ui.UINumberInput;
+import sutil.ui.elements.UINumberInput;
 import ui.AppUI;
 import ui.ResizeUI;
 

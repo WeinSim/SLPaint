@@ -1,9 +1,10 @@
-package sutil.ui;
+package sutil.ui.elements;
 
 import java.util.ArrayList;
 import java.util.function.Supplier;
 
 import sutil.math.SVector;
+import sutil.ui.UI;
 
 public class UIFloatContainer extends UIContainer {
 

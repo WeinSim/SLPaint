@@ -217,6 +217,8 @@ public class UIRenderMaster {
     }
 
     public void setTempFBOSize(int width, int height) {
+        if (tempFBO.width == width && tempFBO.height == height)
+            return;
         tempFBO.cleanUp();
         createTempFBO(width, height);
     }

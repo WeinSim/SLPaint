@@ -2,7 +2,7 @@ package ui.components.toolContainers;
 
 import main.apps.MainApp;
 import main.tools.ImageTool;
-import sutil.ui.UIFloatContainer;
+import sutil.ui.elements.UIFloatContainer;
 
 public abstract sealed class ToolContainer<T extends ImageTool> extends UIFloatContainer
         permits DragToolContainer, PencilToolContainer, PipetteToolContainer, FillBucketToolContainer {
