@@ -45,6 +45,7 @@ public class Settings {
 
         currentSettings = loadSettingsFromFile(SETTINGS_FILE);
         if (currentSettings == null) {
+            System.err.println("Unable to load settings. Using default settings instead.");
             currentSettings = new JSONObject(defaultSettings);
         }
 
@@ -90,9 +91,8 @@ public class Settings {
 
     private static JSONObject loadSettingsFromFile(String path) {
         File file = new File(path);
-        if (!file.exists()) {
+        if (!file.exists())
             return null;
-        }
 
         String buffer = "";
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {

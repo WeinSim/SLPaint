@@ -122,12 +122,7 @@ public class ImageCanvas extends UIContainer {
         if (canDoScrollZoom()) {
             if ((mods & GLFW_MOD_CONTROL) != 0) {
                 // zoom
-                double prevZoom = getImageZoom();
-                imageZoomLevel += (int) Math.signum(scroll.y);
-                imageZoomLevel = Math.min(Math.max(MIN_ZOOM_LEVEL, imageZoomLevel), MAX_ZOOM_LEVEL);
-                double zoom = getImageZoom();
-                mousePos = new SVector(mousePos).sub(position);
-                imageTranslation.sub(mousePos).scale(zoom / prevZoom).add(mousePos);
+                zoom((int) Math.signum(scroll.y), new SVector(mousePos).sub(position));
             } else {
                 // scroll
                 if ((mods & GLFW_MOD_SHIFT) != 0) {
@@ -142,26 +137,41 @@ public class ImageCanvas extends UIContainer {
         return false;
     }
 
+    private void zoom(int delta, SVector origin) {
+        double prevZoom = getImageZoom();
+        imageZoomLevel += delta;
+        imageZoomLevel = Math.min(Math.max(MIN_ZOOM_LEVEL, imageZoomLevel), MAX_ZOOM_LEVEL);
+        double zoom = getImageZoom();
+        imageTranslation.sub(origin).scale(zoom / prevZoom).add(origin);
+    }
+
     public boolean canDoScrollZoom() {
-        // (this is kind of ugly)
         return calculateMouseAbove(mousePosition);
-
-        // if (mouseAbove())
-        // return true;
-
-        // for (UIElement child : getChildren()) {
-        // if (child instanceof ToolContainer) {
-        // if (child.mouseAbove())
-        // return true;
-        // }
-        // }
-
-        // return false;
     }
 
     public void resetImageTransform() {
         imageTranslation = new SVector(10, 10).scale(UI.getUIScale());
         imageZoomLevel = 0;
+    }
+
+    public void zoomIn() {
+        zoom(1, new SVector(size).div(2));
+    }
+
+    public boolean canZoomIn() {
+        return imageZoomLevel < MAX_ZOOM_LEVEL;
+    }
+
+    public void zoomOut() {
+        zoom(-1, new SVector(size).div(2));
+    }
+
+    public boolean canZoomOut() {
+        return imageZoomLevel > MIN_ZOOM_LEVEL;
+    }
+
+    public void resetZoom() {
+        zoom(-imageZoomLevel, new SVector(size).div(2));
     }
 
     public double getImageZoom() {

@@ -9,7 +9,7 @@ import sutil.ui.elements.UIContainer;
 import sutil.ui.elements.UINumberInput;
 import sutil.ui.elements.UIRadioButtonList;
 import sutil.ui.elements.UIText;
-import sutil.ui.elements.UIToggle;
+import sutil.ui.elements.UIToggleList;
 
 public class ResizeUI extends AppUI<ResizeApp> {
 
@@ -34,7 +34,7 @@ public class ResizeUI extends AppUI<ResizeApp> {
                 new String[] { "Resize (scale) image", "Crop image" },
                 app::getResizeMode,
                 app::setResizeMode);
-        resizeMode.setMarginScale(1.0).setPaddingScale(2.0);
+        resizeMode.setMarginScale(1.0);
         root.add(resizeMode);
 
         UIContainer inner = new UIContainer(VERTICAL, CENTER);
@@ -42,15 +42,12 @@ public class ResizeUI extends AppUI<ResizeApp> {
 
         UIContainer inputMode = new UIContainer(HORIZONTAL, CENTER);
         inputMode.setHFillSize().noOutline();
-        // inputMode.zeroMargin();
         inputMode.add(new UIText("By:"));
-        // inputMode.add(new UIContainer(0, 0).zeroMargin().setHFillSize().noOutline());
         UIContainer radioButtons = new UIRadioButtonList(
                 HORIZONTAL,
                 new String[] { "Pixels", "Percentage" },
                 this::getInputMode,
                 this::setInputMode);
-        radioButtons.setPaddingScale(2.0);
         inputMode.add(radioButtons);
         inner.add(inputMode);
 
@@ -78,12 +75,9 @@ public class ResizeUI extends AppUI<ResizeApp> {
             inner.add(row);
         }
 
-        UIContainer ratioContainer = new UIContainer(HORIZONTAL, CENTER);
-        ratioContainer.setHFillSize().noOutline();
-        ratioContainer.add(new UIText("Lock ratio"));
-        ratioContainer.add(new UIContainer(0, 0).setHFillSize().noOutline());
-        ratioContainer.add(new UIToggle(app::isLockRatio, app::setLockRatio));
-        inner.add(ratioContainer);
+        UIToggleList lockRatio = new UIToggleList("Lock ratio", app::isLockRatio, app::setLockRatio);
+        lockRatio.setHFillSize().setMarginScale(1.0);
+        inner.add(lockRatio);
 
         root.add(inner);
 

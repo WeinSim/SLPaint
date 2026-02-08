@@ -179,6 +179,11 @@ public class UIFloatMenu extends UIFloatContainer {
         add(container);
     }
 
+    /**
+     * @implNote This method is not guaranteed to be called whenever the menu
+     *           closes. A close could e.g. also be triggered by a UIMenuBar setting
+     *           {@code expandedMenu} to {@code null}.
+     */
     public void close() {
         closeAction.run();
     }
@@ -189,19 +194,16 @@ public class UIFloatMenu extends UIFloatContainer {
             super(HORIZONTAL, LEFT, CENTER);
 
             noOutline();
-
             setHMarginScale(2.0);
-
             setHFillSize();
 
             UIText text = new UIText(mainText, textSizeUpdater);
-            if (active != null) {
+            if (active != null)
                 text.setColor(SUtil.ifThenElse(active, UIColors.TEXT, UIColors.TEXT_INVALID));
-            }
             add(text);
 
             if (rightText != null) {
-                add(new UIContainer(0, 0).setHFillSize().noOutline());
+                add(new UIContainer(0, 0).setVMarginScale(0).setHFillSize().noOutline());
                 add(new UIText(rightText, textSizeUpdater).setColor(UIColors.TEXT_INVALID));
             }
         }
@@ -210,9 +212,8 @@ public class UIFloatMenu extends UIFloatContainer {
         public void update() {
             super.update();
 
-            if (mouseAbove()) {
+            if (mouseAbove())
                 expandedLabel = this;
-            }
         }
     }
 }

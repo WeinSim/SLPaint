@@ -20,7 +20,7 @@ import ui.AppUI;
 
 public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp, AboutApp {
 
-    private static final double FRAME_TIME_GAMMA = 0.05;
+    private static final double FRAME_TIME_GAMMA = 0.025;
 
     /**
      * 0 = normal 1 = mouse above, 2 = always
@@ -54,6 +54,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     private HashMap<Integer, App> childApps;
 
     protected double avgFrameTime = -1;
+    protected double avgUpdateTime = -1;
     protected int frameCount = 0;
 
     public App(int width, int height, int windowMode, String title) {
@@ -108,6 +109,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     }
 
     public void update(double deltaT) {
+        long updateStart = System.nanoTime();
         if (avgFrameTime < 0) {
             avgFrameTime = deltaT;
         } else {
@@ -198,9 +200,8 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         }
 
         // empty event queue
-        while (!eventQueue.isEmpty()) {
+        while (!eventQueue.isEmpty())
             eventQueue.removeFirst().run();
-        }
 
         int[] displaySize = window.getDisplaySize();
         ui.setRootSize(displaySize[0], displaySize[1]);
@@ -208,6 +209,13 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         ui.update(mousePos, focus);
 
         window.setCursor(ui.getCursorShape());
+
+        double updateDuration = (System.nanoTime() - updateStart) * 1e-9;
+        if (avgUpdateTime < 0) {
+            avgUpdateTime = deltaT;
+        } else {
+            avgUpdateTime = (1 - FRAME_TIME_GAMMA) * avgUpdateTime + FRAME_TIME_GAMMA * updateDuration;
+        }
     }
 
     protected void charInput(char c) {
@@ -345,6 +353,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
     public double getFrameRate() {
         return 1.0 / avgFrameTime;
+    }
+
+    public double getAvgUpdateTime() {
+        return avgUpdateTime;
     }
 
     public int getFrameCount() {

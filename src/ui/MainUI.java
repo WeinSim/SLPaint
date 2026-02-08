@@ -1,7 +1,6 @@
 package ui;
 
 import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -18,10 +17,12 @@ import main.tools.PencilTool;
 import main.tools.TextTool;
 import sutil.SUtil;
 import sutil.math.SVector;
+import sutil.ui.UI;
 import sutil.ui.UISizes;
 import sutil.ui.elements.UIButton;
 import sutil.ui.elements.UIContainer;
 import sutil.ui.elements.UIDropdown;
+import sutil.ui.elements.UIElement;
 import sutil.ui.elements.UIFloatMenu;
 import sutil.ui.elements.UIImage;
 import sutil.ui.elements.UILabel;
@@ -30,7 +31,7 @@ import sutil.ui.elements.UIMenuButton;
 import sutil.ui.elements.UINumberInput;
 import sutil.ui.elements.UIScale;
 import sutil.ui.elements.UIText;
-import sutil.ui.elements.UIToggle;
+import sutil.ui.elements.UIToggleList;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.ImageCanvas;
@@ -71,11 +72,20 @@ public class MainUI extends AppUI<MainApp> {
         editMenu.addLabel("Redo", app.getKeyboardShortcut("redo"));
 
         UIFloatMenu selectionMenu = menuBar.addMenu("Selection");
+        selectionMenu.addLabel("Select everything", app.getKeyboardShortcut("select_all"));
+        selectionMenu.addSeparator();
         selectionMenu.addLabel("Copy", app.getKeyboardShortcut("copy"));
         selectionMenu.addLabel("Cut", app.getKeyboardShortcut("cut"));
         selectionMenu.addLabel("Paste", app.getKeyboardShortcut("paste"));
         selectionMenu.addSeparator();
         selectionMenu.addLabel("Crop image to selection", app.getKeyboardShortcut("crop_to_selection"));
+
+        UIFloatMenu viewMenu = menuBar.addMenu("View");
+        viewMenu.addLabel("Zoom in", app.getKeyboardShortcut("zoom_in"));
+        viewMenu.addLabel("Zoom out", app.getKeyboardShortcut("zoom_out"));
+        viewMenu.addLabel("Reset zoom", app.getKeyboardShortcut("reset_zoom"));
+        viewMenu.addSeparator();
+        viewMenu.addLabel("Reset view", app.getKeyboardShortcut("reset_transform"));
 
         UIFloatMenu imageMenu = menuBar.addMenu("Image");
         imageMenu.addLabel("Resize", () -> app.showDialog(MainApp.RESIZE_DIALOG));
@@ -130,26 +140,23 @@ public class MainUI extends AppUI<MainApp> {
 
         UIContainer pencilSizeBottomRow = new UIContainer(HORIZONTAL, CENTER);
         pencilSizeBottomRow.zeroMargin().noOutline();
-        pencilSizeBottomRow.add(new UIText("Size:"));
+        pencilSizeBottomRow.add(new UIText("Size:", UIText.SMALL));
         pencilSizeBottomRow.add(new UIContainer(0, 0).setHFillSize().noOutline());
         pencilSizeBottomRow.add(createIntPicker(ImageTool.PENCIL::getSize, ImageTool.PENCIL::setSize));
 
         pencilTools.add(pencilSizeBottomRow);
         topRow.add(pencilTools);
 
-        UIContainer selectionTools = new UIContainer(VERTICAL, LEFT);
-        selectionTools.zeroMargin().noOutline();
+        UIToggleList selectionTools = new UIToggleList();
         selectionTools.setVisibilitySupplier(() -> app.getActiveTool() == ImageTool.SELECTION);
 
-        selectionTools.add(createToggleContainer(
-                "Transparent selection",
+        selectionTools.addToggle("Transparent selection",
                 MainApp::isTransparentSelection,
-                MainApp::setTransparentSelection));
+                MainApp::setTransparentSelection);
 
-        selectionTools.add(createToggleContainer(
-                "Lock selection ratio",
+        selectionTools.addToggle("Lock selection ratio",
                 MainApp::isLockSelectionRatio,
-                MainApp::setLockSelectionRatio));
+                MainApp::setLockSelectionRatio);
 
         topRow.add(selectionTools);
 
@@ -161,7 +168,7 @@ public class MainUI extends AppUI<MainApp> {
         UIContainer textSizeContainer = new UIContainer(VERTICAL, CENTER);
         textSizeContainer.zeroMargin().setPaddingScale(2).setVFillSize().noOutline();
         textSizeContainer.add(createIntPicker(ImageTool.TEXT::getSize, ImageTool.TEXT::setSize));
-        textSizeContainer.add(new UIText("Size"));
+        textSizeContainer.add(new UIText("Size", UISizes.TEXT_SMALL));
         textTools.add(textSizeContainer);
 
         UIContainer textFontContainer = new UIContainer(VERTICAL, CENTER);
@@ -174,7 +181,7 @@ public class MainUI extends AppUI<MainApp> {
                 _ -> {
                 }, true));
         textFontContainer.add(textFontRow1);
-        textFontContainer.add(new UIText("Font"));
+        textFontContainer.add(new UIText("Font", UISizes.TEXT_SMALL));
         textTools.add(textFontContainer);
 
         topRow.add(textTools);
@@ -336,24 +343,12 @@ public class MainUI extends AppUI<MainApp> {
             return ret;
         }, UIText.SMALL));
         statusBar.add(new UIContainer(0, 0).setHFillSize().noOutline());
+        statusBar.add(new UILabel(() -> String.format("%d UI elements", countUIElements(UI.getRoot())), UIText.SMALL));
+        statusBar.add(new UILabel(() -> String.format("%5.3f ms update", app.getAvgUpdateTime() / 1e-3), UIText.SMALL));
+        statusBar.add(new UILabel(() -> String.format("%4.1f fps", app.getFrameRate()), UIText.SMALL));
         statusBar.add(new UILabel(() -> String.format("Frame %d", app.getFrameCount()), UIText.SMALL));
-        statusBar.add(new UILabel(() -> String.format("%.1f fps", app.getFrameRate()), UIText.SMALL));
 
         root.add(statusBar);
-    }
-
-    private UIContainer createToggleContainer(String label, BooleanSupplier getter, Consumer<Boolean> setter) {
-        UIContainer container = new UIContainer(HORIZONTAL, CENTER);
-        container.zeroMargin().noOutline();
-        container.setHFillSize();
-        UIContainer fill = new UIContainer(0, 0);
-        fill.noOutline();
-        fill.setHFillSize();
-        container.add(new UIText(label));
-        container.add(fill);
-        UIToggle toggle = new UIToggle(getter, setter);
-        container.add(toggle);
-        return container;
     }
 
     private UIContainer addTopRowSection(UIContainer topRow, String name) {
@@ -406,6 +401,15 @@ public class MainUI extends AppUI<MainApp> {
 
     public void setDebugString(String debugString) {
         this.debugString = debugString;
+    }
+
+    private int countUIElements(UIElement element) {
+        int sum = 1;
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getChildren())
+                sum += countUIElements(child);
+        }
+        return sum;
     }
 
     // public int getTest() {

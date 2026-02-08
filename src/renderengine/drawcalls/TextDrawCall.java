@@ -51,7 +51,6 @@ public final class TextDrawCall extends DrawCall {
 
     @Override
     public boolean usesAlpha() {
-        // This is not true, but I will leave text out of the system for now.
-        return false;
+        return true;
     }
 }

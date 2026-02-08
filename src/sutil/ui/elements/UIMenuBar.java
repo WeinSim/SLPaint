@@ -39,6 +39,7 @@ public class UIMenuBar extends UIContainer {
             menu.addAnchor(Anchor.TOP_LEFT, this, Anchor.BOTTOM_LEFT);
 
             noOutline();
+            setHMarginScale(1.5);
 
             style.setBackgroundColor(
                     () -> (mouseAbove || expandedMenu == this)
@@ -61,20 +62,8 @@ public class UIMenuBar extends UIContainer {
         public void update() {
             super.update();
 
-            if (mouseAbove && expandedMenu != null) {
+            if (mouseAbove && expandedMenu != null)
                 expandedMenu = this;
-            }
-        }
-
-        @Override
-        public void mousePressed(int mouseButton, int mods) {
-            super.mousePressed(mouseButton, mods);
-
-            if (expandedMenu == this) {
-                if (!mouseAbove() && !expandedMenu.mouseAbove()) {
-                    expandedMenu = null;
-                }
-            }
         }
     }
 }

@@ -19,7 +19,6 @@ import main.ImageFormat;
 import main.ImageHistory;
 import main.dialogs.SaveDialog;
 import main.dialogs.UnableToSaveImageDialog;
-import main.dialogs.UnimplementedDialog;
 import main.settings.BooleanSetting;
 import main.settings.ColorArraySetting;
 import main.settings.Settings;
@@ -41,19 +40,22 @@ import ui.components.ImageCanvas;
  *   Line tool
  *   Pencil tool
  *     Sizes 1 & 2 and 3 & 4 look the same
+ *     Make sizes UI prettier
  *     Drawing with a semi-transparent color has weird artifacts because some
  *       pixels are drawn multiple times on consecutive frames, resulting in
  *       the wrong opacity
  *       => Make the pencil tool also use the temp framebuffer?
+ *   Proper file management
+ *     Dialogs
+ *       Save dialog
+ *         Keep track of unsaved changes, ask user to save before quitting if
+ *         there are unsaved changes
+ *       Keep track of all file locks in one centralized place to avoid leaking
+ *         (Whatever that is supposed to mean?)
  *   Keyboard shortcuts
  *     Selecting one of the radio buttons in the resize ui and pressing enter
  *       closes the resize window. => add option for keyboard shortcut to not
  *       run if something is currently selected (similar to text input).
- *   Dialogs
- *     Save dialog
- *       Keep track of unsaved changes, ask user to save before quitting if
- *       there are unsaved changes
- *     Keep track of all file locks in one centralized place to avoid leaking
  *   Transparency
  *     Selecting a semi-transparent area and pasting it over a completely
  *       transparent area messes up the pixel colors: the semi-transparent area
@@ -74,8 +76,7 @@ import ui.components.ImageCanvas;
  *       => Add correct gamma blending? (as a setting?)
  *         Have OpenGL also do correct gamma blending?
  *   Text input
- *     TextTool.MIN_TEXT_SIZE should be set to 1, not 0. However, currently the
- *       UI doesn't allow to input single-digit values if the minimum is not 0.
+ *     Proper number input
  *     Selection (with mouse / arrow keys / Ctrl+A)
  *     Copy / cut / paste
  *     Shift + cursor movement
@@ -85,7 +86,6 @@ import ui.components.ImageCanvas;
  *   (When parent app closes, children should also close)
  * 
  * UI:
- *   Make the pencil size UI prettier
  *   Text wrapping (see "Text input")
  *   Fix bug in UILabel: when the textUpdater returns text containig newline
  *     characters, the text is not properly split across multiple lines
@@ -236,6 +236,12 @@ public final class MainApp extends App {
         addKeyboardShortcut("redo", GLFW_KEY_Y, GLFW_MOD_CONTROL, imageHistory::redo, imageHistory::canRedo);
         // R -> reset image transform
         addKeyboardShortcut("reset_transform", GLFW_KEY_R, 0, this::resetImageTransform, false);
+        // Ctrl + + -> zoom in
+        addKeyboardShortcut("zoom_in", GLFW_KEY_KP_ADD, GLFW_MOD_CONTROL, this::zoomIn, this::canZoomIn);
+        // Ctrl + - -> zoom out
+        addKeyboardShortcut("zoom_out", GLFW_KEY_KP_SUBTRACT, GLFW_MOD_CONTROL, this::zoomOut, this::canZoomOut);
+        // Ctrl + 0 -> reset zoom
+        addKeyboardShortcut("reset_zoom", GLFW_KEY_0, GLFW_MOD_CONTROL, this::resetZoom, true);
 
         // all tool shortcuts
         for (ImageTool tool : ImageTool.INSTANCES) {
@@ -277,9 +283,6 @@ public final class MainApp extends App {
         switch (type) {
             case SAVE_DIALOG -> (new SaveDialog(this)).start();
             case UNABLE_TO_SAVE_IMAGE_DIALOG -> (new UnableToSaveImageDialog(this)).start();
-            case NEW_COLOR_DIALOG, SETTINGS_DIALOG, RESIZE_DIALOG, CROP_DIALOG, ABOUT_DIALOG -> {
-            }
-            default -> (new UnimplementedDialog(this, type)).start();
         }
     }
 
@@ -480,6 +483,26 @@ public final class MainApp extends App {
 
     public void resetImageTransform() {
         canvas.resetImageTransform();
+    }
+
+    public void zoomIn() {
+        canvas.zoomIn();
+    }
+
+    public boolean canZoomIn() {
+        return canvas.canZoomIn();
+    }
+
+    public void zoomOut() {
+        canvas.zoomOut();
+    }
+
+    public boolean canZoomOut() {
+        return canvas.canZoomOut();
+    }
+
+    public void resetZoom() {
+        canvas.resetZoom();
     }
 
     public Image getImage() {
