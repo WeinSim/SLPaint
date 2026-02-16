@@ -85,10 +85,16 @@ public final class SelectionTool extends DragTool {
     }
 
     public void copyToClipboard() {
+        if (state != IDLE)
+            return;
+
         ClipboardManager.setImage(selection.getBufferedImage());
     }
 
     public void cutToClipboard() {
+        if (state != IDLE)
+            return;
+
         copyToClipboard();
         deleteSelection();
     }
@@ -113,6 +119,9 @@ public final class SelectionTool extends DragTool {
     }
 
     public void cropImageToSelection() {
+        if (state != IDLE)
+            return;
+
         finish();
         app.cropImage(x, y, width, height);
     }

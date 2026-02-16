@@ -60,10 +60,6 @@ public abstract class UIElement {
 
     public void updateVisibility() {
         visible = visibilitySupplier.getAsBoolean();
-
-        if (visible && this == UI.getSelectedElement()) {
-            UI.confirmSelectedElement();
-        }
     }
 
     public void updateMousePosition(SVector mouse) {
@@ -99,12 +95,12 @@ public abstract class UIElement {
 
         switch (mouseButton) {
             case GLFW_MOUSE_BUTTON_LEFT -> {
-                if (leftClickAction != null) {
-                    leftClickAction.run();
+                if (selectOnClick) {
+                    UI.select(this);
                 }
 
-                if (selectOnClick) {
-                    UI.select(this, mousePosition);
+                if (leftClickAction != null) {
+                    leftClickAction.run();
                 }
             }
             case GLFW_MOUSE_BUTTON_RIGHT -> {
@@ -145,7 +141,7 @@ public abstract class UIElement {
      *              element to be selected, or {@code null} if this selection didn't
      *              come from a mouse press
      */
-    public void select(SVector mouse) {
+    public void select() {
     }
 
     public boolean isSelectable() {

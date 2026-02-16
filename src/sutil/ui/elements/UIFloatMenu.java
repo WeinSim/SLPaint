@@ -82,7 +82,7 @@ public class UIFloatMenu extends UIFloatContainer {
     }
 
     // returns true if this element of one of its children has mouseAbove set.
-    private boolean shouldClose(UIElement element) {
+    private static boolean shouldClose(UIElement element) {
         if (element.mouseAbove)
             return false;
         if (element instanceof UIContainer container) {

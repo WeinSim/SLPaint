@@ -145,6 +145,10 @@ public class UIContainer extends UIElement {
         child.parent = this;
     }
 
+    public void remove(UIElement child) {
+        children.remove(child);
+    }
+
     @Override
     public void updateVisibility() {
         super.updateVisibility();
@@ -1007,6 +1011,10 @@ public class UIContainer extends UIElement {
 
         void add(UIElement child) {
             children.add(child);
+        }
+
+        void remove(UIElement child) {
+            children.remove(child);
         }
 
         @Override

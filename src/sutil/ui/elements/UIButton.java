@@ -21,6 +21,8 @@ public class UIButton extends UILabel {
         backgroundNormal = true;
         backgroundHighlight = true;
 
+        setHAlignment(CENTER);
+
         setLeftClickAction(clickAction);
         selectable = true;
     }

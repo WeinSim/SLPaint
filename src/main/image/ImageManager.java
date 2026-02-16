@@ -5,8 +5,6 @@ import static org.lwjgl.util.nfd.NativeFileDialog.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-import javax.swing.JOptionPane;
-
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.util.nfd.NFDFilterItem;
@@ -14,6 +12,7 @@ import org.lwjgl.util.nfd.NFDOpenDialogArgs;
 import org.lwjgl.util.nfd.NFDSaveDialogArgs;
 
 import main.apps.MainApp;
+import sutil.ui.UI;
 
 public class ImageManager {
 
@@ -123,7 +122,7 @@ public class ImageManager {
                 e.printStackTrace();
             }
 
-            if (showErrorDialog("open") == JOptionPane.OK_OPTION)
+            if (showErrorDialog("open") == UI.OK_OPTION)
                 continue;
             else
                 return;
@@ -191,7 +190,7 @@ public class ImageManager {
             if (newFile != null)
                 break;
 
-            if (showErrorDialog("save") == JOptionPane.OK_OPTION)
+            if (showErrorDialog("save") == UI.OK_OPTION)
                 continue;
             else
                 return true;
@@ -222,50 +221,12 @@ public class ImageManager {
             if (success)
                 break;
 
-            if (showErrorDialog("save") == JOptionPane.OK_OPTION)
+            if (showErrorDialog("save") == UI.OK_OPTION)
                 continue;
             else
                 return true;
         }
         return false;
-    }
-
-    /**
-     * Notifies the user that there are unsaved changes. If "Save" is selected, the
-     * current file is saved.
-     * 
-     * @return {@code true} if the user cancels the operation.
-     * @implNote Has to be called from a separate thread.
-     */
-    private boolean checkUnsavedChanges() {
-        if (!hasUnsavedChanges())
-            return false;
-
-        int returnCode = JOptionPane.showOptionDialog(
-                null,
-                "There are unsaved changes. Do you want to save them?",
-                "Save changes?",
-                JOptionPane.YES_NO_CANCEL_OPTION,
-                JOptionPane.WARNING_MESSAGE,
-                null,
-                new String[] { "Save", "Discard", "Cancel" },
-                null);
-
-        switch (returnCode) {
-            case JOptionPane.CANCEL_OPTION, JOptionPane.CLOSED_OPTION -> {
-                return true;
-            }
-            case JOptionPane.NO_OPTION -> {
-                return false;
-            }
-            case JOptionPane.YES_OPTION -> {
-                return imageFile == null ? saveAsImpl() : saveImpl();
-            }
-            default -> {
-                System.err.format("Unknown return value from JOptionPane.showOptionDialog: %d\n", returnCode);
-                return false;
-            }
-        }
     }
 
     private NFDFilterItem.Buffer getFileFilters(MemoryStack stack, boolean addAllImagesFilter) {
@@ -298,6 +259,49 @@ public class ImageManager {
         return filters;
     }
 
+    /**
+     * Notifies the user that there are unsaved changes. If "Save" is selected, the
+     * current file is saved.
+     * 
+     * @return {@code true} if the user cancels the operation.
+     * @implNote Has to be called from a separate thread.
+     */
+    private boolean checkUnsavedChanges() {
+        if (!hasUnsavedChanges())
+            return false;
+
+        // int returnCode = JOptionPane.showOptionDialog(
+        // null,
+        // "There are unsaved changes. Do you want to save them?",
+        // "Save changes?",
+        // JOptionPane.YES_NO_CANCEL_OPTION,
+        // JOptionPane.WARNING_MESSAGE,
+        // null,
+        // new String[] { "Save", "Discard", "Cancel" },
+        // null);
+
+        int returnCode = UI.showModalDialog("Save changes?", """
+                There are unsaved changes.
+                Do you want to save them?""",
+                UI.YES_NO_CANCEL_DIALOG);
+
+        switch (returnCode) {
+            case UI.CANCEL_OPTION, UI.CLOSED_OPTION, UI.INVALID_OPTION -> {
+                return true;
+            }
+            case UI.NO_OPTION -> {
+                return false;
+            }
+            case UI.YES_OPTION -> {
+                return imageFile == null ? saveAsImpl() : saveImpl();
+            }
+            default -> {
+                System.err.format("Unknown return value from UI.showModalDialog: %d\n", returnCode);
+                return true;
+            }
+        }
+    }
+
     public boolean hasUnsavedChanges() {
         if (imageHistory.size() == 1)
             return false;
@@ -307,25 +311,13 @@ public class ImageManager {
     }
 
     private static int showErrorDialog(String action) {
-        String mainText = String.format(
-                "An error occured while attempting to %s the image. Please try again.",
-                action);
         String title = String.format("Unable to %s image", action);
-        // return JOptionPane.showConfirmDialog(
-        // null,
-        // mainText,
-        // title,
-        // JOptionPane.OK_CANCEL_OPTION,
-        // JOptionPane.ERROR_MESSAGE);
-        return JOptionPane.showOptionDialog(
-                null,
-                mainText,
-                title,
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.ERROR_MESSAGE,
-                null,
-                new String[] { "Retry", "Cancel" },
-                null);
+        String mainText = String.format("""
+                An error occured while attempting to %s the image.
+                Please try again.""",
+                action);
+
+        return UI.showModalDialog(title, mainText, UI.OK_CANCEL_DIALOG);
     }
 
     private void setEverything(ImageFile imageFile, Image image) {

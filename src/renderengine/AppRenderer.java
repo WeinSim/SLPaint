@@ -46,7 +46,7 @@ public class AppRenderer implements Cleanable {
      */
     private static final int NUM_SUBDIVISIONS = 4;
     private static final int NUM_DIVISIONS = 1024;
-    private static final int NUM_LAYERS = 16;
+    private static final int NUM_LAYERS = UI.NUM_LAYERS;
 
     private static final boolean DEBUG_RENDERING = false;
 

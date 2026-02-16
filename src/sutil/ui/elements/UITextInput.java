@@ -1,6 +1,5 @@
 package sutil.ui.elements;
 
-
 import static org.lwjgl.glfw.GLFW.*;
 
 import java.util.function.Consumer;
@@ -47,7 +46,7 @@ public class UITextInput extends UIContainer {
         uiText = new UIText(textUpdater);
         add(uiText);
 
-        setLeftClickAction(this::resetTimer);
+        setLeftClickAction(this::click);
 
         cursorPosition = 0;
     }
@@ -96,6 +95,7 @@ public class UITextInput extends UIContainer {
         }
     }
 
+    @Override
     public void charInput(char c) {
         if (active()) {
             String text = uiText.getText();
@@ -119,7 +119,7 @@ public class UITextInput extends UIContainer {
 
     /**
      * This method needs be called every time the {@code cursorPosition} variable is
-     * used. The reason is that the value represented byy this UITextInput (and thus
+     * used. The reason is that the value represented by this UITextInput (and thus
      * the String it displays) might have changed since the last time the bounds
      * have been checked.
      */
@@ -136,13 +136,19 @@ public class UITextInput extends UIContainer {
         uiText.syncText();
     }
 
+    private void click() {
+        cursorPosition = uiText.getCharIndex(mousePosition.x - position.x - uiText.getPosition().x);
+        resetTimer();
+    }
+
+    public void resetTimer() {
+        blinkStart = System.nanoTime() * 1e-9;
+    }
+
     @Override
-    public void select(SVector mouse) {
-        if (mouse == null) {
-            cursorPosition = uiText.getText().length();
-        } else {
-            cursorPosition = uiText.getCharIndex(mouse.x - position.x - uiText.getPosition().x);
-        }
+    public void select() {
+        cursorPosition = uiText.getText().length();
+        resetTimer();
     }
 
     public SVector getCursorPosition() {
@@ -157,15 +163,11 @@ public class UITextInput extends UIContainer {
         return new SVector(UISizes.STROKE_WEIGHT.get(), uiText.getTextSize());
     }
 
-    public boolean isCursorVisible() {
-        return active() && ((System.nanoTime() * 1e-9 - blinkStart) / BLINK_INTERVAL) % 2 < 1;
-    }
-
-    public void resetTimer() {
-        blinkStart = System.nanoTime() * 1e-9;
-    }
-
     private boolean active() {
         return UI.getSelectedElement() == this;
+    }
+
+    public boolean isCursorVisible() {
+        return active() && ((System.nanoTime() * 1e-9 - blinkStart) / BLINK_INTERVAL) % 2 < 1;
     }
 }

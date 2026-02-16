@@ -18,7 +18,7 @@ import sutil.ui.elements.UIRoot;
 import sutil.ui.elements.UITextInput;
 import ui.AppUI;
 
-public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp, AboutApp {
+public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp {
 
     private static final double FRAME_TIME_GAMMA = 0.025;
 
@@ -116,8 +116,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
         if (ui == null) {
             final String baseStr = "%s has no UI. The UI must be created in the app's constructor using loadUI().\n";
-            System.err.format(baseStr, getClass().getName());
-            System.exit(1);
+            throw new RuntimeException(String.format(baseStr, getClass().getName()));
         }
 
         if (prevMousePos == null) {
@@ -133,9 +132,9 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         // process char input
         Character c;
         while ((c = window.getNextCharacter()) != null) {
-            if (focus) {
+            if (focus)
                 ui.charInput(c);
-            }
+
             charInput(c);
         }
 

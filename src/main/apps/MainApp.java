@@ -4,6 +4,7 @@ import static org.lwjgl.glfw.GLFW.*;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import renderengine.Window;
 import renderengine.fonts.TextFont;
 import sutil.SUtil;
 import sutil.math.SVector;
+import sutil.ui.UI;
 import sutil.ui.elements.UITextInput;
 import ui.AppUI;
 import ui.MainUI;
@@ -31,11 +33,11 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
+ *   Modal dialogs
+ *     Add options for custom button labels like in JOptionPane
+ *     Deactivate keyboard shortcuts when a modal dialog is active
+ *     Convert other small dialogs into modal dialogs? (e.g. ResizeUI)
  *   File management
- *     Pop-ups with UI ("Modal dialogs")
- *       Add semi-transparent background over entire window as float
- *         container on high layer (with message box above it)
- *       Add UI.showPopUp or similar to replace JOptionPane.showOptionMessage
  *     Only move things to another thread when really neccessary
  *     Ask user to save changes when window is closed
  *     Testing
@@ -54,6 +56,10 @@ import ui.components.ImageCanvas;
  *       => Make the pencil tool also use the temp framebuffer?
  *   Selection tool
  *     Add flip and rotate options for selection
+ *     Ctrl + Shift + X adds two image snapshots (finish() adds one and
+ *       app.cropImage() adds the second one
+ *     Ctrl + Shift + X crashes if the selection is entirely outside of the
+ *        image
  *   Keyboard shortcuts
  *     Selecting one of the radio buttons in the resize ui and pressing enter
  *       closes the resize window. => add option for keyboard shortcut to not
@@ -90,6 +96,18 @@ import ui.components.ImageCanvas;
  *   Implement own version of JOptionPane and JFileChooser using UI classes
  * 
  * UI:
+ *   Layering inconsistency:
+ *     Image's SizeKnob renders above selection
+ *   Dragging: make sure that every draggable UIElement calls UI.setDragging()
+ *     while it is being dragged (e.g. DragKnob)
+ *   Unify UIMenuButton and UIDropdown?
+ *   Fix bug in UIMenu:
+ *     Opening a sub-menu and then closing the parent menu causes the sub-menu
+ *       to still be open when the parent menu is reopened
+ *   UISizes:
+ *     There are multiple places where I want to set a larger margin but have
+ *       to akwardly divide by the default margin because only a margin scale
+ *       can be set. Solution: add UIContainer.setMargin()?
  *   Text wrapping (see "Text input")
  *   Fix bug in UILabel: when the textUpdater returns text containig newline
  *     characters, the text is not properly split across multiple lines
@@ -183,6 +201,10 @@ public final class MainApp extends App {
 
     private static ColorArraySetting customUIBaseColors = new ColorArraySetting("customUIColors");
 
+    private static final String ABOUT_TEXT_FILE = "res/about.txt";
+
+    private static String aboutText;
+
     private final ImageManager imageManager;
 
     /**
@@ -221,6 +243,7 @@ public final class MainApp extends App {
         setActiveTool(ImageTool.PENCIL);
         prevTool = ImageTool.PENCIL;
 
+        // general keyboard shortcuts
         addKeyboardShortcut("new", GLFW_KEY_N, GLFW_MOD_CONTROL, this::newImage, true);
         addKeyboardShortcut("open", GLFW_KEY_O, GLFW_MOD_CONTROL, this::openImage, true);
         addKeyboardShortcut("save", GLFW_KEY_S, GLFW_MOD_CONTROL, this::saveImage, true);
@@ -238,6 +261,17 @@ public final class MainApp extends App {
             tool.createKeyboardShortcuts();
         }
 
+        // load about text
+        aboutText = null;
+        try (BufferedReader reader = new BufferedReader(new FileReader(ABOUT_TEXT_FILE))) {
+            aboutText = reader.readAllAsString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (aboutText == null)
+            aboutText = "[unable to load about]";
+
+        // load UI
         loadUI();
     }
 
@@ -276,13 +310,23 @@ public final class MainApp extends App {
     }
 
     @Override
+    public void showDialog(int dialogType) {
+        super.showDialog(dialogType);
+
+        switch (dialogType) {
+            case ABOUT_DIALOG -> {
+                (new Thread(() -> UI.showModalDialog("About", aboutText, UI.INFO_DIALOG))).start();
+            }
+        }
+    }
+
+    @Override
     protected App createChildApp(int dialogType) {
         return switch (dialogType) {
             case NEW_COLOR_DIALOG -> new ColorEditorApp(this, getSelectedColor());
             case SETTINGS_DIALOG -> new SettingsApp(this);
             case CROP_DIALOG -> new ResizeApp(this, ResizeApp.CROP);
             case RESIZE_DIALOG -> new ResizeApp(this, ResizeApp.SCALE);
-            case ABOUT_DIALOG -> new AboutApp(this);
             default -> null;
         };
     }
@@ -314,10 +358,19 @@ public final class MainApp extends App {
      * {@link MainApp#resizeImage(int, int)}.
      */
     public void cropImage(int x, int y, int newWidth, int newHeight) {
+        Image image = getImage();
+        // int x0 = Math.min(Math.max(0, x), image.getWidth() - 1),
+        // y0 = Math.min(Math.max(0, y), image.getHeight() - 1),
+        // x1 = Math.min(Math.max(0, x + newWidth - 1), image.getWidth()),
+        // y1 = Math.min(Math.max(0, y + newHeight - 1), image.getHeight());
+
+        // newWidth = Math.min(Math.max(MIN_IMAGE_SIZE, x1 - x0 + 1), MAX_IMAGE_SIZE);
+        // newHeight = Math.min(Math.max(MIN_IMAGE_SIZE, y1 - y0 + 1), MAX_IMAGE_SIZE);
+
         newWidth = Math.min(Math.max(MIN_IMAGE_SIZE, newWidth), MAX_IMAGE_SIZE);
         newHeight = Math.min(Math.max(MIN_IMAGE_SIZE, newHeight), MAX_IMAGE_SIZE);
 
-        getImage().crop(x, y, newWidth, newHeight, secondaryColor);
+        image.crop(x, y, newWidth, newHeight, secondaryColor);
         renderer.setTempFBOSize(newWidth, newHeight);
         // If the top left corner of the image changes, its translation should change in
         // the opposite way such that the rest of the image stays in the same place.
