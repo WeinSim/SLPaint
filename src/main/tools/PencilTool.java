@@ -2,7 +2,7 @@ package main.tools;
 
 import org.lwjgl.glfw.GLFW;
 
-import main.Image;
+import main.image.Image;
 
 public final class PencilTool extends ImageTool {
 

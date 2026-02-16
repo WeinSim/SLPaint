@@ -1,6 +1,6 @@
 package main.tools;
 
-import main.Image;
+import main.image.Image;
 
 public final class PipetteTool extends ImageTool {
 

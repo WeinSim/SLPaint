@@ -141,6 +141,10 @@ public class Settings {
 
         private boolean shouldStop = false;
 
+        public SettingsSaveThread() {
+            super("Settings Thread");
+        }
+
         @Override
         public void run() {
             while (!shouldStop) {

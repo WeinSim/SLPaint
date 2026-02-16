@@ -1,4 +1,4 @@
-package main;
+package main.image;
 
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
@@ -232,10 +232,16 @@ public class Image implements Cleanable {
     public void setPixels(int x, int y, int w, int h, int color) {
         checkBounds(x, y, w, h);
 
-        for (int row = y; row < y + h; row++) {
-            int fromIndex = row * width + x,
-                    toIndex = fromIndex + w;
+        if (w == width) {
+            int fromIndex = y * width + x,
+                    toIndex = (y + h) * width;
             Arrays.fill(pixelArray, fromIndex, toIndex, color);
+        } else {
+            for (int row = y; row < y + h; row++) {
+                int fromIndex = row * width + x,
+                        toIndex = fromIndex + w;
+                Arrays.fill(pixelArray, fromIndex, toIndex, color);
+            }
         }
 
         setDirty(x, y);

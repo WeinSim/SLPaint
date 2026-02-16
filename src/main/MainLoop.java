@@ -1,5 +1,7 @@
 package main;
 
+import static org.lwjgl.util.nfd.NativeFileDialog.*;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -40,6 +42,7 @@ public class MainLoop {
         Log.setVerbose(false);
 
         initGLFW();
+        NFD_Init();
 
         apps = new ArrayList<>();
         MainApp mainApp = new MainApp();
@@ -89,6 +92,7 @@ public class MainLoop {
             app.getWindow().closeDisplay();
         }
 
+        NFD_Quit();
         terminateGLFW();
     }
 

@@ -78,11 +78,8 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         mousePos = new SVector();
         prevMousePos = null;
 
-        // Comma -> toggle debug outline
         addKeyboardShortcut("cycle_debug", GLFW_KEY_COMMA, 0, App::cycleDebugOutline, false);
-        // Shift + S -> reload shaders
         addKeyboardShortcut("reload_shaders", GLFW_KEY_S, GLFW_MOD_SHIFT, () -> renderer.reloadShaders(), true);
-        // Shift + R -> reload UI
         addKeyboardShortcut("reload_ui", GLFW_KEY_R, GLFW_MOD_SHIFT, this::loadUI, true);
     }
 

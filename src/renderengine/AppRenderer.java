@@ -7,9 +7,9 @@ import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL30;
 import org.lwjglx.util.vector.Vector4f;
 
-import main.Image;
 import main.apps.App;
 import main.apps.MainApp;
+import main.image.Image;
 import renderengine.bufferobjects.Cleanable;
 import renderengine.bufferobjects.FrameBufferObject;
 import renderengine.fonts.TextFont;

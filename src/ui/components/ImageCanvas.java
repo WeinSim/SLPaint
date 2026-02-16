@@ -2,8 +2,8 @@ package ui.components;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-import main.Image;
 import main.apps.MainApp;
+import main.image.Image;
 import main.tools.Resizable;
 import sutil.math.SVector;
 import sutil.ui.UI;

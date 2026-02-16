@@ -12,13 +12,9 @@ import org.lwjglx.util.vector.Vector4f;
 
 import main.ColorArray;
 import main.ColorPicker;
-import main.Image;
-import main.ImageFile;
-import main.ImageFileManager;
-import main.ImageFormat;
-import main.ImageHistory;
-import main.dialogs.SaveDialog;
-import main.dialogs.UnableToSaveImageDialog;
+import main.image.Image;
+import main.image.ImageFormat;
+import main.image.ImageManager;
 import main.settings.BooleanSetting;
 import main.settings.ColorArraySetting;
 import main.settings.Settings;
@@ -35,6 +31,17 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
+ *   File management
+ *     Pop-ups with UI ("Modal dialogs")
+ *       Add semi-transparent background over entire window as float
+ *         container on high layer (with message box above it)
+ *       Add UI.showPopUp or similar to replace JOptionPane.showOptionMessage
+ *     Only move things to another thread when really neccessary
+ *     Ask user to save changes when window is closed
+ *     Testing
+ *     Does it make sense to have file filters for different types of image
+ *       files when the format of a saved file only depends on the given
+ *       filename?
  * 
  * App:
  *   Line tool
@@ -45,17 +52,13 @@ import ui.components.ImageCanvas;
  *       pixels are drawn multiple times on consecutive frames, resulting in
  *       the wrong opacity
  *       => Make the pencil tool also use the temp framebuffer?
- *   Proper file management
- *     Dialogs
- *       Save dialog
- *         Keep track of unsaved changes, ask user to save before quitting if
- *         there are unsaved changes
- *       Keep track of all file locks in one centralized place to avoid leaking
- *         (Whatever that is supposed to mean?)
+ *   Selection tool
+ *     Add flip and rotate options for selection
  *   Keyboard shortcuts
  *     Selecting one of the radio buttons in the resize ui and pressing enter
  *       closes the resize window. => add option for keyboard shortcut to not
  *       run if something is currently selected (similar to text input).
+ *   No child apps should be open when the image changes?
  *   Transparency
  *     Selecting a semi-transparent area and pasting it over a completely
  *       transparent area messes up the pixel colors: the semi-transparent area
@@ -84,6 +87,7 @@ import ui.components.ImageCanvas;
  *       Would require a variable number of UITexts as children (which is
  *         currently not possible. Why?)
  *   (When parent app closes, children should also close)
+ *   Implement own version of JOptionPane and JFileChooser using UI classes
  * 
  * UI:
  *   Text wrapping (see "Text input")
@@ -166,9 +170,8 @@ public final class MainApp extends App {
             SUtil.toARGB(199, 191, 230),
     };
 
-    public static final int SAVE_DIALOG = 1, NEW_DIALOG = 2, RESIZE_DIALOG = 3, NEW_COLOR_DIALOG = 4,
-            UNABLE_TO_SAVE_IMAGE_DIALOG = 5, DISCARD_UNSAVED_CHANGES_DIALOG = 6, SETTINGS_DIALOG = 7, CROP_DIALOG = 8,
-            ABOUT_DIALOG = 9;
+    public static final int NEW_DIALOG = 2, RESIZE_DIALOG = 3, NEW_COLOR_DIALOG = 4,
+            SETTINGS_DIALOG = 7, CROP_DIALOG = 8, ABOUT_DIALOG = 9;
 
     public static final int PRIMARY_COLOR = 0, SECONDARY_COLOR = 1;
     public static final int INITIAL_PRIMARY_COLOR = SUtil.toARGB(0), INITIAL_SECONDARY_COLOR = SUtil.toARGB(255);
@@ -180,9 +183,7 @@ public final class MainApp extends App {
 
     private static ColorArraySetting customUIBaseColors = new ColorArraySetting("customUIColors");
 
-    private final ImageFileManager imageFileManager;
-
-    private final ImageHistory imageHistory;
+    private final ImageManager imageManager;
 
     /**
      * used for restoring the tool that was selected before the color picker
@@ -209,38 +210,26 @@ public final class MainApp extends App {
     public MainApp() {
         super(1280, 720, Window.MAXIMIZED, "SLPaint");
 
-        imageFileManager = new ImageFileManager(this, "test.png");
-        imageHistory = new ImageHistory(getImage());
-
-        customColorButtonArray = new ColorArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
-
         primaryColor = INITIAL_PRIMARY_COLOR;
         secondaryColor = INITIAL_SECONDARY_COLOR;
         colorSelection = PRIMARY_COLOR;
         selectedColorPicker = new ColorPicker(getSelectedColor());
+        customColorButtonArray = new ColorArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
+
+        imageManager = new ImageManager(this, "res/images/test.png");
 
         setActiveTool(ImageTool.PENCIL);
         prevTool = ImageTool.PENCIL;
 
-        // Ctrl + N -> new image
         addKeyboardShortcut("new", GLFW_KEY_N, GLFW_MOD_CONTROL, this::newImage, true);
-        // Ctrl + O -> new image
         addKeyboardShortcut("open", GLFW_KEY_O, GLFW_MOD_CONTROL, this::openImage, true);
-        // Ctrl + S -> save
         addKeyboardShortcut("save", GLFW_KEY_S, GLFW_MOD_CONTROL, this::saveImage, true);
-        // Ctrl + Shift + S -> save as
         addKeyboardShortcut("save_as", GLFW_KEY_S, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT, this::saveImageAs, true);
-        // Ctrl + Z -> undo
-        addKeyboardShortcut("undo", GLFW_KEY_Z, GLFW_MOD_CONTROL, imageHistory::undo, imageHistory::canUndo);
-        // Ctrl + Y -> redo
-        addKeyboardShortcut("redo", GLFW_KEY_Y, GLFW_MOD_CONTROL, imageHistory::redo, imageHistory::canRedo);
-        // R -> reset image transform
+        addKeyboardShortcut("undo", GLFW_KEY_Z, GLFW_MOD_CONTROL, imageManager::undo, imageManager::canUndo);
+        addKeyboardShortcut("redo", GLFW_KEY_Y, GLFW_MOD_CONTROL, imageManager::redo, imageManager::canRedo);
         addKeyboardShortcut("reset_transform", GLFW_KEY_R, 0, this::resetImageTransform, false);
-        // Ctrl + + -> zoom in
         addKeyboardShortcut("zoom_in", GLFW_KEY_KP_ADD, GLFW_MOD_CONTROL, this::zoomIn, this::canZoomIn);
-        // Ctrl + - -> zoom out
         addKeyboardShortcut("zoom_out", GLFW_KEY_KP_SUBTRACT, GLFW_MOD_CONTROL, this::zoomOut, this::canZoomOut);
-        // Ctrl + 0 -> reset zoom
         addKeyboardShortcut("reset_zoom", GLFW_KEY_0, GLFW_MOD_CONTROL, this::resetZoom, true);
 
         // all tool shortcuts
@@ -262,6 +251,14 @@ public final class MainApp extends App {
             secondaryColor = selectedColorPicker.getRGB();
         }
 
+        String filename = getFilename();
+        boolean hasUnsavedChanges = imageManager.hasUnsavedChanges();
+        if (filename == null) {
+            filename = "[Unnamed]";
+            hasUnsavedChanges = false;
+        }
+        window.setTitle(String.format("%s%s - SLPaint", hasUnsavedChanges ? "" + (char) 0x2022 + " " : "", filename));
+
         // update image texture
         getImage().updateOpenGLTexture();
     }
@@ -278,14 +275,6 @@ public final class MainApp extends App {
         return new MainUI(this);
     }
 
-    public void showDialog(int type) {
-        super.showDialog(type);
-        switch (type) {
-            case SAVE_DIALOG -> (new SaveDialog(this)).start();
-            case UNABLE_TO_SAVE_IMAGE_DIALOG -> (new UnableToSaveImageDialog(this)).start();
-        }
-    }
-
     @Override
     protected App createChildApp(int dialogType) {
         return switch (dialogType) {
@@ -296,34 +285,6 @@ public final class MainApp extends App {
             case ABOUT_DIALOG -> new AboutApp(this);
             default -> null;
         };
-    }
-
-    public void openImage() {
-        imageFileManager.open();
-    }
-
-    public void newImage() {
-        Image image = imageFileManager.getImage();
-        imageFileManager.newImage(image.getWidth(), image.getHeight());
-    }
-
-    /**
-     * Gets called when Ctrl+S is pressed
-     */
-    public void saveImage() {
-        imageFileManager.save();
-    }
-
-    /**
-     * Gets called when Ctrl+Shift+S is pressed
-     * 
-     */
-    public void saveImageAs() {
-        imageFileManager.saveAs();
-    }
-
-    public void addImageSnapshot() {
-        imageHistory.addSnapshot();
     }
 
     /**
@@ -461,6 +422,50 @@ public final class MainApp extends App {
         }
     }
 
+    public Image getImage() {
+        return imageManager.getImage();
+    }
+
+    public void openImage() {
+        imageManager.open();
+    }
+
+    public void newImage() {
+        Image image = getImage();
+        imageManager.newImage(image.getWidth(), image.getHeight());
+    }
+
+    /**
+     * Gets called when Ctrl+S is pressed
+     */
+    public void saveImage() {
+        imageManager.save();
+    }
+
+    /**
+     * Gets called when Ctrl+Shift+S is pressed
+     * 
+     */
+    public void saveImageAs() {
+        imageManager.saveAs();
+    }
+
+    public void addImageSnapshot() {
+        imageManager.addSnapshot();
+    }
+
+    public long getFilesize() {
+        return imageManager.getFilesize();
+    }
+
+    public ImageFormat getImageFormat() {
+        return imageManager.getSavedFormat();
+    }
+
+    public String getFilename() {
+        return imageManager.getFilename();
+    }
+
     public boolean isImageResizing() {
         return canvas.isImageResizing();
     }
@@ -503,10 +508,6 @@ public final class MainApp extends App {
 
     public void resetZoom() {
         canvas.resetZoom();
-    }
-
-    public Image getImage() {
-        return imageFileManager.getImage();
     }
 
     public double getImageZoom() {
@@ -662,25 +663,6 @@ public final class MainApp extends App {
 
     public ColorArray getCustomColorButtonArray() {
         return customColorButtonArray;
-    }
-
-    public long getFilesize() {
-        ImageFile imageFile = imageFileManager.getImageFile();
-        return imageFile == null ? -1 : imageFile.getSize();
-    }
-
-    public ImageFormat getImageFormat() {
-        ImageFile imageFile = imageFileManager.getImageFile();
-        return imageFile == null ? null : imageFile.getFormat();
-    }
-
-    public String getFilename() {
-        ImageFile imageFile = imageFileManager.getImageFile();
-        return imageFile == null ? "" : imageFile.getFile().getName();
-    }
-
-    public ImageFile getImageFile() {
-        return imageFileManager.getImageFile();
     }
 
     public static String formatFilesize(long filesize) {

@@ -8,9 +8,9 @@ import java.util.function.Supplier;
 import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector4f;
 
-import main.Image;
-import main.ImageFormat;
 import main.apps.MainApp;
+import main.image.Image;
+import main.image.ImageFormat;
 import main.tools.DragTool;
 import main.tools.ImageTool;
 import main.tools.PencilTool;
@@ -309,7 +309,7 @@ public class MainUI extends AppUI<MainApp> {
                 ret += format.toString() + ", ";
             }
             String filename = app.getFilename();
-            if (filename.length() > 0) {
+            if (filename != null && filename.length() > 0) {
                 long filesize = app.getFilesize();
                 ret += "%s (%s)".formatted(filename, MainApp.formatFilesize(filesize));
             }

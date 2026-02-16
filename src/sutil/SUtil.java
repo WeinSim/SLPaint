@@ -11,6 +11,11 @@ import sutil.math.SVector;
 
 public class SUtil {
 
+    /*
+     * Command for displaying number of java files in current directory or
+     * subdirectories:
+     * ls -lR . | grep \\.java | wc -l
+     */
     public static void printNumLines() {
         int numLinesTotal = getNumLines(true);
         int numLinesNoSUtil = getNumLines(false);

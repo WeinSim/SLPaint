@@ -6,7 +6,7 @@ Paint. It is still under development and missing key
 features such as proper file handling and support for
 fonts other than the default font.
 
-I started this project in spring or summer of 2024.
+I started this project in August of 2024.
 
 The source code is available at
 <c>https://github.com/WeinSim/SLPaint
