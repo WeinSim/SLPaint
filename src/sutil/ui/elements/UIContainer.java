@@ -26,7 +26,7 @@ public class UIContainer extends UIElement {
             NONE = UI.NONE,
             BOTH = UI.BOTH;
 
-    private final double EPSILON = 1e-6;
+    protected final double EPSILON = 1e-6;
 
     /**
      * Every {@code UIContainer} has one of three size types in both directions
@@ -175,7 +175,9 @@ public class UIContainer extends UIElement {
         // This is a bit ugly. But it is neccessary because a scroll container's
         // children should not have mouseAbove set if the mouse is not above the scroll
         // container, regardles of the layers.
-        boolean ownMouseAbove = clipChildren ? calculateMouseAbove(mousePosition) : true;
+        boolean ownMouseAbove = (insideParent || ignoreParentClipArea)
+                ? (clipChildren ? calculateMouseAbove(mousePosition) : true)
+                : false;
 
         boolean childMouseAbove = false;
         for (UIElement child : getChildren()) {
@@ -511,14 +513,11 @@ public class UIContainer extends UIElement {
 
                 runningTotal += orientation == VERTICAL ? childSize.y : childSize.x;
                 runningTotal += padding;
-            }
-
-            if (!(child instanceof UIFloatContainer)) {
                 child.getPosition().add(scrollOffset);
             }
-            if (child instanceof UIContainer container) {
+
+            if (child instanceof UIContainer container)
                 container.positionChildren();
-            }
         }
     }
 
@@ -970,8 +969,6 @@ public class UIContainer extends UIElement {
             setStyle(style);
 
             addAnchor(Anchor.TOP_LEFT, this::getPos);
-
-            relativeLayer = 0;
         }
 
         private SVector getPos() {

@@ -23,7 +23,7 @@ public abstract class UIElement {
     protected SVector position;
     protected SVector size;
     protected UIContainer parent;
-    protected int relativeLayer;
+    protected int relativeLayer = 0;
 
     protected boolean outlineNormal = false;
     protected boolean outlineHighlight = false;
@@ -51,7 +51,6 @@ public abstract class UIElement {
     public UIElement() {
         position = new SVector();
         size = new SVector();
-        relativeLayer = 0;
 
         mousePosition = new SVector();
 

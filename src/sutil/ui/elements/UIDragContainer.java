@@ -46,21 +46,21 @@ public abstract class UIDragContainer extends UIContainer {
 
     /**
      * @return The underlying value represented by the x-coordinate of this
-     *         {@code Draggable}, in the range from 0 (minimum value) to 1 (maximum
-     *         value).
+     *         {@code UIDragContainer}, in the range from 0 (minimum value) to 1
+     *         (maximum value).
      */
     public abstract double getRelativeX();
 
     /**
      * @return The underlying value represented by the y-coordinate of this
-     *         {@code Draggable}, in the range from 0 (minimum value) to 1 (maximum
-     *         value).
+     *         {@code UIDragContainer}, in the range from 0 (minimum value) to 1
+     *         (maximum value).
      */
     public abstract double getRelativeY();
 
     /**
      * Sets the underlying value represented by the x-coordinate of this
-     * {@code Draggable}.
+     * {@code UIDragContainer}.
      *
      * @param x The new value, which is <b>not</b> guaranteed to be in the range
      *          from 0 to 1.
@@ -69,7 +69,7 @@ public abstract class UIDragContainer extends UIContainer {
 
     /**
      * Sets the underlying value represented by the y-coordinate of this
-     * {@code Draggable}.
+     * {@code UIDragContainer}.
      *
      * @param y The new value, which is <b>not</b> guaranteed to be in the range
      *          from 0 to 1.

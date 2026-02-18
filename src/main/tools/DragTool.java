@@ -59,11 +59,11 @@ public abstract sealed class DragTool extends ImageTool implements Resizable per
     }
 
     @Override
-    public void startResizing() {
+    public void startDragging() {
     }
 
     @Override
-    public void finishResizing() {
+    public void finishDragging() {
     }
 
     @Override
@@ -105,5 +105,4 @@ public abstract sealed class DragTool extends ImageTool implements Resizable per
     public void setHeight(int height) {
         this.height = height;
     }
-
 }

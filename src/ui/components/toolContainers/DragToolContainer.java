@@ -35,7 +35,7 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
                 if (dx == 1 && dy == 1)
                     continue;
 
-                add(new SizeKnob(dx, dy, this, tool, sizeKnobVis, app));
+                add(new SizeKnob(tool, dx, dy, sizeKnobVis, app));
             }
         }
 

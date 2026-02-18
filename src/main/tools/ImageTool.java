@@ -4,9 +4,10 @@ import main.apps.MainApp;
 import sutil.ui.KeyboardShortcut;
 import sutil.ui.UserAction;
 
-public abstract sealed class ImageTool permits PencilTool, DragTool, FillBucketTool, PipetteTool {
+public abstract sealed class ImageTool permits PencilTool, LineTool, DragTool, FillBucketTool, PipetteTool {
 
     public static final PencilTool PENCIL = PencilTool.INSTANCE;
+    public static final LineTool LINE = LineTool.INSTANCE;
     public static final FillBucketTool FILL_BUCKET = FillBucketTool.INSTANCE;
     public static final PipetteTool PIPETTE = PipetteTool.INSTANCE;
     public static final SelectionTool SELECTION = SelectionTool.INSTANCE;
@@ -14,6 +15,7 @@ public abstract sealed class ImageTool permits PencilTool, DragTool, FillBucketT
 
     public static final ImageTool[] INSTANCES = {
             PENCIL,
+            LINE,
             FILL_BUCKET,
             PIPETTE,
             SELECTION,
@@ -22,19 +24,19 @@ public abstract sealed class ImageTool permits PencilTool, DragTool, FillBucketT
 
     public static final int NONE = 0x01;
 
-    protected MainApp app;
-
     protected int state;
+
+    protected MainApp app;
 
     protected ImageTool() {
         state = NONE;
     }
 
-    public abstract void createKeyboardShortcuts();
-
     public abstract void click(int x, int y, int mouseButton);
 
     public abstract void finish();
+
+    public abstract void createKeyboardShortcuts();
 
     public abstract String getName();
 

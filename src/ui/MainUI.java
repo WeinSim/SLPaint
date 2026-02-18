@@ -13,10 +13,10 @@ import main.ImageFormat;
 import main.apps.MainApp;
 import main.tools.DragTool;
 import main.tools.ImageTool;
+import main.tools.LineTool;
 import main.tools.PencilTool;
 import main.tools.TextTool;
 import sutil.SUtil;
-import sutil.math.SVector;
 import sutil.ui.UI;
 import sutil.ui.UISizes;
 import sutil.ui.elements.UIButton;
@@ -24,7 +24,6 @@ import sutil.ui.elements.UIContainer;
 import sutil.ui.elements.UIDropdown;
 import sutil.ui.elements.UIElement;
 import sutil.ui.elements.UIFloatMenu;
-import sutil.ui.elements.UIImage;
 import sutil.ui.elements.UILabel;
 import sutil.ui.elements.UIMenuBar;
 import sutil.ui.elements.UIMenuButton;
@@ -35,6 +34,7 @@ import sutil.ui.elements.UIToggleList;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.ImageCanvas;
+import ui.components.ToolButton;
 import ui.components.UIColorElement;
 
 public class MainUI extends AppUI<MainApp> {
@@ -120,32 +120,57 @@ public class MainUI extends AppUI<MainApp> {
         imageOptions.add(flip);
 
         UIContainer toolbox = addTopRowSection(topRow, "Tools");
-        for (ImageTool tool : ImageTool.INSTANCES) {
-            UIButton toolButton = new UIButton(tool.getName().charAt(0) + "", () -> app.setActiveTool(tool));
-            toolButton.setHandCursor();
-            setSelectableButtonStyle(toolButton, () -> app.getActiveTool() == tool);
-            toolbox.add(toolButton);
+        toolbox.setOrientation(VERTICAL);
+        final int toolsPerRow = 3;
+        UIContainer toolRow = null;
+        for (int i = 0; i < ImageTool.INSTANCES.length; i++) {
+            if (i % toolsPerRow == 0) {
+                toolRow = new UIContainer(HORIZONTAL, CENTER);
+                toolRow.zeroMargin().noOutline();
+            }
+            toolRow.add(new ToolButton(app, ImageTool.INSTANCES[i]));
+            if ((i + 1) % toolsPerRow == 0 || i == ImageTool.INSTANCES.length - 1)
+                toolbox.add(toolRow);
         }
 
-        UIContainer pencilTools = new UIContainer(VERTICAL, CENTER);
-        pencilTools.zeroMargin().noOutline();
-        pencilTools.setVisibilitySupplier(() -> app.getActiveTool() == ImageTool.PENCIL);
+        // Used for pencil size and line size
+        UIContainer sizeTools = new UIContainer(VERTICAL, CENTER);
+        sizeTools.zeroMargin().noOutline();
+        sizeTools.setVisibilitySupplier(() -> switch (app.getActiveTool()) {
+            case PencilTool _,LineTool _ -> true;
+            default -> false;
+        });
+
+        IntSupplier sizeSupplier = () -> switch (app.getActiveTool()) {
+            case PencilTool _ -> ImageTool.PENCIL.getSize();
+            case LineTool _ -> ImageTool.LINE.getSize();
+            default -> 0;
+        };
+        IntConsumer sizeConsumer = i -> {
+            switch (app.getActiveTool()) {
+                case PencilTool _ -> ImageTool.PENCIL.setSize(i);
+                case LineTool _ -> ImageTool.LINE.setSize(i);
+                default -> {
+                }
+            }
+        };
 
         final double min = PencilTool.MIN_SIZE,
                 max = PencilTool.MAX_SIZE;
-        UIScale pencilSizeScale = new UIScale(HORIZONTAL,
-                () -> SUtil.map(ImageTool.PENCIL.getSize(), min, max, 0, 1),
-                x -> ImageTool.PENCIL.setSize((int) Math.round(SUtil.map(x, 0, 1, min, max))));
-        pencilTools.add(pencilSizeScale);
+        UIScale sizeScale = new UIScale(HORIZONTAL,
+                () -> SUtil.map(sizeSupplier.getAsInt(), min, max, 0, 1),
+                x -> sizeConsumer.accept((int) Math.round(SUtil.map(x, 0, 1, min, max))));
+        sizeTools.add(sizeScale);
 
-        UIContainer pencilSizeBottomRow = new UIContainer(HORIZONTAL, CENTER);
-        pencilSizeBottomRow.zeroMargin().noOutline();
-        pencilSizeBottomRow.add(new UIText("Size:", UIText.SMALL));
-        pencilSizeBottomRow.add(new UIContainer(0, 0).setHFillSize().noOutline());
-        pencilSizeBottomRow.add(createIntPicker(ImageTool.PENCIL::getSize, ImageTool.PENCIL::setSize));
+        UIContainer sizeBottomRow = new UIContainer(HORIZONTAL,
+                CENTER);
+        sizeBottomRow.zeroMargin().noOutline();
+        sizeBottomRow.add(new UIText("Size:", UIText.SMALL));
+        sizeBottomRow.add(new UIContainer(0, 0).setHFillSize().noOutline());
+        sizeBottomRow.add(createIntPicker(sizeSupplier, sizeConsumer));
 
-        pencilTools.add(pencilSizeBottomRow);
-        topRow.add(pencilTools);
+        sizeTools.add(sizeBottomRow);
+        topRow.add(sizeTools);
 
         UIToggleList selectionTools = new UIToggleList();
         selectionTools.setVisibilitySupplier(() -> app.getActiveTool() == ImageTool.SELECTION);
@@ -269,9 +294,10 @@ public class MainUI extends AppUI<MainApp> {
                 VERTICAL);
         debugPanel.setFillSize().noOutline();
 
-        UIImage debugImage = new UIImage(() -> app.getImage().getTextureID(), new SVector(200, 200));
-        debugImage.withOutline();
-        debugPanel.add(debugImage);
+        // UIImage debugImage = new UIImage(() -> app.getImage().getTextureID(), new
+        // SVector(200, 200));
+        // debugImage.withOutline();
+        // debugPanel.add(debugImage);
 
         debugPanel.add(new UIText("Tools"));
         for (ImageTool tool : ImageTool.INSTANCES) {
@@ -346,7 +372,7 @@ public class MainUI extends AppUI<MainApp> {
         statusBar.add(new UILabel(() -> String.format("%d UI elements", countUIElements(UI.getRoot())), UIText.SMALL));
         statusBar.add(new UILabel(() -> String.format("%5.3f ms update", app.getAvgUpdateTime() / 1e-3), UIText.SMALL));
         statusBar.add(new UILabel(() -> String.format("%4.1f fps", app.getFrameRate()), UIText.SMALL));
-        statusBar.add(new UILabel(() -> String.format("Frame %d", app.getFrameCount()), UIText.SMALL));
+        statusBar.add(new UILabel(() -> String.format("Frame %5d", app.getFrameCount()), UIText.SMALL));
 
         root.add(statusBar);
     }

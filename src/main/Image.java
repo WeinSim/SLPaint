@@ -13,6 +13,7 @@ import org.lwjgl.opengl.GL12;
 
 import renderengine.bufferobjects.Cleanable;
 import sutil.SUtil;
+import sutil.math.SVector;
 
 public class Image implements Cleanable {
 
@@ -284,6 +285,71 @@ public class Image implements Cleanable {
                     255 - (255 - srcAlpha) * (255 - dstAlpha) / 255);
         }
         pixelArray[y * width + x] = c;
+    }
+
+    public void drawLine(int x0, int y0, int x1, int y1, int size, int color) {
+        drawLine(x0, y0, x1, y1, size, color, false);
+    }
+
+    public void drawLine(int x0, int y0, int x1, int y1, int size, int color, boolean ignoreAlpha) {
+        final int maxOffset = (size - 1) / 2;
+
+        // https://iquilezles.org/articles/distfunctions2d/
+        SVector ba = new SVector(x1 - x0, y1 - y0);
+        double invBaSq = 1.0 / ba.magSq();
+
+        double maxDistSq = ((double) size * size) / 4;
+        int dx = Math.abs(x0 - x1);
+        int dy = Math.abs(y0 - y1);
+        if (dx > dy) {
+            int minx = Math.min(x0, x1),
+                    maxx = Math.max(x0, x1);
+            for (int x = minx - maxOffset; x <= maxx + maxOffset; x++) {
+                int py = x1 == x0 ? y0 : (int) Math.round(SUtil.map(x, x0, x1, y0, y1));
+                for (int yoff = -2 * maxOffset; yoff <= 2 * maxOffset; yoff++) {
+                    int y = py + yoff;
+                    if (!isInside(x, y))
+                        continue;
+                    SVector pa = new SVector(x - x0, y - y0);
+                    double h = Math.min(Math.max(pa.dot(ba) * invBaSq, 0), 1);
+                    if (Double.isFinite(h)) {
+                        pa.x -= ba.x * h;
+                        pa.y -= ba.y * h;
+                    }
+                    double distSq = pa.magSq();
+                    if (distSq < maxDistSq) {
+                        if (ignoreAlpha)
+                            setPixel(x, y, color);
+                        else
+                            drawPixel(x, y, color);
+                    }
+                }
+            }
+        } else {
+            int miny = Math.min(y0, y1),
+                    maxy = Math.max(y0, y1);
+            for (int y = miny - maxOffset; y <= maxy + maxOffset; y++) {
+                int px = y1 == y0 ? x0 : (int) Math.round(SUtil.map(y, y0, y1, x0, x1));
+                for (int xoff = -2 * maxOffset; xoff <= 2 * maxOffset; xoff++) {
+                    int x = px + xoff;
+                    if (!isInside(x, y))
+                        continue;
+                    SVector pa = new SVector(x - x0, y - y0);
+                    double h = Math.min(Math.max(pa.dot(ba) * invBaSq, 0), 1);
+                    if (Double.isFinite(h)) {
+                        pa.x -= ba.x * h;
+                        pa.y -= ba.y * h;
+                    }
+                    double distSq = pa.magSq();
+                    if (distSq < maxDistSq) {
+                        if (ignoreAlpha)
+                            setPixel(x, y, color);
+                        else
+                            drawPixel(x, y, color);
+                    }
+                }
+            }
+        }
     }
 
     public BufferedImage getSubImage(int x, int y, int w, int h, Integer backgroundColor) {

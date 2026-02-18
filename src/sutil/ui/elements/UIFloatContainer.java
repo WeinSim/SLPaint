@@ -45,7 +45,10 @@ public class UIFloatContainer extends UIContainer {
 
         withBackground();
 
-        relativeLayer = 1;
+        // (these lines are kind of unneccessary since these are already the defaults
+        // for UIElement)
+        relativeLayer = 0;
+        ignoreParentClipArea = false;
         clipToRoot = false;
 
         positionSuppliers = new ArrayList<>();
@@ -60,8 +63,8 @@ public class UIFloatContainer extends UIContainer {
         return this;
     }
 
-    public UIFloatContainer addAnchor(Anchor anchor, UIElement parent, Anchor parentAnchor) {
-        positionSuppliers.add(new PositionSupplier(anchor, parent, parentAnchor));
+    public UIFloatContainer addAnchor(Anchor anchor, Anchor parentAnchor) {
+        positionSuppliers.add(new PositionSupplier(anchor, parentAnchor));
         return this;
     }
 
@@ -76,29 +79,34 @@ public class UIFloatContainer extends UIContainer {
     }
 
     public void setPosition() {
-        SVector minAbsolutePos = new SVector(0, 0);
+        SVector minPos = new SVector(0, 0);
         double minDistSq = Double.POSITIVE_INFINITY;
 
         UIRoot root = UI.getRoot();
         for (PositionSupplier positionSupplier : positionSuppliers) {
-            SVector absolutePos = positionSupplier.getAbsolutePosition();
-            SVector originalAbsolutePos = new SVector(absolutePos);
+            SVector pos = positionSupplier.getPosition();
 
+            if (!clipToRoot) {
+                minPos.set(pos);
+                break;
+            }
+
+            SVector parentAbsolutePos = parent.getAbsolutePosition();
+            SVector absolutePos = new SVector(pos).add(parentAbsolutePos);
             absolutePos.x = Math.max(0, Math.min(root.size.x - size.x, absolutePos.x));
             absolutePos.y = Math.max(0, Math.min(root.size.y - size.y, absolutePos.y));
 
-            double distSq = absolutePos.distSq(originalAbsolutePos);
+            double distSq = absolutePos.distSq(pos);
             if (distSq < minDistSq) {
                 minDistSq = distSq;
-                minAbsolutePos = clipToRoot ? absolutePos : originalAbsolutePos;
+                minPos.set(absolutePos).sub(parentAbsolutePos);
             }
 
-            if (distSq == 0.0)
+            if (distSq < EPSILON)
                 break;
         }
 
-        SVector parentAbsolutePos = parent.getAbsolutePosition();
-        position.set(minAbsolutePos).sub(parentAbsolutePos);
+        position.set(minPos);
     }
 
     @Override
@@ -119,51 +127,44 @@ public class UIFloatContainer extends UIContainer {
     private class PositionSupplier {
 
         final Anchor anchor;
-
-        final UIElement parent;
         final Anchor parentAnchor;
 
         final SVector position;
         final Supplier<SVector> positionSupplier;
 
-        public PositionSupplier(Anchor anchor, UIElement parent, Anchor parentAnchor) {
+        PositionSupplier(Anchor anchor, Anchor parentAnchor) {
             this.anchor = anchor;
-            this.parent = parent;
             this.parentAnchor = parentAnchor;
 
             position = null;
             positionSupplier = null;
         }
 
-        public PositionSupplier(Anchor anchor, SVector position) {
+        PositionSupplier(Anchor anchor, SVector position) {
             this.anchor = anchor;
             this.position = new SVector(position);
 
             positionSupplier = null;
-            parent = null;
             parentAnchor = null;
         }
 
-        public PositionSupplier(Anchor anchor, Supplier<SVector> positionSupplier) {
+        PositionSupplier(Anchor anchor, Supplier<SVector> positionSupplier) {
             this.anchor = anchor;
             this.positionSupplier = positionSupplier;
 
             position = null;
-            parent = null;
             parentAnchor = null;
         }
 
-        SVector getAbsolutePosition() {
+        SVector getPosition() {
             SVector absolutePos;
-            if (parent != null) {
-                absolutePos = parent.getAbsolutePosition();
+            if (parentAnchor != null) {
                 SVector parentSize = parent.getSize();
-
-                absolutePos.x += parentSize.x * parentAnchor.dx * 0.5;
-                absolutePos.y += parentSize.y * parentAnchor.dy * 0.5;
+                absolutePos = new SVector(
+                        parentSize.x * parentAnchor.dx,
+                        parentSize.y * parentAnchor.dy).scale(0.5);
             } else {
-                absolutePos = UIFloatContainer.this.parent.getAbsolutePosition();
-                absolutePos.add(position != null ? position : positionSupplier.get());
+                absolutePos = position != null ? position : positionSupplier.get();
             }
 
             absolutePos.x -= size.x * anchor.dx * 0.5;

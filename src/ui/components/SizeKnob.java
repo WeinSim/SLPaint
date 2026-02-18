@@ -3,93 +3,50 @@ package ui.components;
 import java.util.function.BooleanSupplier;
 
 import org.lwjgl.glfw.GLFW;
-import org.lwjglx.util.vector.Vector4f;
 
 import main.apps.MainApp;
 import main.tools.Resizable;
 import sutil.math.SVector;
-import sutil.ui.UI;
-import sutil.ui.UISizes;
-import sutil.ui.elements.UIContainer;
-import sutil.ui.elements.UIFloatContainer;
 
-public class SizeKnob extends UIFloatContainer {
+public class SizeKnob extends DragKnob {
 
     private final int dx, dy;
 
     private final Resizable resizable;
 
-    private MainApp app;
-
-    /**
-     * Wether {@code this} SizeKnob is currently being dragged.
-     */
-    private boolean dragging;
-    private SVector dragStartPos;
     private SVector dragStartSize;
-    private SVector dragStartMouse;
 
-    public SizeKnob(int dx, int dy, UIContainer parent, Resizable resizable, BooleanSupplier visibilitySupplier,
-            MainApp app) {
-        super(0, 0);
+    public SizeKnob(Resizable resizable, int dx, int dy, BooleanSupplier visibilitySupplier, MainApp app) {
+
+        int cursorShape;
+        if (dx == 1)
+            cursorShape = GLFW.GLFW_RESIZE_NS_CURSOR;
+        else if (dy == 1)
+            cursorShape = GLFW.GLFW_RESIZE_EW_CURSOR;
+        else
+            cursorShape = GLFW.GLFW_RESIZE_ALL_CURSOR;
+
+        Anchor parentAnchor = Anchor.fromOffsets(dx, dy);
+
+        super(resizable, visibilitySupplier, cursorShape, parentAnchor, app);
+
         this.dx = dx;
         this.dy = dy;
         this.resizable = resizable;
-        this.app = app;
 
-        style.setBackgroundColor(new Vector4f(1, 1, 1, 1));
-        style.setStrokeColor(new Vector4f(0, 0, 0, 1));
-        style.setStrokeWeight(() -> UISizes.STROKE_WEIGHT.get() * 2.0);
-
-        setFixedSize(UISizes.SIZE_KNOB.getWidthHeight());
-
-        setVisibilitySupplier(visibilitySupplier);
-        setLeftClickAction(this::startDrag);
-        setCursorShape(() -> {
-            if (!mouseAbove && !dragging)
-                return null;
-            if (dx == 1)
-                return GLFW.GLFW_RESIZE_NS_CURSOR;
-            if (dy == 1)
-                return GLFW.GLFW_RESIZE_EW_CURSOR;
-            return GLFW.GLFW_RESIZE_ALL_CURSOR;
-        });
-
-        Anchor parentAnchor = Anchor.fromOffsets(dx, dy);
-        addAnchor(Anchor.CENTER_CENTER, parent, parentAnchor);
-
-        dragging = false;
-        dragStartPos = new SVector();
         dragStartSize = new SVector();
-        dragStartMouse = new SVector();
     }
 
     @Override
-    public void update() {
-        super.update();
+    protected void startDrag() {
+        super.startDrag();
 
-        if (dragging) {
-            SVector mouseDelta = app.getMouseImagePosVec().sub(dragStartMouse);
-            updateSelection(dragStartPos, dragStartSize, mouseDelta, resizable.lockRatio());
-
-            if (!UI.isLeftMousePressed()) {
-                dragging = false;
-                resizable.finishResizing();
-            }
-        }
-    }
-
-    private void startDrag() {
-        dragging = true;
-        dragStartPos.set(resizable.getX(), resizable.getY());
         dragStartSize.set(resizable.getWidth(), resizable.getHeight());
-        dragStartMouse.set(app.getMouseImagePosVec());
-
-        resizable.startResizing();
     }
 
-    public void updateSelection(SVector dragStartPos, SVector dragStartSize, SVector mouseDelta, boolean lockRatio) {
-        // Size
+    @Override
+    protected void drag(SVector mouseDelta) {
+        // size
 
         double oldWidth = dragStartSize.x,
                 oldHeight = dragStartSize.y;
@@ -99,7 +56,7 @@ public class SizeKnob extends UIFloatContainer {
         newWidth += mouseDelta.x * (dx - 1);
         newHeight += mouseDelta.y * (dy - 1);
 
-        if (lockRatio) {
+        if (resizable.lockRatio()) {
             double ratio = oldWidth / oldHeight;
             if (dx == 1) {
                 // change only height
@@ -122,7 +79,7 @@ public class SizeKnob extends UIFloatContainer {
         resizable.setWidth((int) Math.round(newWidth));
         resizable.setHeight((int) Math.round(newHeight));
 
-        // Position
+        // position
 
         double x = dragStartPos.x,
                 y = dragStartPos.y;
@@ -134,9 +91,5 @@ public class SizeKnob extends UIFloatContainer {
 
         resizable.setX((int) Math.round(x));
         resizable.setY((int) Math.round(y));
-    }
-
-    public boolean isDragging() {
-        return dragging;
     }
 }

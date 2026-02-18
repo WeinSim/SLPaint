@@ -24,7 +24,7 @@ public final class SelectionToolContainer extends DragToolContainer<SelectionToo
             setVisibilitySupplier(() -> ImageTool.SELECTION.getSelection() != null);
 
             // the selection border should render above the image
-            relativeLayer = -1;
+            // relativeLayer = -1;
         }
 
         @Override
@@ -39,7 +39,6 @@ public final class SelectionToolContainer extends DragToolContainer<SelectionToo
             int width = ImageTool.SELECTION.getWidth(),
                     height = ImageTool.SELECTION.getHeight();
 
-            // size.set(Math.abs(width), Math.abs(height));
             size.set(width, height);
             size.scale(app.getImageZoom());
         }

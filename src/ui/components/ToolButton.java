@@ -11,7 +11,8 @@ public class ToolButton extends UIButton {
         super(tool.getName().charAt(0) + "", () -> app.setActiveTool(tool));
 
         AppUI.setSelectableButtonStyle(this, () -> app.getActiveTool() == tool);
+        setHandCursor();
 
-        handCursorAbove = true;
+        setVMarginScale(0.5);
     }
 }

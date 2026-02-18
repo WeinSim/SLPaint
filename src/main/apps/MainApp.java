@@ -35,9 +35,12 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
+ *   Line tool
+ *     Preview for INITIAL_DRAG and IDLE states
+ *       => give LineToolContainer an Image on which app.drawLine() is called
+ *         every frame?
  * 
  * App:
- *   Line tool
  *   Pencil tool
  *     Sizes 1 & 2 and 3 & 4 look the same
  *     Make sizes UI prettier
@@ -45,6 +48,9 @@ import ui.components.ImageCanvas;
  *       pixels are drawn multiple times on consecutive frames, resulting in
  *       the wrong opacity
  *       => Make the pencil tool also use the temp framebuffer?
+ *   Selection tool
+ *     Selecting something and then flipping the image keeps the selection as it
+ *       is (and neither flattens nor flips it). Is this the expected behavior?
  *   Proper file management
  *     Dialogs
  *       Save dialog
@@ -75,23 +81,32 @@ import ui.components.ImageCanvas;
  *         video)
  *       => Add correct gamma blending? (as a setting?)
  *         Have OpenGL also do correct gamma blending?
- *   Text input
- *     Proper number input
- *     Selection (with mouse / arrow keys / Ctrl+A)
- *     Copy / cut / paste
- *     Shift + cursor movement
- *     Multi-line text input
- *       Would require a variable number of UITexts as children (which is
- *         currently not possible. Why?)
  *   (When parent app closes, children should also close)
  * 
  * UI:
- *   Text wrapping (see "Text input")
- *   Fix bug in UILabel: when the textUpdater returns text containig newline
- *     characters, the text is not properly split across multiple lines
+ *   Text
+ *     Text input
+ *       Proper number input
+ *         Idea: while entering text, only update value from text but not the
+ *           other way around. Only update text from value when text input is
+ *           unselected.
+ *       Selection (with mouse / arrow keys / Ctrl+A)
+ *         Copy / cut / paste (=> conflicting keyboard shortcuts with selection
+ *           tool!)
+ *         Shift + cursor movement
+ *       Multi-line text input
+ *         Would require a variable number of UITexts as children (which is
+ *           currently not possible. Why?)
+ *     Text wrapping
+ *     Fix bug in UILabel: when the textUpdater returns text containig newline
+ *       characters, the text is not properly split across multiple lines
+ *   Mouse input: tapping the touchpad triggers a mouse press event but not
+ *     mouse release event (=> logic that sets leftMousePressed and
+ *     rightMousePressed based on mouse press / release events is flawed.)
  *   Tool icons & cursors
- *   Make side panel collapsable?
+ *     -> Pre-render icons at various texture sizes and use them as UIImages
  *   Selection are area right-click? (Same menu as "Selection" in menu bar)
+ *   Make side panel collapsable?
  * 
  * Rendering:
  *   Improve UITextInput cursor visibility
@@ -407,58 +422,7 @@ public final class MainApp extends App {
     }
 
     public void drawLine(int x0, int y0, int x1, int y1, int size, int color) {
-        Image image = getImage();
-
-        final int maxOffset = (size - 1) / 2;
-
-        // https://iquilezles.org/articles/distfunctions2d/
-        SVector ba = new SVector(x1 - x0, y1 - y0);
-        double invBaSq = 1.0 / ba.magSq();
-
-        double maxDistSq = ((double) size * size) / 4;
-        int dx = Math.abs(x0 - x1);
-        int dy = Math.abs(y0 - y1);
-        if (dx > dy) {
-            int minx = Math.min(x0, x1),
-                    maxx = Math.max(x0, x1);
-            for (int x = minx - maxOffset; x <= maxx + maxOffset; x++) {
-                int py = x1 == x0 ? y0 : (int) Math.round(SUtil.map(x, x0, x1, y0, y1));
-                for (int yoff = -2 * maxOffset; yoff <= 2 * maxOffset; yoff++) {
-                    int y = py + yoff;
-                    if (!image.isInside(x, y))
-                        continue;
-                    SVector pa = new SVector(x - x0, y - y0);
-                    double h = Math.min(Math.max(pa.dot(ba) * invBaSq, 0), 1);
-                    if (Double.isFinite(h)) {
-                        pa.x -= ba.x * h;
-                        pa.y -= ba.y * h;
-                    }
-                    double distSq = pa.magSq();
-                    if (distSq < maxDistSq)
-                        image.drawPixel(x, y, color);
-                }
-            }
-        } else {
-            int miny = Math.min(y0, y1),
-                    maxy = Math.max(y0, y1);
-            for (int y = miny - maxOffset; y <= maxy + maxOffset; y++) {
-                int px = y1 == y0 ? x0 : (int) Math.round(SUtil.map(y, y0, y1, x0, x1));
-                for (int xoff = -2 * maxOffset; xoff <= 2 * maxOffset; xoff++) {
-                    int x = px + xoff;
-                    if (!image.isInside(x, y))
-                        continue;
-                    SVector pa = new SVector(x - x0, y - y0);
-                    double h = Math.min(Math.max(pa.dot(ba) * invBaSq, 0), 1);
-                    if (Double.isFinite(h)) {
-                        pa.x -= ba.x * h;
-                        pa.y -= ba.y * h;
-                    }
-                    double distSq = pa.magSq();
-                    if (distSq < maxDistSq)
-                        image.drawPixel(x, y, color);
-                }
-            }
-        }
+        getImage().drawLine(x0, y0, x1, y1, size, color);
     }
 
     public boolean isImageResizing() {

@@ -46,6 +46,7 @@ public abstract sealed class DrawCall permits RectDrawCall, EllipseDrawCall, HSL
         if (c1.depth == c2.depth)
             return 0;
 
+        // TODO: shouldn't we respect the drawcalls' ui matrices here???
         if (!SUtil.rectsOverlap(c1.position, c1.size, c2.position, c2.size))
             return 0;
 

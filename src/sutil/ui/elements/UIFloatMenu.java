@@ -54,6 +54,7 @@ public class UIFloatMenu extends UIFloatContainer {
         zeroMargin();
         zeroPadding();
 
+        relativeLayer = 1;
         ignoreParentClipArea = true;
         clipToRoot = true;
 
@@ -95,11 +96,10 @@ public class UIFloatMenu extends UIFloatContainer {
     }
 
     private void add(UIElement child, boolean normalAdd) {
-        if (normalAdd) {
+        if (normalAdd)
             super.add(child);
-        } else {
+        else
             contents.add(child);
-        }
     }
 
     @Override
@@ -154,7 +154,6 @@ public class UIFloatMenu extends UIFloatContainer {
                 () -> label.mouseAbove() || expandedLabel == label
                         ? UIColors.BACKGROUND_HIGHLIGHT.get()
                         : null);
-        add(label);
 
         UIFloatMenu menu = new UIFloatMenu(
                 () -> expandedLabel == label,
@@ -163,11 +162,14 @@ public class UIFloatMenu extends UIFloatContainer {
                     close();
                 },
                 scroll);
-        menu.addAnchor(Anchor.TOP_LEFT, label, Anchor.TOP_RIGHT);
-        menu.addAnchor(Anchor.TOP_RIGHT, label, Anchor.TOP_LEFT);
-        menu.addAnchor(Anchor.BOTTOM_LEFT, label, Anchor.BOTTOM_RIGHT);
-        menu.addAnchor(Anchor.BOTTOM_RIGHT, label, Anchor.BOTTOM_LEFT);
-        add(menu);
+        menu.addAnchor(Anchor.TOP_LEFT, Anchor.TOP_RIGHT);
+        menu.addAnchor(Anchor.TOP_RIGHT, Anchor.TOP_LEFT);
+        menu.addAnchor(Anchor.BOTTOM_LEFT, Anchor.BOTTOM_RIGHT);
+        menu.addAnchor(Anchor.BOTTOM_RIGHT, Anchor.BOTTOM_LEFT);
+
+        label.add(menu);
+
+        add(label);
 
         return menu;
     }

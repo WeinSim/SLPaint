@@ -126,8 +126,6 @@ public class HueSatField extends UIDragContainer {
             for (int i = 0; i < 4; i++) {
                 add(new CursorLine(i % 2 == 0));
             }
-
-            relativeLayer = 0;
         }
 
         @Override

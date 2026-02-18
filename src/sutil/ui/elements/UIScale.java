@@ -126,8 +126,6 @@ public class UIScale extends UIDragContainer {
             } else {
                 setFixedSize(new SVector(width, len));
             }
-
-            relativeLayer = 0;
         }
     }
 

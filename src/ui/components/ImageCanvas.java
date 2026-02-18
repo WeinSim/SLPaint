@@ -1,10 +1,21 @@
 package ui.components;
 
-import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL;
+import static org.lwjgl.glfw.GLFW.GLFW_MOD_SHIFT;
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+import static org.lwjgl.glfw.GLFW.GLFW_POINTING_HAND_CURSOR;
 
 import main.Image;
 import main.apps.MainApp;
+import main.tools.FillBucketTool;
+import main.tools.ImageTool;
+import main.tools.LineTool;
+import main.tools.PencilTool;
+import main.tools.PipetteTool;
 import main.tools.Resizable;
+import main.tools.SelectionTool;
+import main.tools.TextTool;
 import sutil.math.SVector;
 import sutil.ui.UI;
 import sutil.ui.UIColors;
@@ -13,6 +24,7 @@ import sutil.ui.elements.UIContainer;
 import sutil.ui.elements.UIFloatContainer;
 import sutil.ui.elements.UIImage;
 import ui.components.toolContainers.FillBucketToolContainer;
+import ui.components.toolContainers.LineToolContainer;
 import ui.components.toolContainers.PencilToolContainer;
 import ui.components.toolContainers.PipetteToolContainer;
 import ui.components.toolContainers.SelectionToolContainer;
@@ -55,11 +67,18 @@ public class ImageCanvas extends UIContainer {
         add(new ImageResize());
         add(new ImageDisplay());
 
-        add(new PencilToolContainer(app));
-        add(new PipetteToolContainer(app));
-        add(new FillBucketToolContainer(app));
-        add(new TextToolContainer(app));
-        add(new SelectionToolContainer(app));
+        for (ImageTool tool: ImageTool.INSTANCES) {
+            add(switch(tool) {
+                case PencilTool _ -> new PencilToolContainer(app);
+                case LineTool _ -> new LineToolContainer(app);
+                case PipetteTool _ -> new PipetteToolContainer(app);
+                case FillBucketTool _ -> new FillBucketToolContainer(app);
+                case TextTool _ -> new TextToolContainer(app);
+                case SelectionTool _ -> new SelectionToolContainer(app);
+                default -> throw new RuntimeException(
+                    String.format("No ToolContainer found for tool \"%s\"", tool.getName()));
+            });
+        }
 
         resetImageTransform();
 
@@ -217,8 +236,6 @@ public class ImageCanvas extends UIContainer {
 
             addAnchor(Anchor.TOP_LEFT, ImageCanvas.this::getImageTranslation);
 
-            relativeLayer = 0;
-
             add(new ImageContainerChild());
         }
 
@@ -261,14 +278,12 @@ public class ImageCanvas extends UIContainer {
 
             addAnchor(Anchor.TOP_LEFT, this::getPos);
 
-            relativeLayer = 0;
-
             for (int dy = 0; dy <= 2; dy++) {
                 for (int dx = 0; dx <= 2; dx++) {
                     if (dx == 1 && dy == 1)
                         continue;
 
-                    add(new SizeKnob(dx, dy, this, this, () -> true, app));
+                    add(new SizeKnob(this, dx, dy, () -> true, app));
                 }
             }
         }
@@ -294,12 +309,12 @@ public class ImageCanvas extends UIContainer {
         }
 
         @Override
-        public void startResizing() {
+        public void startDragging() {
             resizing = true;
         }
 
         @Override
-        public void finishResizing() {
+        public void finishDragging() {
             app.cropImage(newX, newY, newWidth, newHeight);
             resizing = false;
         }

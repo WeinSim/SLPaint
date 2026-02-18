@@ -17,6 +17,7 @@ public final class TextDrawCall extends DrawCall {
     public TextDrawCall(SVector position, double depth, double relativeSize, Matrix3f uiMatrix,
             ClipAreaInfo clipAreaInfo, Vector4f color, String text, TextFont font) {
 
+        // TODO: use TextFont.textWidth() to determine size
         super(position, depth, new SVector(), clipAreaInfo, uiMatrix);
 
         this.relativeSize = relativeSize;

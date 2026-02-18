@@ -201,7 +201,10 @@ public class UIRenderMaster {
             case HSLDrawCall h -> hslRenderer.addShape(h);
             case ImageDrawCall i -> imageRenderer.addShape(i);
             case TextDrawCall t -> textRenderer.addShape(t);
-            default -> System.err.format("Unknown drawcall: %s\n", d.getClass().getName());
+            default -> {
+                String message = String.format("Unknown drawcall: %s\n", d.getClass().getName());
+                throw new RuntimeException(message);
+            }
         }
     }
 

@@ -1,20 +1,8 @@
 package main.tools;
 
-public interface Resizable {
-
-    public void startResizing();
-
-    public void finishResizing();
+public interface Resizable extends Draggable {
 
     public boolean lockRatio();
-
-    public int getX();
-
-    public void setX(int x);
-
-    public int getY();
-
-    public void setY(int y);
 
     public int getWidth();
 

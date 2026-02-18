@@ -16,6 +16,10 @@ public class UIMenuBar extends UIContainer {
         setPaddingScale(0.5);
         setHFillSize();
 
+        // TODO: this is just a hack to prevent parts of the image canvas (e.g. size
+        // knobs) to appear above the menu.
+        relativeLayer = 4;
+
         expandedMenu = null;
     }
 
@@ -33,10 +37,7 @@ public class UIMenuBar extends UIContainer {
             super(UI.VERTICAL, UI.CENTER);
 
             this.menu = new UIFloatMenu(() -> expandedMenu == this, () -> expandedMenu = null);
-            // TODO: this is just a hack to prevent parts of the image canvas (e.g. size
-            // knobs) to appear above the menu.
-            menu.setRelativeLayer(4);
-            menu.addAnchor(Anchor.TOP_LEFT, this, Anchor.BOTTOM_LEFT);
+            menu.addAnchor(Anchor.TOP_LEFT, Anchor.BOTTOM_LEFT);
 
             noOutline();
             setHMarginScale(1.5);

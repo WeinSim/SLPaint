@@ -33,10 +33,8 @@ public class UIMenuButton extends UIContainer {
         setLeftClickAction(() -> expanded = !expanded);
 
         dropdown = new UIFloatMenu(() -> expanded, () -> expanded = false, scroll, UIText.NORMAL);
-        // see comment in constructor of MenuLabel (UIMenuBar.java:36)
-        dropdown.setRelativeLayer(4);
-        dropdown.addAnchor(UIFloatContainer.Anchor.TOP_LEFT, this, UIFloatContainer.Anchor.BOTTOM_LEFT);
-        dropdown.addAnchor(UIFloatContainer.Anchor.BOTTOM_LEFT, this, UIFloatContainer.Anchor.TOP_LEFT);
+        dropdown.addAnchor(UIFloatContainer.Anchor.TOP_LEFT, UIFloatContainer.Anchor.BOTTOM_LEFT);
+        dropdown.addAnchor(UIFloatContainer.Anchor.BOTTOM_LEFT, UIFloatContainer.Anchor.TOP_LEFT);
 
         add(dropdown);
 

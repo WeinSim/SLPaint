@@ -122,8 +122,6 @@ public abstract class UI {
             default -> 0;
         };
         modifiers ^= 0xFFFFFFFF;
-
-        root.keyPressed(key, mods);
     }
 
     public void mousePressed(int mouseButton, int mods) {

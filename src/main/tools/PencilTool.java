@@ -8,18 +8,14 @@ public final class PencilTool extends ImageTool {
 
     public static final PencilTool INSTANCE = new PencilTool();
 
-    public static final int MIN_SIZE = 1, MAX_SIZE = 16;
-
     public static final int DRAWING_PRIMARY = 0x02, DRAWING_SECONDARY = 0x04;
+
+    public static final int MIN_SIZE = 1, MAX_SIZE = 16;
 
     private int size = 1;
 
     private PencilTool() {
         super();
-    }
-
-    @Override
-    public void createKeyboardShortcuts() {
     }
 
     @Override
@@ -41,9 +37,18 @@ public final class PencilTool extends ImageTool {
             };
         }
     }
-    
+
     @Override
     public void finish() {
+    }
+
+    @Override
+    public void createKeyboardShortcuts() {
+    }
+
+    @Override
+    public String getName() {
+        return "Pencil";
     }
 
     public int getSize() {
@@ -52,10 +57,5 @@ public final class PencilTool extends ImageTool {
 
     public void setSize(int size) {
         this.size = Math.min(Math.max(size, MIN_SIZE), MAX_SIZE);
-    }
-
-    @Override
-    public String getName() {
-        return "Pencil";
     }
 }
