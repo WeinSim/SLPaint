@@ -26,10 +26,6 @@ public class UIStyle {
 
     private Supplier<UIShape> shape;
 
-    public UIStyle(Vector4f backgroundColor, Vector4f strokeColor, double strokeWeight) {
-        this(() -> backgroundColor, () -> strokeColor, () -> strokeWeight);
-    }
-
     public UIStyle(Supplier<Vector4f> backgroundColor, Supplier<Vector4f> strokeColor, DoubleSupplier strokeWeight) {
         this.backgroundColor = backgroundColor;
         this.strokeColor = strokeColor;

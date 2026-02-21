@@ -1,4 +1,4 @@
-package test;
+package sutil.json;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -6,14 +6,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 
-import sutil.json.JSONParser;
-import sutil.json.JSONSerializer;
 import sutil.json.tokens.JSONParseException;
 import sutil.json.values.JSONValue;
 
 public class JSONTester {
 
-    private static final String SOURCE_DIRECTORY = "test/json/";
+    private static final String SOURCE_DIRECTORY = "res/test/json/";
     private static final String PASS_DIRECTORY = "pass";
     private static final String FAIL_DIRECTORY = "fail";
 

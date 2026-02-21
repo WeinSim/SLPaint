@@ -1,0 +1,74 @@
+/**
+ *
+ * New
+ *   -> image: new image
+ *   -> file: none
+ * 
+ * Open
+ *   -> image: image from file
+ *   -> file: specified file
+ * 
+ * Save
+ *   -> image: unchanged
+ *   -> file: unchanged
+ * 
+ * Save as
+ *   -> image: unchanged
+ *   -> file: specified file
+ * 
+ */
+class IFM {
+
+    void new() {
+        check for unsaved changes
+            cancel: return
+        close current file
+            exception: do nothing
+        create new image
+    }
+ 
+    void open() {
+        check for unsaved changes
+            cancel: return
+        user chooses file
+            cancel: return
+        open chosen file
+            exception: show error message, repeat or return (keep old image and file)
+        load image from file
+            exception: show error message, repeate or return (keep old image and file)
+        close current file
+            exception: do nothing
+    }
+
+    // this method runs until the file is successfully saved or the user cancels the operation.
+    // returns true if the user cancels the operation
+    boolean saveCurrent() {
+        save
+            exception: show error message, repeat or save as new file
+            cancel: return true
+        return false
+    }
+
+    // this method runs until the file is successfully saved or the user cancels the operation.
+    // returns true if the user cancels the operation
+    boolean saveAs() {
+        user chooses file
+            cancel: return true
+            file exists: show warning message, repeat or continue
+        open chosen file
+            exception: show error message, repeat or return true
+        save as chosen file
+            exception: show error message, repeat or return true
+        close current file
+            exception: do nothing
+        return false
+    }
+
+    boolean checkForUnsavedChanges() {
+        no unsaved changes: return false
+        user doen't want to save: return false
+        save / saveAs
+            cancel: return true
+        return false
+    }
+}

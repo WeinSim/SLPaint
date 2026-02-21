@@ -5,8 +5,8 @@ import static org.lwjgl.glfw.GLFW.*;
 import java.awt.image.BufferedImage;
 
 import main.ClipboardManager;
-import main.Image;
 import main.apps.MainApp;
+import main.image.Image;
 import sutil.math.SVector;
 
 public final class SelectionTool extends DragTool {
@@ -21,22 +21,14 @@ public final class SelectionTool extends DragTool {
 
     @Override
     public void createKeyboardShortcuts() {
-        // Ctrl + A: select everything
         addShortcut("select_all", GLFW_KEY_A, GLFW_MOD_CONTROL, NONE | IDLE, this::selectEverything);
-        // Esc: finish selection
         addShortcut("finish_selection", GLFW_KEY_ESCAPE, 0, IDLE, this::finish);
-        // Del: delete selection
-        addShortcut("delete_selection", GLFW_KEY_DELETE, 0, IDLE, this::clearSelection);
-        // Ctrl + V: paste
+        addShortcut("delete_selection", GLFW_KEY_DELETE, 0, IDLE, this::deleteSelection);
         addShortcut("paste", GLFW_KEY_V, GLFW_MOD_CONTROL, NONE | IDLE, this::pasteFromClipboard);
-        // Ctrl + C: copy
         addShortcut("copy", GLFW_KEY_C, GLFW_MOD_CONTROL, IDLE, this::copyToClipboard);
-        // Ctrl + X: cut
         addShortcut("cut", GLFW_KEY_X, GLFW_MOD_CONTROL, IDLE, this::cutToClipboard);
-        // Ctrl + Shift + X: crop image to selection
         addShortcut("crop_to_selection", GLFW_KEY_X, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT, IDLE,
                 this::cropImageToSelection);
-        // Arrow keys: move selection
         addShortcut("selection_up", GLFW_KEY_UP, 0, IDLE, () -> y--);
         addShortcut("selection_down", GLFW_KEY_DOWN, 0, IDLE, () -> y++);
         addShortcut("selection_left", GLFW_KEY_LEFT, 0, IDLE, () -> x--);
@@ -63,20 +55,21 @@ public final class SelectionTool extends DragTool {
 
     @Override
     public void finish() {
-        if (selection != null) {
-            app.renderImageToImage(selection, x, y, width, height);
-            clearSelection();
-            app.addImageSnapshot();
-        }
-
-        state = NONE;
+        finish(true);
     }
 
-    public void clearSelection() {
+    public void deleteSelection() {
+        finish(false);
+    }
+
+    private void finish(boolean renderToImage) {
         if (selection != null) {
+            if (renderToImage)
+                app.renderImageToImage(selection, x, y, width, height);
             selection.cleanUp();
+            selection = null;
+            app.addImageSnapshot();
         }
-        selection = null;
 
         state = NONE;
     }
@@ -92,12 +85,18 @@ public final class SelectionTool extends DragTool {
     }
 
     public void copyToClipboard() {
+        if (state != IDLE)
+            return;
+
         ClipboardManager.setImage(selection.getBufferedImage());
     }
 
     public void cutToClipboard() {
+        if (state != IDLE)
+            return;
+
         copyToClipboard();
-        clearSelection();
+        deleteSelection();
     }
 
     public void pasteFromClipboard() {
@@ -120,6 +119,9 @@ public final class SelectionTool extends DragTool {
     }
 
     public void cropImageToSelection() {
+        if (state != IDLE)
+            return;
+
         finish();
         app.cropImage(x, y, width, height);
     }

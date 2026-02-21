@@ -5,8 +5,8 @@ import java.util.function.BooleanSupplier;
 
 import org.lwjgl.glfw.GLFW;
 
-import main.Image;
 import main.apps.MainApp;
+import main.image.Image;
 import main.tools.Draggable;
 import main.tools.ImageTool;
 import main.tools.LineTool;

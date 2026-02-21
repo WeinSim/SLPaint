@@ -8,9 +8,9 @@ import java.util.function.Supplier;
 import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector4f;
 
-import main.Image;
-import main.ImageFormat;
 import main.apps.MainApp;
+import main.image.Image;
+import main.image.ImageFormat;
 import main.tools.DragTool;
 import main.tools.ImageTool;
 import main.tools.LineTool;
@@ -225,11 +225,7 @@ public class MainUI extends AppUI<MainApp> {
                     ? () -> MainApp.toVector4f(app.getPrimaryColor())
                     : () -> MainApp.toVector4f(app.getSecondaryColor());
             colorContainer.add(new UIColorElement(cg, UISizes.BIG_COLOR_BUTTON));
-            UILabel label = new UILabel(
-                    "%s\nColor".formatted(i == 0 ? "Primary" : "Secondary")
-            // "Color %d".formatted(i + 1)
-            // i == 0 ? "Primary" : "Secondary"
-            );
+            UILabel label = new UILabel(String.format("%s\nColor", i == 0 ? "Primary" : "Secondary"));
             label.setAlignment(CENTER);
             label.zeroMargin();
             colorContainer.add(label);
@@ -285,7 +281,6 @@ public class MainUI extends AppUI<MainApp> {
         sidePanel.add(new ColorPickContainer(
                 app.getSelectedColorPicker(),
                 app::addCustomColor,
-                // UISizes.COLOR_PICKER_PANEL,
                 VERTICAL,
                 true,
                 false));
@@ -335,7 +330,7 @@ public class MainUI extends AppUI<MainApp> {
                 ret += format.toString() + ", ";
             }
             String filename = app.getFilename();
-            if (filename.length() > 0) {
+            if (filename != null && filename.length() > 0) {
                 long filesize = app.getFilesize();
                 ret += "%s (%s)".formatted(filename, MainApp.formatFilesize(filesize));
             }

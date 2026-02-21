@@ -2,7 +2,7 @@ package main.tools;
 
 import java.util.LinkedList;
 
-import main.Image;
+import main.image.Image;
 
 public final class FillBucketTool extends ImageTool {
 

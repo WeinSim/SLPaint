@@ -26,7 +26,16 @@ public class TextFont {
 
     public static final String DEFAULT_FONT_NAME = "FreeMonoBold";
 
+    private static final char[] CHAR_RANGES = {
+        0x0020, 0x007E,
+        0x00A0, 0x00FF
+    };
     private static final char UNKNOWN_CHAR = 0x25A1; // □ (WHITE SQUARE)
+    // private static final char BULLET_CHAR = 0x2022; // • (BULLET)
+    private static final char[] EXTRA_CHARS = {
+            UNKNOWN_CHAR,
+            // BULLET_CHAR,
+    };
 
     private static HashMap<String, TextFont> fontCache = new HashMap<>();
 
@@ -187,8 +196,9 @@ public class TextFont {
 
         String directoryName = getDirectoryName(name);
         MainApp.runCommand(directoryName,
-                getFontGenerationCommand(name, 2, 256, 256, textSize, new int[] { 32, 126, 160, 255 },
-                        new int[] { 9633 }, 0));
+                getFontGenerationCommand(name, 2, 256, 256, textSize,
+                    CHAR_RANGES,
+                        EXTRA_CHARS, 0));
     }
 
     private static void addArgument(ArrayList<String> commands, String argument, int value) {
@@ -201,13 +211,13 @@ public class TextFont {
     }
 
     private static ArrayList<String> getFontGenerationCommand(String fontName, int padding, int textureWidth,
-            int textureHeight, int fontSize, int[] charRanges, int[] extraChars, int bgColor) {
+            int textureHeight, int fontSize, char[] charRanges, char[] extraChars, int bgColor) {
 
         ArrayList<String> commands = new ArrayList<>();
         // commands.add("/home/simon/code/executables/fontbm/fontbm");
         commands.add("fontbm");
         addArgument(commands, "font-file", "%s.ttf".formatted(fontName));
-        addArgument(commands, "output", "output");
+        addArgument(commands, "output", "output_%s".formatted(fontSize));
         addArgument(commands, "padding-up", padding);
         addArgument(commands, "padding-down", padding);
         addArgument(commands, "padding-left", padding);
@@ -216,10 +226,10 @@ public class TextFont {
         addArgument(commands, "font-size", fontSize);
         StringBuilder charsBuilder = new StringBuilder();
         for (int i = 0; i < charRanges.length / 2; i++) {
-            charsBuilder.append("%d-%d,".formatted(charRanges[2 * i], charRanges[2 * i + 1]));
+            charsBuilder.append("%d-%d,".formatted((int) charRanges[2 * i], (int) charRanges[2 * i + 1]));
         }
         for (int extraChar : extraChars) {
-            charsBuilder.append("%d,".formatted(extraChar));
+            charsBuilder.append("%d,".formatted((int) extraChar));
         }
         int len = charsBuilder.length();
         if (len > 0) {

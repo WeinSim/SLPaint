@@ -6,8 +6,6 @@ import sutil.math.SVector;
 
 public enum UISizes implements DoubleSupplier {
 
-    MAIN_APP(1280, 720),
-    SETTINGS_APP(900, 650),
     MARGIN(8),
     PADDING(8),
     STROKE_WEIGHT(1.2, true),
@@ -21,8 +19,11 @@ public enum UISizes implements DoubleSupplier {
     RADIO(20),
     RADIO_INSIDE(10),
     TOGGLE_WIDTH(45),
+    DIALOG_MARGIN(50),
     // TOGGLE_INSIDE(13),
     // SLPaint specific stuff:
+    MAIN_APP(1280, 720),
+    SETTINGS_APP(900, 650),
     COLOR_BUTTON(24),
     BIG_COLOR_BUTTON(36),
     CHECKERBOARD(12),

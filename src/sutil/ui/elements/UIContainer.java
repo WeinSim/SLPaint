@@ -47,7 +47,9 @@ public class UIContainer extends UIElement {
         FILL;
     }
 
-    private ChildList children;
+    private ArrayList<UIElement> children;
+    private Iterable<UIElement> visibleChildren,
+            soloChildren;
 
     protected int orientation;
     protected int hAlignment, vAlignment;
@@ -94,19 +96,32 @@ public class UIContainer extends UIElement {
         if (isVScroll())
             setVFillSize();
 
-        clipChildren = isHScroll() || isVScroll();
-
+        scrollOffset = new SVector();
         minSize = new SVector();
 
-        children = new ChildList();
+        clipChildren = isHScroll() || isVScroll();
 
-        scrollOffset = new SVector();
+        children = new ArrayList<>();
+        visibleChildren = new ChildIterable() {
+            @Override
+            boolean iterateOver(UIElement child) {
+                return child.isVisible();
+            }
+        };
+        soloChildren = new ChildIterable() {
+            @Override
+            boolean iterateOver(UIElement child) {
+                return child.soloInputs();
+            }
+        };
     }
+
+    // Adding / removing children
 
     public void add(UIElement child) {
         if (addSeparators && !(child instanceof UIFloatContainer)) {
             boolean containsNonFloatChildren = false;
-            for (UIElement currentChild : children.children) {
+            for (UIElement currentChild : children) {
                 if (!(currentChild instanceof UIFloatContainer)) {
                     containsNonFloatChildren = true;
                     break;
@@ -145,14 +160,19 @@ public class UIContainer extends UIElement {
         child.parent = this;
     }
 
+    public void remove(UIElement child) {
+        children.remove(child);
+    }
+
+    // Recursive methods
+
     @Override
     public void updateVisibility() {
         super.updateVisibility();
-        if (!isVisible()) {
+        if (!isVisible())
             return;
-        }
 
-        for (UIElement child : children.children) {
+        for (UIElement child : children) {
             child.updateVisibility();
         }
     }
@@ -198,32 +218,7 @@ public class UIContainer extends UIElement {
     }
 
     @Override
-    public void mousePressed(int mouseButton, int mods) {
-        super.mousePressed(mouseButton, mods);
-
-        for (UIElement child : getChildren()) {
-            child.mousePressed(mouseButton, mods);
-        }
-    }
-
-    @Override
-    public void mouseReleased(int mouseButton, int mods) {
-        super.mouseReleased(mouseButton, mods);
-
-        for (UIElement child : getChildren()) {
-            child.mouseReleased(mouseButton, mods);
-        }
-    }
-
-    @Override
-    public boolean mouseWheel(SVector scroll, SVector mousePos, int mods) {
-        SVector relativeMouse = new SVector(mousePos).sub(position);
-        for (UIElement child : getChildren()) {
-            if (child.mouseWheel(scroll, relativeMouse, mods)) {
-                return true;
-            }
-        }
-
+    public boolean mouseWheel(SVector scroll, int mods) {
         if (mouseAbove() && (mods & GLFW.GLFW_MOD_CONTROL) == 0) {
             boolean doScroll = false;
             if (isHScroll()) {
@@ -239,26 +234,25 @@ public class UIContainer extends UIElement {
             }
         }
 
-        return super.mouseWheel(scroll, mousePos, mods);
+        return super.mouseWheel(scroll, mods);
     }
 
     @Override
-    public void keyPressed(int key, int mods) {
-        super.keyPressed(key, mods);
+    public Integer getCursorShape() {
+        Integer shape = super.getCursorShape();
+        if (shape != null)
+            return shape;
 
         for (UIElement child : getChildren()) {
-            child.keyPressed(key, mods);
+            shape = child.getCursorShape();
+            if (shape != null)
+                return shape;
         }
+
+        return null;
     }
 
-    @Override
-    public void charInput(char c) {
-        super.charInput(c);
-
-        for (UIElement child : getChildren()) {
-            child.charInput(c);
-        }
-    }
+    // Layout stuff
 
     public void setMinSize() {
         for (UIElement child : getChildren()) {
@@ -553,20 +547,7 @@ public class UIContainer extends UIElement {
         return ret;
     }
 
-    @Override
-    public Integer getCursorShape() {
-        Integer shape = super.getCursorShape();
-        if (shape != null)
-            return shape;
-
-        for (UIElement child : getChildren()) {
-            shape = child.getCursorShape();
-            if (shape != null)
-                return shape;
-        }
-
-        return null;
-    }
+    // Getters / setters
 
     /**
      * 
@@ -647,8 +628,29 @@ public class UIContainer extends UIElement {
         return orientation;
     }
 
+    /**
+     * 
+     * @return an iterator over this container's visible children.
+     */
     public Iterable<UIElement> getChildren() {
-        return children;
+        return visibleChildren;
+    }
+
+    /**
+     * If any of this container's visible children have the {@code soloInputs} flag
+     * set, this method returns an iterator over all children that have the
+     * {@code soloInputs} flag set. Otherwise, it returns an iterator over all
+     * visible children.
+     */
+    public Iterable<UIElement> getSoloChildren() {
+        boolean hasSoloChildren = false;
+        for (UIElement child : getChildren()) {
+            if (child.soloInputs()) {
+                hasSoloChildren = true;
+                break;
+            }
+        }
+        return hasSoloChildren ? soloChildren : visibleChildren;
     }
 
     public UIContainer setMarginScale(double marginScale) {
@@ -793,6 +795,8 @@ public class UIContainer extends UIElement {
     public boolean clipChildren() {
         return clipChildren;
     }
+
+    // Scrolling
 
     public UIContainer addScrollbars() {
         UIContainer ret = this;
@@ -994,31 +998,28 @@ public class UIContainer extends UIElement {
         }
     }
 
-    private class ChildList implements Iterable<UIElement> {
+    // Child list
 
-        private ArrayList<UIElement> children;
+    private abstract class ChildIterable implements Iterable<UIElement> {
 
-        ChildList() {
-            children = new ArrayList<>();
+        ChildIterable() {
         }
 
-        void add(UIElement child) {
-            children.add(child);
-        }
+        abstract boolean iterateOver(UIElement child);
 
         @Override
         public Iterator<UIElement> iterator() {
             return new Iterator<UIElement>() {
 
                 private final Iterator<UIElement> inner = children.iterator();
-                private UIElement nextVisible = null;
+                private UIElement next = null;
 
                 @Override
                 public boolean hasNext() {
                     while (inner.hasNext()) {
-                        UIElement next = inner.next();
-                        if (next.isVisible()) {
-                            nextVisible = next;
+                        UIElement innerNext = inner.next();
+                        if (iterateOver(innerNext)) {
+                            next = innerNext;
                             return true;
                         }
                     }
@@ -1027,9 +1028,9 @@ public class UIContainer extends UIElement {
 
                 @Override
                 public UIElement next() {
-                    if (nextVisible != null || hasNext()) {
-                        UIElement result = nextVisible;
-                        nextVisible = null;
+                    if (next != null || hasNext()) {
+                        UIElement result = next;
+                        next = null;
                         return result;
                     }
                     throw new NoSuchElementException();

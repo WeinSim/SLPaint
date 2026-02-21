@@ -18,7 +18,7 @@ import sutil.ui.elements.UIRoot;
 import sutil.ui.elements.UITextInput;
 import ui.AppUI;
 
-public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp, AboutApp {
+public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp {
 
     private static final double FRAME_TIME_GAMMA = 0.025;
 
@@ -76,13 +76,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
         mouseButtons = new boolean[2];
         mousePos = new SVector();
-        prevMousePos = null;
+        prevMousePos = new SVector();
 
-        // Comma -> toggle debug outline
         addKeyboardShortcut("cycle_debug", GLFW_KEY_COMMA, 0, App::cycleDebugOutline, false);
-        // Shift + S -> reload shaders
         addKeyboardShortcut("reload_shaders", GLFW_KEY_S, GLFW_MOD_SHIFT, () -> renderer.reloadShaders(), true);
-        // Shift + R -> reload UI
         addKeyboardShortcut("reload_ui", GLFW_KEY_R, GLFW_MOD_SHIFT, this::loadUI, true);
     }
 
@@ -91,7 +88,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
         if (adjustSizeOnInit) {
             // calling ui.update here to ensure the root has the correct size
-            ui.update(mousePos, window.isFocused());
+            ui.update(window.getMousePosition(), window.isFocused());
 
             UIRoot root = UI.getRoot();
             SVector rootSize = root.getSize();
@@ -118,27 +115,21 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         frameCount++;
 
         if (ui == null) {
-            final String baseStr = "%s has no UI. The UI must be created in the app's constructor using loadUI().\n";
-            System.err.format(baseStr, getClass().getName());
-            System.exit(1);
+            final String baseStr = "%s has no UI. The UI must be created in the app's constructor using loadUI().";
+            throw new RuntimeException(String.format(baseStr, getClass().getName()));
         }
 
-        if (prevMousePos == null) {
-            mousePos = window.getMousePosition();
-            prevMousePos = new SVector(mousePos);
-        } else {
-            prevMousePos.set(mousePos);
-            mousePos = window.getMousePosition();
-        }
+        prevMousePos.set(mousePos);
+        mousePos.set(window.getMousePosition());
 
         boolean focus = window.isFocused();
 
         // process char input
         Character c;
         while ((c = window.getNextCharacter()) != null) {
-            if (focus) {
+            if (focus)
                 ui.charInput(c);
-            }
+
             charInput(c);
         }
 
@@ -194,7 +185,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         Window.ScrollInfo scrollInfo;
         while ((scrollInfo = window.getNextScrollInfo()) != null) {
             if (focus)
-                ui.mouseWheel(new SVector(scrollInfo.xoffset(), scrollInfo.yoffset()), mousePos);
+                ui.mouseWheel(new SVector(scrollInfo.xoffset(), scrollInfo.yoffset()));
 
             mouseScroll(scrollInfo.xoffset(), scrollInfo.yoffset());
         }

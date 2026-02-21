@@ -39,6 +39,11 @@ public abstract class UIElement {
             ? GLFW_POINTING_HAND_CURSOR
             : null;
 
+    /**
+     * Setting this to {@code true} blocks user inputs from reaching this UI
+     * element's non-solo siblings (and with that their children as well).
+     */
+    protected boolean soloInputs = false;
     protected boolean ignoreParentClipArea = false;
 
     protected Runnable leftClickAction = null, rightClickAction = null;
@@ -59,10 +64,6 @@ public abstract class UIElement {
 
     public void updateVisibility() {
         visible = visibilitySupplier.getAsBoolean();
-
-        if (visible && this == UI.getSelectedElement()) {
-            UI.confirmSelectedElement();
-        }
     }
 
     public void updateMousePosition(SVector mouse) {
@@ -98,12 +99,12 @@ public abstract class UIElement {
 
         switch (mouseButton) {
             case GLFW_MOUSE_BUTTON_LEFT -> {
-                if (leftClickAction != null) {
-                    leftClickAction.run();
+                if (selectOnClick) {
+                    UI.select(this);
                 }
 
-                if (selectOnClick) {
-                    UI.select(this, mousePosition);
+                if (leftClickAction != null) {
+                    leftClickAction.run();
                 }
             }
             case GLFW_MOUSE_BUTTON_RIGHT -> {
@@ -126,7 +127,7 @@ public abstract class UIElement {
      * @return Wether the mouse scroll action has been "used up" by this
      *         {@code UIElement}.
      */
-    public boolean mouseWheel(SVector scroll, SVector mousePos, int mods) {
+    public boolean mouseWheel(SVector scroll, int mods) {
         return false;
     }
 
@@ -144,7 +145,7 @@ public abstract class UIElement {
      *              element to be selected, or {@code null} if this selection didn't
      *              come from a mouse press
      */
-    public void select(SVector mouse) {
+    public void select() {
     }
 
     public boolean isSelectable() {
@@ -172,8 +173,20 @@ public abstract class UIElement {
         return this;
     }
 
+    public void setIgnoreParentClipArea(boolean ignoreParentClipArea) {
+        this.ignoreParentClipArea = ignoreParentClipArea;
+    }
+
     public boolean ignoreParentClipArea() {
         return ignoreParentClipArea;
+    }
+
+    public boolean soloInputs() {
+        return soloInputs;
+    }
+
+    public void setSoloInputs(boolean soloInputs) {
+        this.soloInputs = soloInputs;
     }
 
     public final boolean isVisible() {

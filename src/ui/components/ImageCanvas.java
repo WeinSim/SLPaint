@@ -1,13 +1,9 @@
 package ui.components;
 
-import static org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL;
-import static org.lwjgl.glfw.GLFW.GLFW_MOD_SHIFT;
-import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
-import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT;
-import static org.lwjgl.glfw.GLFW.GLFW_POINTING_HAND_CURSOR;
+import static org.lwjgl.glfw.GLFW.*;
 
-import main.Image;
 import main.apps.MainApp;
+import main.image.Image;
 import main.tools.FillBucketTool;
 import main.tools.ImageTool;
 import main.tools.LineTool;
@@ -134,14 +130,14 @@ public class ImageCanvas extends UIContainer {
     }
 
     @Override
-    public boolean mouseWheel(SVector scroll, SVector mousePos, int mods) {
-        if (super.mouseWheel(scroll, mousePos, mods))
+    public boolean mouseWheel(SVector scroll, int mods) {
+        if (super.mouseWheel(scroll, mods))
             return true;
 
         if (canDoScrollZoom()) {
             if ((mods & GLFW_MOD_CONTROL) != 0) {
                 // zoom
-                zoom((int) Math.signum(scroll.y), new SVector(mousePos).sub(position));
+                zoom((int) Math.signum(scroll.y), new SVector(mousePosition).sub(position));
             } else {
                 // scroll
                 if ((mods & GLFW_MOD_SHIFT) != 0) {

@@ -11,9 +11,9 @@ import org.lwjglx.util.vector.Matrix3f;
 import org.lwjglx.util.vector.Vector3f;
 import org.lwjglx.util.vector.Vector4f;
 
-import main.Image;
 import main.apps.App;
 import main.apps.MainApp;
+import main.image.Image;
 import renderengine.bufferobjects.FrameBufferObject;
 import renderengine.drawcalls.ClipAreaInfo;
 import renderengine.drawcalls.DrawCall;

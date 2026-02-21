@@ -22,9 +22,6 @@ public final class SelectionToolContainer extends DragToolContainer<SelectionToo
             super(0, new SVector());
 
             setVisibilitySupplier(() -> ImageTool.SELECTION.getSelection() != null);
-
-            // the selection border should render above the image
-            // relativeLayer = -1;
         }
 
         @Override

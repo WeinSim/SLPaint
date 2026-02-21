@@ -4,18 +4,55 @@ import static org.lwjgl.glfw.GLFW.*;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.concurrent.CompletableFuture;
 
 import org.lwjglx.util.vector.Vector4f;
 
 import sutil.math.SVector;
 import sutil.ui.elements.UIContainer;
 import sutil.ui.elements.UIElement;
+import sutil.ui.elements.UIModalDialog;
 import sutil.ui.elements.UIRoot;
 
 public abstract class UI {
 
-    public static final int LEFT = 0, TOP = 0, CENTER = 1, RIGHT = 2, BOTTOM = 2;
-    public static final int VERTICAL = 0, HORIZONTAL = 1, NONE = 2, BOTH = 3;
+    /**
+     * UIContainer alignments
+     */
+    public static final int LEFT = 0,
+            TOP = 0,
+            CENTER = 1,
+            RIGHT = 2,
+            BOTTOM = 2;
+
+    /**
+     * UIContainer orientations and scroll directions
+     */
+    public static final int VERTICAL = 0,
+            HORIZONTAL = 1,
+            NONE = 2,
+            BOTH = 3;
+
+    public static final int NUM_LAYERS = 256;
+    public static final int MODAL_DIALOG_LAYER = NUM_LAYERS - 1;
+
+    /**
+     * UIModalDialog dialog types
+     */
+    public static final int YES_NO_DIALOG = 0,
+            OK_CANCEL_DIALOG = 1,
+            YES_NO_CANCEL_DIALOG = 2,
+            INFO_DIALOG = 3;
+
+    /**
+     * UIModalDialog return codes
+     */
+    public static final int YES_OPTION = 0,
+            OK_OPTION = 0,
+            NO_OPTION = 1,
+            CANCEL_OPTION = 2,
+            CLOSED_OPTION = 3,
+            INVALID_OPTION = -1;
 
     private static UI context = null;
 
@@ -26,12 +63,10 @@ public abstract class UI {
     protected double mouseWheelSensitivity = 100;
 
     protected UIRoot root;
+    private SVector rootSize;
+
     private UIElement selectedElement;
-    /**
-     * Used to set selectedElement to null if the selected element is not currently
-     * visible.
-     */
-    private boolean selectedElementVisible;
+
     private boolean dragging;
 
     /**
@@ -60,25 +95,23 @@ public abstract class UI {
         root = new UIRoot(VERTICAL, LEFT);
         root.zeroMargin().zeroPadding().noOutline().withBackground();
         root.setFixedSize(initialRootSize);
+        rootSize = new SVector(initialRootSize);
 
         init();
     }
 
     protected abstract void init();
 
-    public void update(SVector mousePos, boolean valid) {
-        while (!eventQueue.isEmpty()) {
+    public void update(SVector mousePos, boolean focus) {
+        while (!eventQueue.isEmpty())
             eventQueue.removeFirst().run();
-        }
 
-        selectedElementVisible = false;
         root.updateVisibility();
-        if (!selectedElementVisible) {
-            select(null);
-        }
+        if (selectedElement != null && !selectedElement.isVisible())
+            selectedElement = null;
 
         root.updateMousePosition(mousePos);
-        root.updateMouseAbove(valid && !dragging);
+        root.updateMouseAbove(!dragging);
 
         // The dragging variable lags one frame behind (because it is being used before
         // it is being set)
@@ -103,14 +136,24 @@ public abstract class UI {
                 case GLFW_KEY_ENTER -> {
                     if (selectedElement != null) {
                         Runnable clickAction = selectedElement.getLeftClickAction();
-                        if (clickAction != null) {
+                        if (clickAction != null)
                             clickAction.run();
-                        }
                     }
                 }
             }
-            root.keyPressed(key, mods);
+            // root.keyPressed(key, mods);
+
+            keyPressed(root, key, mods);
         });
+    }
+
+    private void keyPressed(UIElement element, int key, int mods) {
+        element.keyPressed(key, mods);
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getSoloChildren()) {
+                keyPressed(child, key, mods);
+            }
+        }
     }
 
     public void keyReleased(int key, int mods) {
@@ -130,9 +173,21 @@ public abstract class UI {
                 case GLFW_MOUSE_BUTTON_LEFT -> leftMousePressed = true;
                 case GLFW_MOUSE_BUTTON_RIGHT -> rightMousePressed = true;
             }
-            select(null);
-            root.mousePressed(mouseButton, mods);
+            if (selectedElement != null && !selectedElement.mouseAbove()) {
+                selectedElement = null;
+            }
+            // root.mousePressed(mouseButton, mods);
+            mousePressed(root, mouseButton, mods);
         });
+    }
+
+    private void mousePressed(UIElement element, int mouseButton, int mods) {
+        element.mousePressed(mouseButton, mods);
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getSoloChildren()) {
+                mousePressed(child, mouseButton, mods);
+            }
+        }
     }
 
     public void mouseReleased(int mouseButton, int mods) {
@@ -141,31 +196,81 @@ public abstract class UI {
                 case GLFW_MOUSE_BUTTON_LEFT -> leftMousePressed = false;
                 case GLFW_MOUSE_BUTTON_RIGHT -> rightMousePressed = false;
             }
-            root.mouseReleased(mouseButton, mods);
+            // root.mouseReleased(mouseButton, mods);
+            mouseReleased(root, mouseButton, mods);
         });
     }
 
+    private void mouseReleased(UIElement element, int mouseButton, int mods) {
+        element.mouseReleased(mouseButton, mods);
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getSoloChildren()) {
+                mouseReleased(child, mouseButton, mods);
+            }
+        }
+    }
+
     public void charInput(char c) {
-        queueEvent(() -> root.charInput(c));
+        // queueEvent(() -> root.charInput(c));
+        queueEvent(() -> charInput(root, c));
     }
 
-    public void mouseWheel(SVector scroll, SVector mousePos) {
-        queueEvent(() -> root.mouseWheel(scroll.copy().scale(mouseWheelSensitivity), mousePos, modifiers));
+    private void charInput(UIElement element, char c) {
+        element.charInput(c);
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getSoloChildren()) {
+                charInput(child, c);
+            }
+        }
     }
 
-    public void setRootSize(int width, int height) {
-        root.setFixedSize(new SVector(width, height));
+    public void mouseWheel(SVector scroll) {
+        // queueEvent(() -> root.mouseWheel(scroll.copy().scale(mouseWheelSensitivity), mousePos, modifiers));
+        queueEvent(() -> mouseWheel(root, scroll.copy().scale(mouseWheelSensitivity), modifiers));
     }
 
-    private void queueEvent(Runnable action) {
-        eventQueue.add(action);
+    private boolean mouseWheel(UIElement element, SVector scroll, int mods) {
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getSoloChildren()) {
+                if (mouseWheel(child, scroll, mods)) {
+                    return true;
+                }
+            }
+        }
+
+        return element.mouseWheel(scroll, mods);
+    }
+
+    public static void queueEvent(Runnable action) {
+        context.eventQueue.add(action);
+    }
+
+    public static int showModalDialog(String title, String text, int dialogType) {
+        return context.showModalDialogImpl(title, text, dialogType);
+    }
+
+    private int showModalDialogImpl(String title, String text, int dialogType) {
+        if (root.hasModalDialog())
+            // throw new RuntimeException("Unable to show modal dialog if another one is
+            // already active");
+            return INVALID_OPTION;
+
+        CompletableFuture<Integer> future = new CompletableFuture<>();
+        queueEvent(() -> {
+            select(null);
+            root.add(new UIModalDialog(title, text, dialogType, future));
+        });
+        try {
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void cycleSelectedElement(boolean backwards) {
         ArrayList<UIElement> elements = getSelectableElements();
-        if (elements.isEmpty()) {
+        if (elements.isEmpty())
             return;
-        }
         if (selectedElement == null) {
             select(backwards ? elements.getLast() : elements.getFirst());
         } else {
@@ -176,19 +281,7 @@ public abstract class UI {
     }
 
     private ArrayList<UIElement> getSelectableElements() {
-        return getSelectableElements(root, new ArrayList<UIElement>());
-    }
-
-    private ArrayList<UIElement> getSelectableElements(UIContainer parent, ArrayList<UIElement> elements) {
-        for (UIElement child : parent.getChildren()) {
-            if (child.isSelectable()) {
-                elements.add(child);
-            }
-            if (child instanceof UIContainer container) {
-                getSelectableElements(container, elements);
-            }
-        }
-        return elements;
+        return root.getSelectableElements();
     }
 
     public int getCursorShape() {
@@ -199,42 +292,13 @@ public abstract class UI {
     // Statically available methods
 
     public static void select(UIElement element) {
-        context.selectImpl(element);
-    }
-
-    public void selectImpl(UIElement element) {
-        select(element, null);
-    }
-
-    public static void select(UIElement element, SVector mouse) {
-        context.selectImpl(element, mouse);
-    }
-
-    public void selectImpl(UIElement element, SVector mouse) {
-        selectedElement = element;
-        if (element != null) {
-            element.select(mouse);
-        }
-    }
-
-    /**
-     * During the updateVisibility() step of update(), the currently selected
-     * element has to report to the UIPanel that it is still visible.
-     */
-    public static void confirmSelectedElement() {
-        context.confirmSelectedElementImpl();
-    }
-
-    protected void confirmSelectedElementImpl() {
-        selectedElementVisible = true;
+        context.selectedElement = element;
+        if (element != null)
+            element.select();
     }
 
     public static void setDragging() {
-        context.setDraggingImpl();
-    }
-
-    protected void setDraggingImpl() {
-        dragging = true;
+        context.dragging = true;
     }
 
     public static double textWidth(String text, double textSize, String fontName) {
@@ -270,19 +334,11 @@ public abstract class UI {
     }
 
     public static String getDefaultFontName() {
-        return context.getDefaultFontNameImpl();
-    }
-
-    public String getDefaultFontNameImpl() {
-        return defaultFontName;
+        return context.defaultFontName;
     }
 
     public static UIElement getSelectedElement() {
-        return context.getSelectedElementImpl();
-    }
-
-    public UIElement getSelectedElementImpl() {
-        return selectedElement;
+        return context.selectedElement;
     }
 
     public static int getModifiers() {
@@ -290,19 +346,11 @@ public abstract class UI {
     }
 
     public static boolean isLeftMousePressed() {
-        return context.isLeftMousePressedImpl();
-    }
-
-    public boolean isLeftMousePressedImpl() {
-        return leftMousePressed;
+        return context.leftMousePressed;
     }
 
     public static boolean isRightMousePressed() {
-        return context.isRightMousePressedImpl();
-    }
-
-    public boolean isRightMousePressedImpl() {
-        return rightMousePressed;
+        return context.rightMousePressed;
     }
 
     public void setRoot(UIRoot root) {
@@ -310,11 +358,16 @@ public abstract class UI {
     }
 
     public static UIRoot getRoot() {
-        return context.getRootImpl();
+        return context.root;
     }
 
-    public UIRoot getRootImpl() {
-        return root;
+    public void setRootSize(int width, int height) {
+        rootSize.set(width, height);
+        root.setFixedSize(rootSize);
+    }
+
+    public static SVector getRootSize() {
+        return context.rootSize;
     }
 
     public void setUIScale(double uiScale) {
@@ -328,4 +381,11 @@ public abstract class UI {
     public static UI getContext() {
         return context;
     }
+
+    // private static class DialogLock {
+    // int returnCode;
+
+    // DialogLock() {
+    // }
+    // }
 }

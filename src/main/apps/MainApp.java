@@ -4,6 +4,7 @@ import static org.lwjgl.glfw.GLFW.*;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -12,13 +13,9 @@ import org.lwjglx.util.vector.Vector4f;
 
 import main.ColorArray;
 import main.ColorPicker;
-import main.Image;
-import main.ImageFile;
-import main.ImageFileManager;
-import main.ImageFormat;
-import main.ImageHistory;
-import main.dialogs.SaveDialog;
-import main.dialogs.UnableToSaveImageDialog;
+import main.image.Image;
+import main.image.ImageFormat;
+import main.image.ImageManager;
 import main.settings.BooleanSetting;
 import main.settings.ColorArraySetting;
 import main.settings.Settings;
@@ -27,6 +24,7 @@ import renderengine.Window;
 import renderengine.fonts.TextFont;
 import sutil.SUtil;
 import sutil.math.SVector;
+import sutil.ui.UI;
 import sutil.ui.elements.UITextInput;
 import ui.AppUI;
 import ui.MainUI;
@@ -35,10 +33,13 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Line tool
- *     Preview for INITIAL_DRAG and IDLE states
- *       => give LineToolContainer an Image on which app.drawLine() is called
- *         every frame?
+ *   Modal dialogs
+ *     Add options for custom button labels like in JOptionPane
+ *     Deactivate keyboard shortcuts when a modal dialog is active
+ *     Convert other small dialogs into modal dialogs? (e.g. ResizeUI)
+ *   File management
+ *     Only move things to another thread when really neccessary
+ *     Ask user to save changes when window is closed
  * 
  * App:
  *   Pencil tool
@@ -51,17 +52,16 @@ import ui.components.ImageCanvas;
  *   Selection tool
  *     Selecting something and then flipping the image keeps the selection as it
  *       is (and neither flattens nor flips it). Is this the expected behavior?
- *   Proper file management
- *     Dialogs
- *       Save dialog
- *         Keep track of unsaved changes, ask user to save before quitting if
- *         there are unsaved changes
- *       Keep track of all file locks in one centralized place to avoid leaking
- *         (Whatever that is supposed to mean?)
+ *     Add flip and rotate options for selection
+ *     Ctrl + Shift + X adds two image snapshots (finish() adds one and
+ *       app.cropImage() adds the second one
+ *     Ctrl + Shift + X crashes if the selection is entirely outside of the
+ *        image
  *   Keyboard shortcuts
  *     Selecting one of the radio buttons in the resize ui and pressing enter
  *       closes the resize window. => add option for keyboard shortcut to not
  *       run if something is currently selected (similar to text input).
+ *   No child apps should be open when the image changes?
  *   Transparency
  *     Selecting a semi-transparent area and pasting it over a completely
  *       transparent area messes up the pixel colors: the semi-transparent area
@@ -82,8 +82,21 @@ import ui.components.ImageCanvas;
  *       => Add correct gamma blending? (as a setting?)
  *         Have OpenGL also do correct gamma blending?
  *   (When parent app closes, children should also close)
+ *   Implement own version of JOptionPane and JFileChooser using UI classes
  * 
  * UI:
+ *   Layering inconsistency:
+ *     Image's SizeKnob renders above selection
+ *   Dragging: make sure that every draggable UIElement calls UI.setDragging()
+ *     while it is being dragged (e.g. DragKnob)
+ *   Unify UIMenuButton and UIDropdown?
+ *   Fix bug in UIMenu:
+ *     Opening a sub-menu and then closing the parent menu causes the sub-menu
+ *       to still be open when the parent menu is reopened
+ *   UISizes:
+ *     There are multiple places where I want to set a larger margin but have
+ *       to akwardly divide by the default margin because only a margin scale
+ *       can be set. Solution: add UIContainer.setMargin()?
  *   Text
  *     Text input
  *       Proper number input
@@ -181,9 +194,8 @@ public final class MainApp extends App {
             SUtil.toARGB(199, 191, 230),
     };
 
-    public static final int SAVE_DIALOG = 1, NEW_DIALOG = 2, RESIZE_DIALOG = 3, NEW_COLOR_DIALOG = 4,
-            UNABLE_TO_SAVE_IMAGE_DIALOG = 5, DISCARD_UNSAVED_CHANGES_DIALOG = 6, SETTINGS_DIALOG = 7, CROP_DIALOG = 8,
-            ABOUT_DIALOG = 9;
+    public static final int NEW_DIALOG = 2, RESIZE_DIALOG = 3, NEW_COLOR_DIALOG = 4,
+            SETTINGS_DIALOG = 7, CROP_DIALOG = 8, ABOUT_DIALOG = 9;
 
     public static final int PRIMARY_COLOR = 0, SECONDARY_COLOR = 1;
     public static final int INITIAL_PRIMARY_COLOR = SUtil.toARGB(0), INITIAL_SECONDARY_COLOR = SUtil.toARGB(255);
@@ -195,9 +207,11 @@ public final class MainApp extends App {
 
     private static ColorArraySetting customUIBaseColors = new ColorArraySetting("customUIColors");
 
-    private final ImageFileManager imageFileManager;
+    private static final String ABOUT_TEXT_FILE = "res/about.txt";
 
-    private final ImageHistory imageHistory;
+    private static String aboutText;
+
+    private final ImageManager imageManager;
 
     /**
      * used for restoring the tool that was selected before the color picker
@@ -224,38 +238,27 @@ public final class MainApp extends App {
     public MainApp() {
         super(1280, 720, Window.MAXIMIZED, "SLPaint");
 
-        imageFileManager = new ImageFileManager(this, "test.png");
-        imageHistory = new ImageHistory(getImage());
-
-        customColorButtonArray = new ColorArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
-
         primaryColor = INITIAL_PRIMARY_COLOR;
         secondaryColor = INITIAL_SECONDARY_COLOR;
         colorSelection = PRIMARY_COLOR;
         selectedColorPicker = new ColorPicker(getSelectedColor());
+        customColorButtonArray = new ColorArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
+
+        imageManager = new ImageManager(this, "res/images/test.png");
 
         setActiveTool(ImageTool.PENCIL);
         prevTool = ImageTool.PENCIL;
 
-        // Ctrl + N -> new image
+        // general keyboard shortcuts
         addKeyboardShortcut("new", GLFW_KEY_N, GLFW_MOD_CONTROL, this::newImage, true);
-        // Ctrl + O -> new image
         addKeyboardShortcut("open", GLFW_KEY_O, GLFW_MOD_CONTROL, this::openImage, true);
-        // Ctrl + S -> save
         addKeyboardShortcut("save", GLFW_KEY_S, GLFW_MOD_CONTROL, this::saveImage, true);
-        // Ctrl + Shift + S -> save as
         addKeyboardShortcut("save_as", GLFW_KEY_S, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT, this::saveImageAs, true);
-        // Ctrl + Z -> undo
-        addKeyboardShortcut("undo", GLFW_KEY_Z, GLFW_MOD_CONTROL, imageHistory::undo, imageHistory::canUndo);
-        // Ctrl + Y -> redo
-        addKeyboardShortcut("redo", GLFW_KEY_Y, GLFW_MOD_CONTROL, imageHistory::redo, imageHistory::canRedo);
-        // R -> reset image transform
+        addKeyboardShortcut("undo", GLFW_KEY_Z, GLFW_MOD_CONTROL, imageManager::undo, imageManager::canUndo);
+        addKeyboardShortcut("redo", GLFW_KEY_Y, GLFW_MOD_CONTROL, imageManager::redo, imageManager::canRedo);
         addKeyboardShortcut("reset_transform", GLFW_KEY_R, 0, this::resetImageTransform, false);
-        // Ctrl + + -> zoom in
         addKeyboardShortcut("zoom_in", GLFW_KEY_KP_ADD, GLFW_MOD_CONTROL, this::zoomIn, this::canZoomIn);
-        // Ctrl + - -> zoom out
         addKeyboardShortcut("zoom_out", GLFW_KEY_KP_SUBTRACT, GLFW_MOD_CONTROL, this::zoomOut, this::canZoomOut);
-        // Ctrl + 0 -> reset zoom
         addKeyboardShortcut("reset_zoom", GLFW_KEY_0, GLFW_MOD_CONTROL, this::resetZoom, true);
 
         // all tool shortcuts
@@ -264,6 +267,17 @@ public final class MainApp extends App {
             tool.createKeyboardShortcuts();
         }
 
+        // load about text
+        aboutText = null;
+        try (BufferedReader reader = new BufferedReader(new FileReader(ABOUT_TEXT_FILE))) {
+            aboutText = reader.readAllAsString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (aboutText == null)
+            aboutText = "[unable to load about]";
+
+        // load UI
         loadUI();
     }
 
@@ -276,6 +290,14 @@ public final class MainApp extends App {
         } else {
             secondaryColor = selectedColorPicker.getRGB();
         }
+
+        String filename = getFilename();
+        boolean hasUnsavedChanges = imageManager.hasUnsavedChanges();
+        if (filename == null) {
+            filename = "[Unnamed]";
+            hasUnsavedChanges = false;
+        }
+        window.setTitle(String.format("%s%s - SLPaint", hasUnsavedChanges ? "" + (char) 0x2022 + " " : "", filename));
 
         // update image texture
         getImage().updateOpenGLTexture();
@@ -293,11 +315,14 @@ public final class MainApp extends App {
         return new MainUI(this);
     }
 
-    public void showDialog(int type) {
-        super.showDialog(type);
-        switch (type) {
-            case SAVE_DIALOG -> (new SaveDialog(this)).start();
-            case UNABLE_TO_SAVE_IMAGE_DIALOG -> (new UnableToSaveImageDialog(this)).start();
+    @Override
+    public void showDialog(int dialogType) {
+        super.showDialog(dialogType);
+
+        switch (dialogType) {
+            case ABOUT_DIALOG -> {
+                (new Thread(() -> UI.showModalDialog("About", aboutText, UI.INFO_DIALOG))).start();
+            }
         }
     }
 
@@ -308,37 +333,8 @@ public final class MainApp extends App {
             case SETTINGS_DIALOG -> new SettingsApp(this);
             case CROP_DIALOG -> new ResizeApp(this, ResizeApp.CROP);
             case RESIZE_DIALOG -> new ResizeApp(this, ResizeApp.SCALE);
-            case ABOUT_DIALOG -> new AboutApp(this);
             default -> null;
         };
-    }
-
-    public void openImage() {
-        imageFileManager.open();
-    }
-
-    public void newImage() {
-        Image image = imageFileManager.getImage();
-        imageFileManager.newImage(image.getWidth(), image.getHeight());
-    }
-
-    /**
-     * Gets called when Ctrl+S is pressed
-     */
-    public void saveImage() {
-        imageFileManager.save();
-    }
-
-    /**
-     * Gets called when Ctrl+Shift+S is pressed
-     * 
-     */
-    public void saveImageAs() {
-        imageFileManager.saveAs();
-    }
-
-    public void addImageSnapshot() {
-        imageHistory.addSnapshot();
     }
 
     /**
@@ -368,10 +364,19 @@ public final class MainApp extends App {
      * {@link MainApp#resizeImage(int, int)}.
      */
     public void cropImage(int x, int y, int newWidth, int newHeight) {
+        Image image = getImage();
+        // int x0 = Math.min(Math.max(0, x), image.getWidth() - 1),
+        // y0 = Math.min(Math.max(0, y), image.getHeight() - 1),
+        // x1 = Math.min(Math.max(0, x + newWidth - 1), image.getWidth()),
+        // y1 = Math.min(Math.max(0, y + newHeight - 1), image.getHeight());
+
+        // newWidth = Math.min(Math.max(MIN_IMAGE_SIZE, x1 - x0 + 1), MAX_IMAGE_SIZE);
+        // newHeight = Math.min(Math.max(MIN_IMAGE_SIZE, y1 - y0 + 1), MAX_IMAGE_SIZE);
+
         newWidth = Math.min(Math.max(MIN_IMAGE_SIZE, newWidth), MAX_IMAGE_SIZE);
         newHeight = Math.min(Math.max(MIN_IMAGE_SIZE, newHeight), MAX_IMAGE_SIZE);
 
-        getImage().crop(x, y, newWidth, newHeight, secondaryColor);
+        image.crop(x, y, newWidth, newHeight, secondaryColor);
         renderer.setTempFBOSize(newWidth, newHeight);
         // If the top left corner of the image changes, its translation should change in
         // the opposite way such that the rest of the image stays in the same place.
@@ -425,6 +430,50 @@ public final class MainApp extends App {
         getImage().drawLine(x0, y0, x1, y1, size, color);
     }
 
+    public Image getImage() {
+        return imageManager.getImage();
+    }
+
+    public void openImage() {
+        imageManager.open();
+    }
+
+    public void newImage() {
+        Image image = getImage();
+        imageManager.newImage(image.getWidth(), image.getHeight());
+    }
+
+    /**
+     * Gets called when Ctrl+S is pressed
+     */
+    public void saveImage() {
+        imageManager.save();
+    }
+
+    /**
+     * Gets called when Ctrl+Shift+S is pressed
+     * 
+     */
+    public void saveImageAs() {
+        imageManager.saveAs();
+    }
+
+    public void addImageSnapshot() {
+        imageManager.addSnapshot();
+    }
+
+    public long getFilesize() {
+        return imageManager.getFilesize();
+    }
+
+    public ImageFormat getImageFormat() {
+        return imageManager.getSavedFormat();
+    }
+
+    public String getFilename() {
+        return imageManager.getFilename();
+    }
+
     public boolean isImageResizing() {
         return canvas.isImageResizing();
     }
@@ -467,10 +516,6 @@ public final class MainApp extends App {
 
     public void resetZoom() {
         canvas.resetZoom();
-    }
-
-    public Image getImage() {
-        return imageFileManager.getImage();
     }
 
     public double getImageZoom() {
@@ -626,25 +671,6 @@ public final class MainApp extends App {
 
     public ColorArray getCustomColorButtonArray() {
         return customColorButtonArray;
-    }
-
-    public long getFilesize() {
-        ImageFile imageFile = imageFileManager.getImageFile();
-        return imageFile == null ? -1 : imageFile.getSize();
-    }
-
-    public ImageFormat getImageFormat() {
-        ImageFile imageFile = imageFileManager.getImageFile();
-        return imageFile == null ? null : imageFile.getFormat();
-    }
-
-    public String getFilename() {
-        ImageFile imageFile = imageFileManager.getImageFile();
-        return imageFile == null ? "" : imageFile.getFile().getName();
-    }
-
-    public ImageFile getImageFile() {
-        return imageFileManager.getImageFile();
     }
 
     public static String formatFilesize(long filesize) {

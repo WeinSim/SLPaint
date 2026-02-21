@@ -1,4 +1,4 @@
-package main;
+package main.image;
 
 import java.awt.image.BufferedImage;
 import java.util.LinkedList;
@@ -7,7 +7,8 @@ public class ImageHistory {
 
     private static final int MAX_NUM_CHANGES = 64;
 
-    private Image image;
+    private final Image image;
+
     private LinkedList<BufferedImage> history;
     /**
      * Points to the current state of the image
@@ -27,9 +28,8 @@ public class ImageHistory {
     public void addSnapshot() {
         // if prior changes were undone, remove these changes
         int numBefore = history.size() - 1 - index;
-        for (int i = 0; i < numBefore; i++) {
+        for (int i = 0; i < numBefore; i++)
             history.removeLast();
-        }
 
         // if list is too big, remove oldest snapshot
         if (history.size() == MAX_NUM_CHANGES)
@@ -67,6 +67,14 @@ public class ImageHistory {
 
     public boolean canRedo() {
         return index < history.size() - 1;
+    }
+
+    public BufferedImage getCurrentImage() {
+        return history.get(index);
+    }
+
+    public int size() {
+        return history.size();
     }
 
     @Override

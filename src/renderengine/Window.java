@@ -1,6 +1,11 @@
 package renderengine;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFWNativeCocoa.*;
+import static org.lwjgl.glfw.GLFWNativeWin32.*;
+import static org.lwjgl.glfw.GLFWNativeX11.*;
+import static org.lwjgl.system.MemoryUtil.*;
+import static org.lwjgl.util.nfd.NativeFileDialog.*;
 
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -16,6 +21,7 @@ import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.system.Platform;
 
 import sutil.math.SVector;
 
@@ -72,7 +78,11 @@ public class Window {
         KEY_MAP.put(GLFW_KEY_Y, GLFW_KEY_Z);
     }
 
-    private long windowHandle;
+    private final long windowHandle;
+
+    // for NFD
+    private final int nativeHandleType;
+    private final long nativeWindowHandle;
 
     private SVector mousePos;
 
@@ -133,6 +143,25 @@ public class Window {
 
         // Make the window visible
         glfwShowWindow(windowHandle);
+
+        switch (Platform.get()) {
+            case FREEBSD, LINUX -> {
+                nativeHandleType = NFD_WINDOW_HANDLE_TYPE_X11;
+                nativeWindowHandle = glfwGetX11Window(windowHandle);
+            }
+            case MACOSX -> {
+                nativeHandleType = NFD_WINDOW_HANDLE_TYPE_COCOA;
+                nativeWindowHandle = glfwGetCocoaWindow(windowHandle);
+            }
+            case WINDOWS -> {
+                nativeHandleType = NFD_WINDOW_HANDLE_TYPE_WINDOWS;
+                nativeWindowHandle = glfwGetWin32Window(windowHandle);
+            }
+            default -> {
+                nativeHandleType = NFD_WINDOW_HANDLE_TYPE_UNSET;
+                nativeWindowHandle = NULL;
+            }
+        }
 
         GL.createCapabilities();
         // GL11.glEnable(GL43.GL_DEBUG_OUTPUT);
@@ -203,6 +232,10 @@ public class Window {
     public float[] getWindowContentScale() {
         float[] xScale = new float[1],
                 yScale = new float[1];
+
+        // Note: the return value of this method does not change if the system's UI
+        // scale is changed while the app is running (on linux mint: System Settings >
+        // Font Selection > Text Scaling Factor).
         glfwGetWindowContentScale(windowHandle, xScale, yScale);
 
         // System.out.format("GLFW window content scale: x = %.1f, y = %.1f\n",
@@ -211,8 +244,12 @@ public class Window {
         return new float[] { xScale[0], yScale[0] };
     }
 
-    public long getWindowHandle() {
-        return windowHandle;
+    public int getNativeHandleType() {
+        return nativeHandleType;
+    }
+
+    public long getNativeWindowHandle() {
+        return nativeWindowHandle;
     }
 
     public SVector getMousePosition() {
@@ -232,7 +269,7 @@ public class Window {
     public void setCursor(int cursorShape) {
         Cursor cursor = Cursor.get(cursorShape);
         if (cursor == null) {
-            final String baseString = "Invalid cursor shape (%d)!";
+            final String baseString = "Invalid cursor shape (%d)";
             throw new RuntimeException(baseString.formatted(cursorShape));
         }
         glfwSetCursor(windowHandle, cursor.cursor);
