@@ -40,10 +40,6 @@ import ui.components.ImageCanvas;
  *   File management
  *     Only move things to another thread when really neccessary
  *     Ask user to save changes when window is closed
- *     Testing
- *     Does it make sense to have file filters for different types of image
- *       files when the format of a saved file only depends on the given
- *       filename?
  * 
  * App:
  *   Line tool

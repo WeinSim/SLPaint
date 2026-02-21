@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import org.lwjglx.util.vector.Vector4f;
 
 import sutil.math.SVector;
+import sutil.ui.elements.UIContainer;
 import sutil.ui.elements.UIElement;
 import sutil.ui.elements.UIModalDialog;
 import sutil.ui.elements.UIRoot;
@@ -135,14 +136,24 @@ public abstract class UI {
                 case GLFW_KEY_ENTER -> {
                     if (selectedElement != null) {
                         Runnable clickAction = selectedElement.getLeftClickAction();
-                        if (clickAction != null) {
+                        if (clickAction != null)
                             clickAction.run();
-                        }
                     }
                 }
             }
-            root.keyPressed(key, mods);
+            // root.keyPressed(key, mods);
+
+            keyPressed(root, key, mods);
         });
+    }
+
+    private void keyPressed(UIElement element, int key, int mods) {
+        element.keyPressed(key, mods);
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getSoloChildren()) {
+                keyPressed(child, key, mods);
+            }
+        }
     }
 
     public void keyReleased(int key, int mods) {
@@ -165,8 +176,18 @@ public abstract class UI {
             if (selectedElement != null && !selectedElement.mouseAbove()) {
                 selectedElement = null;
             }
-            root.mousePressed(mouseButton, mods);
+            // root.mousePressed(mouseButton, mods);
+            mousePressed(root, mouseButton, mods);
         });
+    }
+
+    private void mousePressed(UIElement element, int mouseButton, int mods) {
+        element.mousePressed(mouseButton, mods);
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getSoloChildren()) {
+                mousePressed(child, mouseButton, mods);
+            }
+        }
     }
 
     public void mouseReleased(int mouseButton, int mods) {
@@ -175,16 +196,49 @@ public abstract class UI {
                 case GLFW_MOUSE_BUTTON_LEFT -> leftMousePressed = false;
                 case GLFW_MOUSE_BUTTON_RIGHT -> rightMousePressed = false;
             }
-            root.mouseReleased(mouseButton, mods);
+            // root.mouseReleased(mouseButton, mods);
+            mouseReleased(root, mouseButton, mods);
         });
     }
 
-    public void charInput(char c) {
-        queueEvent(() -> root.charInput(c));
+    private void mouseReleased(UIElement element, int mouseButton, int mods) {
+        element.mouseReleased(mouseButton, mods);
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getSoloChildren()) {
+                mouseReleased(child, mouseButton, mods);
+            }
+        }
     }
 
-    public void mouseWheel(SVector scroll, SVector mousePos) {
-        queueEvent(() -> root.mouseWheel(scroll.copy().scale(mouseWheelSensitivity), mousePos, modifiers));
+    public void charInput(char c) {
+        // queueEvent(() -> root.charInput(c));
+        queueEvent(() -> charInput(root, c));
+    }
+
+    private void charInput(UIElement element, char c) {
+        element.charInput(c);
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getSoloChildren()) {
+                charInput(child, c);
+            }
+        }
+    }
+
+    public void mouseWheel(SVector scroll) {
+        // queueEvent(() -> root.mouseWheel(scroll.copy().scale(mouseWheelSensitivity), mousePos, modifiers));
+        queueEvent(() -> mouseWheel(root, scroll.copy().scale(mouseWheelSensitivity), modifiers));
+    }
+
+    private boolean mouseWheel(UIElement element, SVector scroll, int mods) {
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getSoloChildren()) {
+                if (mouseWheel(child, scroll, mods)) {
+                    return true;
+                }
+            }
+        }
+
+        return element.mouseWheel(scroll, mods);
     }
 
     public static void queueEvent(Runnable action) {

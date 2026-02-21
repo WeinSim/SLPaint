@@ -11,24 +11,19 @@ import sutil.ui.UISizes;
 public class UIModalDialog extends UIFloatContainer {
 
     private CompletableFuture<Integer> fututre;
-    private boolean finished;
 
     public UIModalDialog(String title, String message, int dialogType, CompletableFuture<Integer> future) {
         super(VERTICAL, CENTER);
 
         this.fututre = future;
-        finished = false;
 
-        // A UIModalDialog automatically gets removed from its parent (the root) when it
-        // turns invisible.
-        setVisibilitySupplier(() -> !finished);
+        soloInputs = true;
 
         style.setBackgroundColor(new Vector4f(0.0f, 0.0f, 0.0f, 0.5f));
         outlineNormal = false;
 
         UIContainer content = new UIContainer(VERTICAL, CENTER);
         content.zeroPadding().zeroMargin().withBackground();
-        // content.setFixedSize(UISizes.DIALOG.getWidthHeight());
 
         UIContainer topRow = new UIContainer(HORIZONTAL, RIGHT, CENTER);
         topRow.setHFillSize().zeroMargin();
@@ -110,7 +105,6 @@ public class UIModalDialog extends UIFloatContainer {
 
     private void finish(int returnCode) {
         fututre.complete(returnCode);
-        finished = true;
         UI.queueEvent(() -> parent.remove(this));
     }
 }

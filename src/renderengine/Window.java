@@ -269,7 +269,7 @@ public class Window {
     public void setCursor(int cursorShape) {
         Cursor cursor = Cursor.get(cursorShape);
         if (cursor == null) {
-            final String baseString = "Invalid cursor shape (%d)!";
+            final String baseString = "Invalid cursor shape (%d)";
             throw new RuntimeException(baseString.formatted(cursorShape));
         }
         glfwSetCursor(windowHandle, cursor.cursor);

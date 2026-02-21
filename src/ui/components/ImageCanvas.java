@@ -115,14 +115,14 @@ public class ImageCanvas extends UIContainer {
     }
 
     @Override
-    public boolean mouseWheel(SVector scroll, SVector mousePos, int mods) {
-        if (super.mouseWheel(scroll, mousePos, mods))
+    public boolean mouseWheel(SVector scroll, int mods) {
+        if (super.mouseWheel(scroll, mods))
             return true;
 
         if (canDoScrollZoom()) {
             if ((mods & GLFW_MOD_CONTROL) != 0) {
                 // zoom
-                zoom((int) Math.signum(scroll.y), new SVector(mousePos).sub(position));
+                zoom((int) Math.signum(scroll.y), new SVector(mousePosition).sub(position));
             } else {
                 // scroll
                 if ((mods & GLFW_MOD_SHIFT) != 0) {

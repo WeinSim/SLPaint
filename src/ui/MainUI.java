@@ -200,11 +200,7 @@ public class MainUI extends AppUI<MainApp> {
                     ? () -> MainApp.toVector4f(app.getPrimaryColor())
                     : () -> MainApp.toVector4f(app.getSecondaryColor());
             colorContainer.add(new UIColorElement(cg, UISizes.BIG_COLOR_BUTTON));
-            UILabel label = new UILabel(
-                    "%s\nColor".formatted(i == 0 ? "Primary" : "Secondary")
-            // "Color %d".formatted(i + 1)
-            // i == 0 ? "Primary" : "Secondary"
-            );
+            UILabel label = new UILabel(String.format("%s\nColor", i == 0 ? "Primary" : "Secondary"));
             label.setAlignment(CENTER);
             label.zeroMargin();
             colorContainer.add(label);
@@ -260,7 +256,6 @@ public class MainUI extends AppUI<MainApp> {
         sidePanel.add(new ColorPickContainer(
                 app.getSelectedColorPicker(),
                 app::addCustomColor,
-                // UISizes.COLOR_PICKER_PANEL,
                 VERTICAL,
                 true,
                 false));

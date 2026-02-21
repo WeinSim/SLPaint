@@ -63,7 +63,7 @@ public class ImageManager {
      * @implNote Has to be called from the main thread.
      */
     public void newImage(int width, int height) {
-        (new Thread(() -> newImageImpl(width, height))).start();
+        (new Thread(() -> newImageImpl(width, height), "New Image Thread")).start();
     }
 
     private void newImageImpl(int width, int height) {
@@ -77,7 +77,7 @@ public class ImageManager {
      * @implNote Has to be called from the main thread.
      */
     public void open() {
-        (new Thread(this::openImpl)).start();
+        (new Thread(this::openImpl, "Image Opener")).start();
     }
 
     private void openImpl() {
@@ -137,7 +137,7 @@ public class ImageManager {
      * @implNote Has to be called from the main thread.
      */
     public void saveAs() {
-        (new Thread(this::saveAsImpl)).start();
+        (new Thread(this::saveAsImpl, "Image Saver")).start();
     }
 
     private boolean saveAsImpl() {
@@ -205,7 +205,7 @@ public class ImageManager {
      * @implNote Has to be called from the main thread.
      */
     public void save() {
-        (new Thread(imageFile == null ? this::saveAsImpl : this::saveImpl)).start();
+        (new Thread(imageFile == null ? this::saveAsImpl : this::saveImpl, "Image Saver")).start();
     }
 
     private boolean saveImpl() {
@@ -229,32 +229,32 @@ public class ImageManager {
         return false;
     }
 
-    private NFDFilterItem.Buffer getFileFilters(MemoryStack stack, boolean addAllImagesFilter) {
+    private NFDFilterItem.Buffer getFileFilters(MemoryStack stack, boolean addIndividualFiletypes) {
         ImageFormat[] formats = ImageFormat.values();
-        int numFilters = formats.length + (addAllImagesFilter ? 1 : 0);
+        int numFilters = addIndividualFiletypes ? formats.length + 1 : 1;
         NFDFilterItem.Buffer filters = NFDFilterItem.malloc(numFilters);
         int index = 0;
-        if (addAllImagesFilter) {
-            // String name = "Image Files (";
-            String spec = "";
-            for (ImageFormat format : formats) {
-                for (String extension : format.extensions) {
-                    // name += "*.%s, ".formatted(extension);
-                    spec += extension + ",";
-                }
+        // String name = "Image Files (";
+        String spec = "";
+        for (ImageFormat format : formats) {
+            for (String extension : format.extensions) {
+                // name += "*.%s, ".formatted(extension);
+                spec += extension + ",";
             }
-            // int len = name.length();
-            // name = name.substring(0, len - 2);
-            // name += ")";
-            spec = spec.substring(0, spec.length() - 1);
-            filters.get(index++)
-                    .name(stack.UTF8("Image Files"))
-                    .spec(stack.UTF8(spec));
         }
-        for (int i = 0; index < numFilters; index++, i++) {
-            filters.get(index)
-                    .name(stack.UTF8(formats[i].name))
-                    .spec(stack.UTF8(String.join(",", formats[i].extensions)));
+        // int len = name.length();
+        // name = name.substring(0, len - 2);
+        // name += ")";
+        spec = spec.substring(0, spec.length() - 1);
+        filters.get(index++)
+                .name(stack.UTF8("Image Files"))
+                .spec(stack.UTF8(spec));
+        if (addIndividualFiletypes) {
+            for (int i = 0; index < numFilters; index++, i++) {
+                filters.get(index)
+                        .name(stack.UTF8(formats[i].name))
+                        .spec(stack.UTF8(String.join(",", formats[i].extensions)));
+            }
         }
         return filters;
     }
@@ -270,19 +270,9 @@ public class ImageManager {
         if (!hasUnsavedChanges())
             return false;
 
-        // int returnCode = JOptionPane.showOptionDialog(
-        // null,
-        // "There are unsaved changes. Do you want to save them?",
-        // "Save changes?",
-        // JOptionPane.YES_NO_CANCEL_OPTION,
-        // JOptionPane.WARNING_MESSAGE,
-        // null,
-        // new String[] { "Save", "Discard", "Cancel" },
-        // null);
-
-        int returnCode = UI.showModalDialog("Save changes?", """
-                There are unsaved changes.
-                Do you want to save them?""",
+        int returnCode = UI.showModalDialog(
+                "Save changes?",
+                "There are unsaved changes.\nDo you want to save them?",
                 UI.YES_NO_CANCEL_DIALOG);
 
         switch (returnCode) {
