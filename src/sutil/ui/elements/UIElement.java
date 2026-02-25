@@ -8,6 +8,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector4f;
 
 import sutil.SUtil;
@@ -94,36 +95,28 @@ public abstract class UIElement {
         if (!mouseAbove)
             return;
 
-        // if ((mods & (GLFW_MOD_SHIFT | GLFW_MOD_CONTROL)) != 0)
-        // return;
-
         switch (mouseButton) {
             case GLFW_MOUSE_BUTTON_LEFT -> {
-                if (selectOnClick) {
+                if (selectOnClick)
                     UI.select(this);
-                }
 
-                if (leftClickAction != null) {
+                if (leftClickAction != null)
                     leftClickAction.run();
-                }
             }
             case GLFW_MOUSE_BUTTON_RIGHT -> {
-                if (rightClickAction != null) {
+                if (rightClickAction != null)
                     rightClickAction.run();
-                }
             }
         }
     }
 
     public void mouseReleased(int mouseButton, int mods) {
-
     }
 
     /**
      * @param scroll
-     * @param mousePos
-     * @param mods     Only contains the {@code GLFW_MOD_CONTROL} and
-     *                 {@code GLFW_MOD_SHIFT} modifiers
+     * @param mods   Only contains the {@code GLFW_MOD_CONTROL} and
+     *               {@code GLFW_MOD_SHIFT} modifiers
      * @return Wether the mouse scroll action has been "used up" by this
      *         {@code UIElement}.
      */
@@ -132,6 +125,10 @@ public abstract class UIElement {
     }
 
     public void keyPressed(int key, int mods) {
+        if (isSelected() && key == GLFW.GLFW_KEY_ENTER) {
+            if (leftClickAction != null)
+                leftClickAction.run();
+        }
     }
 
     public void charInput(char c) {
@@ -140,12 +137,28 @@ public abstract class UIElement {
     public abstract void setPreferredSize();
 
     /**
+     * The {@code select} and {@code unselect} are always called when an element
+     * gets selected / unselected. They can <i>not</i> be used to actually select /
+     * unselect an element. Use {@code UI.select(element)} instead.
      * 
-     * @param mouse the relative mouse position of the mouse press that caused this
-     *              element to be selected, or {@code null} if this selection didn't
-     *              come from a mouse press
+     * @see UI#select(UIElement)
      */
     public void select() {
+    }
+
+    /**
+     * The {@code select} and {@code unselect} are always called when an element
+     * gets selected / unselected. They can <i>not</i> be used to actually select /
+     * unselect an element. Use {@code UI.select(null)} to unselect the currently
+     * selected element.
+     * 
+     * @see UI#select(UIElement)
+     */
+    public void unselect() {
+    }
+
+    public boolean isSelected() {
+        return UI.getSelectedElement() == this;
     }
 
     public boolean isSelectable() {
@@ -261,7 +274,7 @@ public abstract class UIElement {
 
     public final Vector4f strokeColor() {
         Vector4f ol = style.strokeColor();
-        if (ol == null && UI.getSelectedElement() == this) {
+        if (ol == null && isSelected()) {
             ol = UIColors.OUTLINE.get();
         }
         return ol;
@@ -269,7 +282,7 @@ public abstract class UIElement {
 
     public final double strokeWeight() {
         double sw = style.strokeWeight();
-        if (UI.getSelectedElement() == this) {
+        if (isSelected()) {
             if (style.strokeColor() == null) {
                 sw = UISizes.STROKE_WEIGHT.get();
             } else {

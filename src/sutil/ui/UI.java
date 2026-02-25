@@ -107,8 +107,12 @@ public abstract class UI {
             eventQueue.removeFirst().run();
 
         root.updateVisibility();
+
+        // This could potentially cause some weird behavior if the selected element's
+        // unselect method immediately undoes the action that made it invisible in the
+        // first place
         if (selectedElement != null && !selectedElement.isVisible())
-            selectedElement = null;
+            select(null);
 
         root.updateMousePosition(mousePos);
         root.updateMouseAbove(!dragging);
@@ -133,13 +137,6 @@ public abstract class UI {
             switch (key) {
                 case GLFW_KEY_TAB -> cycleSelectedElement((mods & GLFW_MOD_SHIFT) != 0);
                 case GLFW_KEY_ESCAPE -> select(null);
-                case GLFW_KEY_ENTER -> {
-                    if (selectedElement != null) {
-                        Runnable clickAction = selectedElement.getLeftClickAction();
-                        if (clickAction != null)
-                            clickAction.run();
-                    }
-                }
             }
             // root.keyPressed(key, mods);
 
@@ -174,9 +171,8 @@ public abstract class UI {
                 case GLFW_MOUSE_BUTTON_RIGHT -> rightMousePressed = true;
             }
             if (selectedElement != null && !selectedElement.mouseAbove()) {
-                selectedElement = null;
+                select(null);
             }
-            // root.mousePressed(mouseButton, mods);
             mousePressed(root, mouseButton, mods);
         });
     }
@@ -225,7 +221,8 @@ public abstract class UI {
     }
 
     public void mouseWheel(SVector scroll) {
-        // queueEvent(() -> root.mouseWheel(scroll.copy().scale(mouseWheelSensitivity), mousePos, modifiers));
+        // queueEvent(() -> root.mouseWheel(scroll.copy().scale(mouseWheelSensitivity),
+        // mousePos, modifiers));
         queueEvent(() -> mouseWheel(root, scroll.copy().scale(mouseWheelSensitivity), modifiers));
     }
 
@@ -253,7 +250,8 @@ public abstract class UI {
         if (root.hasModalDialog())
             // throw new RuntimeException("Unable to show modal dialog if another one is
             // already active");
-            return INVALID_OPTION;
+            // return INVALID_OPTION;
+            UI.cancelActiveModalDialog();
 
         CompletableFuture<Integer> future = new CompletableFuture<>();
         queueEvent(() -> {
@@ -265,6 +263,17 @@ public abstract class UI {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void cancelActiveModalDialog() {
+        context.cancelActiveModalDialogImpl();
+    }
+
+    private void cancelActiveModalDialogImpl() {
+        UIModalDialog dialog = root.getModalDialog();
+        if (dialog == null)
+            return;
+        dialog.cancel();
     }
 
     private void cycleSelectedElement(boolean backwards) {
@@ -292,7 +301,13 @@ public abstract class UI {
     // Statically available methods
 
     public static void select(UIElement element) {
-        context.selectedElement = element;
+        context.selectImpl(element);
+    }
+
+    private void selectImpl(UIElement element) {
+        if (selectedElement != null)
+            selectedElement.unselect();
+        selectedElement = element;
         if (element != null)
             element.select();
     }

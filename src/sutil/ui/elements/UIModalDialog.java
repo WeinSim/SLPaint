@@ -107,4 +107,8 @@ public class UIModalDialog extends UIFloatContainer {
         fututre.complete(returnCode);
         UI.queueEvent(() -> parent.remove(this));
     }
+
+    public void cancel() {
+        finish(UI.CANCEL_OPTION);
+    }
 }

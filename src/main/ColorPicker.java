@@ -29,13 +29,13 @@ public class ColorPicker {
     }
 
     public void setHSLHue(double hue) {
-        this.hue = Math.min(Math.max(hue, 0), 360);
+        this.hue = ((hue % 360) + 360) % 360;
         updateRGBFromHSL();
         updateHSVFromHSL();
     }
 
     public void setHSVHue(double hue) {
-        this.hue = Math.min(Math.max(hue, 0), 360);
+        this.hue = ((hue % 360) + 360) % 360;
         updateRGBFromHSV();
         updateHSLFromHSV();
     }

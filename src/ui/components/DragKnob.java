@@ -77,6 +77,7 @@ public class DragKnob extends UIFloatContainer {
         if (dragging) {
             SVector mouseDelta = app.getMouseImagePosVec().sub(dragStartMouse);
             drag(mouseDelta);
+            UI.setDragging();
 
             if (!UI.isLeftMousePressed()) {
                 dragging = false;

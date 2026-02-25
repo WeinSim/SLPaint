@@ -17,7 +17,7 @@ public final class SettingsApp extends App {
 
         colorPicker = AppUI.getBaseColorPicker();
 
-        addKeyboardShortcut("close", GLFW.GLFW_KEY_ESCAPE, 0, window::requestClose, false);
+        addKeyboardShortcut("close", GLFW.GLFW_KEY_ESCAPE, 0, this::requestClose, false);
 
         loadUI();
     }

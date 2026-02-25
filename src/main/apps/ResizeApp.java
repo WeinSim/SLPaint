@@ -46,7 +46,7 @@ public final class ResizeApp extends App {
         maxWidthPercentage = 100.0 * MainApp.MAX_IMAGE_SIZE / initialWidth;
         maxHeightPercentage = 100.0 * MainApp.MAX_IMAGE_SIZE / initialHeight;
 
-        addKeyboardShortcut("cancel", GLFW.GLFW_KEY_ESCAPE, 0, this::cancel, false);
+        addKeyboardShortcut("cancel", GLFW.GLFW_KEY_ESCAPE, 0, this::requestClose, false);
         addKeyboardShortcut("close", GLFW.GLFW_KEY_ENTER, 0, this::done, true);
 
         loadUI();
@@ -92,11 +92,7 @@ public final class ResizeApp extends App {
                     case SCALE -> () -> mainApp.resizeImage(widthPixels, heightPixels);
                     default -> throw new IllegalArgumentException("resizeMode must be either CROP or SCALE");
                 });
-        exit();
-    }
-
-    public void cancel() {
-        exit();
+        requestClose();
     }
 
     public void setWidthPixels(int widthPixels) {

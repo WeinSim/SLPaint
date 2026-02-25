@@ -33,13 +33,15 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Modal dialogs
- *     Add options for custom button labels like in JOptionPane
- *     Deactivate keyboard shortcuts when a modal dialog is active
- *     Convert other small dialogs into modal dialogs? (e.g. ResizeUI)
- *   File management
- *     Only move things to another thread when really neccessary
- *     Ask user to save changes when window is closed
+ *   UI
+ *     Make all UIElement user input methods final and instead implement
+ *       something analogous to click actions for key presses etc.
+ *     Modal dialogs
+ *       Deactivate keyboard shortcuts when a modal dialog is active
+ *       Add ESC shortcut to close dialog
+ *       Convert other small dialogs into modal dialogs? (e.g. ResizeUI)
+ *       Add options for custom button labels like in JOptionPane
+ *         For what?
  * 
  * App:
  *   Pencil tool
@@ -54,7 +56,7 @@ import ui.components.ImageCanvas;
  *       is (and neither flattens nor flips it). Is this the expected behavior?
  *     Add flip and rotate options for selection
  *     Ctrl + Shift + X adds two image snapshots (finish() adds one and
- *       app.cropImage() adds the second one
+ *       app.cropImage() adds the second one)
  *     Ctrl + Shift + X crashes if the selection is entirely outside of the
  *        image
  *   Keyboard shortcuts
@@ -85,10 +87,6 @@ import ui.components.ImageCanvas;
  *   Implement own version of JOptionPane and JFileChooser using UI classes
  * 
  * UI:
- *   Layering inconsistency:
- *     Image's SizeKnob renders above selection
- *   Dragging: make sure that every draggable UIElement calls UI.setDragging()
- *     while it is being dragged (e.g. DragKnob)
  *   Unify UIMenuButton and UIDropdown?
  *   Fix bug in UIMenu:
  *     Opening a sub-menu and then closing the parent menu causes the sub-menu
@@ -99,10 +97,6 @@ import ui.components.ImageCanvas;
  *       can be set. Solution: add UIContainer.setMargin()?
  *   Text
  *     Text input
- *       Proper number input
- *         Idea: while entering text, only update value from text but not the
- *           other way around. Only update text from value when text input is
- *           unselected.
  *       Selection (with mouse / arrow keys / Ctrl+A)
  *         Copy / cut / paste (=> conflicting keyboard shortcuts with selection
  *           tool!)
@@ -113,6 +107,8 @@ import ui.components.ImageCanvas;
  *     Text wrapping
  *     Fix bug in UILabel: when the textUpdater returns text containig newline
  *       characters, the text is not properly split across multiple lines
+ *   The first frame on which a child app (e.g. ResizeApp) is rendered, the root
+ *     has a black background and parts of the UI are not yet visible
  *   Mouse input: tapping the touchpad triggers a mouse press event but not
  *     mouse release event (=> logic that sets leftMousePressed and
  *     rightMousePressed based on mouse press / release events is flawed.)
@@ -123,6 +119,9 @@ import ui.components.ImageCanvas;
  * 
  * Rendering:
  *   Improve UITextInput cursor visibility
+ *   A one-frame flicker occurs when flattening the text tool or the selection.
+ *     Maybe this comes from some glEnable / glDisable transparency flag being
+ *     set incorrectly.
  *   Text rendering
  *     Orange text on image has yellow edges (on the left)
  *     How to handle fonts?
@@ -204,6 +203,7 @@ public final class MainApp extends App {
 
     private static BooleanSetting transparentSelection = new BooleanSetting("transparentSelection");
     private static BooleanSetting lockSelectionRatio = new BooleanSetting("lockSelectionRatio");
+    private static BooleanSetting askUnsavedChanges = new BooleanSetting("askUnsavedChanges");
 
     private static ColorArraySetting customUIBaseColors = new ColorArraySetting("customUIColors");
 
@@ -212,6 +212,10 @@ public final class MainApp extends App {
     private static String aboutText;
 
     private final ImageManager imageManager;
+
+    // this is needed for prompting the user for unsaved changes when closing the
+    // window
+    private boolean canClose;
 
     /**
      * used for restoring the tool that was selected before the color picker
@@ -304,10 +308,22 @@ public final class MainApp extends App {
     }
 
     @Override
-    public void finish() {
-        super.finish();
-
-        Settings.finish();
+    public boolean finish() {
+        if (canClose || !imageManager.hasUnsavedChanges() || !isAskUnsavedChanges()) {
+            if (super.finish()) {
+                Settings.finish();
+                return true;
+            }
+            return false;
+        } else {
+            (new Thread(() -> {
+                if (!imageManager.checkUnsavedChanges()) {
+                    canClose = true;
+                    requestClose();
+                }
+            })).start();
+            return false;
+        }
     }
 
     @Override
@@ -632,6 +648,14 @@ public final class MainApp extends App {
         MainApp.lockSelectionRatio.set(lockSelectionRatio);
     }
 
+    public static boolean isAskUnsavedChanges() {
+        return askUnsavedChanges.get();
+    }
+
+    public static void setAskUnsavedChanges(boolean askUnsavedChanges) {
+        MainApp.askUnsavedChanges.set(askUnsavedChanges);
+    }
+
     public int[] getPrevMouseImagePosition() {
         return getMouseImagePosition(prevMousePos);
     }
@@ -663,10 +687,6 @@ public final class MainApp extends App {
 
     public SVector getPrevMousePosition() {
         return prevMousePos;
-    }
-
-    public int[] getDisplaySize() {
-        return window.getDisplaySize();
     }
 
     public ColorArray getCustomColorButtonArray() {

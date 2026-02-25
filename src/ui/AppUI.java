@@ -44,8 +44,7 @@ public abstract class AppUI<T extends App> extends UI {
 
     public AppUI(T app) {
         this.app = app;
-        float[] scale = app.getWindow().getWindowContentScale();
-        super(Math.sqrt(scale[0] * scale[1]), app.getWindowSize());
+        super(app.getWindowContentScale(), app.getWindowSize());
     }
 
     public static <E extends UIElement> E setSelectableButtonStyle(E element, BooleanSupplier selectedSupplier) {
@@ -63,6 +62,7 @@ public abstract class AppUI<T extends App> extends UI {
     @Override
     public double textWidthImpl(String text, double textSize, String fontName, int len) {
         TextFont font = TextFont.getFont(fontName);
+        len = Math.min(Math.max(0, len), text.length());
         return font.textWidth(text, len) * textSize / font.size;
     }
 

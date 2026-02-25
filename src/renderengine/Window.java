@@ -203,6 +203,11 @@ public class Window {
         glfwSetWindowShouldClose(windowHandle, true); // We will detect this in the rendering loop
     }
 
+    // very bad method name
+    public void unrequestClose() {
+        glfwSetWindowShouldClose(windowHandle, false);
+    }
+
     public void closeDisplay() {
         // Free the window callbacks and destroy the window
         Callbacks.glfwFreeCallbacks(windowHandle);

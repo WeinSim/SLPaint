@@ -3,17 +3,11 @@ package sutil.math;
 public class SVector {
 
     public double x, y, z;
-    private double lx, ly, lz;
-    private double lastMag;
 
     public SVector() {
         x = 0;
         y = 0;
         z = 0;
-        lx = 0;
-        ly = 0;
-        lz = 0;
-        lastMag = 0;
     }
 
     public SVector(SVector other) {
@@ -64,10 +58,6 @@ public class SVector {
         x = other.x;
         y = other.y;
         z = other.z;
-        lx = other.lx;
-        ly = other.ly;
-        lz = other.lz;
-        lastMag = other.lastMag;
 
         return this;
     }
@@ -83,12 +73,10 @@ public class SVector {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == this) {
+        if (obj == this)
             return true;
-        }
-        if (obj instanceof SVector v) {
+        if (obj instanceof SVector v)
             return x == v.x && y == v.y && z == v.z;
-        }
         return false;
     }
 
@@ -136,15 +124,9 @@ public class SVector {
     }
 
     public double mag() {
-        double ax = Math.abs(x), ay = Math.abs(y), az = Math.abs(z);
-        if (ax == lx && ay == ly && az == lz)
-            return lastMag;
-        lx = ax;
-        ly = ay;
-        lz = az;
-        lastMag = Math.sqrt(magSq());
-        return lastMag;
+        return Math.sqrt(magSq());
     }
+
 
     public double distSq(SVector other) {
         return copy().sub(other).magSq();

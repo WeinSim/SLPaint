@@ -138,7 +138,7 @@ public class ColorPickContainer extends UIContainer {
                 default -> null;
             };
             IntConsumer setter = switch (i) {
-                case 0 -> hue -> colorPicker.setHSLHue(Math.min(Math.max(hue, 0), 359));
+                case 0 -> hue -> colorPicker.setHSLHue(hue);
                 case 1 -> saturation -> colorPicker.setHSLSaturation(saturation / 100.0);
                 case 2 -> lightness -> colorPicker.setLightness(lightness / 100.0);
                 default -> null;

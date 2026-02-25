@@ -20,7 +20,6 @@ public class UIText extends UIElement {
 
     private double textSize;
     private DoubleSupplier textSizeUpdater;
-    // private DoubleSupplier textSizeUpdater = () -> ;
 
     private String fontName;
     private Supplier<String> fontUpdater = UI::getDefaultFontName;
@@ -46,6 +45,19 @@ public class UIText extends UIElement {
         this.textSizeUpdater = textSizeUpdater;
     }
 
+    @Override
+    public void update() {
+        text = textUpdater.get();
+        textSize = textSizeUpdater.getAsDouble();
+        fontName = fontUpdater.get();
+        color.set(colorUpdater.get());
+    }
+
+    @Override
+    public void setPreferredSize() {
+        size = new SVector(textWidth(text.length()), textSize);
+    }
+
     public double textWidth(int len) {
         return UI.textWidth(text, textSize, fontName, len);
     }
@@ -54,28 +66,7 @@ public class UIText extends UIElement {
         return UI.getCharIndex(text, textSize, fontName, x);
     }
 
-    @Override
-    public void setPreferredSize() {
-        size = new SVector(textWidth(text.length()), textSize);
-    }
-
-    @Override
-    public void update() {
-        syncText();
-        textSize = textSizeUpdater.getAsDouble();
-        fontName = fontUpdater.get();
-        color.set(colorUpdater.get());
-    }
-
-    public void syncText() {
-        text = textUpdater.get();
-    }
-
     public String getText() {
-        if (text == null) {
-            syncText();
-        }
-
         return text;
     }
 

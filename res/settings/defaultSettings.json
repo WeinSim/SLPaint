@@ -1,16 +1,17 @@
 {
     "baseColor": [
-        255,
-        255,
-        255
+        76,
+        76,
+        76
     ],
     "customUIColors": {
         "capacity": 10,
         "values": []
     },
-    "darkMode": false,
-    "hueSatCircle" : true,
+    "darkMode": true,
+    "hueSatCircle": true,
     "hslColorSpace": true,
     "transparentSelection": false,
-    "lockSelectionRatio": true
+    "lockSelectionRatio": true,
+    "askUnsavedChanges": false
 }

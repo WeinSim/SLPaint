@@ -5,32 +5,46 @@ import java.util.function.IntSupplier;
 
 public class UINumberInput extends UITextInput {
 
-    public UINumberInput(IntSupplier getter, IntConsumer setter) {
-        super(
-                () -> Integer.toString(getter.getAsInt()),
+    // Kind of a low and random limit but it works for now
+    private static final int MAX_LENGTH = 5;
+
+    private String text;
+
+    private IntSupplier valueSupplier;
+
+    public UINumberInput(IntSupplier valueSupplier, IntConsumer valueConsumer) {
+        super(null, null);
+
+        this.valueSupplier = valueSupplier;
+
+        // This is the same ugly design as in the constructor of UIContextMenu. Because
+        // we cannot capture instance variables, we cannot pass () -> text as an
+        // argument in the constructor.
+        text = "";
+        setTextUpdater(() -> text);
+        setValueUpdater(
                 (String s) -> {
-                    int i = 0;
+                    if (s.length() > MAX_LENGTH)
+                        s = s.substring(0, MAX_LENGTH);
+                    text = s;
                     if (s.length() > 0) {
                         try {
-                            i = Integer.parseInt(s);
+                            valueConsumer.accept(Integer.parseInt(s));
                         } catch (NumberFormatException e) {
                             return;
                         }
                     }
-                    setter.accept(i);
                 });
     }
 
     @Override
     public void update() {
+        if (!isSelected())
+            text = Integer.toString(valueSupplier.getAsInt());
+
         super.update();
 
         double textSize = uiText.getTextSize();
         setHFixedSize(textSize * 3.3333);
-    }
-
-    @Override
-    protected boolean isValidChar(char c) {
-        return c >= '0' && c <= '9';
     }
 }

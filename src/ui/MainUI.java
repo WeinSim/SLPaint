@@ -65,7 +65,7 @@ public class MainUI extends AppUI<MainApp> {
         fileMenu.addSeparator();
         fileMenu.addLabel("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG));
         fileMenu.addSeparator();
-        fileMenu.addLabel("Quit", app::exit);
+        fileMenu.addLabel("Quit", app::requestClose);
 
         UIFloatMenu editMenu = menuBar.addMenu("Edit");
         editMenu.addLabel("Undo", app.getKeyboardShortcut("undo"));

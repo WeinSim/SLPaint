@@ -20,7 +20,7 @@ import ui.AppUI;
 
 public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp {
 
-    private static final double FRAME_TIME_GAMMA = 0.025;
+    private static final double FRAME_TIME_GAMMA = 0.01;
 
     /**
      * 0 = normal 1 = mouse above, 2 = always
@@ -229,22 +229,62 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     protected void mouseScroll(double xoff, double yoff) {
     }
 
-    public void exit() {
+    public void updateDisplay() {
+        window.updateDisplay();
+    }
+
+    /**
+     * 
+     * @return Wether to actually close the window
+     */
+    public boolean finish() {
+        renderer.cleanUp();
+        if (parent != null)
+            parent.clearChildApp(dialogType);
+        return true;
+    }
+
+    public void requestFocus() {
+        window.requestFocus();
+    }
+
+    public int[] getDisplaySize() {
+        return window.getDisplaySize();
+    }
+
+    public double getWindowContentScale() {
+        float[] scale = window.getWindowContentScale();
+        return Math.sqrt(scale[0] * scale[1]);
+    }
+
+    public int getNativeHandleType() {
+        return window.getNativeHandleType();
+    }
+
+    public long getNativeWindowHandle() {
+        return window.getNativeWindowHandle();
+    }
+
+    public boolean isCloseRequested() {
+        return window.isCloseRequested();
+    }
+
+    public void requestClose() {
         window.requestClose();
     }
 
-    public void finish() {
-        renderer.cleanUp();
+    public void unrequestClose() {
+        window.unrequestClose();
+    }
 
-        if (parent != null) {
-            parent.clearChildApp(dialogType);
-        }
+    public void closeDisplay() {
+        window.closeDisplay();
     }
 
     public void showDialog(int dialogType) {
         App child = childApps.get(dialogType);
         if (child != null) {
-            child.getWindow().requestFocus();
+            child.requestFocus();
         } else {
             child = createChildApp(dialogType);
             if (child != null) {
@@ -305,9 +345,9 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         return k;
     }
 
-    public Window getWindow() {
-        return window;
-    }
+    // public Window getWindow() {
+    // return window;
+    // }
 
     public SVector getWindowSize() {
         int[] size = window.getDisplaySize();

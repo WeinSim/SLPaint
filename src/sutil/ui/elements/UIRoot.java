@@ -51,51 +51,6 @@ public class UIRoot extends UIContainer {
         positionChildren();
     }
 
-    // @Override
-    // public void keyPressed(int key, int mods) {
-    //     UIModalDialog modalDialog = getModalDialog();
-    //     if (modalDialog != null)
-    //         modalDialog.keyPressed(key, mods);
-    //     else
-    //         super.keyPressed(key, mods);
-    // }
-
-    // @Override
-    // public void charInput(char c) {
-    //     UIModalDialog modalDialog = getModalDialog();
-    //     if (modalDialog != null)
-    //         modalDialog.charInput(c);
-    //     else
-    //         super.charInput(c);
-    // }
-
-    // @Override
-    // public void mousePressed(int mouseButton, int mods) {
-    //     UIModalDialog modalDialog = getModalDialog();
-    //     if (modalDialog != null)
-    //         modalDialog.mousePressed(mouseButton, mods);
-    //     else
-    //         super.mousePressed(mouseButton, mods);
-    // }
-
-    // @Override
-    // public void mouseReleased(int mouseButton, int mods) {
-    //     UIModalDialog modalDialog = getModalDialog();
-    //     if (modalDialog != null)
-    //         modalDialog.mouseReleased(mouseButton, mods);
-    //     else
-    //         super.mouseReleased(mouseButton, mods);
-    // }
-
-    // @Override
-    // public boolean mouseWheel(SVector scroll, SVector mousePos, int mods) {
-    //     UIModalDialog modalDialog = getModalDialog();
-    //     if (modalDialog != null)
-    //         return modalDialog.mouseWheel(scroll, mousePos, mods);
-    //     else
-    //         return super.mouseWheel(scroll, mousePos, mods);
-    // }
-
     public ArrayList<UIElement> getSelectableElements() {
         UIModalDialog modalDialog = getModalDialog();
         return getSelectableElements((modalDialog != null ? modalDialog : this), new ArrayList<UIElement>());
@@ -112,9 +67,9 @@ public class UIRoot extends UIContainer {
         }
         return elements;
     }
-        
-    private UIModalDialog getModalDialog() {
-        for (UIElement child: getChildren()) {
+
+    public UIModalDialog getModalDialog() {
+        for (UIElement child : getChildren()) {
             if (child instanceof UIModalDialog m)
                 return m;
         }

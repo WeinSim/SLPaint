@@ -46,10 +46,10 @@ public class MainLoop {
 
         apps = new ArrayList<>();
         MainApp mainApp = new MainApp();
-        Window mainWindow = mainApp.getWindow();
 
         double deltaT = 1.0 / 60.0;
-        while (!mainWindow.isCloseRequested()) {
+        boolean stop = false;
+        while (!stop) {
             long startTime = System.nanoTime();
 
             for (int i = apps.size() - 1; i >= 0; i--) {
@@ -65,14 +65,17 @@ public class MainLoop {
                 app.makeContextCurrent();
                 app.render();
 
-                Window window = app.getWindow();
-                window.updateDisplay();
+                app.updateDisplay();
 
-                if (app != mainApp) {
-                    if (window.isCloseRequested()) {
-                        app.finish();
-                        window.closeDisplay();
+                if (app.isCloseRequested()) {
+                    if (app.finish()) {
+                        app.closeDisplay();
                         apps.remove(i);
+
+                        if (app == mainApp)
+                            stop = true;
+                    } else {
+                        app.unrequestClose();
                     }
                 }
             }
@@ -88,8 +91,7 @@ public class MainLoop {
         }
 
         for (App app : apps) {
-            app.finish();
-            app.getWindow().closeDisplay();
+            app.closeDisplay();
         }
 
         NFD_Quit();

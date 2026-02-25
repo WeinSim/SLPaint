@@ -85,7 +85,7 @@ public class ResizeUI extends AppUI<ResizeApp> {
         buttonRow.setHFillSize().zeroMargin().noOutline();
 
         buttonRow.add(new UIButton("OK", app::done));
-        buttonRow.add(new UIButton("Cancel", app::cancel));
+        buttonRow.add(new UIButton("Cancel", app::requestClose));
 
         root.add(buttonRow);
     }

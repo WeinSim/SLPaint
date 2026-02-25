@@ -7,6 +7,7 @@ import org.lwjgl.glfw.GLFW;
 import main.apps.MainApp;
 import main.tools.DragTool;
 import sutil.math.SVector;
+import sutil.ui.UI;
 import sutil.ui.UIColors;
 import sutil.ui.UISizes;
 import ui.components.SizeKnob;
@@ -74,6 +75,8 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
                 tool.setY(y);
                 tool.setWidth(width);
                 tool.setHeight(height);
+
+                UI.setDragging();
             }
             case DragTool.IDLE_DRAG -> {
                 SVector delta = app.getMouseImagePosVec().copy().sub(dragStartMouseCoords);
@@ -81,6 +84,8 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
                 int y = dragStartY + (int) Math.round(delta.y);
                 tool.setX(x);
                 tool.setY(y);
+
+                UI.setDragging();
             }
         }
 

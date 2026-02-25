@@ -15,6 +15,7 @@ public class UITextInput extends UIContainer {
 
     protected UIText uiText;
 
+    private Supplier<String> textUpdater;
     private Consumer<String> valueUpdater;
 
     private boolean multiline;
@@ -29,6 +30,7 @@ public class UITextInput extends UIContainer {
     public UITextInput(Supplier<String> textUpdater, Consumer<String> valueUpdater, boolean multiline) {
         super(HORIZONTAL, LEFT, CENTER);
 
+        this.textUpdater = textUpdater;
         this.valueUpdater = valueUpdater;
         this.multiline = multiline;
 
@@ -45,6 +47,7 @@ public class UITextInput extends UIContainer {
 
         uiText = new UIText(textUpdater);
         add(uiText);
+        add(new Cursor());
 
         setLeftClickAction(this::click);
 
@@ -53,26 +56,26 @@ public class UITextInput extends UIContainer {
 
     @Override
     public void keyPressed(int key, int mods) {
-        if (active()) {
-            String text = uiText.getText();
+        super.keyPressed(key, mods);
+
+        if (isSelected()) {
+            String text = textUpdater.get();
             boundCursorPosition(text);
             switch (key) {
                 case GLFW_KEY_BACKSPACE -> {
                     if (cursorPosition > 0) {
-                        String newText = text.substring(0, cursorPosition - 1)
-                                + text.substring(cursorPosition);
+                        String newText = text.substring(0, cursorPosition - 1) + text.substring(cursorPosition);
                         cursorPosition--;
 
-                        updateText(newText);
+                        valueUpdater.accept(newText);
                         resetTimer();
                     }
                 }
                 case GLFW_KEY_DELETE -> {
                     if (cursorPosition < text.length()) {
-                        String newText = text.substring(0, cursorPosition)
-                                + text.substring(cursorPosition + 1);
+                        String newText = text.substring(0, cursorPosition) + text.substring(cursorPosition + 1);
 
-                        updateText(newText);
+                        valueUpdater.accept(newText);
                         resetTimer();
                     }
                 }
@@ -85,11 +88,10 @@ public class UITextInput extends UIContainer {
                     resetTimer();
                 }
                 case GLFW_KEY_ENTER -> {
-                    if (multiline) {
+                    if (multiline)
                         charInput('\n');
-                    } else {
+                    else
                         UI.select(null);
-                    }
                 }
             }
         }
@@ -97,9 +99,9 @@ public class UITextInput extends UIContainer {
 
     @Override
     public void charInput(char c) {
-        if (active()) {
-            String text = uiText.getText();
-            boundCursorPosition();
+        if (isSelected()) {
+            String text = textUpdater.get();
+            boundCursorPosition(text);
 
             String newText = text;
             boolean validKey = isValidChar(c);
@@ -108,7 +110,7 @@ public class UITextInput extends UIContainer {
 
             newText = text.substring(0, cursorPosition) + c + text.substring(cursorPosition);
             cursorPosition++;
-            updateText(newText);
+            valueUpdater.accept(newText);
             resetTimer();
         }
     }
@@ -117,23 +119,8 @@ public class UITextInput extends UIContainer {
         return (c >= 32 && c <= 126) || (c >= 160 && c < 255) || (c == '\n' && multiline);
     }
 
-    /**
-     * This method needs be called every time the {@code cursorPosition} variable is
-     * used. The reason is that the value represented by this UITextInput (and thus
-     * the String it displays) might have changed since the last time the bounds
-     * have been checked.
-     */
-    private void boundCursorPosition() {
-        boundCursorPosition(uiText.getText());
-    }
-
     private void boundCursorPosition(String text) {
         cursorPosition = Math.min(Math.max(cursorPosition, 0), text.length());
-    }
-
-    private void updateText(String newText) {
-        valueUpdater.accept(newText);
-        uiText.syncText();
     }
 
     private void click() {
@@ -147,27 +134,37 @@ public class UITextInput extends UIContainer {
 
     @Override
     public void select() {
-        cursorPosition = uiText.getText().length();
+        cursorPosition = textUpdater.get().length();
         resetTimer();
     }
 
-    public SVector getCursorPosition() {
-        boundCursorPosition();
-        SVector pos = new SVector(uiText.getPosition());
-        pos.add(position);
-        pos.x += uiText.textWidth(cursorPosition);
-        return pos;
+    protected void setTextUpdater(Supplier<String> textUpdater) {
+        this.textUpdater = textUpdater;
+        uiText.setText(textUpdater);
     }
 
-    public SVector getCursorSize() {
-        return new SVector(UISizes.STROKE_WEIGHT.get(), uiText.getTextSize());
+    protected void setValueUpdater(Consumer<String> valueUpdater) {
+        this.valueUpdater = valueUpdater;
     }
 
-    private boolean active() {
-        return UI.getSelectedElement() == this;
-    }
+    private class Cursor extends UIFloatContainer {
 
-    public boolean isCursorVisible() {
-        return active() && ((System.nanoTime() * 1e-9 - blinkStart) / BLINK_INTERVAL) % 2 < 1;
+        public Cursor() {
+            super(0, 0);
+
+            addAnchor(Anchor.TOP_LEFT, () -> {
+                SVector pos = new SVector(uiText.getPosition());
+                pos.x += uiText.textWidth(cursorPosition);
+                return pos;
+            });
+
+            setVisibilitySupplier(() -> UITextInput.this.isSelected()
+                    && ((System.nanoTime() * 1e-9 - blinkStart) / BLINK_INTERVAL) % 2 < 1);
+        }
+
+        @Override
+        public void update() {
+            setFixedSize(new SVector(UISizes.STROKE_WEIGHT.get(), uiText.getTextSize()));
+        }
     }
 }

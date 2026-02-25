@@ -239,7 +239,7 @@ public class UIRenderMaster {
         GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, fboID);
 
         int[] size = framebuffer == null
-                ? app.getWindow().getDisplaySize()
+                ? app.getDisplaySize()
                 : new int[] { framebuffer.width, framebuffer.height };
         GL11.glViewport(0, 0, size[0], size[1]);
 
@@ -564,7 +564,7 @@ public class UIRenderMaster {
         int width, height;
         float sign = currentFramebuffer == null ? -1 : 1;
         if (currentFramebuffer == null) {
-            int[] displaySize = app.getWindow().getDisplaySize();
+            int[] displaySize = app.getDisplaySize();
             width = displaySize[0];
             height = displaySize[1];
         } else {

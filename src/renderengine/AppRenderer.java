@@ -1,6 +1,6 @@
 package renderengine;
 
-import static sutil.ui.UI.VERTICAL;
+import static sutil.ui.UI.*;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -22,7 +22,6 @@ import sutil.ui.elements.UIContainer;
 import sutil.ui.elements.UIElement;
 import sutil.ui.elements.UIImage;
 import sutil.ui.elements.UIText;
-import sutil.ui.elements.UITextInput;
 import ui.components.AlphaScale;
 import ui.components.HueSatField;
 import ui.components.LightnessScale;
@@ -210,13 +209,6 @@ public class AppRenderer implements Cleanable {
             uiMaster.textSize(textSize);
             uiMaster.fill(text.getColor());
             uiMaster.text(text.getText(), position);
-        }
-        if (element instanceof UITextInput textInput) {
-            if (textInput.isCursorVisible()) {
-                uiMaster.noStroke();
-                uiMaster.fill(textInput.strokeColor());
-                uiMaster.rect(textInput.getCursorPosition(), textInput.getCursorSize());
-            }
         }
         if (element instanceof UIImage image) {
             uiMaster.image(image.getTextureID(), position, size);

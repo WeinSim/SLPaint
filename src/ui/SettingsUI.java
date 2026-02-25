@@ -13,6 +13,7 @@ import sutil.ui.elements.UIDropdown;
 import sutil.ui.elements.UIFloatMenu;
 import sutil.ui.elements.UISeparator;
 import sutil.ui.elements.UIText;
+import sutil.ui.elements.UIToggleList;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.UIColorElement;
@@ -42,6 +43,9 @@ public class SettingsUI extends AppUI<SettingsApp> {
         mainContainer.add(createDarkModeDropdown());
         mainContainer.add(createHueSatDropdown());
         mainContainer.add(createHSLHSVDropdown());
+        mainContainer.add(new UIToggleList("Check for unsaved changes when closing window",
+                MainApp::isAskUnsavedChanges,
+                MainApp::setAskUnsavedChanges));
 
         UIContextMenu contextMenu = new UIContextMenu(mainContainer, false);
         contextMenu.addLabel("Label 1", () -> System.out.println("Label 1"));
@@ -56,7 +60,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         UIContainer bottomRow = new UIContainer(HORIZONTAL, TOP);
         bottomRow.setHFillSize().zeroMargin().noOutline();
-        bottomRow.add(new UIButton("Done", () -> app.getWindow().requestClose()));
+        bottomRow.add(new UIButton("Done", app::requestClose));
         UIContainer fill = new UIContainer(0, 0);
         fill.setHFillSize().noOutline();
         bottomRow.add(fill);

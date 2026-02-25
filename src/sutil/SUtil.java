@@ -185,7 +185,7 @@ public class SUtil {
         if (delta < 0.0001) {
             h = 0;
         } else if (cMax == r) {
-            h = 60 * (((g - b) / delta) % 6);
+            h = 60 * (((g - b) / delta + 6) % 6);
         } else if (cMax == g) {
             h = 60 * ((b - r) / delta + 2);
         } else {

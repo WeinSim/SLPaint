@@ -93,8 +93,8 @@ public class ImageManager {
                 NFDOpenDialogArgs args = NFDOpenDialogArgs.calloc(stack)
                         .filterList(getFileFilters(stack, true))
                         .parentWindow(it -> it
-                                .type(app.getWindow().getNativeHandleType())
-                                .handle(app.getWindow().getNativeWindowHandle()));
+                                .type(app.getNativeHandleType())
+                                .handle(app.getNativeWindowHandle()));
                 if (imageFile != null)
                     args.defaultPath(stack.UTF8(imageFile.getPath()));
                 int result = NFD_OpenDialog_With(pathPointer, args);
@@ -149,8 +149,8 @@ public class ImageManager {
                 NFDSaveDialogArgs args = NFDSaveDialogArgs.calloc(stack)
                         .filterList(getFileFilters(stack, false))
                         .parentWindow(it -> it
-                                .type(app.getWindow().getNativeHandleType())
-                                .handle(app.getWindow().getNativeWindowHandle()));
+                                .type(app.getNativeHandleType())
+                                .handle(app.getNativeWindowHandle()));
                 if (imageFile != null) {
                     args.defaultPath(stack.UTF8(imageFile.getPath()));
                     args.defaultName(stack.UTF8(imageFile.getName()));
@@ -266,7 +266,7 @@ public class ImageManager {
      * @return {@code true} if the user cancels the operation.
      * @implNote Has to be called from a separate thread.
      */
-    private boolean checkUnsavedChanges() {
+    public boolean checkUnsavedChanges() {
         if (!hasUnsavedChanges())
             return false;
 
@@ -297,7 +297,7 @@ public class ImageManager {
             return false;
         if (imageFile == null)
             return true;
-        return imageHistory.getCurrentImage() != imageFile.getLastSavedImage() || imageHistory.canRedo();
+        return imageHistory.getCurrentImage() != imageFile.getLastSavedImage();
     }
 
     private static int showErrorDialog(String action) {

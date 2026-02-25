@@ -18,7 +18,7 @@ public class ColorEditorUI extends AppUI<ColorEditorApp> {
                 app.getColorPicker(),
                 color -> {
                     app.getMainApp().addCustomColor(color);
-                    app.getWindow().requestClose();
+                    app.requestClose();
                 },
                 VERTICAL,
                 true,
