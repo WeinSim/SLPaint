@@ -1,7 +1,5 @@
 package main.apps;
 
-import org.lwjgl.glfw.GLFW;
-
 import renderengine.Window;
 import sutil.ui.UI;
 import sutil.ui.elements.UINumberInput;
@@ -45,9 +43,6 @@ public final class ResizeApp extends App {
         minHeightPercentage = 100.0 * MainApp.MIN_IMAGE_SIZE / initialHeight;
         maxWidthPercentage = 100.0 * MainApp.MAX_IMAGE_SIZE / initialWidth;
         maxHeightPercentage = 100.0 * MainApp.MAX_IMAGE_SIZE / initialHeight;
-
-        addKeyboardShortcut("cancel", GLFW.GLFW_KEY_ESCAPE, 0, this::requestClose, false);
-        addKeyboardShortcut("close", GLFW.GLFW_KEY_ENTER, 0, this::done, true);
 
         loadUI();
     }

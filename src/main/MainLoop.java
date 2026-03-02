@@ -45,7 +45,7 @@ public class MainLoop {
         NFD_Init();
 
         apps = new ArrayList<>();
-        MainApp mainApp = new MainApp();
+        MainApp mainApp = new MainApp(args.length == 0 ? null: args[0]);
 
         double deltaT = 1.0 / 60.0;
         boolean stop = false;

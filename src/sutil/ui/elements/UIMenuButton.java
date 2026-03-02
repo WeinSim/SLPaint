@@ -30,7 +30,7 @@ public class UIMenuButton extends UIContainer {
 
         add(new UIText(textUpdater));
 
-        setLeftClickAction(() -> expanded = !expanded);
+        addLeftClickAction(() -> expanded = !expanded);
 
         dropdown = new UIFloatMenu(() -> expanded, () -> expanded = false, scroll, UIText.NORMAL);
         dropdown.addAnchor(UIFloatContainer.Anchor.TOP_LEFT, UIFloatContainer.Anchor.BOTTOM_LEFT);

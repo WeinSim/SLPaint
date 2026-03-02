@@ -1,5 +1,7 @@
 package sutil.ui.elements;
 
+import static org.lwjgl.glfw.GLFW.*;
+
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
@@ -66,23 +68,19 @@ public class UIFloatMenu extends UIFloatContainer {
         } else {
             contents = this;
         }
+
+        addMousePressAction(GLFW_MOUSE_BUTTON_LEFT, false, () -> {
+            // The first check is neccessary because it prevents the following situation:
+            // A UIContextMenu and one of its attached float menues are open.
+            // The user clicks somewhere in the parent menu. Because the mouse is not above
+            // the child menu, it closes (and also causes the parent to close).
+            if (!(parent instanceof UIFloatContainer) && shouldClose(this)) {
+                close();
+            }
+        });
     }
 
-    @Override
-    public void mousePressed(int mouseButton, int mods) {
-        super.mousePressed(mouseButton, mods);
-
-        // Kind of a dumb hack.
-        // The first check is neccessary because it prevents the following situation:
-        // A UIContextMenu and one of its attached float menues are open.
-        // The user clicks somewhere in the parent menu. Because the mouse is not above
-        // the child menu, it closes (and also causes the parent to close).
-        if (!(parent instanceof UIFloatContainer) && shouldClose(this)) {
-            close();
-        }
-    }
-
-    // returns true if this element of one of its children has mouseAbove set.
+    // returns true if this element or one of its children has mouseAbove set.
     private static boolean shouldClose(UIElement element) {
         if (element.mouseAbove)
             return false;
@@ -120,7 +118,6 @@ public class UIFloatMenu extends UIFloatContainer {
             rightText += "Shift + ";
         if ((modifiers & GLFW.GLFW_MOD_ALT) != 0)
             rightText += "Alt + ";
-
         int key = shortcut.getKey();
         int scancode = GLFW.glfwGetKeyScancode(key);
         rightText += GLFW.glfwGetKeyName(key, scancode).toUpperCase();
@@ -135,7 +132,7 @@ public class UIFloatMenu extends UIFloatContainer {
                         ? UIColors.BACKGROUND_HIGHLIGHT.get()
                         : null);
         if (clickAction != null)
-            label.setLeftClickAction(() -> {
+            label.addLeftClickAction(() -> {
                 if (!active.getAsBoolean())
                     return;
                 clickAction.run();

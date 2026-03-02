@@ -1,5 +1,7 @@
 package sutil.ui.elements;
 
+import static org.lwjgl.glfw.GLFW.*;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.function.DoubleSupplier;
 
@@ -18,6 +20,7 @@ public class UIModalDialog extends UIFloatContainer {
         this.fututre = future;
 
         soloInputs = true;
+        addKeyPressAction(GLFW_KEY_ESCAPE, 0, this::cancel);
 
         style.setBackgroundColor(new Vector4f(0.0f, 0.0f, 0.0f, 0.5f));
         outlineNormal = false;

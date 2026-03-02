@@ -4,18 +4,14 @@ import static org.lwjgl.glfw.GLFW.*;
 
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.function.BooleanSupplier;
 
 import main.MainLoop;
 import main.settings.BooleanSetting;
 import renderengine.AppRenderer;
 import renderengine.Window;
 import sutil.math.SVector;
-import sutil.ui.KeyboardShortcut;
 import sutil.ui.UI;
-import sutil.ui.UserAction;
 import sutil.ui.elements.UIRoot;
-import sutil.ui.elements.UITextInput;
 import ui.AppUI;
 
 public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp {
@@ -33,8 +29,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
     protected boolean[] mouseButtons;
     protected SVector mousePos, prevMousePos;
-
-    private HashMap<String, KeyboardShortcut> keyboardShortcuts;
 
     private LinkedList<Runnable> eventQueue;
 
@@ -71,19 +65,14 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
         window = new Window(width, height, windowMode, resizable, title);
         childApps = new HashMap<>();
-        keyboardShortcuts = new HashMap<>();
         eventQueue = new LinkedList<>();
 
         mouseButtons = new boolean[2];
         mousePos = new SVector();
         prevMousePos = new SVector();
-
-        addKeyboardShortcut("cycle_debug", GLFW_KEY_COMMA, 0, App::cycleDebugOutline, false);
-        addKeyboardShortcut("reload_shaders", GLFW_KEY_S, GLFW_MOD_SHIFT, () -> renderer.reloadShaders(), true);
-        addKeyboardShortcut("reload_ui", GLFW_KEY_R, GLFW_MOD_SHIFT, this::loadUI, true);
     }
 
-    protected void loadUI() {
+    public final void loadUI() {
         ui = createUI();
 
         if (adjustSizeOnInit) {
@@ -129,8 +118,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         while ((c = window.getNextCharacter()) != null) {
             if (focus)
                 ui.charInput(c);
-
-            charInput(c);
         }
 
         // process key input
@@ -142,14 +129,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
                 case GLFW_PRESS, GLFW_REPEAT -> {
                     if (focus)
                         ui.keyPressed(key, mods);
-
-                    keyPressed(key, mods);
                 }
                 case GLFW_RELEASE -> {
                     if (focus)
                         ui.keyReleased(key, mods);
-
-                    keyReleased(key, mods);
                 }
             }
         }
@@ -166,8 +149,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
                     if (focus)
                         ui.mousePressed(button, mods);
-
-                    mousePressed(button, mods);
                 }
                 case GLFW_RELEASE -> {
                     if (0 <= button && button < mouseButtons.length)
@@ -175,8 +156,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
                     if (focus)
                         ui.mouseReleased(button, mods);
-
-                    mouseReleased(button, mods);
                 }
             }
         }
@@ -186,8 +165,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         while ((scrollInfo = window.getNextScrollInfo()) != null) {
             if (focus)
                 ui.mouseWheel(new SVector(scrollInfo.xoffset(), scrollInfo.yoffset()));
-
-            mouseScroll(scrollInfo.xoffset(), scrollInfo.yoffset());
         }
 
         // empty event queue
@@ -209,28 +186,12 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         }
     }
 
-    protected void charInput(char c) {
-    }
-
-    protected void keyPressed(int key, int mods) {
-        for (KeyboardShortcut shortcut : keyboardShortcuts.values())
-            shortcut.keyPressed(key, mods);
-    }
-
-    protected void keyReleased(int key, int mods) {
-    }
-
-    protected void mousePressed(int button, int mods) {
-    }
-
-    protected void mouseReleased(int button, int mods) {
-    }
-
-    protected void mouseScroll(double xoff, double yoff) {
-    }
-
     public void updateDisplay() {
         window.updateDisplay();
+    }
+
+    public void reloadShaders() {
+        renderer.reloadShaders();
     }
 
     /**
@@ -310,44 +271,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     public void queueEvent(Runnable action) {
         eventQueue.add(action);
     }
-
-    /**
-     * When text is set to false, the shortcut will not run if a text input is
-     * currently active.
-     */
-    public void addKeyboardShortcut(String identifier, int key, int modifiers, Runnable action, boolean text) {
-        UserAction userAction = new UserAction(action,
-                text
-                        ? () -> !(UI.getSelectedElement() instanceof UITextInput)
-                        : () -> true);
-        addKeyboardShortcut(new KeyboardShortcut(identifier, key, modifiers, userAction));
-    }
-
-    public void addKeyboardShortcut(String identifier, int key, int modifiers, Runnable action,
-            BooleanSupplier isPossible) {
-
-        UserAction userAction = new UserAction(action, isPossible);
-        addKeyboardShortcut(new KeyboardShortcut(identifier, key, modifiers, userAction));
-    }
-
-    public void addKeyboardShortcut(KeyboardShortcut shortcut) {
-        String identifier = shortcut.getIdentifier();
-        KeyboardShortcut currentShortcut = keyboardShortcuts.get(identifier);
-        if (currentShortcut != null)
-            System.err.format("Duplicate keyboard shortcut \"%s\" in %s\n", identifier, getClass().getName());
-        keyboardShortcuts.put(shortcut.getIdentifier(), shortcut);
-    }
-
-    public KeyboardShortcut getKeyboardShortcut(String identifier) {
-        KeyboardShortcut k = keyboardShortcuts.get(identifier);
-        if (k == null)
-            throw new RuntimeException(String.format("Keyboard shortcut \"%s\" does not exist", identifier));
-        return k;
-    }
-
-    // public Window getWindow() {
-    // return window;
-    // }
 
     public SVector getWindowSize() {
         int[] size = window.getDisplaySize();

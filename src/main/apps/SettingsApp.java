@@ -1,6 +1,5 @@
 package main.apps;
 
-import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector4f;
 
 import main.ColorPicker;
@@ -16,8 +15,6 @@ public final class SettingsApp extends App {
         super(900, 650, Window.NORMAL, true, false, "Settings", mainApp);
 
         colorPicker = AppUI.getBaseColorPicker();
-
-        addKeyboardShortcut("close", GLFW.GLFW_KEY_ESCAPE, 0, this::requestClose, false);
 
         loadUI();
     }

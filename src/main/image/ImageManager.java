@@ -40,9 +40,8 @@ public class ImageManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (image == null) {
+        if (image == null)
             setEverything(null, createNewImage());
-        }
     }
 
     private Image createNewImage() {

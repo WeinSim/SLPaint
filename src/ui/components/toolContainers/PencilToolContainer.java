@@ -1,6 +1,6 @@
 package ui.components.toolContainers;
 
-import org.lwjgl.glfw.GLFW;
+import static org.lwjgl.glfw.GLFW.*;
 
 import main.apps.MainApp;
 import main.tools.ImageTool;
@@ -10,6 +10,19 @@ public final class PencilToolContainer extends ToolContainer<PencilTool> {
 
     public PencilToolContainer(MainApp app) {
         super(ImageTool.PENCIL, app);
+
+        addMouseReleaseAction(GLFW_MOUSE_BUTTON_LEFT, false, () -> {
+            if (tool.getState() == PencilTool.DRAWING_PRIMARY) {
+                tool.setState(PencilTool.NONE);
+                app.addImageSnapshot();
+            }
+        });
+        addMouseReleaseAction(GLFW_MOUSE_BUTTON_RIGHT, false, () -> {
+            if (tool.getState() == PencilTool.DRAWING_SECONDARY) {
+                tool.setState(PencilTool.NONE);
+                app.addImageSnapshot();
+            }
+        });
     }
 
     @Override
@@ -28,24 +41,6 @@ public final class PencilToolContainer extends ToolContainer<PencilTool> {
 
             int color = state == PencilTool.DRAWING_PRIMARY ? app.getPrimaryColor() : app.getSecondaryColor();
             app.drawLine(mouseX, mouseY, pmouseX, pmouseY, tool.getSize(), color);
-        }
-    }
-
-    @Override
-    public void mouseReleased(int mouseButton, int mods) {
-        switch (tool.getState()) {
-            case PencilTool.DRAWING_PRIMARY -> {
-                if (mouseButton == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                    tool.setState(PencilTool.NONE);
-                    app.addImageSnapshot();
-                }
-            }
-            case PencilTool.DRAWING_SECONDARY -> {
-                if (mouseButton == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                    tool.setState(PencilTool.NONE);
-                    app.addImageSnapshot();
-                }
-            }
         }
     }
 

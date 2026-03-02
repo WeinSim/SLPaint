@@ -12,7 +12,7 @@ public class UIContextMenu extends UIFloatMenu {
         visibilitySupplier = () -> visible;
         closeAction = () -> visible = false;
 
-        container.setRightClickAction(() -> {
+        container.addRightClickAction(() -> {
             expandedLabel = null;
             visible = true;
             clearAnchors();

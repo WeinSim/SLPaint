@@ -52,7 +52,7 @@ public class DragKnob extends UIFloatContainer {
         setFixedSize(UISizes.SIZE_KNOB.getWidthHeight());
 
         setVisibilitySupplier(visibilitySupplier);
-        setLeftClickAction(this::startDrag);
+        addLeftClickAction(this::startDrag);
         setCursorShape(() -> mouseAbove || dragging ? cursorShape : null);
 
         relativeLayer = 1;

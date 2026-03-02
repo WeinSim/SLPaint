@@ -27,6 +27,11 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
         style.setStrokeCheckerboard(UIColors.SELECTION_BORDER_1, UIColors.SELECTION_BORDER_2, UISizes.CHECKERBOARD);
         style.setStrokeWeight(2.0);
 
+        setCursorShape(
+                () -> mouseAbove && ((tool.getState() & (DragTool.IDLE | DragTool.IDLE_DRAG)) != 0)
+                        ? GLFW.GLFW_POINTING_HAND_CURSOR
+                        : null);
+
         addAnchor(Anchor.TOP_LEFT, this::getPos);
 
         final int visibleStates = DragTool.IDLE | DragTool.IDLE_DRAG;
@@ -40,12 +45,21 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
             }
         }
 
-        setLeftClickAction(this::startIdleDrag);
+        addLeftClickAction(this::startIdleDrag);
 
-        setCursorShape(
-                () -> mouseAbove && ((tool.getState() & (DragTool.IDLE | DragTool.IDLE_DRAG)) != 0)
-                        ? GLFW.GLFW_POINTING_HAND_CURSOR
-                        : null);
+        addMouseReleaseAction(GLFW.GLFW_MOUSE_BUTTON_LEFT, false, () -> {
+            switch (tool.getState()) {
+                case DragTool.INITIAL_DRAG -> {
+                    if (tool.enterIdle())
+                        tool.start();
+                    else
+                        tool.finish();
+                }
+                case DragTool.IDLE_DRAG -> {
+                    tool.setState(DragTool.IDLE);
+                }
+            }
+        });
     }
 
     @Override
@@ -91,27 +105,6 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
 
         double zoom = app.getImageZoom();
         setFixedSize(new SVector(tool.getWidth(), tool.getHeight()).scale(zoom));
-    }
-
-    @Override
-    public void mouseReleased(int mouseButton, int mods) {
-        super.mouseReleased(mouseButton, mods);
-
-        switch (mouseButton) {
-            case GLFW.GLFW_MOUSE_BUTTON_LEFT -> {
-                switch (tool.getState()) {
-                    case DragTool.INITIAL_DRAG -> {
-                        if (tool.enterIdle())
-                            tool.start();
-                        else
-                            tool.finish();
-                    }
-                    case DragTool.IDLE_DRAG -> {
-                        tool.setState(DragTool.IDLE);
-                    }
-                }
-            }
-        }
     }
 
     private void startIdleDrag() {

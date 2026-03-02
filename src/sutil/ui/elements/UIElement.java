@@ -1,20 +1,24 @@
 package sutil.ui.elements;
 
-import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
-import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT;
-import static org.lwjgl.glfw.GLFW.GLFW_POINTING_HAND_CURSOR;
+import static org.lwjgl.glfw.GLFW.*;
 
+import java.util.ArrayList;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector4f;
 
 import sutil.SUtil;
 import sutil.math.SVector;
 import sutil.ui.UI;
+import sutil.ui.UICharInputAction;
 import sutil.ui.UIColors;
+import sutil.ui.UIKeyPressAction;
+import sutil.ui.UIMouseButtonAction;
+import sutil.ui.UIMouseWheelAction;
 import sutil.ui.UIShape;
 import sutil.ui.UISizes;
 import sutil.ui.UIStyle;
@@ -26,19 +30,13 @@ public abstract class UIElement {
     protected UIContainer parent;
     protected int relativeLayer = 0;
 
-    protected boolean outlineNormal = false;
-    protected boolean outlineHighlight = false;
-    protected boolean backgroundNormal = false;
-    protected boolean backgroundHighlight = false;
-    protected UIStyle style;
-
     protected SVector mousePosition;
     protected boolean mouseAbove = false;
+    protected ArrayList<UIMouseButtonAction> mousePressActions, mouseReleaseActions;
+    protected ArrayList<UIMouseWheelAction> mouseWheelActions;
 
-    protected boolean handCursorAbove = false;
-    protected Supplier<Integer> cursorShapeSupplier = () -> handCursorAbove && mouseAbove
-            ? GLFW_POINTING_HAND_CURSOR
-            : null;
+    protected ArrayList<UIKeyPressAction> keyPressActions;
+    protected ArrayList<UICharInputAction> charInputActions;
 
     /**
      * Setting this to {@code true} blocks user inputs from reaching this UI
@@ -46,21 +44,48 @@ public abstract class UIElement {
      */
     protected boolean soloInputs = false;
     protected boolean ignoreParentClipArea = false;
-
-    protected Runnable leftClickAction = null, rightClickAction = null;
     protected boolean selectOnClick = false;
     protected boolean selectable = false;
 
     protected BooleanSupplier visibilitySupplier = this::isVisible;
     private boolean visible = true;
 
+    protected boolean outlineNormal = false;
+    protected boolean outlineHighlight = false;
+    protected boolean backgroundNormal = false;
+    protected boolean backgroundHighlight = false;
+    protected UIStyle style;
+    protected boolean handCursorAbove = false;
+    protected Supplier<Integer> cursorShapeSupplier = () -> handCursorAbove && mouseAbove
+            ? GLFW_POINTING_HAND_CURSOR
+            : null;
+
     public UIElement() {
         position = new SVector();
         size = new SVector();
-
         mousePosition = new SVector();
 
+        mousePressActions = new ArrayList<>();
+        mouseReleaseActions = new ArrayList<>();
+        mouseWheelActions = new ArrayList<>();
+        keyPressActions = new ArrayList<>();
+        charInputActions = new ArrayList<>();
+
         setDefaultStyle();
+
+        addKeyPressAction(GLFW_KEY_ENTER, 0, () -> {
+            // We skip the click action that selects this element.
+            // Doing it this way is kind of fragile because it assumes that this click
+            // action is always at index zero.
+            for (int i = 0; i < mousePressActions.size(); i++) {
+                mousePressActions.get(i).action().run();
+            }
+        });
+
+        addLeftClickAction(() -> {
+            if (selectOnClick)
+                UI.select(this);
+        });
     }
 
     public void updateVisibility() {
@@ -91,26 +116,14 @@ public abstract class UIElement {
     public void update() {
     }
 
-    public void mousePressed(int mouseButton, int mods) {
-        if (!mouseAbove)
-            return;
-
-        switch (mouseButton) {
-            case GLFW_MOUSE_BUTTON_LEFT -> {
-                if (selectOnClick)
-                    UI.select(this);
-
-                if (leftClickAction != null)
-                    leftClickAction.run();
-            }
-            case GLFW_MOUSE_BUTTON_RIGHT -> {
-                if (rightClickAction != null)
-                    rightClickAction.run();
-            }
-        }
+    public final void mousePressed(int mouseButton, int mods) {
+        for (UIMouseButtonAction action : mousePressActions)
+            action.mouseAction(mouseButton, mods, mouseAbove);
     }
 
-    public void mouseReleased(int mouseButton, int mods) {
+    public final void mouseReleased(int mouseButton, int mods) {
+        for (UIMouseButtonAction action : mouseReleaseActions)
+            action.mouseAction(mouseButton, mods, mouseAbove);
     }
 
     /**
@@ -120,18 +133,22 @@ public abstract class UIElement {
      * @return Wether the mouse scroll action has been "used up" by this
      *         {@code UIElement}.
      */
-    public boolean mouseWheel(SVector scroll, int mods) {
+    public final boolean mouseWheel(SVector scroll, int mods) {
+        for (UIMouseWheelAction action : mouseWheelActions) {
+            if (action.mouseWheel(scroll, mods, mouseAbove))
+                return true;
+        }
         return false;
     }
 
-    public void keyPressed(int key, int mods) {
-        if (isSelected() && key == GLFW.GLFW_KEY_ENTER) {
-            if (leftClickAction != null)
-                leftClickAction.run();
-        }
+    public final void keyPressed(int key, int mods) {
+        for (UIKeyPressAction action : keyPressActions)
+            action.keyPressed(key, mods, isSelected());
     }
 
-    public void charInput(char c) {
+    public final void charInput(char c) {
+        for (UICharInputAction action : charInputActions)
+            action.charInput(c, isSelected());
     }
 
     public abstract void setPreferredSize();
@@ -139,7 +156,8 @@ public abstract class UIElement {
     /**
      * The {@code select} and {@code unselect} are always called when an element
      * gets selected / unselected. They can <i>not</i> be used to actually select /
-     * unselect an element. Use {@code UI.select(element)} instead.
+     * unselect an element. Use {@code UI.select(element)} to select an element
+     * instead.
      * 
      * @see UI#select(UIElement)
      */
@@ -215,20 +233,52 @@ public abstract class UIElement {
         return mouseAbove;
     }
 
-    public void setLeftClickAction(Runnable leftClickAction) {
-        this.leftClickAction = leftClickAction;
+    public void addLeftClickAction(Runnable leftClickAction) {
+        addMousePressAction(GLFW_MOUSE_BUTTON_LEFT, leftClickAction);
     }
 
-    public Runnable getLeftClickAction() {
-        return leftClickAction;
+    public void addRightClickAction(Runnable rightClickAction) {
+        addMousePressAction(GLFW_MOUSE_BUTTON_RIGHT, rightClickAction);
     }
 
-    public void setRightClickAction(Runnable rightClickAction) {
-        this.rightClickAction = rightClickAction;
+    public void addMousePressAction(int button, Runnable action) {
+        addMousePressAction(button, true, action);
     }
 
-    public Runnable getRightClickAction() {
-        return rightClickAction;
+    public void addMousePressAction(int button, boolean mouseAbove, Runnable action) {
+        mousePressActions.add(new UIMouseButtonAction(button, mouseAbove, action));
+    }
+
+    public void addMouseReleaseAction(int button, Runnable action) {
+        addMouseReleaseAction(button, true, action);
+    }
+
+    public void addMouseReleaseAction(int button, boolean mouseAbove, Runnable action) {
+        mouseReleaseActions.add(new UIMouseButtonAction(button, mouseAbove, action));
+    }
+
+    public void addMouseWheelAction(int mods, Predicate<SVector> action) {
+        addMouseWheelAction(mods, true, action);
+    }
+
+    public void addMouseWheelAction(int mods, boolean mouseAbove, Predicate<SVector> action) {
+        mouseWheelActions.add(new UIMouseWheelAction(mods, mouseAbove, action));
+    }
+
+    public void addKeyPressAction(int key, int mods, Runnable action) {
+        keyPressActions.add(new UIKeyPressAction(key, mods, action));
+    }
+
+    public void addKeyPressAction(int key, int mods, boolean selected, Runnable action) {
+        keyPressActions.add(new UIKeyPressAction(key, mods, selected, action));
+    }
+
+    public void addCharInputAction(Consumer<Character> action) {
+        addCharInputAction(true, action);
+    }
+
+    public void addCharInputAction(boolean selected, Consumer<Character> action) {
+        charInputActions.add(new UICharInputAction(selected, action));
     }
 
     public SVector getAbsolutePosition() {

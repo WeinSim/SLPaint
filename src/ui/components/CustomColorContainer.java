@@ -18,7 +18,7 @@ public class CustomColorContainer extends UIContainer {
             final int j = i;
             UIColorElement button = new UIColorElement(() -> MainApp.toVector4f(colors.getColor(j)),
                     UISizes.COLOR_BUTTON);
-            button.setLeftClickAction(() -> {
+            button.addLeftClickAction(() -> {
                 Vector4f color = MainApp.toVector4f(colors.getColor(j));
                 if (color != null) {
                     clickAction.accept(color);

@@ -1,10 +1,13 @@
 package ui;
 
+import static org.lwjgl.glfw.GLFW.*;
+
 import main.ColorPicker;
 import main.apps.App;
 import main.apps.MainApp;
 import main.apps.SettingsApp;
 import main.settings.Settings;
+import sutil.ui.UI;
 import sutil.ui.UISizes;
 import sutil.ui.elements.UIButton;
 import sutil.ui.elements.UIContainer;
@@ -28,6 +31,13 @@ public class SettingsUI extends AppUI<SettingsApp> {
         super(app);
 
         colorSelectionExpanded = false;
+    }
+
+    @Override
+    protected void createKeyboardShortcuts() {
+        super.createKeyboardShortcuts();
+
+        UI.addKeyboardShortcut("close", GLFW_KEY_ESCAPE, 0, false, app::requestClose);
     }
 
     @Override
@@ -83,7 +93,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         baseColorHeading.add(gap);
         UIColorElement baseColorButton = new UIColorElement(AppUI::getBaseColor, UISizes.COLOR_BUTTON);
         baseColorHeading.add(baseColorButton);
-        baseColorHeading.setLeftClickAction(() -> colorSelectionExpanded = !colorSelectionExpanded);
+        baseColorHeading.addLeftClickAction(() -> colorSelectionExpanded = !colorSelectionExpanded);
         baseColor.add(baseColorHeading);
 
         UIContainer allColorsContainer = new UIContainer(HORIZONTAL, LEFT, CENTER);
@@ -98,7 +108,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         for (int i = 0; i < numDefaultColors; i++) {
             final int j = i;
             UIColorElement button = new UIColorElement(() -> AppUI.getDefaultUIColors()[j], UISizes.COLOR_BUTTON);
-            button.setLeftClickAction(() -> app.setUIColor(MainApp.toInt(AppUI.getDefaultUIColors()[j])));
+            button.addLeftClickAction(() -> app.setUIColor(MainApp.toInt(AppUI.getDefaultUIColors()[j])));
             defaultColorContainer.add(button);
         }
         defaultColors.add(defaultColorContainer);

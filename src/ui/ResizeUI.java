@@ -1,9 +1,12 @@
 package ui;
 
+import static org.lwjgl.glfw.GLFW.*;
+
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 
 import main.apps.ResizeApp;
+import sutil.ui.UI;
 import sutil.ui.elements.UIButton;
 import sutil.ui.elements.UIContainer;
 import sutil.ui.elements.UINumberInput;
@@ -19,6 +22,14 @@ public class ResizeUI extends AppUI<ResizeApp> {
         super(app);
 
         inputMode = ResizeApp.PIXELS;
+    }
+
+    @Override
+    protected void createKeyboardShortcuts() {
+        super.createKeyboardShortcuts();
+
+        UI.addKeyboardShortcut("cancel", GLFW_KEY_ESCAPE, 0, false, app::requestClose);
+        UI.addKeyboardShortcut("close", GLFW_KEY_ENTER, 0, true, app::done);
     }
 
     @Override

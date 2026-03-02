@@ -1,11 +1,11 @@
 {
-    "transparentSelection" : false,
+    "transparentSelection" : true,
     "customUIColors" : {
         "capacity" : 10,
         "values" : []
     },
     "darkMode" : true,
-    "askUnsavedChanges" : false,
+    "askUnsavedChanges" : true,
     "baseColor" : [
         76,
         76,

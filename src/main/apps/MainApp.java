@@ -1,7 +1,5 @@
 package main.apps;
 
-import static org.lwjgl.glfw.GLFW.*;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -33,17 +31,26 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   UI
- *     Make all UIElement user input methods final and instead implement
- *       something analogous to click actions for key presses etc.
- *     Modal dialogs
- *       Deactivate keyboard shortcuts when a modal dialog is active
- *       Add ESC shortcut to close dialog
- *       Convert other small dialogs into modal dialogs? (e.g. ResizeUI)
- *       Add options for custom button labels like in JOptionPane
- *         For what?
  * 
  * App:
+ *   Ctrl + Shift + X
+ *     Adds two image snapshots (finish() adds one and app.cropImage() adds
+ *       the second one)
+ *     Crashes if the selection is entirely outside of the image
+ *     Behaves weirdly if selection goes past image edge
+ *     Idea: set current image to selection image instead of first rendering
+ *       the selection and then cropping
+ *   Selection tool
+ *     Selecting something and then flipping the image keeps the selection as it
+ *       is (and neither flattens nor flips it). Is this the expected behavior?
+ *     Add flip and rotate options for selection
+ *   Keyboard shortcuts
+ *     Selecting one of the radio buttons in the resize ui and pressing enter
+ *       closes the resize window. => add option for keyboard shortcut to not
+ *       run if something is currently selected (similar to text input).
+ *     Radio buttons, toggles, etc. should also be toggled when pressing space
+ *   No child apps should be open when the image changes?
+ *   update() takes about twice as long when a modal dialog is open
  *   Pencil tool
  *     Sizes 1 & 2 and 3 & 4 look the same
  *     Make sizes UI prettier
@@ -51,19 +58,6 @@ import ui.components.ImageCanvas;
  *       pixels are drawn multiple times on consecutive frames, resulting in
  *       the wrong opacity
  *       => Make the pencil tool also use the temp framebuffer?
- *   Selection tool
- *     Selecting something and then flipping the image keeps the selection as it
- *       is (and neither flattens nor flips it). Is this the expected behavior?
- *     Add flip and rotate options for selection
- *     Ctrl + Shift + X adds two image snapshots (finish() adds one and
- *       app.cropImage() adds the second one)
- *     Ctrl + Shift + X crashes if the selection is entirely outside of the
- *        image
- *   Keyboard shortcuts
- *     Selecting one of the radio buttons in the resize ui and pressing enter
- *       closes the resize window. => add option for keyboard shortcut to not
- *       run if something is currently selected (similar to text input).
- *   No child apps should be open when the image changes?
  *   Transparency
  *     Selecting a semi-transparent area and pasting it over a completely
  *       transparent area messes up the pixel colors: the semi-transparent area
@@ -80,17 +74,15 @@ import ui.components.ImageCanvas;
  *       changed I think (?). Also, what is the expected behavior?)
  *     Pasting / drawing a half-transparent red pixel over a fully opaque green
  *       one results in brown overlap instead of yellow (see MinutePhysics
- *         video)
+ *       video)
  *       => Add correct gamma blending? (as a setting?)
  *         Have OpenGL also do correct gamma blending?
  *   (When parent app closes, children should also close)
- *   Implement own version of JOptionPane and JFileChooser using UI classes
+ *   Packaging:
+ *     Use jpackage tool
  * 
  * UI:
  *   Unify UIMenuButton and UIDropdown?
- *   Fix bug in UIMenu:
- *     Opening a sub-menu and then closing the parent menu causes the sub-menu
- *       to still be open when the parent menu is reopened
  *   UISizes:
  *     There are multiple places where I want to set a larger margin but have
  *       to akwardly divide by the default margin because only a margin scale
@@ -107,15 +99,26 @@ import ui.components.ImageCanvas;
  *     Text wrapping
  *     Fix bug in UILabel: when the textUpdater returns text containig newline
  *       characters, the text is not properly split across multiple lines
- *   The first frame on which a child app (e.g. ResizeApp) is rendered, the root
- *     has a black background and parts of the UI are not yet visible
+ *   On the first frame that the UI is rendered, the root has a black background
+ *     and parts of the UI are not yet visible. This is visible when opening a
+ *     child app.
+ *   Ctrl + 0 can cause the image to appear completely outside of the canvas
+ *     Reason: the point at the center of the canvas stays fixed. For a very
+ *     zoomed out image, this is likely to be outside of the image.
  *   Mouse input: tapping the touchpad triggers a mouse press event but not
  *     mouse release event (=> logic that sets leftMousePressed and
  *     rightMousePressed based on mouse press / release events is flawed.)
+ *   Modal dialogs
+ *     Convert other small dialogs into modal dialogs? (e.g. ResizeUI)
+ *     Add options for custom button labels like in JOptionPane
+ *       For what?
  *   Tool icons & cursors
  *     -> Pre-render icons at various texture sizes and use them as UIImages
  *   Selection are area right-click? (Same menu as "Selection" in menu bar)
  *   Make side panel collapsable?
+ *   Add options for hyperlinks in about text?
+ *   Add Alt + Letter navigation options for menu bar
+ *     Would require underlined letters
  * 
  * Rendering:
  *   Improve UITextInput cursor visibility
@@ -239,7 +242,12 @@ public final class MainApp extends App {
 
     private ImageCanvas canvas;
 
-    public MainApp() {
+    /**
+     * 
+     * @param initialFile The initial image file to open. If it is {@code null}, a
+     *                    new image will be opened.
+     */
+    public MainApp(String initialFile) {
         super(1280, 720, Window.MAXIMIZED, "SLPaint");
 
         primaryColor = INITIAL_PRIMARY_COLOR;
@@ -248,28 +256,16 @@ public final class MainApp extends App {
         selectedColorPicker = new ColorPicker(getSelectedColor());
         customColorButtonArray = new ColorArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
 
-        imageManager = new ImageManager(this, "res/images/test.png");
+        System.out.println(initialFile);
+
+        imageManager = initialFile == null ? new ImageManager(this)
+                : new ImageManager(this, initialFile);
+        // : new ImageManager(this, "res/images/test.png");
 
         setActiveTool(ImageTool.PENCIL);
         prevTool = ImageTool.PENCIL;
-
-        // general keyboard shortcuts
-        addKeyboardShortcut("new", GLFW_KEY_N, GLFW_MOD_CONTROL, this::newImage, true);
-        addKeyboardShortcut("open", GLFW_KEY_O, GLFW_MOD_CONTROL, this::openImage, true);
-        addKeyboardShortcut("save", GLFW_KEY_S, GLFW_MOD_CONTROL, this::saveImage, true);
-        addKeyboardShortcut("save_as", GLFW_KEY_S, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT, this::saveImageAs, true);
-        addKeyboardShortcut("undo", GLFW_KEY_Z, GLFW_MOD_CONTROL, imageManager::undo, imageManager::canUndo);
-        addKeyboardShortcut("redo", GLFW_KEY_Y, GLFW_MOD_CONTROL, imageManager::redo, imageManager::canRedo);
-        addKeyboardShortcut("reset_transform", GLFW_KEY_R, 0, this::resetImageTransform, false);
-        addKeyboardShortcut("zoom_in", GLFW_KEY_KP_ADD, GLFW_MOD_CONTROL, this::zoomIn, this::canZoomIn);
-        addKeyboardShortcut("zoom_out", GLFW_KEY_KP_SUBTRACT, GLFW_MOD_CONTROL, this::zoomOut, this::canZoomOut);
-        addKeyboardShortcut("reset_zoom", GLFW_KEY_0, GLFW_MOD_CONTROL, this::resetZoom, true);
-
-        // all tool shortcuts
-        for (ImageTool tool : ImageTool.INSTANCES) {
+        for (ImageTool tool : ImageTool.INSTANCES)
             tool.setApp(this);
-            tool.createKeyboardShortcuts();
-        }
 
         // load about text
         aboutText = null;
@@ -448,6 +444,22 @@ public final class MainApp extends App {
 
     public Image getImage() {
         return imageManager.getImage();
+    }
+
+    public void undo() {
+        imageManager.undo();
+    }
+
+    public boolean canUndo() {
+        return imageManager.canUndo();
+    }
+
+    public void redo() {
+        imageManager.redo();
+    }
+
+    public boolean canRedo() {
+        return imageManager.canRedo();
     }
 
     public void openImage() {

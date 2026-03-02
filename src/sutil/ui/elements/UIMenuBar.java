@@ -47,7 +47,7 @@ public class UIMenuBar extends UIContainer {
                             ? UIColors.BACKGROUND_HIGHLIGHT.get()
                             : null);
 
-            setLeftClickAction(() -> {
+            addLeftClickAction(() -> {
                 if (expandedMenu == null) {
                     expandedMenu = this;
                 } else {

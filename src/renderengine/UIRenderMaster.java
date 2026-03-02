@@ -264,7 +264,6 @@ public class UIRenderMaster {
         }
 
         if (fillMode > 0)
-            // rectFillRenderer.addShape(
             drawCalls.add(
                     new RectFillDrawCall(position, depth, size,
                             new Matrix3f().load(uiMatrix),
@@ -273,7 +272,6 @@ public class UIRenderMaster {
                             new Vector4f(checkerboardColors[1]), checkerboardSize, fillMode == CHECKERBOARD));
 
         if (strokeMode > 0)
-            // rectOutlineRenderer.addShape(
             drawCalls.add(
                     new RectOutlineDrawCall(position, depth, size,
                             new Matrix3f().load(uiMatrix),
@@ -286,27 +284,25 @@ public class UIRenderMaster {
         if (fillMode != NORMAL)
             return;
 
-        // ellipseRenderer.addShape(
         drawCalls.add(
                 new EllipseDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
                         new ClipAreaInfo(clipAreaInfo), new Vector4f(fill)));
     }
 
     public void text(String text, SVector position) {
+        if (text == null)
+            return;
         if (textFont == null)
             return;
-
         if (fillMode != NORMAL)
             return;
 
-        // textRenderer.addShape(
         drawCalls.add(
                 new TextDrawCall(position, depth, textSize / textFont.size, new Matrix3f().load(uiMatrix),
                         new ClipAreaInfo(clipAreaInfo), new Vector4f(fill), text, textFont));
     }
 
     public void image(int textureID, SVector position, SVector size) {
-        // imageRenderer.addShape(
         drawCalls.add(
                 new ImageDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
                         new ClipAreaInfo(clipAreaInfo), textureID));
@@ -315,7 +311,6 @@ public class UIRenderMaster {
     public void hueSatField(SVector position, SVector size, boolean circular, boolean hsl) {
         int flags = (circular ? HSLDrawCall.HUE_SAT_FIELD_CIRC : HSLDrawCall.HUE_SAT_FIELD_RECT)
                 | (hsl ? HSLDrawCall.HSL : HSLDrawCall.HSV);
-        // hslRenderer.addShape(
         drawCalls.add(
                 new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
                         new ClipAreaInfo(clipAreaInfo), new SVector(), flags));
@@ -327,7 +322,6 @@ public class UIRenderMaster {
         int flags = HSLDrawCall.LIGHTNESS_SCALE
                 | (hsl ? HSLDrawCall.HSL : HSLDrawCall.HSV)
                 | (vertical ? HSLDrawCall.VERTICAL : HSLDrawCall.HORIZONTAL);
-        // hslRenderer.addShape(
         drawCalls.add(
                 new HSLDrawCall(position, depth, size, new Matrix3f().load(uiMatrix),
                         new ClipAreaInfo(clipAreaInfo), new SVector(hue, saturation, 0), flags));

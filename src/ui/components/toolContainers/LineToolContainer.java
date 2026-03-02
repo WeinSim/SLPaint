@@ -1,9 +1,9 @@
 package ui.components.toolContainers;
 
+import static org.lwjgl.glfw.GLFW.*;
+
 import java.awt.image.BufferedImage;
 import java.util.function.BooleanSupplier;
-
-import org.lwjgl.glfw.GLFW;
 
 import main.apps.MainApp;
 import main.image.Image;
@@ -28,15 +28,19 @@ public final class LineToolContainer extends ToolContainer<LineTool> {
 
         add(new ImageDisplay());
 
+        addMouseReleaseAction(GLFW_MOUSE_BUTTON_LEFT, false, () -> {
+            switch (tool.getState()) {
+                case LineTool.INITIAL_DRAG -> tool.setState(LineTool.IDLE);
+            }
+        });
+
         final int visibleStates = LineTool.IDLE;
         BooleanSupplier dragKnobVis = () -> (tool.getState() & visibleStates) != 0;
-        int cursorShape = GLFW.GLFW_RESIZE_ALL_CURSOR;
+        int cursorShape = GLFW_RESIZE_ALL_CURSOR;
         Draggable[] draggables = { ImageTool.LINE.getDrag1(), ImageTool.LINE.getDrag2() };
-        // Anchor[] anchors = { Anchor.TOP_LEFT, Anchor.BOTTOM_RIGHT };
         for (int i = 0; i < 2; i++) {
             final Draggable d = draggables[i];
             add(new DragKnob(d, dragKnobVis, cursorShape, () -> getDragKnobPos(d), app));
-            // add(new DragKnob(d, dragKnobVis, cursorShape, anchors[i], app));
         }
 
         Image image = app.getImage();
@@ -79,15 +83,6 @@ public final class LineToolContainer extends ToolContainer<LineTool> {
                 tool.getSize(),
                 app.getPrimaryColor(),
                 true);
-    }
-
-    @Override
-    public void mouseReleased(int mouseButton, int mods) {
-        super.mouseReleased(mouseButton, mods);
-
-        switch (tool.getState()) {
-            case LineTool.INITIAL_DRAG -> tool.setState(LineTool.IDLE);
-        }
     }
 
     @Override

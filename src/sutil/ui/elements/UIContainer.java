@@ -5,8 +5,6 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.BooleanSupplier;
 
-import org.lwjgl.glfw.GLFW;
-
 import sutil.math.SVector;
 import sutil.ui.UI;
 import sutil.ui.UIColors;
@@ -48,8 +46,7 @@ public class UIContainer extends UIElement {
     }
 
     private ArrayList<UIElement> children;
-    private Iterable<UIElement> visibleChildren,
-            soloChildren;
+    private Iterable<UIElement> visibleChildren, soloChildren;
 
     protected int orientation;
     protected int hAlignment, vAlignment;
@@ -114,6 +111,19 @@ public class UIContainer extends UIElement {
                 return child.soloInputs();
             }
         };
+
+        addMouseWheelAction(0, scroll -> {
+            boolean doScroll = false;
+            if (isHScroll()) {
+                scrollOffset.x += scroll.x;
+                doScroll = true;
+            }
+            if (isVScroll()) {
+                scrollOffset.y += scroll.y;
+                doScroll = true;
+            }
+            return doScroll;
+        });
     }
 
     // Adding / removing children
@@ -215,26 +225,6 @@ public class UIContainer extends UIElement {
         for (UIElement child : getChildren()) {
             child.update();
         }
-    }
-
-    @Override
-    public boolean mouseWheel(SVector scroll, int mods) {
-        if (mouseAbove() && (mods & GLFW.GLFW_MOD_CONTROL) == 0) {
-            boolean doScroll = false;
-            if (isHScroll()) {
-                scrollOffset.x += scroll.x;
-                doScroll = true;
-            }
-            if (isVScroll()) {
-                scrollOffset.y += scroll.y;
-                doScroll = true;
-            }
-            if (doScroll) {
-                return true;
-            }
-        }
-
-        return super.mouseWheel(scroll, mods);
     }
 
     @Override
@@ -643,6 +633,11 @@ public class UIContainer extends UIElement {
      * visible children.
      */
     public Iterable<UIElement> getSoloChildren() {
+        boolean hasSoloChildren = hasSoloChildren();
+        return hasSoloChildren ? soloChildren : visibleChildren;
+    }
+
+    public boolean hasSoloChildren() {
         boolean hasSoloChildren = false;
         for (UIElement child : getChildren()) {
             if (child.soloInputs()) {
@@ -650,7 +645,7 @@ public class UIContainer extends UIElement {
                 break;
             }
         }
-        return hasSoloChildren ? soloChildren : visibleChildren;
+        return hasSoloChildren;
     }
 
     public UIContainer setMarginScale(double marginScale) {

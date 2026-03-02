@@ -1,8 +1,9 @@
 package main.tools;
 
+import java.util.function.BooleanSupplier;
+
 import main.apps.MainApp;
-import sutil.ui.KeyboardShortcut;
-import sutil.ui.UserAction;
+import sutil.ui.UI;
 
 public abstract sealed class ImageTool permits PencilTool, LineTool, DragTool, FillBucketTool, PipetteTool {
 
@@ -52,15 +53,12 @@ public abstract sealed class ImageTool permits PencilTool, LineTool, DragTool, F
         this.state = state;
     }
 
-    protected void addShortcut(String identifier, int key, int modifiers,
-            int possibleStates, Runnable action) {
-
-        UserAction userAction = new UserAction(
-                () -> {
-                    app.setActiveTool(this);
-                    action.run();
-                },
-                () -> (getState() & possibleStates) != 0);
-        app.addKeyboardShortcut(new KeyboardShortcut(identifier, key, modifiers, userAction));
+    protected void addShortcut(String identifier, int key, int modifiers, int possibleStates, Runnable action) {
+        Runnable shortcutAction = () -> {
+            app.setActiveTool(this);
+            action.run();
+        };
+        BooleanSupplier possible = () -> (getState() & possibleStates) != 0;
+        UI.addKeyboardShortcut(identifier, key, modifiers, possible, shortcutAction);
     }
 }

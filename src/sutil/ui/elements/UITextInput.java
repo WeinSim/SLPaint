@@ -49,59 +49,16 @@ public class UITextInput extends UIContainer {
         add(uiText);
         add(new Cursor());
 
-        setLeftClickAction(this::click);
-
         cursorPosition = 0;
-    }
 
-    @Override
-    public void keyPressed(int key, int mods) {
-        super.keyPressed(key, mods);
+        addLeftClickAction(() -> {
+            cursorPosition = uiText.getCharIndex(mousePosition.x - position.x - uiText.getPosition().x);
+            resetTimer();
+        });
 
-        if (isSelected()) {
-            String text = textUpdater.get();
-            boundCursorPosition(text);
-            switch (key) {
-                case GLFW_KEY_BACKSPACE -> {
-                    if (cursorPosition > 0) {
-                        String newText = text.substring(0, cursorPosition - 1) + text.substring(cursorPosition);
-                        cursorPosition--;
-
-                        valueUpdater.accept(newText);
-                        resetTimer();
-                    }
-                }
-                case GLFW_KEY_DELETE -> {
-                    if (cursorPosition < text.length()) {
-                        String newText = text.substring(0, cursorPosition) + text.substring(cursorPosition + 1);
-
-                        valueUpdater.accept(newText);
-                        resetTimer();
-                    }
-                }
-                case GLFW_KEY_LEFT -> {
-                    cursorPosition--;
-                    resetTimer();
-                }
-                case GLFW_KEY_RIGHT -> {
-                    cursorPosition++;
-                    resetTimer();
-                }
-                case GLFW_KEY_ENTER -> {
-                    if (multiline)
-                        charInput('\n');
-                    else
-                        UI.select(null);
-                }
-            }
-        }
-    }
-
-    @Override
-    public void charInput(char c) {
-        if (isSelected()) {
-            String text = textUpdater.get();
-            boundCursorPosition(text);
+        addCharInputAction(c -> {
+            String text = this.textUpdater.get();
+            boundCursorPosition();
 
             String newText = text;
             boolean validKey = isValidChar(c);
@@ -110,22 +67,59 @@ public class UITextInput extends UIContainer {
 
             newText = text.substring(0, cursorPosition) + c + text.substring(cursorPosition);
             cursorPosition++;
-            valueUpdater.accept(newText);
+            this.valueUpdater.accept(newText);
             resetTimer();
-        }
+        });
+
+        addKeyPressAction(GLFW_KEY_BACKSPACE, 0, () -> {
+            boundCursorPosition();
+            String text = this.textUpdater.get();
+            if (cursorPosition > 0) {
+                String newText = text.substring(0, cursorPosition - 1) + text.substring(cursorPosition);
+                cursorPosition--;
+                this.valueUpdater.accept(newText);
+                resetTimer();
+            }
+        });
+        addKeyPressAction(GLFW_KEY_DELETE, 0, () -> {
+            boundCursorPosition();
+            String text = this.textUpdater.get();
+            if (cursorPosition < text.length()) {
+                String newText = text.substring(0, cursorPosition) + text.substring(cursorPosition + 1);
+                this.valueUpdater.accept(newText);
+                resetTimer();
+            }
+        });
+        addKeyPressAction(GLFW_KEY_LEFT, 0, () -> {
+            cursorPosition--;
+            resetTimer();
+        });
+        addKeyPressAction(GLFW_KEY_RIGHT, 0, () -> {
+            cursorPosition++;
+            resetTimer();
+        });
+        addKeyPressAction(GLFW_KEY_ENTER, 0, () -> {
+            if (multiline)
+                charInput('\n');
+            else
+                UI.select(null);
+        });
+    }
+
+    @Override
+    public void update() {
+        super.update();
+
+        boundCursorPosition();
     }
 
     protected boolean isValidChar(char c) {
         return (c >= 32 && c <= 126) || (c >= 160 && c < 255) || (c == '\n' && multiline);
     }
 
-    private void boundCursorPosition(String text) {
+    private void boundCursorPosition() {
+        String text = textUpdater.get();
         cursorPosition = Math.min(Math.max(cursorPosition, 0), text.length());
-    }
-
-    private void click() {
-        cursorPosition = uiText.getCharIndex(mousePosition.x - position.x - uiText.getPosition().x);
-        resetTimer();
     }
 
     public void resetTimer() {

@@ -1,5 +1,7 @@
 package ui;
 
+import static org.lwjgl.glfw.GLFW.*;
+
 import java.util.function.BooleanSupplier;
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
@@ -50,6 +52,29 @@ public class MainUI extends AppUI<MainApp> {
     }
 
     @Override
+    protected void createKeyboardShortcuts() {
+        super.createKeyboardShortcuts();
+
+        // general keyboard shortcuts
+        UI.addKeyboardShortcut("new", GLFW_KEY_N, GLFW_MOD_CONTROL, true, app::newImage);
+        UI.addKeyboardShortcut("open", GLFW_KEY_O, GLFW_MOD_CONTROL, true, app::openImage);
+        UI.addKeyboardShortcut("save", GLFW_KEY_S, GLFW_MOD_CONTROL, true, app::saveImage);
+        UI.addKeyboardShortcut("save_as", GLFW_KEY_S, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT, true, app::saveImageAs);
+        UI.addKeyboardShortcut("undo", GLFW_KEY_Z, GLFW_MOD_CONTROL, app::canUndo, app::undo);
+        UI.addKeyboardShortcut("redo", GLFW_KEY_Y, GLFW_MOD_CONTROL, app::canRedo, app::redo);
+        UI.addKeyboardShortcut("reset_transform", GLFW_KEY_R, 0, false, app::resetImageTransform);
+        UI.addKeyboardShortcut("zoom_in", GLFW_KEY_KP_ADD, GLFW_MOD_CONTROL, app::canZoomIn, app::zoomIn);
+        UI.addKeyboardShortcut("zoom_out", GLFW_KEY_KP_SUBTRACT, GLFW_MOD_CONTROL, app::canZoomOut, app::zoomOut);
+        UI.addKeyboardShortcut("reset_zoom", GLFW_KEY_0, GLFW_MOD_CONTROL, true, app::resetZoom);
+
+        // all tool shortcuts
+        for (ImageTool tool : ImageTool.INSTANCES) {
+            tool.setApp(app);
+            tool.createKeyboardShortcuts();
+        }
+    }
+
+    @Override
     protected void init() {
         root.setOrientation(VERTICAL);
         root.setHAlignment(LEFT);
@@ -58,34 +83,34 @@ public class MainUI extends AppUI<MainApp> {
         UIMenuBar menuBar = new UIMenuBar();
 
         UIFloatMenu fileMenu = menuBar.addMenu("File");
-        fileMenu.addLabel("New", app.getKeyboardShortcut("new"));
-        fileMenu.addLabel("Open", app.getKeyboardShortcut("open"));
-        fileMenu.addLabel("Save", app.getKeyboardShortcut("save"));
-        fileMenu.addLabel("Save As", app.getKeyboardShortcut("save_as"));
+        fileMenu.addLabel("New", getKeyboardShortcut("new"));
+        fileMenu.addLabel("Open", getKeyboardShortcut("open"));
+        fileMenu.addLabel("Save", getKeyboardShortcut("save"));
+        fileMenu.addLabel("Save As", getKeyboardShortcut("save_as"));
         fileMenu.addSeparator();
         fileMenu.addLabel("Settings", () -> app.showDialog(MainApp.SETTINGS_DIALOG));
         fileMenu.addSeparator();
         fileMenu.addLabel("Quit", app::requestClose);
 
         UIFloatMenu editMenu = menuBar.addMenu("Edit");
-        editMenu.addLabel("Undo", app.getKeyboardShortcut("undo"));
-        editMenu.addLabel("Redo", app.getKeyboardShortcut("redo"));
+        editMenu.addLabel("Undo", getKeyboardShortcut("undo"));
+        editMenu.addLabel("Redo", getKeyboardShortcut("redo"));
 
         UIFloatMenu selectionMenu = menuBar.addMenu("Selection");
-        selectionMenu.addLabel("Select everything", app.getKeyboardShortcut("select_all"));
+        selectionMenu.addLabel("Select everything", getKeyboardShortcut("select_all"));
         selectionMenu.addSeparator();
-        selectionMenu.addLabel("Copy", app.getKeyboardShortcut("copy"));
-        selectionMenu.addLabel("Cut", app.getKeyboardShortcut("cut"));
-        selectionMenu.addLabel("Paste", app.getKeyboardShortcut("paste"));
+        selectionMenu.addLabel("Copy", getKeyboardShortcut("copy"));
+        selectionMenu.addLabel("Cut", getKeyboardShortcut("cut"));
+        selectionMenu.addLabel("Paste", getKeyboardShortcut("paste"));
         selectionMenu.addSeparator();
-        selectionMenu.addLabel("Crop image to selection", app.getKeyboardShortcut("crop_to_selection"));
+        selectionMenu.addLabel("Crop image to selection", getKeyboardShortcut("crop_to_selection"));
 
         UIFloatMenu viewMenu = menuBar.addMenu("View");
-        viewMenu.addLabel("Zoom in", app.getKeyboardShortcut("zoom_in"));
-        viewMenu.addLabel("Zoom out", app.getKeyboardShortcut("zoom_out"));
-        viewMenu.addLabel("Reset zoom", app.getKeyboardShortcut("reset_zoom"));
+        viewMenu.addLabel("Zoom in", getKeyboardShortcut("zoom_in"));
+        viewMenu.addLabel("Zoom out", getKeyboardShortcut("zoom_out"));
+        viewMenu.addLabel("Reset zoom", getKeyboardShortcut("reset_zoom"));
         viewMenu.addSeparator();
-        viewMenu.addLabel("Reset view", app.getKeyboardShortcut("reset_transform"));
+        viewMenu.addLabel("Reset view", getKeyboardShortcut("reset_transform"));
 
         UIFloatMenu imageMenu = menuBar.addMenu("Image");
         imageMenu.addLabel("Resize", () -> app.showDialog(MainApp.RESIZE_DIALOG));
@@ -230,7 +255,7 @@ public class MainUI extends AppUI<MainApp> {
             label.zeroMargin();
             colorContainer.add(label);
 
-            colorContainer.setLeftClickAction(() -> app.setColorSelection(index));
+            colorContainer.addLeftClickAction(() -> app.setColorSelection(index));
 
             primSecColorContainer.add(colorContainer);
         }
@@ -251,7 +276,7 @@ public class MainUI extends AppUI<MainApp> {
             final int colorInt = MainApp.DEFAULT_COLORS[i];
             final Vector4f color = MainApp.toVector4f(colorInt);
             UIColorElement button = new UIColorElement(() -> color, UISizes.COLOR_BUTTON);
-            button.setLeftClickAction(() -> app.selectColor(colorInt));
+            button.addLeftClickAction(() -> app.selectColor(colorInt));
             button.setCursorShape(() -> button.mouseAbove() ? GLFW.GLFW_POINTING_HAND_CURSOR : null);
             currentRow.add(button);
 

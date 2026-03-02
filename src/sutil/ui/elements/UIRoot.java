@@ -1,15 +1,21 @@
 package sutil.ui.elements;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import sutil.math.SVector;
+import sutil.ui.KeyboardShortcut;
 
 public class UIRoot extends UIContainer {
+
+    private HashMap<String, KeyboardShortcut> keyboardShortcuts;
 
     private int minLayer, maxLayer;
 
     public UIRoot(int orientation, int alignment) {
         super(orientation, alignment);
+
+        keyboardShortcuts = new HashMap<>();
 
         backgroundNormal = true;
         outlineNormal = false;
@@ -49,6 +55,18 @@ public class UIRoot extends UIContainer {
         setPreferredSize();
         expandAsNeccessary();
         positionChildren();
+    }
+
+    public void addKeyboardShortcut(KeyboardShortcut shortcut) {
+        keyboardShortcuts.put(shortcut.getIdentifier(), shortcut);
+        keyPressActions.add(shortcut);
+    }
+
+    public KeyboardShortcut getKeyboardShortcut(String identifier) {
+        KeyboardShortcut shortcut = keyboardShortcuts.get(identifier);
+        if (shortcut != null)
+            return shortcut;
+        throw new RuntimeException(String.format("Keyboard shortcut \"%s\" does not exist", identifier));
     }
 
     public ArrayList<UIElement> getSelectableElements() {

@@ -76,6 +76,9 @@ public class Window {
 
         KEY_MAP.put(GLFW_KEY_Z, GLFW_KEY_Y);
         KEY_MAP.put(GLFW_KEY_Y, GLFW_KEY_Z);
+
+        KEY_MAP.put(GLFW_KEY_RIGHT_BRACKET, GLFW_KEY_KP_ADD);
+        KEY_MAP.put(GLFW_KEY_SLASH, GLFW_KEY_KP_SUBTRACT);
     }
 
     private final long windowHandle;

@@ -10,7 +10,7 @@ public abstract class UIDragContainer extends UIContainer {
     public UIDragContainer() {
         super(0, 0);
 
-        setLeftClickAction(this::startDragging);
+        addLeftClickAction(this::startDragging);
     }
 
     @Override

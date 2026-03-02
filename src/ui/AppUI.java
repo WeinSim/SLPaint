@@ -1,5 +1,7 @@
 package ui;
 
+import static org.lwjgl.glfw.GLFW.*;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -37,7 +39,7 @@ public abstract class AppUI<T extends App> extends UI {
             new Vector4f(0.84f, 0.51f, 0.51f, 1.0f)
     };
 
-    protected T app;
+    protected final T app;
 
     private static BooleanSetting darkMode = new BooleanSetting("darkMode");
     private static ColorSetting baseColor = new ColorSetting("baseColor");
@@ -45,6 +47,13 @@ public abstract class AppUI<T extends App> extends UI {
     public AppUI(T app) {
         this.app = app;
         super(app.getWindowContentScale(), app.getWindowSize());
+    }
+
+    @Override
+    protected void createKeyboardShortcuts() {
+        UI.addKeyboardShortcut("cycle_debug", GLFW_KEY_COMMA, 0, false, App::cycleDebugOutline);
+        UI.addKeyboardShortcut("reload_shaders", GLFW_KEY_S, GLFW_MOD_SHIFT, true, app::reloadShaders);
+        UI.addKeyboardShortcut("reload_ui", GLFW_KEY_R, GLFW_MOD_SHIFT, true, () -> app.queueEvent(app::loadUI));
     }
 
     public static <E extends UIElement> E setSelectableButtonStyle(E element, BooleanSupplier selectedSupplier) {

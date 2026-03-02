@@ -51,8 +51,8 @@ public class ImageCanvas extends UIContainer {
         setFillSize();
         zeroMargin();
 
-        setLeftClickAction(this::leftClick);
-        setRightClickAction(this::rightClick);
+        addLeftClickAction(this::leftClick);
+        addRightClickAction(this::rightClick);
 
         setCursorShape(() -> draggingImage ? GLFW_POINTING_HAND_CURSOR : null);
 
@@ -63,8 +63,8 @@ public class ImageCanvas extends UIContainer {
         add(new ImageResize());
         add(new ImageDisplay());
 
-        for (ImageTool tool: ImageTool.INSTANCES) {
-            add(switch(tool) {
+        for (ImageTool tool : ImageTool.INSTANCES) {
+            add(switch (tool) {
                 case PencilTool _ -> new PencilToolContainer(app);
                 case LineTool _ -> new LineToolContainer(app);
                 case PipetteTool _ -> new PipetteToolContainer(app);
@@ -72,7 +72,7 @@ public class ImageCanvas extends UIContainer {
                 case TextTool _ -> new TextToolContainer(app);
                 case SelectionTool _ -> new SelectionToolContainer(app);
                 default -> throw new RuntimeException(
-                    String.format("No ToolContainer found for tool \"%s\"", tool.getName()));
+                        String.format("No ToolContainer found for tool \"%s\"", tool.getName()));
             });
         }
 
@@ -80,6 +80,21 @@ public class ImageCanvas extends UIContainer {
 
         draggingImage = false;
         resizing = false;
+
+        // zoom
+        addMouseWheelAction(GLFW_MOD_CONTROL, scroll -> {
+            zoom((int) Math.signum(scroll.y), new SVector(mousePosition).sub(position));
+            return true;
+        });
+        // scroll
+        addMouseWheelAction(0, scroll -> {
+            imageTranslation.add(scroll);
+            return true;
+        });
+        addMouseWheelAction(GLFW_MOD_SHIFT, scroll -> {
+            imageTranslation.add(new SVector(scroll.y, scroll.x));
+            return true;
+        });
     }
 
     @Override
@@ -129,29 +144,6 @@ public class ImageCanvas extends UIContainer {
         }
     }
 
-    @Override
-    public boolean mouseWheel(SVector scroll, int mods) {
-        if (super.mouseWheel(scroll, mods))
-            return true;
-
-        if (canDoScrollZoom()) {
-            if ((mods & GLFW_MOD_CONTROL) != 0) {
-                // zoom
-                zoom((int) Math.signum(scroll.y), new SVector(mousePosition).sub(position));
-            } else {
-                // scroll
-                if ((mods & GLFW_MOD_SHIFT) != 0) {
-                    double temp = scroll.x;
-                    scroll.x = scroll.y;
-                    scroll.y = temp;
-                }
-                imageTranslation.add(scroll);
-            }
-            return true;
-        }
-        return false;
-    }
-
     private void zoom(int delta, SVector origin) {
         double prevZoom = getImageZoom();
         imageZoomLevel += delta;
@@ -161,7 +153,7 @@ public class ImageCanvas extends UIContainer {
     }
 
     public boolean canDoScrollZoom() {
-        return calculateMouseAbove(mousePosition);
+        return mouseAbove;
     }
 
     public void resetImageTransform() {
@@ -193,6 +185,10 @@ public class ImageCanvas extends UIContainer {
         return Math.pow(ZOOM_BASE, imageZoomLevel) * UI.getUIScale();
     }
 
+    public void translateImage(SVector delta) {
+        imageTranslation.add(delta.scale(getImageZoom()));
+    }
+
     public SVector getImageTranslation() {
         return imageTranslation;
     }
@@ -203,10 +199,6 @@ public class ImageCanvas extends UIContainer {
 
     public SVector getScreenPosition(SVector imagePos) {
         return imagePos.copy().scale(getImageZoom()).add(getAbsolutePosition().add(imageTranslation));
-    }
-
-    public void translateImage(SVector delta) {
-        imageTranslation.add(delta.scale(getImageZoom()));
     }
 
     public boolean isImageResizing() {

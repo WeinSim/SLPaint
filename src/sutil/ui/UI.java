@@ -5,6 +5,7 @@ import static org.lwjgl.glfw.GLFW.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BooleanSupplier;
 
 import org.lwjglx.util.vector.Vector4f;
 
@@ -13,6 +14,7 @@ import sutil.ui.elements.UIContainer;
 import sutil.ui.elements.UIElement;
 import sutil.ui.elements.UIModalDialog;
 import sutil.ui.elements.UIRoot;
+import sutil.ui.elements.UITextInput;
 
 public abstract class UI {
 
@@ -97,8 +99,12 @@ public abstract class UI {
         root.setFixedSize(initialRootSize);
         rootSize = new SVector(initialRootSize);
 
+        createKeyboardShortcuts();
+
         init();
     }
+
+    protected abstract void createKeyboardShortcuts();
 
     protected abstract void init();
 
@@ -125,54 +131,14 @@ public abstract class UI {
         root.updateSize();
     }
 
-    public void keyPressed(int key, int mods) {
-        modifiers |= switch (key) {
-            case GLFW_KEY_LEFT_CONTROL, GLFW_KEY_RIGHT_CONTROL -> GLFW_MOD_CONTROL;
-            case GLFW_KEY_LEFT_SHIFT, GLFW_KEY_RIGHT_SHIFT -> GLFW_MOD_SHIFT;
-            case GLFW_KEY_LEFT_ALT, GLFW_KEY_RIGHT_ALT -> GLFW_MOD_ALT;
-            default -> 0;
-        };
-
-        queueEvent(() -> {
-            switch (key) {
-                case GLFW_KEY_TAB -> cycleSelectedElement((mods & GLFW_MOD_SHIFT) != 0);
-                case GLFW_KEY_ESCAPE -> select(null);
-            }
-            // root.keyPressed(key, mods);
-
-            keyPressed(root, key, mods);
-        });
-    }
-
-    private void keyPressed(UIElement element, int key, int mods) {
-        element.keyPressed(key, mods);
-        if (element instanceof UIContainer container) {
-            for (UIElement child : container.getSoloChildren()) {
-                keyPressed(child, key, mods);
-            }
-        }
-    }
-
-    public void keyReleased(int key, int mods) {
-        modifiers ^= 0xFFFFFFFF;
-        modifiers |= switch (key) {
-            case GLFW_KEY_LEFT_CONTROL, GLFW_KEY_RIGHT_CONTROL -> GLFW_MOD_CONTROL;
-            case GLFW_KEY_LEFT_SHIFT, GLFW_KEY_RIGHT_SHIFT -> GLFW_MOD_SHIFT;
-            case GLFW_KEY_LEFT_ALT, GLFW_KEY_RIGHT_ALT -> GLFW_MOD_ALT;
-            default -> 0;
-        };
-        modifiers ^= 0xFFFFFFFF;
-    }
-
     public void mousePressed(int mouseButton, int mods) {
         queueEvent(() -> {
             switch (mouseButton) {
                 case GLFW_MOUSE_BUTTON_LEFT -> leftMousePressed = true;
                 case GLFW_MOUSE_BUTTON_RIGHT -> rightMousePressed = true;
             }
-            if (selectedElement != null && !selectedElement.mouseAbove()) {
+            if (selectedElement != null && !selectedElement.mouseAbove())
                 select(null);
-            }
             mousePressed(root, mouseButton, mods);
         });
     }
@@ -192,7 +158,6 @@ public abstract class UI {
                 case GLFW_MOUSE_BUTTON_LEFT -> leftMousePressed = false;
                 case GLFW_MOUSE_BUTTON_RIGHT -> rightMousePressed = false;
             }
-            // root.mouseReleased(mouseButton, mods);
             mouseReleased(root, mouseButton, mods);
         });
     }
@@ -206,23 +171,7 @@ public abstract class UI {
         }
     }
 
-    public void charInput(char c) {
-        // queueEvent(() -> root.charInput(c));
-        queueEvent(() -> charInput(root, c));
-    }
-
-    private void charInput(UIElement element, char c) {
-        element.charInput(c);
-        if (element instanceof UIContainer container) {
-            for (UIElement child : container.getSoloChildren()) {
-                charInput(child, c);
-            }
-        }
-    }
-
     public void mouseWheel(SVector scroll) {
-        // queueEvent(() -> root.mouseWheel(scroll.copy().scale(mouseWheelSensitivity),
-        // mousePos, modifiers));
         queueEvent(() -> mouseWheel(root, scroll.copy().scale(mouseWheelSensitivity), modifiers));
     }
 
@@ -234,8 +183,61 @@ public abstract class UI {
                 }
             }
         }
-
         return element.mouseWheel(scroll, mods);
+    }
+
+    public void keyPressed(int key, int mods) {
+        modifiers |= switch (key) {
+            case GLFW_KEY_LEFT_CONTROL, GLFW_KEY_RIGHT_CONTROL -> GLFW_MOD_CONTROL;
+            case GLFW_KEY_LEFT_SHIFT, GLFW_KEY_RIGHT_SHIFT -> GLFW_MOD_SHIFT;
+            case GLFW_KEY_LEFT_ALT, GLFW_KEY_RIGHT_ALT -> GLFW_MOD_ALT;
+            default -> 0;
+        };
+
+        queueEvent(() -> {
+            switch (key) {
+                case GLFW_KEY_TAB -> cycleSelectedElement((mods & GLFW_MOD_SHIFT) != 0);
+                case GLFW_KEY_ESCAPE -> select(null);
+            }
+
+            keyPressed(root, key, mods);
+        });
+    }
+
+    private void keyPressed(UIElement element, int key, int mods) {
+        // quick and dirty hack to ensure a modal dialog blocks keyboard shortcuts (and
+        // char input too, see below)
+        if (!(element == root && root.hasModalDialog()))
+            element.keyPressed(key, mods);
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getSoloChildren())
+                keyPressed(child, key, mods);
+        }
+    }
+
+    public void keyReleased(int key, int mods) {
+        modifiers ^= 0xFFFFFFFF;
+        modifiers |= switch (key) {
+            case GLFW_KEY_LEFT_CONTROL, GLFW_KEY_RIGHT_CONTROL -> GLFW_MOD_CONTROL;
+            case GLFW_KEY_LEFT_SHIFT, GLFW_KEY_RIGHT_SHIFT -> GLFW_MOD_SHIFT;
+            case GLFW_KEY_LEFT_ALT, GLFW_KEY_RIGHT_ALT -> GLFW_MOD_ALT;
+            default -> 0;
+        };
+        modifiers ^= 0xFFFFFFFF;
+    }
+
+    public void charInput(char c) {
+        queueEvent(() -> charInput(root, c));
+    }
+
+    private void charInput(UIElement element, char c) {
+        if (!(element == root && root.hasModalDialog()))
+            element.charInput(c);
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getSoloChildren()) {
+                charInput(child, c);
+            }
+        }
     }
 
     public static void queueEvent(Runnable action) {
@@ -291,6 +293,30 @@ public abstract class UI {
 
     private ArrayList<UIElement> getSelectableElements() {
         return root.getSelectableElements();
+    }
+
+    /**
+     * Adds a {@code KeyboardShortcut} based on the given parameters to the root's
+     * list of keyboard shortcuts.
+     * 
+     * @param text When {@code text} is set to false, the shortcut will not run if a
+     *             text input is currently active.
+     */
+    public static void addKeyboardShortcut(String identifier, int key, int modifiers, boolean text, Runnable action) {
+        BooleanSupplier possible = text
+                ? () -> true
+                : () -> !(getSelectedElement() instanceof UITextInput);
+        addKeyboardShortcut(identifier, key, modifiers, possible, action);
+    }
+
+    public static void addKeyboardShortcut(String identifier, int key, int modifiers, BooleanSupplier possible,
+            Runnable action) {
+
+        getRoot().addKeyboardShortcut(new KeyboardShortcut(identifier, key, modifiers, possible, action));
+    }
+
+    public KeyboardShortcut getKeyboardShortcut(String identifier) {
+        return root.getKeyboardShortcut(identifier);
     }
 
     public int getCursorShape() {
@@ -396,11 +422,4 @@ public abstract class UI {
     public static UI getContext() {
         return context;
     }
-
-    // private static class DialogLock {
-    // int returnCode;
-
-    // DialogLock() {
-    // }
-    // }
 }

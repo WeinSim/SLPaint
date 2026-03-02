@@ -23,7 +23,7 @@ public class UIButton extends UILabel {
 
         setHAlignment(CENTER);
 
-        setLeftClickAction(clickAction);
+        addLeftClickAction(clickAction);
         selectable = true;
     }
 }
