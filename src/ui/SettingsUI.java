@@ -1,6 +1,6 @@
 package ui;
 
-import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 
 import main.ColorPicker;
 import main.apps.App;
@@ -16,7 +16,6 @@ import sutil.ui.elements.UIDropdown;
 import sutil.ui.elements.UIFloatMenu;
 import sutil.ui.elements.UISeparator;
 import sutil.ui.elements.UIText;
-import sutil.ui.elements.UIToggleList;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.UIColorElement;
@@ -53,9 +52,6 @@ public class SettingsUI extends AppUI<SettingsApp> {
         mainContainer.add(createDarkModeDropdown());
         mainContainer.add(createHueSatDropdown());
         mainContainer.add(createHSLHSVDropdown());
-        mainContainer.add(new UIToggleList("Check for unsaved changes when closing window",
-                MainApp::isAskUnsavedChanges,
-                MainApp::setAskUnsavedChanges));
 
         UIContextMenu contextMenu = new UIContextMenu(mainContainer, false);
         contextMenu.addLabel("Label 1", () -> System.out.println("Label 1"));

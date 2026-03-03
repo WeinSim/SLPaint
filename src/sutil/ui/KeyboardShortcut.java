@@ -7,7 +7,7 @@ public class KeyboardShortcut extends UIKeyPressAction {
     private final String identifier;
 
     public KeyboardShortcut(String identifier, int key, int mods, BooleanSupplier possible, Runnable action) {
-        super(key, mods, possible, action);
+        super(key, mods, false, possible, action);
         this.identifier = identifier;
     }
 

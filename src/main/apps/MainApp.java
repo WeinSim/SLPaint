@@ -171,6 +171,17 @@ import ui.components.ImageCanvas;
 public final class MainApp extends App {
 
     /**
+     * Setting {@code DEV_BUILD} to {@code true} does the following things:
+     * <ul>
+     * <li>Adds options (keyboard shortcuts + menu bar items) for showing element
+     * outlines ({@code ,}), reloading the UI ({@code Shift + R}) and and reloading
+     * the shaders ({@code Shift + S})
+     * <li>Disables prompting to save changes when closing the window
+     * </ul>
+     */
+    public static final boolean DEV_BUILD = true;
+
+    /**
      * https://images.minitool.com/de.minitool.com/images/uploads/news/2022/02/microsoft-paint-herunterladen-installieren/microsoft-paint-herunterladen-installieren-1.png
      */
     public static final int[] DEFAULT_COLORS = {
@@ -206,7 +217,6 @@ public final class MainApp extends App {
 
     private static BooleanSetting transparentSelection = new BooleanSetting("transparentSelection");
     private static BooleanSetting lockSelectionRatio = new BooleanSetting("lockSelectionRatio");
-    private static BooleanSetting askUnsavedChanges = new BooleanSetting("askUnsavedChanges");
 
     private static ColorArraySetting customUIBaseColors = new ColorArraySetting("customUIColors");
 
@@ -661,11 +671,7 @@ public final class MainApp extends App {
     }
 
     public static boolean isAskUnsavedChanges() {
-        return askUnsavedChanges.get();
-    }
-
-    public static void setAskUnsavedChanges(boolean askUnsavedChanges) {
-        MainApp.askUnsavedChanges.set(askUnsavedChanges);
+        return !DEV_BUILD;
     }
 
     public int[] getPrevMouseImagePosition() {

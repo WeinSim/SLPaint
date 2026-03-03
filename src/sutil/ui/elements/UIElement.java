@@ -77,7 +77,7 @@ public abstract class UIElement {
             // We skip the click action that selects this element.
             // Doing it this way is kind of fragile because it assumes that this click
             // action is always at index zero.
-            for (int i = 0; i < mousePressActions.size(); i++) {
+            for (int i = 1; i < mousePressActions.size(); i++) {
                 mousePressActions.get(i).action().run();
             }
         });

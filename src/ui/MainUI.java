@@ -124,6 +124,13 @@ public class MainUI extends AppUI<MainApp> {
         flipMenu.addLabel("Flip horizontally", () -> app.flipImageHorizontal());
         flipMenu.addLabel("Flip vertically", () -> app.flipImageVertical());
 
+        if (MainApp.DEV_BUILD) {
+            UIFloatMenu debugMenu = menuBar.addMenu("Debug");
+            debugMenu.addLabel("Toggle element outline", getKeyboardShortcut("cycle_debug"));
+            debugMenu.addLabel("Reload shaders", getKeyboardShortcut("reload_shaders"));
+            debugMenu.addLabel("Reload UI", getKeyboardShortcut("reload_ui"));
+        }
+
         UIFloatMenu helpMenu = menuBar.addMenu("Help");
         helpMenu.addLabel("About", () -> app.showDialog(MainApp.ABOUT_DIALOG));
 

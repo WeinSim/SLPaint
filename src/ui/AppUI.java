@@ -13,6 +13,7 @@ import org.lwjglx.util.vector.Vector4f;
 
 import main.ColorPicker;
 import main.apps.App;
+import main.apps.MainApp;
 import main.settings.BooleanSetting;
 import main.settings.ColorSetting;
 import renderengine.fonts.TextFont;
@@ -51,9 +52,11 @@ public abstract class AppUI<T extends App> extends UI {
 
     @Override
     protected void createKeyboardShortcuts() {
-        UI.addKeyboardShortcut("cycle_debug", GLFW_KEY_COMMA, 0, false, App::cycleDebugOutline);
-        UI.addKeyboardShortcut("reload_shaders", GLFW_KEY_S, GLFW_MOD_SHIFT, true, app::reloadShaders);
-        UI.addKeyboardShortcut("reload_ui", GLFW_KEY_R, GLFW_MOD_SHIFT, true, () -> app.queueEvent(app::loadUI));
+        if (MainApp.DEV_BUILD) {
+            UI.addKeyboardShortcut("cycle_debug", GLFW_KEY_COMMA, 0, false, App::cycleDebugOutline);
+            UI.addKeyboardShortcut("reload_shaders", GLFW_KEY_S, GLFW_MOD_SHIFT, true, app::reloadShaders);
+            UI.addKeyboardShortcut("reload_ui", GLFW_KEY_R, GLFW_MOD_SHIFT, true, () -> app.queueEvent(app::loadUI));
+        }
     }
 
     public static <E extends UIElement> E setSelectableButtonStyle(E element, BooleanSupplier selectedSupplier) {

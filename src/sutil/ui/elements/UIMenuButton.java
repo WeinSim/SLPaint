@@ -28,6 +28,8 @@ public class UIMenuButton extends UIContainer {
         zeroPadding();
         backgroundHighlight = true;
 
+        selectable = true;
+
         add(new UIText(textUpdater));
 
         addLeftClickAction(() -> expanded = !expanded);

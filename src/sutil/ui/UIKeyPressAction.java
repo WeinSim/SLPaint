@@ -17,7 +17,7 @@ public class UIKeyPressAction {
     protected final Runnable action;
 
     public UIKeyPressAction(int key, int mods, Runnable action) {
-        this(key, mods, false, TRUE, action);
+        this(key, mods, true, TRUE, action);
     }
 
     public UIKeyPressAction(int key, int mods, boolean selected, Runnable action) {
@@ -25,7 +25,7 @@ public class UIKeyPressAction {
     }
 
     public UIKeyPressAction(int key, int mods, BooleanSupplier possible, Runnable action) {
-        this(key, mods, false, possible, action);
+        this(key, mods, true, possible, action);
     }
 
     public UIKeyPressAction(int key, int mods, boolean selected, BooleanSupplier possible, Runnable action) {
