@@ -1,8 +1,8 @@
 package ui.components.toolContainers;
 
-import java.util.function.BooleanSupplier;
+import static org.lwjgl.glfw.GLFW.*;
 
-import org.lwjgl.glfw.GLFW;
+import java.util.function.BooleanSupplier;
 
 import main.apps.MainApp;
 import main.tools.DragTool;
@@ -29,7 +29,7 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
 
         setCursorShape(
                 () -> mouseAbove && ((tool.getState() & (DragTool.IDLE | DragTool.IDLE_DRAG)) != 0)
-                        ? GLFW.GLFW_POINTING_HAND_CURSOR
+                        ? GLFW_POINTING_HAND_CURSOR
                         : null);
 
         addAnchor(Anchor.TOP_LEFT, this::getPos);
@@ -47,7 +47,7 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
 
         addLeftClickAction(this::startIdleDrag);
 
-        addMouseReleaseAction(GLFW.GLFW_MOUSE_BUTTON_LEFT, false, () -> {
+        addMouseReleaseAction(GLFW_MOUSE_BUTTON_LEFT, false, () -> {
             switch (tool.getState()) {
                 case DragTool.INITIAL_DRAG -> {
                     if (tool.enterIdle())

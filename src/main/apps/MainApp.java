@@ -82,7 +82,6 @@ import ui.components.ImageCanvas;
  *     Use jpackage tool
  * 
  * UI:
- *   Unify UIMenuButton and UIDropdown?
  *   UISizes:
  *     There are multiple places where I want to set a larger margin but have
  *       to akwardly divide by the default margin because only a margin scale

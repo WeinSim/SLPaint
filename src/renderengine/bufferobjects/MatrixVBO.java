@@ -1,8 +1,8 @@
 package renderengine.bufferobjects;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL33;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL33.*;
 
 public final class MatrixVBO extends AttributeVBO {
 
@@ -23,8 +23,8 @@ public final class MatrixVBO extends AttributeVBO {
         };
         for (int i = 0; i < coordinateSize; i++) {
             int offset = coordinateSize * i * Float.BYTES;
-            GL20.glVertexAttribPointer(attributeNumber + i, coordinateSize, GL11.GL_FLOAT, false, stride, offset);
-            GL33.glVertexAttribDivisor(attributeNumber + i, divisor);
+            glVertexAttribPointer(attributeNumber + i, coordinateSize, GL_FLOAT, false, stride, offset);
+            glVertexAttribDivisor(attributeNumber + i, divisor);
         }
         unbind();
     }

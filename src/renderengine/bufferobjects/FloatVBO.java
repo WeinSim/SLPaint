@@ -1,8 +1,8 @@
 package renderengine.bufferobjects;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL33;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL33.*;
 
 public final class FloatVBO extends AttributeVBO {
 
@@ -13,8 +13,8 @@ public final class FloatVBO extends AttributeVBO {
     @Override
     public void init() {
         bind();
-        GL20.glVertexAttribPointer(attributeNumber, coordinateSize, GL11.GL_FLOAT, false, 0, 0);
-        GL33.glVertexAttribDivisor(attributeNumber,
+        glVertexAttribPointer(attributeNumber, coordinateSize, GL_FLOAT, false, 0, 0);
+        glVertexAttribDivisor(attributeNumber,
                 switch (type) {
                     case VERTEX -> 0;
                     case INSTANCE -> 1;

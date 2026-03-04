@@ -1,10 +1,10 @@
 package renderengine;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL14.*;
 import static sutil.ui.UI.*;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
-import org.lwjgl.opengl.GL30;
 import org.lwjglx.util.vector.Vector4f;
 
 import main.apps.App;
@@ -289,21 +289,21 @@ public class AppRenderer implements Cleanable {
         uiMaster.start();
         uiMaster.tempFrameBuffer();
 
-        GL11.glDisable(GL11.GL_BLEND);
+        glDisable(GL_BLEND);
 
         uiMaster.setBGColor(new Vector4f(0, 0, 0, 0));
         uiMaster.image(srcImage.getTextureID(), new SVector(x, y), new SVector(width, height));
 
         uiMaster.render();
 
-        GL11.glEnable(GL11.GL_BLEND);
+        glEnable(GL_BLEND);
 
         FrameBufferObject fbo = uiMaster.getTempFBO();
         int fboWidth = fbo.width, fboHeight = fbo.height;
 
         int[] array = new int[fboWidth * fboHeight];
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID);
-        GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, array);
+        glBindTexture(GL_TEXTURE_2D, fbo.textureID);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, array);
 
         dstImage.drawSubImage(0, 0, fboWidth, fboHeight, array);
     }
@@ -319,9 +319,9 @@ public class AppRenderer implements Cleanable {
 
         // For this text rendering, we only care about the alpha output.
         // The color channel should be filled with the text color.
-        GL30.glBlendFuncSeparate(
-                GL11.GL_ONE, GL11.GL_ONE, // rgb
-                GL11.GL_ONE_MINUS_DST_ALPHA, GL11.GL_ONE); // alpha
+        glBlendFuncSeparate(
+                GL_ONE, GL_ONE, // rgb
+                GL_ONE_MINUS_DST_ALPHA, GL_ONE); // alpha
 
         uiMaster.setBGColor(new Vector4f(0, 0, 0, 0));
         uiMaster.fill(color);
@@ -335,8 +335,8 @@ public class AppRenderer implements Cleanable {
         int width = fbo.width, height = fbo.height;
 
         int[] array = new int[width * height];
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID);
-        GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, array);
+        glBindTexture(GL_TEXTURE_2D, fbo.textureID);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, array);
 
         image.drawSubImage(0, 0, width, height, array);
     }
@@ -349,7 +349,7 @@ public class AppRenderer implements Cleanable {
         uiMaster.start();
         uiMaster.tempFrameBuffer();
 
-        GL11.glDisable(GL11.GL_BLEND);
+        glDisable(GL_BLEND);
 
         uiMaster.image(image.getTextureID(), new SVector(), new SVector(newWidth, newHeight));
 
@@ -359,8 +359,8 @@ public class AppRenderer implements Cleanable {
         int width = fbo.width, height = fbo.height;
 
         int[] array = new int[width * height];
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbo.textureID);
-        GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, array);
+        glBindTexture(GL_TEXTURE_2D, fbo.textureID);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, array);
 
         image.resize(newWidth, newHeight, array);
     }
@@ -383,9 +383,9 @@ public class AppRenderer implements Cleanable {
         SVector s1 = new SVector(800, 100),
                 s2 = new SVector(800, 800),
                 s3 = new SVector(100, 200);
-        SVector c1 = new SVector(0.8, 0.2, 0.2),
-                c2 = new SVector(0.2, 0.8, 0.2),
-                c3 = new SVector(0.2, 0.2, 0.8);
+        Vector4f c1 = new Vector4f(0.8f, 0.2f, 0.2f, 1.0f),
+                c2 = new Vector4f(0.2f, 0.8f, 0.2f, 1.0f),
+                c3 = new Vector4f(0.2f, 0.2f, 0.8f, 0.5f);
 
         // MainApp app = (MainApp) this.app;
 

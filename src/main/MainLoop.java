@@ -1,5 +1,6 @@
 package main;
 
+import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.util.nfd.NativeFileDialog.*;
 
 import java.io.BufferedReader;
@@ -8,7 +9,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.newdawn.slick.util.Log;
 
@@ -59,7 +59,7 @@ public class MainLoop {
                 // makeContextCurrent() twice. I have absolutely no idea why.
                 app.makeContextCurrent();
 
-                GLFW.glfwPollEvents();
+                glfwPollEvents();
 
                 app.update(deltaT);
                 app.makeContextCurrent();
@@ -108,15 +108,15 @@ public class MainLoop {
 
             @Override
             public void invoke(int error, long description) {
-                if (error == GLFW.GLFW_CURSOR_UNAVAILABLE)
+                if (error == GLFW_CURSOR_UNAVAILABLE)
                     return;
 
                 err.invoke(error, description);
             }
         }.set();
 
-        // Initialize GLFW. Most GLFW functions will not work before doing this.
-        if (!GLFW.glfwInit())
+        // Initialize  Most GLFW functions will not work before doing this.
+        if (!glfwInit())
             throw new IllegalStateException("Unable to initialize GLFW");
 
         Window.createCursors();
@@ -124,8 +124,8 @@ public class MainLoop {
 
     private static void terminateGLFW() {
         // Terminate GLFW and free the error callback
-        GLFW.glfwTerminate();
-        GLFW.glfwSetErrorCallback(null).free();
+        glfwTerminate();
+        glfwSetErrorCallback(null).free();
     }
 
     /**

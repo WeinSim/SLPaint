@@ -7,7 +7,6 @@ import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-import org.lwjgl.glfw.GLFW;
 import org.lwjglx.util.vector.Vector4f;
 
 import main.apps.MainApp;
@@ -28,7 +27,6 @@ import sutil.ui.elements.UIElement;
 import sutil.ui.elements.UIFloatMenu;
 import sutil.ui.elements.UILabel;
 import sutil.ui.elements.UIMenuBar;
-import sutil.ui.elements.UIMenuButton;
 import sutil.ui.elements.UINumberInput;
 import sutil.ui.elements.UIScale;
 import sutil.ui.elements.UIText;
@@ -141,12 +139,12 @@ public class MainUI extends AppUI<MainApp> {
 
         UIContainer imageOptions = addTopRowSection(topRow, "Image");
         imageOptions.add(new UIButton("Resize", () -> app.showDialog(MainApp.RESIZE_DIALOG)));
-        UIMenuButton rotate = new UIMenuButton("Rotate");
+        UIDropdown rotate = new UIDropdown("Rotate");
         rotate.addLabel("Rotate 90° right", () -> app.rotateImage(90));
         rotate.addLabel("Rotate 90° left", () -> app.rotateImage(-90));
         rotate.addLabel("Rotate 180°", () -> app.rotateImage(180));
         imageOptions.add(rotate);
-        UIMenuButton flip = new UIMenuButton("Flip");
+        UIDropdown flip = new UIDropdown("Flip");
         flip.addLabel("Flip horizontally", () -> app.flipImageHorizontal());
         flip.addLabel("Flip vertically", () -> app.flipImageVertical());
         imageOptions.add(flip);
@@ -284,7 +282,7 @@ public class MainUI extends AppUI<MainApp> {
             final Vector4f color = MainApp.toVector4f(colorInt);
             UIColorElement button = new UIColorElement(() -> color, UISizes.COLOR_BUTTON);
             button.addLeftClickAction(() -> app.selectColor(colorInt));
-            button.setCursorShape(() -> button.mouseAbove() ? GLFW.GLFW_POINTING_HAND_CURSOR : null);
+            button.setCursorShape(() -> button.mouseAbove() ? GLFW_POINTING_HAND_CURSOR : null);
             currentRow.add(button);
 
             if ((i + 1) % NUM_COLOR_BUTTONS_PER_ROW == 0 || i + 1 == MainApp.DEFAULT_COLORS.length) {
@@ -436,14 +434,14 @@ public class MainUI extends AppUI<MainApp> {
         UIContainer container = new UIContainer(HORIZONTAL, CENTER);
         container.zeroMargin().zeroPadding().noOutline();
         UIButton minusButton = new UIButton("-", () -> sizeSetter.accept(sizeGetter.getAsInt() - 1));
-        minusButton.setCursorShape(() -> minusButton.mouseAbove() ? GLFW.GLFW_POINTING_HAND_CURSOR : null);
+        minusButton.setCursorShape(() -> minusButton.mouseAbove() ? GLFW_POINTING_HAND_CURSOR : null);
         container.add(minusButton);
         UINumberInput textSizeInput = new UINumberInput(sizeGetter, sizeSetter);
         textSizeInput.setVFillSize();
         textSizeInput.setHAlignment(CENTER);
         container.add(textSizeInput);
         UIButton plusButton = new UIButton("+", () -> sizeSetter.accept(sizeGetter.getAsInt() + 1));
-        plusButton.setCursorShape(() -> plusButton.mouseAbove() ? GLFW.GLFW_POINTING_HAND_CURSOR : null);
+        plusButton.setCursorShape(() -> plusButton.mouseAbove() ? GLFW_POINTING_HAND_CURSOR : null);
         container.add(plusButton);
         return container;
     }

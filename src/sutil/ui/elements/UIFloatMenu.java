@@ -5,8 +5,6 @@ import static org.lwjgl.glfw.GLFW.*;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
-import org.lwjgl.glfw.GLFW;
-
 import sutil.SUtil;
 import sutil.ui.KeyboardShortcut;
 import sutil.ui.UI;
@@ -112,15 +110,15 @@ public class UIFloatMenu extends UIFloatContainer {
     public void addLabel(String labelText, KeyboardShortcut shortcut) {
         int modifiers = shortcut.getModifiers();
         String rightText = "";
-        if ((modifiers & GLFW.GLFW_MOD_CONTROL) != 0)
+        if ((modifiers & GLFW_MOD_CONTROL) != 0)
             rightText += "Ctrl + ";
-        if ((modifiers & GLFW.GLFW_MOD_SHIFT) != 0)
+        if ((modifiers & GLFW_MOD_SHIFT) != 0)
             rightText += "Shift + ";
-        if ((modifiers & GLFW.GLFW_MOD_ALT) != 0)
+        if ((modifiers & GLFW_MOD_ALT) != 0)
             rightText += "Alt + ";
         int key = shortcut.getKey();
-        int scancode = GLFW.glfwGetKeyScancode(key);
-        rightText += GLFW.glfwGetKeyName(key, scancode).toUpperCase();
+        int scancode = glfwGetKeyScancode(key);
+        rightText += glfwGetKeyName(key, scancode).toUpperCase();
 
         addLabel(labelText, rightText, shortcut::run, shortcut::isPossible);
     }

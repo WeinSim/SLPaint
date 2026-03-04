@@ -1,6 +1,6 @@
 package ui;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.*;
 
 import main.ColorPicker;
 import main.apps.App;

@@ -1,8 +1,8 @@
 package renderengine.bufferobjects;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL30;
-import org.lwjgl.opengl.GL33;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL33.*;
 
 public final class IntVBO extends AttributeVBO {
 
@@ -22,8 +22,8 @@ public final class IntVBO extends AttributeVBO {
     @Override
     public void init() {
         bind();
-        GL30.glVertexAttribIPointer(attributeNumber, coordinateSize, GL11.GL_INT, 0, 0);
-        GL33.glVertexAttribDivisor(attributeNumber,
+        glVertexAttribIPointer(attributeNumber, coordinateSize, GL_INT, 0, 0);
+        glVertexAttribDivisor(attributeNumber,
                 switch (type) {
                     case VERTEX -> 0;
                     case INSTANCE -> 1;

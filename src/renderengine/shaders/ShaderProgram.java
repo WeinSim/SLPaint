@@ -1,15 +1,15 @@
 package renderengine.shaders;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL32.*;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL32;
 
 import renderengine.RawModel;
 import renderengine.bufferobjects.AttributeVBO;
@@ -51,48 +51,48 @@ public class ShaderProgram implements Cleanable {
             geometryName = String.format(type.geometryPath, name);
         fragmentName = String.format(type.fragmentPath, name);
 
-        vertexShaderID = loadShader(vertexName, GL20.GL_VERTEX_SHADER, vbos);
-        geometryShaderID = hasGeometry ? loadShader(geometryName, GL32.GL_GEOMETRY_SHADER) : 0;
-        fragmentShaderID = loadShader(fragmentName, GL20.GL_FRAGMENT_SHADER);
+        vertexShaderID = loadShader(vertexName, GL_VERTEX_SHADER, vbos);
+        geometryShaderID = hasGeometry ? loadShader(geometryName, GL_GEOMETRY_SHADER) : 0;
+        fragmentShaderID = loadShader(fragmentName, GL_FRAGMENT_SHADER);
 
-        programID = GL20.glCreateProgram();
+        programID = glCreateProgram();
 
-        GL20.glAttachShader(programID, vertexShaderID);
+        glAttachShader(programID, vertexShaderID);
         if (hasGeometry)
-            GL20.glAttachShader(programID, geometryShaderID);
-        GL20.glAttachShader(programID, fragmentShaderID);
+            glAttachShader(programID, geometryShaderID);
+        glAttachShader(programID, fragmentShaderID);
 
         int attributeNumber = 0;
         for (AttributeVBO vbo : vbos) {
-            GL20.glBindAttribLocation(programID, attributeNumber, vbo.attributeName());
+            glBindAttribLocation(programID, attributeNumber, vbo.attributeName());
             attributeNumber += vbo.getNumAttributes();
         }
         rawModel = new RawModel(vbos);
 
-        GL20.glLinkProgram(programID);
-        if (GL20.glGetProgrami(programID, GL20.GL_LINK_STATUS) == GL11.GL_FALSE) {
+        glLinkProgram(programID);
+        if (glGetProgrami(programID, GL_LINK_STATUS) == GL_FALSE) {
             System.out.format("Could not link shader \"%s\"!\n", name);
-            System.out.println(GL20.glGetProgramInfoLog(programID));
+            System.out.println(glGetProgramInfoLog(programID));
             System.exit(1);
         }
-        GL20.glValidateProgram(programID);
-        if (GL20.glGetProgrami(programID, GL20.GL_VALIDATE_STATUS) == GL11.GL_FALSE) {
+        glValidateProgram(programID);
+        if (glGetProgrami(programID, GL_VALIDATE_STATUS) == GL_FALSE) {
             System.out.format("Could not validate shader \"%s\"!\n", name);
-            System.out.println(GL20.glGetProgramInfoLog(programID));
+            System.out.println(glGetProgramInfoLog(programID));
             System.exit(1);
         }
 
         for (UniformVariable uniform : uniformVariables.values()) {
-            uniform.setLocation(GL20.glGetUniformLocation(programID, uniform.getName()));
+            uniform.setLocation(glGetUniformLocation(programID, uniform.getName()));
         }
     }
 
     public void start() {
-        GL20.glUseProgram(programID);
+        glUseProgram(programID);
     }
 
     public void stop() {
-        GL20.glUseProgram(0);
+        glUseProgram(0);
     }
 
     @Override
@@ -101,17 +101,17 @@ public class ShaderProgram implements Cleanable {
 
         boolean hasGeometry = type.hasGeometry();
 
-        GL20.glDetachShader(programID, vertexShaderID);
+        glDetachShader(programID, vertexShaderID);
         if (hasGeometry)
-            GL20.glDetachShader(programID, geometryShaderID);
-        GL20.glDetachShader(programID, fragmentShaderID);
+            glDetachShader(programID, geometryShaderID);
+        glDetachShader(programID, fragmentShaderID);
 
-        GL20.glDeleteShader(vertexShaderID);
+        glDeleteShader(vertexShaderID);
         if (hasGeometry)
-            GL20.glDeleteShader(geometryShaderID);
-        GL20.glDeleteShader(fragmentShaderID);
+            glDeleteShader(geometryShaderID);
+        glDeleteShader(fragmentShaderID);
 
-        GL20.glDeleteProgram(programID);
+        glDeleteProgram(programID);
     }
 
     public void loadUniform(String name, Object value) {
@@ -256,12 +256,12 @@ public class ShaderProgram implements Cleanable {
             System.exit(1);
         }
 
-        int shaderID = GL20.glCreateShader(type);
-        GL20.glShaderSource(shaderID, shaderSource);
-        GL20.glCompileShader(shaderID);
-        if (GL20.glGetShaderi(shaderID, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE) {
+        int shaderID = glCreateShader(type);
+        glShaderSource(shaderID, shaderSource);
+        glCompileShader(shaderID);
+        if (glGetShaderi(shaderID, GL_COMPILE_STATUS) == GL_FALSE) {
             System.out.format("Could not compile shader \"%s\"!\n", filename);
-            // System.out.println(GL20.glGetShaderInfoLog(shaderID));
+            // System.out.println(glGetShaderInfoLog(shaderID));
             System.exit(-1);
         }
         return shaderID;

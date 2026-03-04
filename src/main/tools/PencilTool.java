@@ -1,6 +1,6 @@
 package main.tools;
 
-import org.lwjgl.glfw.GLFW;
+import static org.lwjgl.glfw.GLFW.*;
 
 import main.image.Image;
 
@@ -20,7 +20,7 @@ public final class PencilTool extends ImageTool {
 
     @Override
     public void click(int x, int y, int mouseButton) {
-        if (mouseButton != GLFW.GLFW_MOUSE_BUTTON_LEFT && mouseButton != GLFW.GLFW_MOUSE_BUTTON_RIGHT)
+        if (mouseButton != GLFW_MOUSE_BUTTON_LEFT && mouseButton != GLFW_MOUSE_BUTTON_RIGHT)
             return;
 
         Image image = app.getImage();
@@ -30,8 +30,8 @@ public final class PencilTool extends ImageTool {
 
         if (x >= 0 && x < image.getWidth() && y >= 0 && y < image.getHeight()) {
             state = switch (mouseButton) {
-                case GLFW.GLFW_MOUSE_BUTTON_LEFT -> DRAWING_PRIMARY;
-                case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> DRAWING_SECONDARY;
+                case GLFW_MOUSE_BUTTON_LEFT -> DRAWING_PRIMARY;
+                case GLFW_MOUSE_BUTTON_RIGHT -> DRAWING_SECONDARY;
                 // can never happen
                 default -> 0;
             };

@@ -1,12 +1,13 @@
 package renderengine.renderers;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL13.*;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
 import org.lwjglx.util.vector.Matrix3f;
 
 import renderengine.bufferobjects.FloatVBO;
@@ -41,10 +42,10 @@ public class TextRenderer extends InstanceShapeRenderer<TextDrawCall> {
     @Override
     public void render(Matrix3f viewMatrix) {
         for (int i = 0; i < textureIDs.length; i++) {
-            GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureIDs[i]);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+            glActiveTexture(GL_TEXTURE0 + i);
+            glBindTexture(GL_TEXTURE_2D, textureIDs[i]);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         }
 
         // This looks a little wasteful, but it only takes ~3 microseconds

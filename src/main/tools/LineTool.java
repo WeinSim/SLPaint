@@ -1,6 +1,6 @@
 package main.tools;
 
-import org.lwjgl.glfw.GLFW;
+import static org.lwjgl.glfw.GLFW.*;
 
 public final class LineTool extends ImageTool {
 
@@ -27,7 +27,7 @@ public final class LineTool extends ImageTool {
     @Override
     public void click(int x, int y, int mouseButton) {
         if (state == NONE) {
-            if (mouseButton == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            if (mouseButton == GLFW_MOUSE_BUTTON_LEFT) {
                 x1 = x;
                 y1 = y;
 
@@ -49,7 +49,7 @@ public final class LineTool extends ImageTool {
 
     @Override
     public void createKeyboardShortcuts() {
-        addShortcut("line_finish", GLFW.GLFW_KEY_ESCAPE, 0, IDLE, this::finish);
+        addShortcut("line_finish", GLFW_KEY_ESCAPE, 0, IDLE, this::finish);
     }
 
     @Override

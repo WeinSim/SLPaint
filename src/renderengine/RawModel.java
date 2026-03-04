@@ -1,9 +1,9 @@
 package renderengine;
 
+import static org.lwjgl.opengl.GL30.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import org.lwjgl.opengl.GL30;
 
 import renderengine.bufferobjects.AttributeVBO;
 import renderengine.bufferobjects.Cleanable;
@@ -23,7 +23,7 @@ public class RawModel implements Cleanable {
     private int instanceCount = -1;
 
     public RawModel(ArrayList<AttributeVBO> vbos) {
-        vaoID = GL30.glGenVertexArrays();
+        vaoID = glGenVertexArrays();
         bind();
 
         this.vbos = new HashMap<>();
@@ -97,11 +97,11 @@ public class RawModel implements Cleanable {
     }
 
     public void bind() {
-        GL30.glBindVertexArray(vaoID);
+        glBindVertexArray(vaoID);
     }
 
     public void unbind() {
-        GL30.glBindVertexArray(0);
+        glBindVertexArray(0);
     }
 
     @Override
@@ -109,7 +109,7 @@ public class RawModel implements Cleanable {
         for (VBO vbo : vbos())
             vbo.cleanUp();
 
-        GL30.glDeleteVertexArrays(vaoID);
+        glDeleteVertexArrays(vaoID);
     }
 
     public int vertexCount() {

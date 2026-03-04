@@ -1,11 +1,12 @@
 package renderengine.renderers;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.*;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
 import org.lwjglx.util.vector.Matrix3f;
 
 import renderengine.RawModel;
@@ -18,7 +19,7 @@ import renderengine.shaders.ShaderType;
 
 public abstract class ShapeRenderer<C extends DrawCall> implements Cleanable {
 
-    protected static final int NUM_TEXTURE_UNITS = GL11.glGetInteger(GL20.GL_MAX_TEXTURE_IMAGE_UNITS);
+    protected static final int NUM_TEXTURE_UNITS = glGetInteger(GL_MAX_TEXTURE_IMAGE_UNITS);
 
     protected final RawModel model;
     protected final ShaderProgram shaderProgram;

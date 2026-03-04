@@ -1,7 +1,8 @@
 package renderengine.renderers;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL31;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL31.*;
+
 import org.lwjglx.util.vector.Matrix3f;
 import org.lwjglx.util.vector.Vector2f;
 
@@ -25,7 +26,7 @@ public abstract class InstanceShapeRenderer<C extends DrawCall> extends ShapeRen
         model.bind();
         model.enableVBOs();
         while (prepareNextDrawcall())
-            GL31.glDrawArraysInstanced(GL11.GL_TRIANGLE_STRIP, 0, model.vertexCount(), model.instanceCount());
+            glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, model.vertexCount(), model.instanceCount());
         model.disableVBOs();
 
         shaderProgram.stop();
@@ -43,7 +44,7 @@ public abstract class InstanceShapeRenderer<C extends DrawCall> extends ShapeRen
         cornerPos.putData(new Vector2f(1f, 0f));
         cornerPos.putData(new Vector2f(0f, 1f));
         cornerPos.putData(new Vector2f(1f, 1f));
-        
+
         model.finishVertexVBOs();
     }
 }

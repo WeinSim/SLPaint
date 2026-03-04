@@ -1,10 +1,11 @@
 package renderengine.bufferobjects;
 
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL20.*;
+
 import java.nio.ByteBuffer;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL15;
-import org.lwjgl.opengl.GL20;
 
 public abstract class AttributeVBO extends VBO {
 
@@ -38,10 +39,10 @@ public abstract class AttributeVBO extends VBO {
     public void storeDataInAttributeList() {
         bind();
         buffer.flip();
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, 
+        glBufferData(GL_ARRAY_BUFFER, buffer, 
             switch (type) {
-                case VERTEX -> GL15.GL_STATIC_DRAW;
-                case INSTANCE -> GL15.GL_DYNAMIC_DRAW;
+                case VERTEX -> GL_STATIC_DRAW;
+                case INSTANCE -> GL_DYNAMIC_DRAW;
             }
         );
         unbind();
@@ -57,21 +58,21 @@ public abstract class AttributeVBO extends VBO {
     }
 
     public void bind() {
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboID);
+        glBindBuffer(GL_ARRAY_BUFFER, vboID);
     }
 
     public void unbind() {
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     public void enable() {
         for (int i = 0; i < getNumAttributes(); i++)
-            GL20.glEnableVertexAttribArray(attributeNumber + i);
+            glEnableVertexAttribArray(attributeNumber + i);
     }
 
     public void disable() {
         for (int i = 0; i < getNumAttributes(); i++)
-            GL20.glDisableVertexAttribArray(attributeNumber + i);
+            glDisableVertexAttribArray(attributeNumber + i);
     }
 
     public VBOType type() {

@@ -1,7 +1,7 @@
 package renderengine.bufferobjects;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL30;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL30.*;
 
 public class FrameBufferObject implements Cleanable {
 
@@ -17,28 +17,28 @@ public class FrameBufferObject implements Cleanable {
         // https://learnopengl.com/Advanced-OpenGL/Framebuffers
 
         // create framebuffer
-        fboID = GL30.glGenFramebuffers();
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, fboID);
+        fboID = glGenFramebuffers();
+        glBindFramebuffer(GL_FRAMEBUFFER, fboID);
 
         // create texture
-        textureID = GL11.glGenTextures();
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE,
+        textureID = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                 (int[]) null);
-        // GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER,
-        // GL30.GL_LINEAR_MIPMAP_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+        // GL_LINEAR_MIPMAP_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         // unbind texture
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
         // attach texture to framebuffer
-        GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, textureID, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureID, 0);
     }
 
     @Override
     public void cleanUp() {
-        GL30.glDeleteFramebuffers(fboID);
-        GL11.glDeleteTextures(textureID);
+        glDeleteFramebuffers(fboID);
+        glDeleteTextures(textureID);
     }
 }

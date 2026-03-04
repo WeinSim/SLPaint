@@ -167,8 +167,8 @@ public class Window {
         }
 
         GL.createCapabilities();
-        // GL11.glEnable(GL43.GL_DEBUG_OUTPUT);
-        // GL43.glDebugMessageCallback((source, type, id, severity, length, message,
+        // glEnable(GL_DEBUG_OUTPUT);
+        // glDebugMessageCallback((source, type, id, severity, length, message,
         // userParam) -> {
         // System.err.println(GLDebugMessageCallback.getMessage(length, message));
         // }, 0);

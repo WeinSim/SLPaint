@@ -1,12 +1,14 @@
 package renderengine;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL14.*;
+import static org.lwjgl.opengl.GL30.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL30;
 import org.lwjglx.util.vector.Matrix3f;
 import org.lwjglx.util.vector.Vector3f;
 import org.lwjglx.util.vector.Vector4f;
@@ -110,20 +112,20 @@ public class UIRenderMaster {
     }
 
     public void start() {
-        GL11.glEnable(GL11.GL_BLEND);
-        GL30.glBlendFuncSeparate(
-                GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, // rgb
-                GL11.GL_ONE_MINUS_DST_ALPHA, GL11.GL_ONE); // alpha
-
-        GL11.glEnable(GL13.GL_MULTISAMPLE);
-
-        GL11.glDisable(GL11.GL_CULL_FACE);
-
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glDepthFunc(GL11.GL_LEQUAL);
-        GL11.glDepthMask(true);
-
         defaultFramebuffer();
+
+        glEnable(GL_BLEND);
+        glBlendFuncSeparate(
+                GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, // rgb
+                GL_ONE_MINUS_DST_ALPHA, GL_ONE); // alpha
+
+        glEnable(GL_MULTISAMPLE);
+
+        glDisable(GL_CULL_FACE);
+
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+        glDepthMask(true);
 
         uiMatrixStack.clear();
         uiMatrix = new Matrix3f();
@@ -236,20 +238,20 @@ public class UIRenderMaster {
 
     public void framebuffer(FrameBufferObject framebuffer) {
         int fboID = framebuffer == null ? 0 : framebuffer.fboID;
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, fboID);
+        glBindFramebuffer(GL_FRAMEBUFFER, fboID);
 
         int[] size = framebuffer == null
                 ? app.getDisplaySize()
                 : new int[] { framebuffer.width, framebuffer.height };
-        GL11.glViewport(0, 0, size[0], size[1]);
+        glViewport(0, 0, size[0], size[1]);
 
         currentFramebuffer = framebuffer;
     }
 
     public void setBGColor(Vector4f bgColor) {
-        GL11.glClearColor(bgColor.x, bgColor.y, bgColor.z, bgColor.w);
-        GL11.glClearDepth(1.0);
-        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+        glClearColor(bgColor.x, bgColor.y, bgColor.z, bgColor.w);
+        glClearDepth(1.0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
     public void rect(SVector position, SVector size) {

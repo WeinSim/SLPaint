@@ -1,5 +1,8 @@
 package main.image;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
+
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -8,8 +11,6 @@ import java.nio.IntBuffer;
 import java.util.Arrays;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
 
 import renderengine.bufferobjects.Cleanable;
 import sutil.SUtil;
@@ -30,7 +31,7 @@ public class Image implements Cleanable {
     private int dirtyMaxY;
 
     public Image(BufferedImage image) {
-        textureID = GL11.glGenTextures();
+        textureID = glGenTextures();
 
         setBufferedImage(image);
     }
@@ -79,29 +80,29 @@ public class Image implements Cleanable {
         buffer.put(pixelArray);
         buffer.flip();
 
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
 
         if (subArea) {
             int dirtyWidth = dirtyMaxX - dirtyMinX + 1,
                     dirtyHeight = dirtyMaxY - dirtyMinY + 1;
 
-            GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, width);
-            GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_PIXELS, dirtyMinX);
-            GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_ROWS, dirtyMinY);
+            glPixelStorei(GL_UNPACK_ROW_LENGTH, width);
+            glPixelStorei(GL_UNPACK_SKIP_PIXELS, dirtyMinX);
+            glPixelStorei(GL_UNPACK_SKIP_ROWS, dirtyMinY);
 
-            GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, dirtyMinX, dirtyMinY, dirtyWidth, dirtyHeight, GL12.GL_BGRA,
-                    GL12.GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, dirtyMinX, dirtyMinY, dirtyWidth, dirtyHeight, GL_BGRA,
+                    GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
 
             dirty = false;
 
-            GL11.glPixelStorei(GL11.GL_UNPACK_ROW_LENGTH, 0);
-            GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_PIXELS, 0);
-            GL11.glPixelStorei(GL11.GL_UNPACK_SKIP_ROWS, 0);
+            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+            glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+            glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
         } else {
-            GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 4);
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
-            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, height, 0, GL12.GL_BGRA,
-                    GL12.GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA,
+                    GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
         }
     }
 
@@ -451,7 +452,7 @@ public class Image implements Cleanable {
 
     @Override
     public void cleanUp() {
-        GL11.glDeleteTextures(textureID);
+        glDeleteTextures(textureID);
     }
 
     /**

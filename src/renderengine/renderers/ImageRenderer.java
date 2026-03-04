@@ -1,9 +1,10 @@
 package renderengine.renderers;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL13.*;
+
 import java.util.ArrayList;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
 import org.lwjglx.util.vector.Matrix3f;
 
 import renderengine.bufferobjects.FloatVBO;
@@ -65,13 +66,13 @@ public class ImageRenderer extends InstanceShapeRenderer<ImageDrawCall> {
         for (int i = 0; i < textureIDs.length; i++) {
             int textureID = textureIDs[i];
             if (textureID != NO_TEXTURE) {
-                GL13.glActiveTexture(GL13.GL_TEXTURE0 + i);
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+                glActiveTexture(GL_TEXTURE0 + i);
+                glBindTexture(GL_TEXTURE_2D, textureID);
 
-                // GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER,
-                // GL11.GL_NEAREST);
-                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-                GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                // GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             }
         }
 
@@ -111,6 +112,6 @@ public class ImageRenderer extends InstanceShapeRenderer<ImageDrawCall> {
     public void cleanUp() {
         super.cleanUp();
 
-        GL11.glDeleteTextures(textureIDs);
+        glDeleteTextures(textureIDs);
     }
 }

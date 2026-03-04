@@ -1,8 +1,8 @@
 package ui.components;
 
-import java.util.function.BooleanSupplier;
+import static org.lwjgl.glfw.GLFW.*;
 
-import org.lwjgl.glfw.GLFW;
+import java.util.function.BooleanSupplier;
 
 import main.apps.MainApp;
 import main.tools.Resizable;
@@ -20,11 +20,11 @@ public class SizeKnob extends DragKnob {
 
         int cursorShape;
         if (dx == 1)
-            cursorShape = GLFW.GLFW_RESIZE_NS_CURSOR;
+            cursorShape = GLFW_RESIZE_NS_CURSOR;
         else if (dy == 1)
-            cursorShape = GLFW.GLFW_RESIZE_EW_CURSOR;
+            cursorShape = GLFW_RESIZE_EW_CURSOR;
         else
-            cursorShape = GLFW.GLFW_RESIZE_ALL_CURSOR;
+            cursorShape = GLFW_RESIZE_ALL_CURSOR;
 
         Anchor parentAnchor = Anchor.fromOffsets(dx, dy);
 

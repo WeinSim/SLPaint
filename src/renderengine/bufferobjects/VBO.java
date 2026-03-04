@@ -1,8 +1,9 @@
 package renderengine.bufferobjects;
 
+import static org.lwjgl.opengl.GL15.*;
+
 import java.nio.ByteBuffer;
 
-import org.lwjgl.opengl.GL15;
 import org.lwjglx.util.vector.Matrix2f;
 import org.lwjglx.util.vector.Matrix3f;
 import org.lwjglx.util.vector.Matrix4f;
@@ -17,7 +18,7 @@ public abstract class VBO implements Cleanable {
     protected final int vboID;
 
     public VBO() {
-        vboID = GL15.glGenBuffers();
+        vboID = glGenBuffers();
     }
 
     public static void put(Object data, int coordinateSize, ByteBuffer buffer, boolean addStd140Padding) {
@@ -129,6 +130,6 @@ public abstract class VBO implements Cleanable {
 
     @Override
     public void cleanUp() {
-        GL15.glDeleteBuffers(vboID);
+        glDeleteBuffers(vboID);
     }
 }

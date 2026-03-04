@@ -1,6 +1,6 @@
 package main.tools;
 
-import org.lwjgl.glfw.GLFW;
+import static org.lwjgl.glfw.GLFW.*;
 
 import renderengine.fonts.TextFont;
 import sutil.math.SVector;
@@ -55,7 +55,7 @@ public final class TextTool extends DragTool {
 
     @Override
     public void createKeyboardShortcuts() {
-        addShortcut("text_finish", GLFW.GLFW_KEY_ESCAPE, 0, IDLE, this::finish);
+        addShortcut("text_finish", GLFW_KEY_ESCAPE, 0, IDLE, this::finish);
     }
 
     @Override
