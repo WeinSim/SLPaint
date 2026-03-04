@@ -20,17 +20,17 @@ public enum UISizes implements DoubleSupplier {
     RADIO_INSIDE(10),
     TOGGLE_WIDTH(45),
     DIALOG_MARGIN(50),
-    // TOGGLE_INSIDE(13),
     // SLPaint specific stuff:
     MAIN_APP(1280, 720),
     SETTINGS_APP(900, 650),
     COLOR_BUTTON(24),
     BIG_COLOR_BUTTON(36),
+    SELECTION_BORDER(2),
     CHECKERBOARD(12),
     HUE_SAT_FIELD(200),
+    SIZE_KNOB(12),
     COLOR_PICKER_EXTRA_WINDOW(300),
-    COLOR_PICKER_PREVIEW(96, 60),
-    SIZE_KNOB(12);
+    COLOR_PICKER_PREVIEW(96, 60);
 
     public final double size;
     public final double width;

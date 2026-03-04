@@ -72,15 +72,14 @@ public class ImageFile {
         // Remove alpha channel if it is known that the format doesn't support alpha.
         BufferedImage saveImage = image;
         if (!format.supportsAlpha) {
-            BufferedImage newImage = new BufferedImage(
+            saveImage = new BufferedImage(
                     image.getWidth(),
                     image.getHeight(),
                     BufferedImage.TYPE_INT_RGB);
 
-            Graphics2D g = newImage.createGraphics();
+            Graphics2D g = saveImage.createGraphics();
             g.drawImage(image, 0, 0, Color.WHITE, null);
             g.dispose();
-            saveImage = newImage;
         }
 
         if (ImageIO.write(saveImage, format.extensions[0], file)) {

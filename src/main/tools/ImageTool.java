@@ -37,6 +37,8 @@ public abstract sealed class ImageTool permits PencilTool, LineTool, DragTool, F
 
     public abstract void finish();
 
+    public abstract void cancel();
+
     public abstract void createKeyboardShortcuts();
 
     public abstract String getName();

@@ -146,16 +146,21 @@ public class Image implements Cleanable {
                 copyEndY = Math.min(oldHeight - startY, newHeight);
         int copyWidth = copyEndX - copyStartX;
 
-        for (int y = copyStartY; y < copyEndY; y++) {
-            int oldIndex = (y + startY) * oldWidth + (copyStartX + startX),
-                    newIndex = y * newWidth + copyStartX;
-            System.arraycopy(oldPixels, oldIndex, newPixels, newIndex, copyWidth);
+        if (copyWidth > 0) {
+            for (int y = copyStartY; y < copyEndY; y++) {
+                int oldIndex = (y + startY) * oldWidth + (copyStartX + startX),
+                        newIndex = y * newWidth + copyStartX;
+                System.arraycopy(oldPixels, oldIndex, newPixels, newIndex, copyWidth);
+            }
         }
 
         setBufferedImage(newImage);
     }
 
     public void resize(int newWidth, int newHeight, int[] pixels) {
+        if (newWidth == width && newHeight == height)
+            return;
+
         BufferedImage image = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
         int[] imagePixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
         System.arraycopy(pixels, 0, imagePixels, 0, pixels.length);

@@ -71,11 +71,6 @@ public abstract class UI {
 
     private boolean dragging;
 
-    /**
-     * Contains the flags of the currently held down modifier keys (Shift, Control,
-     * Alt).
-     */
-    private int modifiers;
     private boolean leftMousePressed;
     private boolean rightMousePressed;
 
@@ -86,7 +81,6 @@ public abstract class UI {
 
         selectedElement = null;
         dragging = false;
-        modifiers = 0;
         leftMousePressed = false;
         rightMousePressed = false;
 
@@ -172,7 +166,7 @@ public abstract class UI {
     }
 
     public void mouseWheel(SVector scroll) {
-        queueEvent(() -> mouseWheel(root, scroll.copy().scale(mouseWheelSensitivity), modifiers));
+        queueEvent(() -> mouseWheel(root, scroll.copy().scale(mouseWheelSensitivity), getModifiers()));
     }
 
     private boolean mouseWheel(UIElement element, SVector scroll, int mods) {
@@ -187,13 +181,6 @@ public abstract class UI {
     }
 
     public void keyPressed(int key, int mods) {
-        modifiers |= switch (key) {
-            case GLFW_KEY_LEFT_CONTROL, GLFW_KEY_RIGHT_CONTROL -> GLFW_MOD_CONTROL;
-            case GLFW_KEY_LEFT_SHIFT, GLFW_KEY_RIGHT_SHIFT -> GLFW_MOD_SHIFT;
-            case GLFW_KEY_LEFT_ALT, GLFW_KEY_RIGHT_ALT -> GLFW_MOD_ALT;
-            default -> 0;
-        };
-
         queueEvent(() -> {
             switch (key) {
                 case GLFW_KEY_TAB -> cycleSelectedElement((mods & GLFW_MOD_SHIFT) != 0);
@@ -213,17 +200,6 @@ public abstract class UI {
             for (UIElement child : container.getSoloChildren())
                 keyPressed(child, key, mods);
         }
-    }
-
-    public void keyReleased(int key, int mods) {
-        modifiers ^= 0xFFFFFFFF;
-        modifiers |= switch (key) {
-            case GLFW_KEY_LEFT_CONTROL, GLFW_KEY_RIGHT_CONTROL -> GLFW_MOD_CONTROL;
-            case GLFW_KEY_LEFT_SHIFT, GLFW_KEY_RIGHT_SHIFT -> GLFW_MOD_SHIFT;
-            case GLFW_KEY_LEFT_ALT, GLFW_KEY_RIGHT_ALT -> GLFW_MOD_ALT;
-            default -> 0;
-        };
-        modifiers ^= 0xFFFFFFFF;
     }
 
     public void charInput(char c) {
@@ -383,8 +359,10 @@ public abstract class UI {
     }
 
     public static int getModifiers() {
-        return context.modifiers;
+        return context.getModifiersImpl();
     }
+
+    protected abstract int getModifiersImpl();
 
     public static boolean isLeftMousePressed() {
         return context.leftMousePressed;

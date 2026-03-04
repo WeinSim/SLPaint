@@ -130,10 +130,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
                     if (focus)
                         ui.keyPressed(key, mods);
                 }
-                case GLFW_RELEASE -> {
-                    if (focus)
-                        ui.keyReleased(key, mods);
-                }
             }
         }
 
@@ -205,6 +201,10 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         return true;
     }
 
+    public int getModifierKeys() {
+        return window.getModifierKeys();
+    }
+
     public void requestFocus() {
         window.requestFocus();
     }
@@ -259,6 +259,12 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
 
     public void clearChildApp(int dialogType) {
         childApps.remove(dialogType);
+    }
+
+    public void closeChildApp(int dialogType) {
+        App childApp = childApps.get(dialogType);
+        if (childApp != null)
+            childApp.requestClose();
     }
 
     public final void render() {

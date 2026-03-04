@@ -123,6 +123,10 @@ public class UIFloatMenu extends UIFloatContainer {
         addLabel(labelText, rightText, shortcut::run, shortcut::isPossible);
     }
 
+    public void addLabel(String mainText, Runnable clickAction, BooleanSupplier active) {
+        addLabel(mainText, null, clickAction, active);
+    }
+
     private void addLabel(String mainText, String rightText, Runnable clickAction, BooleanSupplier active) {
         CMLabel label = new CMLabel(mainText, rightText, active);
         label.style.setBackgroundColor(

@@ -84,6 +84,11 @@ public abstract class AppUI<T extends App> extends UI {
         return font.getCharIndex(text, x / textSize * font.size);
     }
 
+    @Override
+    protected int getModifiersImpl() {
+        return app.getModifierKeys();
+    }
+
     /**
      * Returns a {@code String[]} containing the first {@code numWords} words of
      * lorem ipsum, split into lines of {@code lineLength} words each.

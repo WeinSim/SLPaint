@@ -72,9 +72,14 @@ public final class TextTool extends DragTool {
             SVector position = app.getImagePosition(app.getTextToolInput().getAbsolutePosition());
             app.renderTextToImage(text, position.x, position.y, size, TextFont.getFont(font));
             text = "";
-            app.addImageSnapshot();
         }
 
+        state = NONE;
+    }
+
+    @Override
+    public void cancel() {
+        text = "";
         state = NONE;
     }
 

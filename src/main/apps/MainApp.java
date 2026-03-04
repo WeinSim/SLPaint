@@ -1,5 +1,6 @@
 package main.apps;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -33,31 +34,19 @@ import ui.components.ImageCanvas;
  * TODO continue:
  * 
  * App:
- *   Ctrl + Shift + X
- *     Adds two image snapshots (finish() adds one and app.cropImage() adds
- *       the second one)
- *     Crashes if the selection is entirely outside of the image
- *     Behaves weirdly if selection goes past image edge
- *     Idea: set current image to selection image instead of first rendering
- *       the selection and then cropping
- *   Selection tool
- *     Selecting something and then flipping the image keeps the selection as it
- *       is (and neither flattens nor flips it). Is this the expected behavior?
- *     Add flip and rotate options for selection
  *   Keyboard shortcuts
  *     Selecting one of the radio buttons in the resize ui and pressing enter
  *       closes the resize window. => add option for keyboard shortcut to not
  *       run if something is currently selected (similar to text input).
  *     Radio buttons, toggles, etc. should also be toggled when pressing space
- *   No child apps should be open when the image changes?
- *   update() takes about twice as long when a modal dialog is open
  *   Pencil tool
- *     Sizes 1 & 2 and 3 & 4 look the same
- *     Make sizes UI prettier
  *     Drawing with a semi-transparent color has weird artifacts because some
  *       pixels are drawn multiple times on consecutive frames, resulting in
  *       the wrong opacity
  *       => Make the pencil tool also use the temp framebuffer?
+ *     Sizes 1 & 2 and 3 & 4 look the same
+ *     Make sizes UI prettier
+ *   update() takes about twice as long when a modal dialog is open
  *   Transparency
  *     Selecting a semi-transparent area and pasting it over a completely
  *       transparent area messes up the pixel colors: the semi-transparent area
@@ -86,6 +75,10 @@ import ui.components.ImageCanvas;
  *     There are multiple places where I want to set a larger margin but have
  *       to akwardly divide by the default margin because only a margin scale
  *       can be set. Solution: add UIContainer.setMargin()?
+ *   Zooming doesn't work when the mouse is above the selection / text tool
+ *     input
+ *   Change UIContainer defaults? .zeroMargin().noOutline() is used in a ton of
+ *     places and should maybe be the default.
  *   Text
  *     Text input
  *       Selection (with mouse / arrow keys / Ctrl+A)
@@ -114,10 +107,13 @@ import ui.components.ImageCanvas;
  *   Tool icons & cursors
  *     -> Pre-render icons at various texture sizes and use them as UIImages
  *   Selection are area right-click? (Same menu as "Selection" in menu bar)
+ *   Layering inconsistency: the SizeKnobs' outline appears above the dropdowns
+ *     of the top row (Rotate, Flip, font selection)
  *   Make side panel collapsable?
  *   Add options for hyperlinks in about text?
  *   Add Alt + Letter navigation options for menu bar
  *     Would require underlined letters
+ *   Add tooltips (on mouse hover)
  * 
  * Rendering:
  *   Improve UITextInput cursor visibility
@@ -158,6 +154,7 @@ import ui.components.ImageCanvas;
  *     Debug view
  * 
  * Backend:
+ *   Make SUtil a git submodule
  *   Sizes
  *     Move things that should not be part of sutil.ui into ui package
  *   GLFW key input: automatically recognize keyboard layout and remappings to
@@ -265,11 +262,7 @@ public final class MainApp extends App {
         selectedColorPicker = new ColorPicker(getSelectedColor());
         customColorButtonArray = new ColorArray(MainUI.NUM_COLOR_BUTTONS_PER_ROW);
 
-        System.out.println(initialFile);
-
-        imageManager = initialFile == null ? new ImageManager(this)
-                : new ImageManager(this, initialFile);
-        // : new ImageManager(this, "res/images/test.png");
+        imageManager = initialFile == null ? new ImageManager(this) : new ImageManager(this, initialFile);
 
         setActiveTool(ImageTool.PENCIL);
         prevTool = ImageTool.PENCIL;
@@ -363,6 +356,8 @@ public final class MainApp extends App {
      * Not to be confused with {@link MainApp#cropImage(int, int)}.
      */
     public void resizeImage(int newWidth, int newHeight) {
+        finishActiveTool();
+
         newWidth = Math.min(Math.max(MIN_IMAGE_SIZE, newWidth), MAX_IMAGE_SIZE);
         newHeight = Math.min(Math.max(MIN_IMAGE_SIZE, newHeight), MAX_IMAGE_SIZE);
 
@@ -385,15 +380,9 @@ public final class MainApp extends App {
      * {@link MainApp#resizeImage(int, int)}.
      */
     public void cropImage(int x, int y, int newWidth, int newHeight) {
+        finishActiveTool();
+
         Image image = getImage();
-        // int x0 = Math.min(Math.max(0, x), image.getWidth() - 1),
-        // y0 = Math.min(Math.max(0, y), image.getHeight() - 1),
-        // x1 = Math.min(Math.max(0, x + newWidth - 1), image.getWidth()),
-        // y1 = Math.min(Math.max(0, y + newHeight - 1), image.getHeight());
-
-        // newWidth = Math.min(Math.max(MIN_IMAGE_SIZE, x1 - x0 + 1), MAX_IMAGE_SIZE);
-        // newHeight = Math.min(Math.max(MIN_IMAGE_SIZE, y1 - y0 + 1), MAX_IMAGE_SIZE);
-
         newWidth = Math.min(Math.max(MIN_IMAGE_SIZE, newWidth), MAX_IMAGE_SIZE);
         newHeight = Math.min(Math.max(MIN_IMAGE_SIZE, newHeight), MAX_IMAGE_SIZE);
 
@@ -401,61 +390,78 @@ public final class MainApp extends App {
         renderer.setTempFBOSize(newWidth, newHeight);
         // If the top left corner of the image changes, its translation should change in
         // the opposite way such that the rest of the image stays in the same place.
-        canvas.translateImage(new SVector(x, y));
+        translateImage(x, y);
 
         addImageSnapshot();
     }
 
-    /**
-     * 
-     * @param degrees Must be either 90, -90 or 180.
-     */
-    public void rotateImage(int degrees) {
+    public void rotateImageRight() {
+        finishActiveTool();
         Image image = getImage();
-        switch (degrees) {
-            case 90 -> image.rotateRight();
-            case -90 -> image.rotateLeft();
-            case 180 -> image.rotate180();
-            default -> {
-                final String baseStr = "Illegal image rotation angle (%d). Allowed values are 90, -90 and 180.";
-                throw new IllegalArgumentException(String.format(baseStr, degrees));
-            }
-        }
-
+        image.rotateRight();
         renderer.setTempFBOSize(image.getWidth(), image.getHeight());
+        addImageSnapshot();
+    }
 
+    public void rotateImageLeft() {
+        finishActiveTool();
+        Image image = getImage();
+        image.rotateLeft();
+        renderer.setTempFBOSize(image.getWidth(), image.getHeight());
+        addImageSnapshot();
+    }
+
+    public void rotateImage180() {
+        finishActiveTool();
+        getImage().rotate180();
         addImageSnapshot();
     }
 
     public void flipImageHorizontal() {
+        finishActiveTool();
         getImage().flipHorizontal();
-
         addImageSnapshot();
     }
 
     public void flipImageVertical() {
+        finishActiveTool();
         getImage().flipVertical();
+        addImageSnapshot();
+    }
 
+    public void setImage(BufferedImage image) {
+        getImage().setBufferedImage(image);
         addImageSnapshot();
     }
 
     public void renderImageToImage(Image image, int x, int y, int width, int height) {
         renderer.renderImageToImage(image, x, y, width, height, getImage());
+        addImageSnapshot();
     }
 
     public void renderTextToImage(String text, double x, double y, double size, TextFont font) {
         renderer.renderTextToImage(text, x, y, size, toVector4f(primaryColor), font, getImage());
+        addImageSnapshot();
     }
 
     public void drawLine(int x0, int y0, int x1, int y1, int size, int color) {
         getImage().drawLine(x0, y0, x1, y1, size, color);
     }
 
-    public Image getImage() {
-        return imageManager.getImage();
+    public void translateImage(int x, int y) {
+        canvas.translateImage(new SVector(x, y));
+    }
+
+    public void finishActiveTool() {
+        activeTool.finish();
+    }
+
+    public void cancelActiveTool() {
+        activeTool.cancel();
     }
 
     public void undo() {
+        cancelActiveTool();
         imageManager.undo();
     }
 
@@ -464,6 +470,7 @@ public final class MainApp extends App {
     }
 
     public void redo() {
+        cancelActiveTool();
         imageManager.redo();
     }
 
@@ -472,10 +479,14 @@ public final class MainApp extends App {
     }
 
     public void openImage() {
+        finishActiveTool();
+        closeChildApp(RESIZE_DIALOG);
         imageManager.open();
     }
 
     public void newImage() {
+        finishActiveTool();
+        closeChildApp(RESIZE_DIALOG);
         Image image = getImage();
         imageManager.newImage(image.getWidth(), image.getHeight());
     }
@@ -484,6 +495,7 @@ public final class MainApp extends App {
      * Gets called when Ctrl+S is pressed
      */
     public void saveImage() {
+        finishActiveTool();
         imageManager.save();
     }
 
@@ -492,11 +504,16 @@ public final class MainApp extends App {
      * 
      */
     public void saveImageAs() {
+        finishActiveTool();
         imageManager.saveAs();
     }
 
     public void addImageSnapshot() {
         imageManager.addSnapshot();
+    }
+
+    public Image getImage() {
+        return imageManager.getImage();
     }
 
     public long getFilesize() {

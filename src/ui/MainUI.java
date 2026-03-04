@@ -16,6 +16,7 @@ import main.tools.DragTool;
 import main.tools.ImageTool;
 import main.tools.LineTool;
 import main.tools.PencilTool;
+import main.tools.SelectionTool;
 import main.tools.TextTool;
 import sutil.SUtil;
 import sutil.ui.UI;
@@ -102,25 +103,34 @@ public class MainUI extends AppUI<MainApp> {
         selectionMenu.addLabel("Paste", getKeyboardShortcut("paste"));
         selectionMenu.addSeparator();
         selectionMenu.addLabel("Crop image to selection", getKeyboardShortcut("crop_to_selection"));
+        selectionMenu.addSeparator();
+        UIFloatMenu selectionRotateMenu = selectionMenu.addNestedMenu("Rotate");
+        final SelectionTool selection = ImageTool.SELECTION;
+        final BooleanSupplier selectionActive = () -> selection.getState() == SelectionTool.IDLE;
+        selectionRotateMenu.addLabel("Rotate 90° right", selection::rotateRight, selectionActive);
+        selectionRotateMenu.addLabel("Rotate 90° left", selection::rotateLeft, selectionActive);
+        selectionRotateMenu.addLabel("Rotate 180°", selection::rotate180, selectionActive);
+        UIFloatMenu selectionFlipMenu = selectionMenu.addNestedMenu("Flip");
+        selectionFlipMenu.addLabel("Flip horizontally", selection::flipHorizontal, selectionActive);
+        selectionFlipMenu.addLabel("Flip vertically", selection::flipVertical, selectionActive);
 
         UIFloatMenu viewMenu = menuBar.addMenu("View");
         viewMenu.addLabel("Zoom in", getKeyboardShortcut("zoom_in"));
         viewMenu.addLabel("Zoom out", getKeyboardShortcut("zoom_out"));
         viewMenu.addLabel("Reset zoom", getKeyboardShortcut("reset_zoom"));
-        viewMenu.addSeparator();
         viewMenu.addLabel("Reset view", getKeyboardShortcut("reset_transform"));
 
         UIFloatMenu imageMenu = menuBar.addMenu("Image");
         imageMenu.addLabel("Resize", () -> app.showDialog(MainApp.RESIZE_DIALOG));
         imageMenu.addLabel("Crop", () -> app.showDialog(MainApp.CROP_DIALOG));
         imageMenu.addSeparator();
-        UIFloatMenu rotateMenu = imageMenu.addNestedMenu("Rotate");
-        rotateMenu.addLabel("Rotate 90° right", () -> app.rotateImage(90));
-        rotateMenu.addLabel("Rotate 90° left", () -> app.rotateImage(-90));
-        rotateMenu.addLabel("Rotate 180°", () -> app.rotateImage(180));
-        UIFloatMenu flipMenu = imageMenu.addNestedMenu("Flip");
-        flipMenu.addLabel("Flip horizontally", () -> app.flipImageHorizontal());
-        flipMenu.addLabel("Flip vertically", () -> app.flipImageVertical());
+        UIFloatMenu imageRotateMenu = imageMenu.addNestedMenu("Rotate");
+        imageRotateMenu.addLabel("Rotate 90° right", app::rotateImageRight);
+        imageRotateMenu.addLabel("Rotate 90° left", app::rotateImageLeft);
+        imageRotateMenu.addLabel("Rotate 180°", app::rotateImage180);
+        UIFloatMenu imageFlipMenu = imageMenu.addNestedMenu("Flip");
+        imageFlipMenu.addLabel("Flip horizontally", app::flipImageHorizontal);
+        imageFlipMenu.addLabel("Flip vertically", app::flipImageVertical);
 
         if (MainApp.DEV_BUILD) {
             UIFloatMenu debugMenu = menuBar.addMenu("Debug");
@@ -134,33 +144,140 @@ public class MainUI extends AppUI<MainApp> {
 
         root.add(menuBar);
 
-        UIContainer topRow = new UIContainer(HORIZONTAL, LEFT, CENTER, HORIZONTAL);
-        topRow.withSeparators(true).setHFillSize().setHAlignment(LEFT).withBackground().noOutline();
+        UIContainer mainRow = new UIContainer(HORIZONTAL, TOP);
+        mainRow.withSeparators(false).noBackground().noOutline();
+        mainRow.setFillSize();
 
-        UIContainer imageOptions = addTopRowSection(topRow, "Image");
+        UIContainer sidePanel = new UIContainer(VERTICAL, CENTER, TOP,
+                VERTICAL);
+        sidePanel.withSeparators(true).setVFillSize().withBackground().noOutline();
+
+        UIContainer primSecColorContainer = new UIContainer(HORIZONTAL, TOP);
+        primSecColorContainer.zeroMargin().setPaddingScale(1.0).noOutline();
+
+        for (int i = 0; i < 2; i++) {
+            final int index = i;
+            UIContainer colorContainer = new UIContainer(VERTICAL, CENTER);
+            // colorContainer.zeroMargin();
+            setSelectableButtonStyle(colorContainer, () -> app.getColorSelection() == index);
+            colorContainer.setSelectable(true);
+
+            Supplier<Vector4f> cg = i == 0
+                    ? () -> MainApp.toVector4f(app.getPrimaryColor())
+                    : () -> MainApp.toVector4f(app.getSecondaryColor());
+            colorContainer.add(new UIColorElement(cg, UISizes.BIG_COLOR_BUTTON));
+            UILabel label = new UILabel(String.format("%s\nColor", i == 0 ? "Primary" : "Secondary"),
+                    UISizes.TEXT_SMALL);
+            label.setAlignment(CENTER);
+            label.zeroMargin();
+            colorContainer.add(label);
+
+            colorContainer.addLeftClickAction(() -> app.setColorSelection(index));
+
+            primSecColorContainer.add(colorContainer);
+        }
+
+        sidePanel.add(primSecColorContainer);
+
+        final double colorPaddingScale = 1.0;
+
+        UIContainer allColors = new UIContainer(VERTICAL, LEFT);
+        allColors.zeroMargin().setPaddingScale(colorPaddingScale).noOutline();
+        UIContainer currentRow = null;
+        for (int i = 0; i < MainApp.DEFAULT_COLORS.length; i++) {
+            if (currentRow == null) {
+                currentRow = new UIContainer(HORIZONTAL, CENTER);
+                currentRow.zeroMargin().setPaddingScale(colorPaddingScale).noOutline();
+            }
+
+            final int colorInt = MainApp.DEFAULT_COLORS[i];
+            final Vector4f color = MainApp.toVector4f(colorInt);
+            UIColorElement button = new UIColorElement(() -> color, UISizes.COLOR_BUTTON);
+            button.addLeftClickAction(() -> app.selectColor(colorInt));
+            button.setCursorShape(() -> button.mouseAbove() ? GLFW_POINTING_HAND_CURSOR : null);
+            currentRow.add(button);
+
+            if ((i + 1) % NUM_COLOR_BUTTONS_PER_ROW == 0 || i + 1 == MainApp.DEFAULT_COLORS.length) {
+                allColors.add(currentRow);
+                currentRow = null;
+            }
+        }
+        CustomColorContainer ccc = new CustomColorContainer(HORIZONTAL,
+                app.getCustomColorButtonArray(),
+                c -> app.selectColor(MainApp.toInt(c)));
+        ccc.zeroMargin().setPaddingScale(colorPaddingScale).noOutline();
+        allColors.add(ccc);
+        sidePanel.add(allColors);
+
+        sidePanel.add(new ColorPickContainer(
+                app.getSelectedColorPicker(),
+                app::addCustomColor,
+                VERTICAL,
+                true,
+                false));
+
+        UIContainer debugPanel = new UIContainer(VERTICAL, LEFT, TOP,
+                VERTICAL);
+        debugPanel.setFillSize().noOutline();
+
+        // UIImage debugImage = new UIImage(() -> app.getImage().getTextureID(), new
+        // SVector(200, 200));
+        // debugImage.withOutline();
+        // debugPanel.add(debugImage);
+
+        debugPanel.add(new UIText("Tools"));
+        for (ImageTool tool : ImageTool.INSTANCES) {
+            debugPanel.add(new UIText(() -> String.format(" %s: state = %d", tool.getName(), tool.getState())));
+        }
+        debugPanel.add(new UIText(() -> String.format("Active tool: %s", app.getActiveTool().getName())));
+        debugPanel.add(new UIText(() -> String.format(" State: %d", app.getActiveTool().getState())));
+        debugPanel.add(new UIText(() -> String.format("TextTool.text: \"%s\"", ImageTool.TEXT.getText())));
+        debugPanel.add(new UIText(() -> String.format("TextTool.font: \"%s\"", ImageTool.TEXT.getFont())));
+
+        // debugPanel.add(new UIText(" "));
+        // String[] lipsum = lipsum(Integer.MAX_VALUE, 3);
+        // for (int i = 0; i < 20; i++) {
+        // debugPanel.add(new UILabel(lipsum));
+        // }
+
+        // debugPanel.add(new UITextInput(this::getDebugString, this::setDebugString,
+        // true));
+
+        // sidePanel.add(debugPanel.addScrollbars());
+
+        mainRow.add(sidePanel.addScrollbars());
+
+        UIContainer mainArea = new UIContainer(VERTICAL, TOP);
+        mainArea.withSeparators(false).noOutline();
+        mainArea.setFillSize();
+
+        UIContainer toolRow = new UIContainer(HORIZONTAL, LEFT, CENTER, HORIZONTAL);
+        toolRow.withSeparators(true).setHFillSize().setHAlignment(LEFT).withBackground().noOutline();
+
+        UIContainer imageOptions = addTopRowSection(toolRow, "Image");
         imageOptions.add(new UIButton("Resize", () -> app.showDialog(MainApp.RESIZE_DIALOG)));
-        UIDropdown rotate = new UIDropdown("Rotate");
-        rotate.addLabel("Rotate 90° right", () -> app.rotateImage(90));
-        rotate.addLabel("Rotate 90° left", () -> app.rotateImage(-90));
-        rotate.addLabel("Rotate 180°", () -> app.rotateImage(180));
-        imageOptions.add(rotate);
-        UIDropdown flip = new UIDropdown("Flip");
-        flip.addLabel("Flip horizontally", () -> app.flipImageHorizontal());
-        flip.addLabel("Flip vertically", () -> app.flipImageVertical());
-        imageOptions.add(flip);
+        UIDropdown rotateImage = new UIDropdown("Rotate");
+        rotateImage.addLabel("Rotate 90° right", app::rotateImageRight);
+        rotateImage.addLabel("Rotate 90° left", app::rotateImageLeft);
+        rotateImage.addLabel("Rotate 180°", app::rotateImage180);
+        imageOptions.add(rotateImage);
+        UIDropdown flipImage = new UIDropdown("Flip");
+        flipImage.addLabel("Flip horizontally", app::flipImageHorizontal);
+        flipImage.addLabel("Flip vertically", app::flipImageVertical);
+        imageOptions.add(flipImage);
 
-        UIContainer toolbox = addTopRowSection(topRow, "Tools");
+        UIContainer toolbox = addTopRowSection(toolRow, "Tools");
         toolbox.setOrientation(VERTICAL);
-        final int toolsPerRow = 3;
-        UIContainer toolRow = null;
+        final int toolsPerRow = 6;
+        UIContainer currentToolRow = null;
         for (int i = 0; i < ImageTool.INSTANCES.length; i++) {
             if (i % toolsPerRow == 0) {
-                toolRow = new UIContainer(HORIZONTAL, CENTER);
-                toolRow.zeroMargin().noOutline();
+                currentToolRow = new UIContainer(HORIZONTAL, CENTER);
+                currentToolRow.zeroMargin().noOutline();
             }
-            toolRow.add(new ToolButton(app, ImageTool.INSTANCES[i]));
+            currentToolRow.add(new ToolButton(app, ImageTool.INSTANCES[i]));
             if ((i + 1) % toolsPerRow == 0 || i == ImageTool.INSTANCES.length - 1)
-                toolbox.add(toolRow);
+                toolbox.add(currentToolRow);
         }
 
         // Used for pencil size and line size
@@ -200,20 +317,42 @@ public class MainUI extends AppUI<MainApp> {
         sizeBottomRow.add(createIntPicker(sizeSupplier, sizeConsumer));
 
         sizeTools.add(sizeBottomRow);
-        topRow.add(sizeTools);
+        toolRow.add(sizeTools);
 
-        UIToggleList selectionTools = new UIToggleList();
+        UIContainer selectionTools = new UIContainer(VERTICAL, CENTER);
+        selectionTools.zeroMargin().setPaddingScale(2.0).noOutline();
         selectionTools.setVisibilitySupplier(() -> app.getActiveTool() == ImageTool.SELECTION);
+        UIContainer selectionToolsTop = new UIContainer(HORIZONTAL, CENTER);
+        selectionToolsTop.zeroMargin().setPaddingScale(2.0).noOutline();
 
-        selectionTools.addToggle("Transparent selection",
+        UIContainer selectionButtons = new UIContainer(HORIZONTAL, LEFT);
+        selectionButtons.zeroMargin().noOutline();
+        UIDropdown rotateSelection = new UIDropdown("Rotate");
+        // rotateSelection.setHFillSize();
+        rotateSelection.addLabel("Rotate 90° right", selection::rotateRight);
+        rotateSelection.addLabel("Rotate 90° left", selection::rotateLeft);
+        rotateSelection.addLabel("Rotate 180°", selection::rotate180);
+        selectionButtons.add(rotateSelection);
+        UIDropdown flipSelection = new UIDropdown("Flip");
+        // flipSelection.setHFillSize();
+        flipSelection.addLabel("Flip horizontally", selection::flipHorizontal);
+        flipSelection.addLabel("Flip vertically", selection::flipVertical);
+        selectionButtons.add(flipSelection);
+        selectionToolsTop.add(selectionButtons);
+
+        UIToggleList selectionToggles = new UIToggleList();
+        selectionToggles.setOrientation(HORIZONTAL).setPaddingScale(2.0);
+        selectionToggles.addToggle("Transparent selection",
                 MainApp::isTransparentSelection,
                 MainApp::setTransparentSelection);
-
-        selectionTools.addToggle("Lock selection ratio",
+        selectionToggles.addToggle("Lock aspect ratio",
                 MainApp::isLockSelectionRatio,
                 MainApp::setLockSelectionRatio);
+        selectionToolsTop.add(selectionToggles);
 
-        topRow.add(selectionTools);
+        selectionTools.add(selectionToolsTop);
+        selectionTools.add(new UIText("Selection", UISizes.TEXT_SMALL));
+        toolRow.add(selectionTools);
 
         UIContainer textTools = new UIContainer(HORIZONTAL, CENTER);
         textTools.zeroMargin().setVFillSize().noOutline();
@@ -239,112 +378,15 @@ public class MainUI extends AppUI<MainApp> {
         textFontContainer.add(new UIText("Font", UISizes.TEXT_SMALL));
         textTools.add(textFontContainer);
 
-        topRow.add(textTools);
+        toolRow.add(textTools);
 
-        UIContainer primSecColorContainer = new UIContainer(HORIZONTAL, TOP);
-        primSecColorContainer.zeroMargin().setPaddingScale(1.0).noOutline();
+        // topRow.add(new UIContainer(0, 0).setHFillSize().noOutline());
 
-        for (int i = 0; i < 2; i++) {
-            final int index = i;
-            UIContainer colorContainer = new UIContainer(VERTICAL, CENTER);
-            // colorContainer.zeroMargin();
-            setSelectableButtonStyle(colorContainer, () -> app.getColorSelection() == index);
-            colorContainer.setSelectable(true);
+        mainArea.add(toolRow.addScrollbars().setHFillSize());
 
-            Supplier<Vector4f> cg = i == 0
-                    ? () -> MainApp.toVector4f(app.getPrimaryColor())
-                    : () -> MainApp.toVector4f(app.getSecondaryColor());
-            colorContainer.add(new UIColorElement(cg, UISizes.BIG_COLOR_BUTTON));
-            UILabel label = new UILabel(String.format("%s\nColor", i == 0 ? "Primary" : "Secondary"));
-            label.setAlignment(CENTER);
-            label.zeroMargin();
-            colorContainer.add(label);
+        mainArea.add(new ImageCanvas(VERTICAL, RIGHT, TOP, app));
 
-            colorContainer.addLeftClickAction(() -> app.setColorSelection(index));
-
-            primSecColorContainer.add(colorContainer);
-        }
-
-        topRow.add(primSecColorContainer);
-
-        final double colorPaddingScale = 1.0;
-
-        UIContainer allColors = new UIContainer(VERTICAL, LEFT);
-        allColors.zeroMargin().setPaddingScale(colorPaddingScale).noOutline();
-        UIContainer currentRow = null;
-        for (int i = 0; i < MainApp.DEFAULT_COLORS.length; i++) {
-            if (currentRow == null) {
-                currentRow = new UIContainer(HORIZONTAL, CENTER);
-                currentRow.zeroMargin().setPaddingScale(colorPaddingScale).noOutline();
-            }
-
-            final int colorInt = MainApp.DEFAULT_COLORS[i];
-            final Vector4f color = MainApp.toVector4f(colorInt);
-            UIColorElement button = new UIColorElement(() -> color, UISizes.COLOR_BUTTON);
-            button.addLeftClickAction(() -> app.selectColor(colorInt));
-            button.setCursorShape(() -> button.mouseAbove() ? GLFW_POINTING_HAND_CURSOR : null);
-            currentRow.add(button);
-
-            if ((i + 1) % NUM_COLOR_BUTTONS_PER_ROW == 0 || i + 1 == MainApp.DEFAULT_COLORS.length) {
-                allColors.add(currentRow);
-                currentRow = null;
-            }
-        }
-        CustomColorContainer ccc = new CustomColorContainer(app.getCustomColorButtonArray(),
-                c -> app.selectColor(MainApp.toInt(c)));
-        ccc.zeroMargin().setPaddingScale(colorPaddingScale).noOutline();
-        allColors.add(ccc);
-        topRow.add(allColors);
-
-        root.add(topRow.addScrollbars().setHFillSize());
-
-        UIContainer mainRow = new UIContainer(HORIZONTAL, TOP);
-        mainRow.withSeparators(false).noBackground().noOutline();
-        mainRow.setFillSize();
-
-        mainRow.add(new ImageCanvas(VERTICAL, RIGHT, TOP, app));
-
-        UIContainer sidePanel = new UIContainer(VERTICAL, CENTER, TOP,
-                VERTICAL);
-        sidePanel.withSeparators(true).setVFillSize().withBackground().noOutline();
-
-        sidePanel.add(new ColorPickContainer(
-                app.getSelectedColorPicker(),
-                app::addCustomColor,
-                VERTICAL,
-                true,
-                false));
-
-        UIContainer debugPanel = new UIContainer(VERTICAL, LEFT, TOP,
-                VERTICAL);
-        debugPanel.setFillSize().noOutline();
-
-        // UIImage debugImage = new UIImage(() -> app.getImage().getTextureID(), new
-        // SVector(200, 200));
-        // debugImage.withOutline();
-        // debugPanel.add(debugImage);
-
-        debugPanel.add(new UIText("Tools"));
-        for (ImageTool tool : ImageTool.INSTANCES) {
-            debugPanel.add(new UIText(() -> String.format(" %s: state = %d", tool.getName(), tool.getState())));
-        }
-        debugPanel.add(new UIText(() -> String.format("Active tool: %s", app.getActiveTool().getName())));
-        debugPanel.add(new UIText(() -> String.format(" State: %d", app.getActiveTool().getState())));
-        debugPanel.add(new UIText(() -> String.format("TextTool.text: \"%s\"", ImageTool.TEXT.getText())));
-        debugPanel.add(new UIText(() -> String.format("TextTool.font: \"%s\"", ImageTool.TEXT.getFont())));
-
-        // debugPanel.add(new UIText(" "));
-        // String[] lipsum = lipsum(Integer.MAX_VALUE, 3);
-        // for (int i = 0; i < 20; i++) {
-        // debugPanel.add(new UILabel(lipsum));
-        // }
-
-        // debugPanel.add(new UITextInput(this::getDebugString, this::setDebugString,
-        // true));
-
-        // sidePanel.add(debugPanel.addScrollbars());
-
-        mainRow.add(sidePanel.addScrollbars());
+        mainRow.add(mainArea);
 
         root.add(mainRow);
 

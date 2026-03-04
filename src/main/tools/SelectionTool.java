@@ -58,8 +58,14 @@ public final class SelectionTool extends DragTool {
         finish(true);
     }
 
+    @Override
+    public void cancel() {
+        finish(false);
+    }
+
     public void deleteSelection() {
         finish(false);
+        app.addImageSnapshot();
     }
 
     private void finish(boolean renderToImage) {
@@ -68,7 +74,6 @@ public final class SelectionTool extends DragTool {
                 app.renderImageToImage(selection, x, y, width, height);
             selection.cleanUp();
             selection = null;
-            app.addImageSnapshot();
         }
 
         state = NONE;
@@ -122,8 +127,45 @@ public final class SelectionTool extends DragTool {
         if (state != IDLE)
             return;
 
-        finish();
-        app.cropImage(x, y, width, height);
+        app.setImage(selection.getBufferedImage());
+        app.translateImage(x, y);
+        finish(false);
+    }
+
+    public void rotateRight() {
+        if (state != IDLE)
+            return;
+        selection.rotateRight();
+        int temp = width;
+        width = height;
+        height = temp;
+    }
+
+    public void rotateLeft() {
+        if (state != IDLE)
+            return;
+        selection.rotateLeft();
+        int temp = width;
+        width = height;
+        height = temp;
+    }
+
+    public void rotate180() {
+        if (state != IDLE)
+            return;
+        selection.rotate180();
+    }
+
+    public void flipHorizontal() {
+        if (state != IDLE)
+            return;
+        selection.flipHorizontal();
+    }
+
+    public void flipVertical() {
+        if (state != IDLE)
+            return;
+        selection.flipVertical();
     }
 
     @Override

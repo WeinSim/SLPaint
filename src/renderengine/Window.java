@@ -260,6 +260,23 @@ public class Window {
         return nativeWindowHandle;
     }
 
+    public int getModifierKeys() {
+        int mods = 0;
+        int[] flags = { GLFW_MOD_SHIFT, GLFW_MOD_CONTROL, GLFW_MOD_ALT, GLFW_MOD_SUPER };
+        int[] keys = {
+                GLFW_KEY_LEFT_SHIFT, GLFW_KEY_RIGHT_SHIFT,
+                GLFW_KEY_LEFT_CONTROL, GLFW_KEY_RIGHT_CONTROL,
+                GLFW_KEY_LEFT_ALT, GLFW_KEY_RIGHT_ALT,
+                GLFW_KEY_LEFT_SUPER, GLFW_KEY_RIGHT_SUPER
+        };
+        for (int i = 0; i < flags.length; i++) {
+            if (glfwGetKey(windowHandle, keys[2 * i]) == GLFW_PRESS
+                    || glfwGetKey(windowHandle, keys[2 * i + 1]) == GLFW_PRESS)
+                mods |= flags[i];
+        }
+        return mods;
+    }
+
     public SVector getMousePosition() {
         if (mousePos == null) {
             double[] x = { 0 };

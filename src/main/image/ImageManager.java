@@ -69,7 +69,10 @@ public class ImageManager {
         if (checkUnsavedChanges())
             return;
 
-        app.queueEvent(() -> setEverything(null, createNewImage(width, height)));
+        app.queueEvent(() -> {
+            setEverything(null, createNewImage(width, height));
+            app.resetImageTransform();
+        });
     }
 
     /**
@@ -129,7 +132,10 @@ public class ImageManager {
 
         final ImageFile finalNewFile = newFile;
         final BufferedImage finalBufferedImage = bufferedImage;
-        app.queueEvent(() -> setEverything(finalNewFile, new Image(finalBufferedImage)));
+        app.queueEvent(() -> {
+            setEverything(finalNewFile, new Image(finalBufferedImage));
+            app.resetImageTransform();
+        });
     }
 
     /**
@@ -220,6 +226,7 @@ public class ImageManager {
             if (success)
                 break;
 
+            // TODO: shouldn't this return false when UI.NO_OPTION is selected?
             if (showErrorDialog("save") == UI.OK_OPTION)
                 continue;
             else
@@ -233,17 +240,11 @@ public class ImageManager {
         int numFilters = addIndividualFiletypes ? formats.length + 1 : 1;
         NFDFilterItem.Buffer filters = NFDFilterItem.malloc(numFilters);
         int index = 0;
-        // String name = "Image Files (";
         String spec = "";
         for (ImageFormat format : formats) {
-            for (String extension : format.extensions) {
-                // name += "*.%s, ".formatted(extension);
+            for (String extension : format.extensions)
                 spec += extension + ",";
-            }
         }
-        // int len = name.length();
-        // name = name.substring(0, len - 2);
-        // name += ")";
         spec = spec.substring(0, spec.length() - 1);
         filters.get(index++)
                 .name(stack.UTF8("Image Files"))
@@ -292,10 +293,12 @@ public class ImageManager {
     }
 
     public boolean hasUnsavedChanges() {
-        if (imageHistory.size() == 1)
-            return false;
-        if (imageFile == null)
-            return true;
+        // if (imageHistory.size() == 1)
+        // return false;
+        // if (imageFile == null)
+        // return true;
+        if (imageFile == null || imageFile.getLastSavedImage() == null)
+            return imageHistory.canUndo();
         return imageHistory.getCurrentImage() != imageFile.getLastSavedImage();
     }
 

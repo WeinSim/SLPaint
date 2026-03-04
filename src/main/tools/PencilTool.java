@@ -43,6 +43,10 @@ public final class PencilTool extends ImageTool {
     }
 
     @Override
+    public void cancel() {
+    }
+
+    @Override
     public void createKeyboardShortcuts() {
     }
 

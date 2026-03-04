@@ -47,6 +47,10 @@ public final class LineTool extends ImageTool {
         }
     }
 
+    public void cancel() {
+        state = NONE;
+    }
+
     @Override
     public void createKeyboardShortcuts() {
         addShortcut("line_finish", GLFW_KEY_ESCAPE, 0, IDLE, this::finish);

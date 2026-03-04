@@ -64,6 +64,10 @@ public final class FillBucketTool extends ImageTool {
     }
 
     @Override
+    public void cancel() {
+    }
+
+    @Override
     public String getName() {
         return "Fill Bucket";
     }

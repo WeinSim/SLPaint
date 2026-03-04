@@ -115,7 +115,8 @@ public class SettingsUI extends AppUI<SettingsApp> {
 
         UIContainer customColors = new UIContainer(VERTICAL, CENTER);
         customColors.zeroMargin().noOutline();
-        CustomColorContainer ccc = new CustomColorContainer(MainApp.getCustomUIBaseColors(),
+        CustomColorContainer ccc = new CustomColorContainer(HORIZONTAL,
+                MainApp.getCustomUIBaseColors(),
                 c -> app.setUIColor(MainApp.toInt(c)));
         ccc.zeroMargin().noOutline();
         customColors.add(ccc);

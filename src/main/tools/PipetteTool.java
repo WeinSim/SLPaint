@@ -37,6 +37,10 @@ public final class PipetteTool extends ImageTool {
     }
 
     @Override
+    public void cancel() {
+    }
+
+    @Override
     public String getName() {
         return "Pipette";
     }

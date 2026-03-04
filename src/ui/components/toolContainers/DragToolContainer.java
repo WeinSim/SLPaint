@@ -25,7 +25,7 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
         relativeLayer = 2;
 
         style.setStrokeCheckerboard(UIColors.SELECTION_BORDER_1, UIColors.SELECTION_BORDER_2, UISizes.CHECKERBOARD);
-        style.setStrokeWeight(2.0);
+        style.setStrokeWeight(UISizes.SELECTION_BORDER);
 
         setCursorShape(
                 () -> mouseAbove && ((tool.getState() & (DragTool.IDLE | DragTool.IDLE_DRAG)) != 0)

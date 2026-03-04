@@ -11,8 +11,8 @@ import sutil.ui.elements.UIContainer;
 
 public class CustomColorContainer extends UIContainer {
 
-    public CustomColorContainer(ColorArray colors, Consumer<Vector4f> clickAction) {
-        super(HORIZONTAL, CENTER);
+    public CustomColorContainer(int orientation, ColorArray colors, Consumer<Vector4f> clickAction) {
+        super(orientation, CENTER);
 
         for (int i = 0; i < colors.getCapacity(); i++) {
             final int j = i;
