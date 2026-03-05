@@ -73,6 +73,8 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     }
 
     public final void loadUI() {
+        if (ui != null)
+            ui.cleanUp();
         ui = createUI();
 
         if (adjustSizeOnInit) {
@@ -196,6 +198,7 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
      */
     public boolean finish() {
         renderer.cleanUp();
+        ui.cleanUp();
         if (parent != null)
             parent.clearChildApp(dialogType);
         return true;

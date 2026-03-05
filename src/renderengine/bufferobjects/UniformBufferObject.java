@@ -6,6 +6,8 @@ import static org.lwjgl.opengl.GL31.*;
 
 import java.nio.ByteBuffer;
 
+import renderengine.Cleanable;
+
 
 public class UniformBufferObject implements Cleanable {
 

@@ -41,7 +41,7 @@ public final class LineTool extends ImageTool {
     @Override
     public void finish() {
         if (state == IDLE) {
-            app.drawLine(x1, y1, x2, y2, size, app.getSelectedColor());
+            app.drawLine(x1, y1, x2, y2, size, app.getPrimaryColor());
             app.addImageSnapshot();
             state = NONE;
         }

@@ -11,6 +11,7 @@ import org.lwjglx.util.vector.Vector2f;
 import org.lwjglx.util.vector.Vector3f;
 import org.lwjglx.util.vector.Vector4f;
 
+import renderengine.Cleanable;
 import sutil.math.SVector;
 
 public abstract class VBO implements Cleanable {

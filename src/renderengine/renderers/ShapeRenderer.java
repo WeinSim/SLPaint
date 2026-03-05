@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import org.lwjgl.BufferUtils;
 import org.lwjglx.util.vector.Matrix3f;
 
+import renderengine.Cleanable;
 import renderengine.RawModel;
-import renderengine.bufferobjects.Cleanable;
 import renderengine.bufferobjects.UBOEntry;
 import renderengine.bufferobjects.UniformBufferObject;
 import renderengine.drawcalls.DrawCall;

@@ -1,4 +1,4 @@
-package renderengine.bufferobjects;
+package renderengine;
 
 public interface Cleanable {
 

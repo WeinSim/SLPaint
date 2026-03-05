@@ -69,8 +69,7 @@ public class ImageRenderer extends InstanceShapeRenderer<ImageDrawCall> {
                 glActiveTexture(GL_TEXTURE0 + i);
                 glBindTexture(GL_TEXTURE_2D, textureID);
 
-                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                // GL_NEAREST);
+                // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             }

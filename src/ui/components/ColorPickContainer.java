@@ -97,33 +97,6 @@ public class ColorPickContainer extends UIContainer {
         row3.zeroMargin().noOutline();
         row3.setHFillSize();
 
-        UIContainer colorPreview = new UIContainer(VERTICAL, CENTER);
-        colorPreview.zeroMargin().noOutline();
-        UIContainer colorBox = new UIContainer(HORIZONTAL, 0);
-        colorBox.setStyle(new UIStyle(() -> null, UIColors.HIGHLIGHT, () -> 2.0));
-        colorBox.zeroMargin().zeroPadding().noOutline();
-        Supplier<SVector> previewSize = () -> {
-            SVector size = UISizes.COLOR_PICKER_PREVIEW.getWidthHeight();
-            if (addPreview) {
-                size.x /= 2;
-            }
-            return size;
-        };
-        for (int i = addPreview ? 0 : 1; i < 2; i++) {
-            Supplier<Vector4f> bgColorSupplier = i == 0
-                    ? () -> MainApp.toVector4f(colorPicker.getInitialColor())
-                    : () -> MainApp.toVector4f(colorPicker.getRGB());
-            colorBox.add(new UIColorElement(bgColorSupplier, previewSize, false));
-        }
-        colorPreview.add(colorBox);
-        colorPreview.add(new UIText("Preview", UIText.SMALL));
-        row3.add(colorPreview);
-
-        UIContainer gap = new UIContainer(0, 0);
-        gap.zeroMargin().noOutline();
-        gap.setHFillSize();
-        row3.add(gap);
-
         UIContainer hslInput = new UIContainer(VERTICAL, RIGHT);
         hslInput.zeroMargin().noOutline();
         hslInput.setVisibilitySupplier(App::isHSLColorSpace);
@@ -202,6 +175,32 @@ public class ColorPickContainer extends UIContainer {
         }
         row3.add(rgbInput);
 
+        UIContainer gap = new UIContainer(0, 0);
+        gap.zeroMargin().noOutline();
+        gap.setHFillSize();
+        row3.add(gap);
+
+        UIContainer colorPreview = new UIContainer(VERTICAL, CENTER);
+        colorPreview.zeroMargin().noOutline();
+        UIContainer colorBox = new UIContainer(HORIZONTAL, 0);
+        colorBox.setStyle(new UIStyle(() -> null, UIColors.HIGHLIGHT, () -> 2.0));
+        colorBox.zeroMargin().zeroPadding().noOutline();
+        Supplier<SVector> previewSize = () -> {
+            SVector size = UISizes.COLOR_PICKER_PREVIEW.getWidthHeight();
+            if (addPreview) {
+                size.x /= 2;
+            }
+            return size;
+        };
+        for (int i = addPreview ? 0 : 1; i < 2; i++) {
+            Supplier<Vector4f> bgColorSupplier = i == 0
+                    ? () -> MainApp.toVector4f(colorPicker.getInitialColor())
+                    : () -> MainApp.toVector4f(colorPicker.getRGB());
+            colorBox.add(new UIColorElement(bgColorSupplier, previewSize, false));
+        }
+        colorPreview.add(colorBox);
+        colorPreview.add(new UIText("Preview", UIText.SMALL));
+        row3.add(colorPreview);
         return row3;
     }
 

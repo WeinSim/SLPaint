@@ -10,7 +10,6 @@ import org.lwjglx.util.vector.Vector4f;
 import main.apps.App;
 import main.apps.MainApp;
 import main.image.Image;
-import renderengine.bufferobjects.Cleanable;
 import renderengine.bufferobjects.FrameBufferObject;
 import renderengine.fonts.TextFont;
 import sutil.math.SVector;

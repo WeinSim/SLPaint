@@ -32,6 +32,10 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
+ *   Icons
+ *     Tool icons & cursors
+ *       -> Pre-render icons at various texture sizes and use them as UIImages
+ *         (probably not)
  * 
  * App:
  *   Keyboard shortcuts
@@ -104,8 +108,6 @@ import ui.components.ImageCanvas;
  *     Convert other small dialogs into modal dialogs? (e.g. ResizeUI)
  *     Add options for custom button labels like in JOptionPane
  *       For what?
- *   Tool icons & cursors
- *     -> Pre-render icons at various texture sizes and use them as UIImages
  *   Selection are area right-click? (Same menu as "Selection" in menu bar)
  *   Layering inconsistency: the SizeKnobs' outline appears above the dropdowns
  *     of the top row (Rotate, Flip, font selection)
@@ -431,6 +433,7 @@ public final class MainApp extends App {
 
     public void setImage(BufferedImage image) {
         getImage().setBufferedImage(image);
+        renderer.setTempFBOSize(image.getWidth(), image.getHeight());
         addImageSnapshot();
     }
 
@@ -446,6 +449,10 @@ public final class MainApp extends App {
 
     public void drawLine(int x0, int y0, int x1, int y1, int size, int color) {
         getImage().drawLine(x0, y0, x1, y1, size, color);
+    }
+
+    public void drawLine(int x0, int y0, int x1, int y1, int size, int color, boolean ignoreAlpha) {
+        getImage().drawLine(x0, y0, x1, y1, size, color, ignoreAlpha);
     }
 
     public void translateImage(int x, int y) {

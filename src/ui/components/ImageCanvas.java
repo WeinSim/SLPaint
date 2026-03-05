@@ -135,7 +135,8 @@ public class ImageCanvas extends UIContainer {
     }
 
     private void toolClick(int mouseButton, int mods) {
-        if ((mods & (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT)) == 0) {
+        // if ((mods & (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT)) == 0) {
+        if ((mods & GLFW_MOD_CONTROL) == 0) {
             int[] mousePosition = app.getMouseImagePosition();
             int mouseX = mousePosition[0],
                     mouseY = mousePosition[1];

@@ -11,9 +11,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import renderengine.Cleanable;
 import renderengine.RawModel;
 import renderengine.bufferobjects.AttributeVBO;
-import renderengine.bufferobjects.Cleanable;
 import renderengine.bufferobjects.FloatVBO;
 import renderengine.bufferobjects.IntVBO;
 import renderengine.bufferobjects.MatrixVBO;

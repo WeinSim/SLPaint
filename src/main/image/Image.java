@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 import org.lwjgl.BufferUtils;
 
-import renderengine.bufferobjects.Cleanable;
+import renderengine.Cleanable;
 import sutil.SUtil;
 import sutil.math.SVector;
 
@@ -158,9 +158,6 @@ public class Image implements Cleanable {
     }
 
     public void resize(int newWidth, int newHeight, int[] pixels) {
-        if (newWidth == width && newHeight == height)
-            return;
-
         BufferedImage image = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
         int[] imagePixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
         System.arraycopy(pixels, 0, imagePixels, 0, pixels.length);

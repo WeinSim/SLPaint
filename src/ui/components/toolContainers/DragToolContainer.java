@@ -46,6 +46,10 @@ public abstract sealed class DragToolContainer<T extends DragTool> extends ToolC
         }
 
         addLeftClickAction(this::startIdleDrag);
+        addMousePressAction(GLFW_MOUSE_BUTTON_RIGHT, false, () -> {
+            if (tool.getState() == DragTool.INITIAL_DRAG)
+                tool.cancel();
+        });
 
         addMouseReleaseAction(GLFW_MOUSE_BUTTON_LEFT, false, () -> {
             switch (tool.getState()) {

@@ -1,21 +1,27 @@
 package ui;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import org.lwjglx.util.vector.Vector4f;
+import org.newdawn.slick.opengl.Texture;
+import org.newdawn.slick.opengl.TextureLoader;
 
 import main.ColorPicker;
 import main.apps.App;
 import main.apps.MainApp;
 import main.settings.BooleanSetting;
 import main.settings.ColorSetting;
+import renderengine.Cleanable;
 import renderengine.fonts.TextFont;
 import sutil.SUtil;
 import sutil.ui.UI;
@@ -24,7 +30,9 @@ import sutil.ui.UISizes;
 import sutil.ui.UIStyle;
 import sutil.ui.elements.UIElement;
 
-public abstract class AppUI<T extends App> extends UI {
+public abstract class AppUI<T extends App> extends UI implements Cleanable {
+
+    private static final String ICON_BASE_PATH = "res/icons/%s.png";
 
     private static final Vector4f[] DEFAULT_UI_COLORS_DARK = {
             new Vector4f(0.3f, 0.3f, 0.3f, 1.0f),
@@ -45,9 +53,13 @@ public abstract class AppUI<T extends App> extends UI {
     private static BooleanSetting darkMode = new BooleanSetting("darkMode");
     private static ColorSetting baseColor = new ColorSetting("baseColor");
 
+    private ArrayList<Integer> iconTextures;
+
     public AppUI(T app) {
         this.app = app;
         super(app.getWindowContentScale(), app.getWindowSize());
+
+        iconTextures = new ArrayList<>();
     }
 
     @Override
@@ -82,6 +94,19 @@ public abstract class AppUI<T extends App> extends UI {
     public int getCharIndexImpl(String text, double textSize, String fontName, double x) {
         TextFont font = TextFont.getFont(fontName);
         return font.getCharIndex(text, x / textSize * font.size);
+    }
+
+    @Override
+    protected int loadIconTextureID(String name) {
+        String path = String.format(ICON_BASE_PATH, name);
+        Texture texture = null;
+        try {
+            texture = TextureLoader.getTexture("PNG", new FileInputStream(path));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(String.format("Unable to load icon \"%s\"", name));
+        }
+        return texture.getTextureID();
     }
 
     @Override
@@ -170,5 +195,12 @@ public abstract class AppUI<T extends App> extends UI {
 
     public static ColorPicker getBaseColorPicker() {
         return baseColor.get();
+    }
+
+    @Override
+    public void cleanUp() {
+        for (int texture : iconTextures) {
+            glDeleteTextures(texture);
+        }
     }
 }

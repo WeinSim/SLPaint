@@ -1,44 +1,58 @@
 package sutil.ui.elements;
 
 import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 import sutil.math.SVector;
 
 public class UIImage extends UIElement {
 
-    protected int textureID;
     protected IntSupplier textureIDSupplier;
+
+    protected Supplier<SVector> sizeSupplier;
 
     public UIImage(int textureID, SVector size) {
         setTextureID(textureID);
-
         setSize(size);
     }
 
     public UIImage(IntSupplier textureIDSupplier, SVector size) {
-        this.textureIDSupplier = textureIDSupplier;
-
+        setTextureID(textureIDSupplier);
         setSize(size);
     }
 
-    public void setSize(SVector size) {
-        this.size.set(size);
+    public UIImage(int textureID, Supplier<SVector> sizeSupplier) {
+        setTextureID(textureID);
+        setSize(sizeSupplier);
+    }
+
+    public UIImage(IntSupplier textureIDSupplier, Supplier<SVector> sizeSupplier) {
+        setTextureID(textureIDSupplier);
+        setSize(sizeSupplier);
     }
 
     @Override
     public void setPreferredSize() {
+        size.set(sizeSupplier.get());
     }
 
     public int getTextureID() {
-        return textureIDSupplier != null ? textureIDSupplier.getAsInt() : textureID;
+        return textureIDSupplier.getAsInt();
     }
 
     public void setTextureID(int textureID) {
-        this.textureID = textureID;
-        textureIDSupplier = null;
+        setTextureID(() -> textureID);
     }
 
-    public void setTextureIDSupplier(IntSupplier textureIDSupplier) {
+    public void setTextureID(IntSupplier textureIDSupplier) {
         this.textureIDSupplier = textureIDSupplier;
+    }
+
+    public void setSize(SVector size) {
+        setSize(() -> size);
+    }
+
+    public void setSize(Supplier<SVector> sizeSupplier) {
+        this.sizeSupplier = sizeSupplier;
     }
 }

@@ -3,6 +3,7 @@ package sutil.ui;
 import static org.lwjgl.glfw.GLFW.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
@@ -76,6 +77,8 @@ public abstract class UI {
 
     private LinkedList<Runnable> eventQueue;
 
+    private HashMap<String, Integer> iconTextureIDs;
+
     public UI(double uiScale, SVector initialRootSize) {
         setContext(this);
 
@@ -85,6 +88,7 @@ public abstract class UI {
         rightMousePressed = false;
 
         eventQueue = new LinkedList<>();
+        iconTextureIDs = new HashMap<>();
 
         this.uiScale = uiScale;
 
@@ -326,13 +330,28 @@ public abstract class UI {
         return context.textWidthImpl(text, textSize, fontName, len);
     }
 
-    public abstract double textWidthImpl(String text, double textSize, String fontName, int len);
+    protected abstract double textWidthImpl(String text, double textSize, String fontName, int len);
 
     public static int getCharIndex(String text, double textSize, String fonrName, double x) {
         return context.getCharIndexImpl(text, textSize, fonrName, x);
     }
 
-    public abstract int getCharIndexImpl(String text, double textSize, String fontName, double x);
+    protected abstract int getCharIndexImpl(String text, double textSize, String fontName, double x);
+
+    public static int getIconTextureID(String name) {
+        return context.getIconTextureIDImpl(name);
+    }
+
+    protected int getIconTextureIDImpl(String name) {
+        Integer id = iconTextureIDs.get(name);
+        if (id != null)
+            return id;
+        id = loadIconTextureID(name);
+        iconTextureIDs.put(name, id);
+        return id;
+    }
+
+    protected abstract int loadIconTextureID(String name);
 
     public static boolean isDarkMode() {
         return context.isDarkModeImpl();

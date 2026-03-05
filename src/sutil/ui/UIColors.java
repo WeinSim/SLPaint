@@ -8,7 +8,7 @@ public enum UIColors implements Supplier<Vector4f> {
 
     BACKGROUND(0.24, 0.95),
     BACKGROUND_2(0.7, 0.82),
-    BACKGROUND_HIGHLIGHT(0.5, 0.9),
+    BACKGROUND_HIGHLIGHT(0.55, 0.9),
     OUTLINE(1.1, 0.45),
     SCROLLBAR_HIGHLIGHT(0.9, 0.6),
     SEPARATOR(0.56, 0.7),

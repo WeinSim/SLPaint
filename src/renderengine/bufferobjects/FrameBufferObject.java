@@ -3,6 +3,8 @@ package renderengine.bufferobjects;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.*;
 
+import renderengine.Cleanable;
+
 public class FrameBufferObject implements Cleanable {
 
     public final int fboID;

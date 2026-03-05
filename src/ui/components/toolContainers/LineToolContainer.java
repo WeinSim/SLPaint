@@ -11,6 +11,7 @@ import main.tools.Draggable;
 import main.tools.ImageTool;
 import main.tools.LineTool;
 import sutil.math.SVector;
+import sutil.ui.UI;
 import sutil.ui.elements.UIImage;
 import ui.components.DragKnob;
 
@@ -28,6 +29,10 @@ public final class LineToolContainer extends ToolContainer<LineTool> {
 
         add(new ImageDisplay());
 
+        addMousePressAction(GLFW_MOUSE_BUTTON_RIGHT, false, () -> {
+            if (tool.getState() == LineTool.INITIAL_DRAG)
+                tool.cancel();
+        });
         addMouseReleaseAction(GLFW_MOUSE_BUTTON_LEFT, false, () -> {
             switch (tool.getState()) {
                 case LineTool.INITIAL_DRAG -> tool.setState(LineTool.IDLE);
@@ -62,8 +67,32 @@ public final class LineToolContainer extends ToolContainer<LineTool> {
         switch (tool.getState()) {
             case LineTool.INITIAL_DRAG -> {
                 int[] imageMousePos = app.getMouseImagePosition();
-                tool.getDrag2().setX(imageMousePos[0]);
-                tool.getDrag2().setY(imageMousePos[1]);
+                int mouseX = imageMousePos[0],
+                        mouseY = imageMousePos[1];
+                // snap line direction to 45° angles when holding shift
+                if ((UI.getModifiers() & GLFW_MOD_SHIFT) != 0) {
+                    int startX = tool.getDrag1().getX(),
+                            startY = tool.getDrag1().getY();
+                    int dx = mouseX - startX,
+                            dy = mouseY - startY;
+                    double ratio = Math.abs(((double) dx) / dy);
+                    if (ratio >= 0.5 && ratio < 2) {
+                        // 45 degree angle
+                        int mag = (int) Math.round(Math.sqrt(dx * dx + dy * dy) / Math.sqrt(2));
+                        dx = Integer.signum(dx) * mag;
+                        dy = Integer.signum(dy) * mag;
+                    } else {
+                        // 90 degree angle
+                        if (Math.abs(dx) > Math.abs(dy))
+                            dy = 0;
+                        else
+                            dx = 0;
+                    }
+                    mouseX = startX + dx;
+                    mouseY = startY + dy;
+                }
+                tool.getDrag2().setX(mouseX);
+                tool.getDrag2().setY(mouseY);
 
                 drawPreviewLine();
             }
