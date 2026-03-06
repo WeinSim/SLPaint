@@ -4,6 +4,7 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -32,7 +33,8 @@ import sutil.ui.elements.UIElement;
 
 public abstract class AppUI<T extends App> extends UI implements Cleanable {
 
-    private static final String ICON_BASE_PATH = "res/icons/%s.png";
+    private static final String ICON_BASE_PATH = "res/icons/%s.png",
+            MISSING_ICON_NAME = "questionmark";
 
     private static final Vector4f[] DEFAULT_UI_COLORS_DARK = {
             new Vector4f(0.3f, 0.3f, 0.3f, 1.0f),
@@ -98,12 +100,14 @@ public abstract class AppUI<T extends App> extends UI implements Cleanable {
 
     @Override
     protected int loadIconTextureID(String name) {
-        String path = String.format(ICON_BASE_PATH, name);
+        File file = new File(String.format(ICON_BASE_PATH, name));
+        if (!file.exists())
+            file = new File(String.format(ICON_BASE_PATH, MISSING_ICON_NAME));
         Texture texture = null;
         try {
-            texture = TextureLoader.getTexture("PNG", new FileInputStream(path));
+            texture = TextureLoader.getTexture("PNG", new FileInputStream(file));
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
             throw new RuntimeException(String.format("Unable to load icon \"%s\"", name));
         }
         return texture.getTextureID();

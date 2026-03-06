@@ -14,14 +14,6 @@ public class UIDropdown extends UIContainer {
         this(() -> text, false);
     }
 
-    public UIDropdown(String text, boolean scroll) {
-        this(() -> text, scroll);
-    }
-
-    public UIDropdown(Supplier<String> textUpdater) {
-        this(textUpdater, false);
-    }
-
     public UIDropdown(Supplier<String> textUpdater, boolean scroll) {
         super(CENTER, CENTER);
 

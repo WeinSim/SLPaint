@@ -33,9 +33,18 @@ import ui.components.ImageCanvas;
  * <pre>
  * TODO continue:
  *   Icons
- *     Tool icons & cursors
- *       -> Pre-render icons at various texture sizes and use them as UIImages
- *         (probably not)
+ *     Use mipmapping
+ *     The current icons look kind of bad in light mode
+ *       -> separate icons for light and dark mode?
+ *     Create icons for:
+ *       Image options (rotate, flip), both general and sub menues
+ *       Tools
+ *       Dropdowns (v)
+ *       Nested float menues (>)
+ *       Modal dialog close (x)
+ *   UI
+ *     Combine user actions (keyboard, mouse). Combine with BooleanSupplier
+ *       (active / possible)
  * 
  * App:
  *   Keyboard shortcuts
@@ -83,6 +92,7 @@ import ui.components.ImageCanvas;
  *     input
  *   Change UIContainer defaults? .zeroMargin().noOutline() is used in a ton of
  *     places and should maybe be the default.
+ *   Tool cursors
  *   Text
  *     Text input
  *       Selection (with mouse / arrow keys / Ctrl+A)
@@ -104,10 +114,12 @@ import ui.components.ImageCanvas;
  *   Mouse input: tapping the touchpad triggers a mouse press event but not
  *     mouse release event (=> logic that sets leftMousePressed and
  *     rightMousePressed based on mouse press / release events is flawed.)
+ *   UIMouseButtonAction: the mods parameter in mousePressed() is not used
  *   Modal dialogs
  *     Convert other small dialogs into modal dialogs? (e.g. ResizeUI)
  *     Add options for custom button labels like in JOptionPane
  *       For what?
+ *   Using Tab + Enter, multiple dropdowns can be opened simultaneously
  *   Selection are area right-click? (Same menu as "Selection" in menu bar)
  *   Layering inconsistency: the SizeKnobs' outline appears above the dropdowns
  *     of the top row (Rotate, Flip, font selection)

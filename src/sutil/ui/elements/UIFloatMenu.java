@@ -189,6 +189,7 @@ public class UIFloatMenu extends UIFloatContainer {
         closeAction.run();
     }
 
+    // TODO: make this extends UIButton?
     private class CMLabel extends UIContainer {
 
         CMLabel(String mainText, String rightText, BooleanSupplier active) {

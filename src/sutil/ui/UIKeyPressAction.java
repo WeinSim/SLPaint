@@ -3,8 +3,8 @@ package sutil.ui;
 import java.util.function.BooleanSupplier;
 
 /**
- * The {@code selected} field controls wether this UIElement has to be selected
- * in order for this key press action to run.
+ * The reason that {@code UIKeyPressAction} is a class and not a record is that
+ * it has {@code KeyboardShortcut} as a subclass.
  */
 public class UIKeyPressAction {
 
@@ -12,6 +12,10 @@ public class UIKeyPressAction {
 
     protected final int key;
     protected final int mods;
+    /**
+     * The {@code selected} field controls wether this UIElement has to be selected
+     * in order for this key press action to run.
+     */
     protected final boolean selected;
     protected final BooleanSupplier possible;
     protected final Runnable action;

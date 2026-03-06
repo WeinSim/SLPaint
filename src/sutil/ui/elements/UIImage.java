@@ -4,12 +4,18 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import sutil.math.SVector;
+import sutil.ui.UIIcon;
+import sutil.ui.UISizes;
 
 public class UIImage extends UIElement {
 
     protected IntSupplier textureIDSupplier;
 
     protected Supplier<SVector> sizeSupplier;
+
+    public UIImage(UIIcon icon) {
+        this(icon.textureID(), UISizes.ICON::getWidthHeight);
+    }
 
     public UIImage(int textureID, SVector size) {
         setTextureID(textureID);
