@@ -20,7 +20,6 @@ import main.tools.SelectionTool;
 import main.tools.TextTool;
 import sutil.SUtil;
 import sutil.ui.UI;
-import sutil.ui.UIIcon;
 import sutil.ui.UISizes;
 import sutil.ui.elements.UIButton;
 import sutil.ui.elements.UIContainer;
@@ -37,7 +36,6 @@ import sutil.ui.elements.UIToggleList;
 import ui.components.ColorPickContainer;
 import ui.components.CustomColorContainer;
 import ui.components.ImageCanvas;
-import ui.components.ToolButton;
 import ui.components.UIColorElement;
 
 public class MainUI extends AppUI<MainApp> {
@@ -132,15 +130,10 @@ public class MainUI extends AppUI<MainApp> {
         selectionMenu.addSeparator();
         selectionMenu.addLabel("Crop image to selection", getKeyboardShortcut("crop_to_selection"));
         selectionMenu.addSeparator();
-        UIFloatMenu selectionRotateMenu = selectionMenu.addNestedMenu("Rotate");
         final SelectionTool selection = ImageTool.SELECTION;
         final BooleanSupplier selectionActive = () -> selection.getState() == SelectionTool.IDLE;
-        selectionRotateMenu.addLabel("Rotate 90° right", selection::rotateRight, selectionActive);
-        selectionRotateMenu.addLabel("Rotate 90° left", selection::rotateLeft, selectionActive);
-        selectionRotateMenu.addLabel("Rotate 180°", selection::rotate180, selectionActive);
-        UIFloatMenu selectionFlipMenu = selectionMenu.addNestedMenu("Flip");
-        selectionFlipMenu.addLabel("Flip horizontally", selection::flipHorizontal, selectionActive);
-        selectionFlipMenu.addLabel("Flip vertically", selection::flipVertical, selectionActive);
+        addRotateFlipMenues(selectionMenu, selectionActive, selection::rotateRight, selection::rotateLeft,
+                selection::rotate180, selection::flipHorizontal, selection::flipVertical);
 
         UIFloatMenu viewMenu = menuBar.addMenu("View");
         viewMenu.addLabel("Zoom in", getKeyboardShortcut("zoom_in"));
@@ -149,16 +142,11 @@ public class MainUI extends AppUI<MainApp> {
         viewMenu.addLabel("Reset view", getKeyboardShortcut("reset_transform"));
 
         UIFloatMenu imageMenu = menuBar.addMenu("Image");
-        imageMenu.addLabel("Resize", () -> app.showDialog(MainApp.RESIZE_DIALOG));
-        imageMenu.addLabel("Crop", () -> app.showDialog(MainApp.CROP_DIALOG));
+        imageMenu.addLabel(UILabel.iconText("resize", "Resize"), () -> app.showDialog(MainApp.RESIZE_DIALOG));
+        imageMenu.addLabel(UILabel.iconText("crop", "Crop"), () -> app.showDialog(MainApp.CROP_DIALOG));
         imageMenu.addSeparator();
-        UIFloatMenu imageRotateMenu = imageMenu.addNestedMenu("Rotate");
-        imageRotateMenu.addLabel("Rotate 90° right", app::rotateImageRight);
-        imageRotateMenu.addLabel("Rotate 90° left", app::rotateImageLeft);
-        imageRotateMenu.addLabel("Rotate 180°", app::rotateImage180);
-        UIFloatMenu imageFlipMenu = imageMenu.addNestedMenu("Flip");
-        imageFlipMenu.addLabel("Flip horizontally", app::flipImageHorizontal);
-        imageFlipMenu.addLabel("Flip vertically", app::flipImageVertical);
+        addRotateFlipMenues(imageMenu, () -> true, app::rotateImageRight, app::rotateImageLeft, app::rotateImage180,
+                app::flipImageHorizontal, app::flipImageVertical);
 
         if (MainApp.DEV_BUILD) {
             UIFloatMenu debugMenu = menuBar.addMenu("Debug");
@@ -178,35 +166,37 @@ public class MainUI extends AppUI<MainApp> {
         toolRow.withSeparators(true).setHFillSize().setHAlignment(LEFT).withBackground().noOutline();
 
         UIContainer fileButtons = addToolRowSection(toolRow, "File");
-        fileButtons.add(new UIButton(new UIIcon("undo"), new UIIcon("undo_inactive"), app::canUndo, app::undo));
-        fileButtons.add(new UIButton(new UIIcon("redo"), new UIIcon("redo_inactive"), app::canRedo, app::redo));
+        fileButtons.add(new UIButton(UILabel.icons("undo", "undo_inactive", app::canUndo), app::undo));
+        fileButtons.add(new UIButton(UILabel.icons("redo", "redo_inactive", app::canRedo), app::redo));
         fileButtons.add(new UISeparator());
-        fileButtons.add(new UIButton(new UIIcon("new"), app::newImage));
-        fileButtons.add(new UIButton(new UIIcon("open"), app::openImage));
-        fileButtons.add(new UIButton(new UIIcon("save"), app::saveImage));
+        fileButtons.add(new UIButton(UILabel.icon("new"), app::newImage));
+        fileButtons.add(new UIButton(UILabel.icon("open"), app::openImage));
+        fileButtons.add(new UIButton(UILabel.icon("save"), app::saveImage));
 
         UIContainer imageOptions = addToolRowSection(toolRow, "Image");
-        imageOptions.add(new UIButton(new UIIcon("resize"), "Resize", () -> app.showDialog(MainApp.RESIZE_DIALOG)));
-        UIDropdown rotateImage = new UIDropdown("Rotate");
-        rotateImage.addLabel("Rotate 90° right", app::rotateImageRight);
-        rotateImage.addLabel("Rotate 90° left", app::rotateImageLeft);
-        rotateImage.addLabel("Rotate 180°", app::rotateImage180);
-        imageOptions.add(rotateImage);
-        UIDropdown flipImage = new UIDropdown("Flip");
-        flipImage.addLabel("Flip horizontally", app::flipImageHorizontal);
-        flipImage.addLabel("Flip vertically", app::flipImageVertical);
-        imageOptions.add(flipImage);
+        imageOptions.add(new UIButton(
+                UILabel.iconText("resize", "Resize"),
+                () -> app.showDialog(MainApp.RESIZE_DIALOG)));
+        UIDropdown[] imageRotateFlipDropdowns = createRotateFlipDropdowns(() -> true, app::rotateImageRight,
+                app::rotateImageLeft, app::rotateImage180, app::flipImageHorizontal, app::flipImageVertical);
+        imageOptions.add(imageRotateFlipDropdowns[0]);
+        imageOptions.add(imageRotateFlipDropdowns[1]);
 
         UIContainer toolbox = addToolRowSection(toolRow, "Tools");
         toolbox.setOrientation(VERTICAL);
-        final int toolsPerRow = 6;
+        final int toolsPerRow = ImageTool.INSTANCES.length;
         UIContainer currentToolRow = null;
         for (int i = 0; i < ImageTool.INSTANCES.length; i++) {
             if (i % toolsPerRow == 0) {
                 currentToolRow = new UIContainer(HORIZONTAL, CENTER);
                 currentToolRow.zeroMargin().noOutline();
             }
-            currentToolRow.add(new ToolButton(app, ImageTool.INSTANCES[i]));
+            ImageTool tool = ImageTool.INSTANCES[i];
+            String iconName = String.format("%s_tool", tool.getName().toLowerCase());
+            UIButton toolButton = new UIButton(UILabel.icon(iconName), () -> app.setActiveTool(tool));
+            AppUI.setSelectableButtonStyle(toolButton, () -> app.getActiveTool() == tool);
+            toolButton.setHandCursor();
+            currentToolRow.add(toolButton);
             if ((i + 1) % toolsPerRow == 0 || i == ImageTool.INSTANCES.length - 1)
                 toolbox.add(currentToolRow);
         }
@@ -257,19 +247,13 @@ public class MainUI extends AppUI<MainApp> {
         selectionToolsTop.zeroMargin().setPaddingScale(2.0).noOutline();
 
         final SelectionTool selection = ImageTool.SELECTION;
+        final BooleanSupplier selectionActive = () -> selection.getState() == SelectionTool.IDLE;
         UIContainer selectionButtons = new UIContainer(HORIZONTAL, LEFT);
         selectionButtons.zeroMargin().noOutline();
-        UIDropdown rotateSelection = new UIDropdown("Rotate");
-        // rotateSelection.setHFillSize();
-        rotateSelection.addLabel("Rotate 90° right", selection::rotateRight);
-        rotateSelection.addLabel("Rotate 90° left", selection::rotateLeft);
-        rotateSelection.addLabel("Rotate 180°", selection::rotate180);
-        selectionButtons.add(rotateSelection);
-        UIDropdown flipSelection = new UIDropdown("Flip");
-        // flipSelection.setHFillSize();
-        flipSelection.addLabel("Flip horizontally", selection::flipHorizontal);
-        flipSelection.addLabel("Flip vertically", selection::flipVertical);
-        selectionButtons.add(flipSelection);
+        UIDropdown[] selectionRotateFlipDropdowns = createRotateFlipDropdowns(selectionActive, selection::rotateRight,
+                selection::rotateLeft, selection::rotate180, selection::flipHorizontal, selection::flipVertical);
+        selectionButtons.add(selectionRotateFlipDropdowns[0]);
+        selectionButtons.add(selectionRotateFlipDropdowns[1]);
         selectionToolsTop.add(selectionButtons);
 
         UIToggleList selectionToggles = new UIToggleList();
@@ -342,6 +326,37 @@ public class MainUI extends AppUI<MainApp> {
         return optionButtons;
     }
 
+    private void addRotateFlipMenues(UIFloatMenu menu, BooleanSupplier active, Runnable rotateRight,
+            Runnable rotateLeft, Runnable rotate180, Runnable flipHorizontal, Runnable flipVertical) {
+
+        UIFloatMenu rotateMenu = menu.addNestedMenu(UILabel.iconText("rotate_right", "Rotate"));
+        UIFloatMenu flipMenu = menu.addNestedMenu(UILabel.iconText("flip_horizontal", "Flip"));
+        addRotateFlipLabels(rotateMenu, flipMenu, active, rotateRight, rotateLeft, rotate180, flipHorizontal,
+                flipVertical);
+    }
+
+    private UIDropdown[] createRotateFlipDropdowns(BooleanSupplier active, Runnable rotateRight, Runnable rotateLeft,
+            Runnable rotate180, Runnable flipHorizontal, Runnable flipVertical) {
+
+        UIDropdown rotate = new UIDropdown(UILabel.iconText("rotate_right", "Rotate"));
+        UIDropdown flip = new UIDropdown(UILabel.iconText("flip_horizontal", "Flip"));
+        addRotateFlipLabels(rotate.getFloatMenu(), flip.getFloatMenu(), active, rotateRight, rotateLeft, rotate180,
+                flipHorizontal, flipVertical);
+
+        return new UIDropdown[] { rotate, flip };
+    }
+
+    private void addRotateFlipLabels(UIFloatMenu rotateMenu, UIFloatMenu flipMenu, BooleanSupplier active,
+            Runnable rotateRight, Runnable rotateLeft, Runnable rotate180, Runnable flipHorizontal,
+            Runnable flipVertical) {
+
+        rotateMenu.addLabel(UILabel.iconText("rotate_right", "Rotate 90° right", active), rotateRight);
+        rotateMenu.addLabel(UILabel.iconText("rotate_left", "Rotate 90° left", active), rotateLeft);
+        rotateMenu.addLabel(UILabel.iconText("rotate_180", "Rotate 180°", active), rotate180);
+        flipMenu.addLabel(UILabel.iconText("flip_horizontal", "Flip horizontally", active), flipHorizontal);
+        flipMenu.addLabel(UILabel.iconText("flip_vertical", "Flip vertically", active), flipVertical);
+    }
+
     private UIContainer createIntPicker(IntSupplier sizeGetter, IntConsumer sizeSetter) {
         UIContainer container = new UIContainer(HORIZONTAL, CENTER);
         container.zeroMargin().zeroPadding().noOutline();
@@ -375,11 +390,11 @@ public class MainUI extends AppUI<MainApp> {
                     ? () -> MainApp.toVector4f(app.getPrimaryColor())
                     : () -> MainApp.toVector4f(app.getSecondaryColor());
             colorContainer.add(new UIColorElement(cg, UISizes.BIG_COLOR_BUTTON));
-            UILabel label = new UILabel(String.format("%s\nColor", i == 0 ? "Primary" : "Secondary"),
-                    UISizes.TEXT_SMALL);
-            label.setAlignment(CENTER);
-            label.zeroMargin();
-            colorContainer.add(label);
+            UIContainer textContainer = new UIContainer(VERTICAL, CENTER);
+            textContainer.zeroMargin().zeroPadding().noOutline();
+            textContainer.add(new UIText(i == 0 ? "Primary" : "Secondary", UISizes.TEXT_SMALL));
+            textContainer.add(new UIText("Color", UISizes.TEXT_SMALL));
+            colorContainer.add(textContainer);
             colorContainer.addLeftClickAction(() -> app.setColorSelection(index));
             primSecColorContainer.add(colorContainer);
         }
@@ -443,7 +458,8 @@ public class MainUI extends AppUI<MainApp> {
         // debugPanel.add(new UIText(" "));
         // String[] lipsum = lipsum(Integer.MAX_VALUE, 3);
         // for (int i = 0; i < 20; i++) {
-        // debugPanel.add(new UILabel(lipsum));
+        // for (String line : lipsum)
+        // debugPanel.add(new UIText(line, UISizes.TEXT_SMALL));
         // }
 
         // debugPanel.add(new UITextInput(this::getDebugString, this::setDebugString,
@@ -458,7 +474,7 @@ public class MainUI extends AppUI<MainApp> {
         UIContainer statusBar = new UIContainer(HORIZONTAL, LEFT, CENTER);
         statusBar.withSeparators(false).withBackground().noOutline();
         statusBar.setHFillSize();
-        statusBar.add(new UILabel(() -> {
+        addStatusBarLabel(statusBar, () -> {
             String ret = "Format: ";
             ImageFormat format = app.getImageFormat();
             if (format == null) {
@@ -472,8 +488,8 @@ public class MainUI extends AppUI<MainApp> {
                 ret += "%s (%s)".formatted(filename, MainApp.formatFilesize(filesize));
             }
             return ret;
-        }, UIText.SMALL));
-        statusBar.add(new UILabel(() -> {
+        });
+        addStatusBarLabel(statusBar, () -> {
             int width, height;
             if (app.isImageResizing()) {
                 width = app.getNewImageWidth();
@@ -484,38 +500,43 @@ public class MainUI extends AppUI<MainApp> {
                 height = image.getHeight();
             }
             return "Image Size: %d x %d px".formatted(width, height);
-        }, UIText.SMALL));
-        statusBar.add(new UILabel(
+        });
+        addStatusBarLabel(statusBar,
                 () -> String.format("Selection size: %d x %d px",
                         ImageTool.SELECTION.getWidth(),
-                        ImageTool.SELECTION.getHeight()),
-                UIText.SMALL).setVisibilitySupplier(
-                        () -> ImageTool.SELECTION.getState() != DragTool.NONE));
-        statusBar.add(new UILabel(() -> {
+                        ImageTool.SELECTION.getHeight()))
+                .setVisibilitySupplier(() -> ImageTool.SELECTION.getState() != DragTool.NONE);
+
+        addStatusBarLabel(statusBar, () -> {
             int[] mouseImagePos = app.getMouseImagePosition();
             boolean inside = app.getImage().isInside(mouseImagePos[0], mouseImagePos[1]);
             String ret = "Mouse Position:";
-            if (inside) {
+            if (inside)
                 ret += " %d, %d".formatted(mouseImagePos[0], mouseImagePos[1]);
-            }
             return ret;
-        }, UIText.SMALL));
+        });
 
         if (MainApp.DEV_BUILD) {
             statusBar.add(new UIContainer(0, 0).setHFillSize().noOutline());
-            statusBar.add(new UILabel(() -> String.format(
+            addStatusBarLabel(statusBar, () -> String.format(
                     "%d UI elements",
-                    countUIElements(UI.getRoot())),
-                    UIText.SMALL));
-            statusBar.add(new UILabel(() -> String.format(
+                    countUIElements(UI.getRoot())));
+            addStatusBarLabel(statusBar, () -> String.format(
                     "%5.3f ms update",
-                    app.getAvgUpdateTime() / 1e-3),
-                    UIText.SMALL));
-            statusBar.add(new UILabel(() -> String.format("%4.1f fps", app.getFrameRate()), UIText.SMALL));
-            statusBar.add(new UILabel(() -> String.format("Frame %5d", app.getFrameCount()), UIText.SMALL));
+                    app.getAvgUpdateTime() / 1e-3));
+            addStatusBarLabel(statusBar, () -> String.format("%4.1f fps", app.getFrameRate()));
+            addStatusBarLabel(statusBar, () -> String.format("Frame %5d", app.getFrameCount()));
         }
 
         return statusBar;
+    }
+
+    private UIContainer addStatusBarLabel(UIContainer statusBar, Supplier<String> textSupplier) {
+        UIContainer container = new UIContainer(HORIZONTAL, CENTER);
+        container.noOutline();
+        container.add(new UIText(textSupplier, UISizes.TEXT_SMALL));
+        statusBar.add(container);
+        return container;
     }
 
     public String getDebugString() {

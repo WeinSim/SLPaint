@@ -205,7 +205,7 @@ public class ColorPickContainer extends UIContainer {
     }
 
     private UIContainer createRow4(IntConsumer buttonAction) {
-        UIButton customColor = new UIButton("Add to Custom Colors", () -> buttonAction.accept(colorPicker.getRGB()));
+        UIButton customColor = new UIButton("+ Add to Custom Colors", () -> buttonAction.accept(colorPicker.getRGB()));
         customColor.setAlignment(CENTER);
         customColor.setHFillSize();
         return customColor;

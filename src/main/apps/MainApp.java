@@ -1,5 +1,7 @@
 package main.apps;
 
+import static org.lwjgl.glfw.GLFW.*;
+
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -32,16 +34,8 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Icons
- *     Use mipmapping
- *     The current icons look kind of bad in light mode
- *       -> separate icons for light and dark mode?
- *     Create icons for:
- *       Image options (rotate, flip), both general and sub menues
- *       Tools
- *       Dropdowns (v)
- *       Nested float menues (>)
- *       Modal dialog close (x)
+ *   Selection: Shift + initial drag forces square aspect ratio (combine with
+ *     analogous feature for line tool)
  *   UI
  *     Combine user actions (keyboard, mouse). Combine with BooleanSupplier
  *       (active / possible)
@@ -60,6 +54,7 @@ import ui.components.ImageCanvas;
  *     Sizes 1 & 2 and 3 & 4 look the same
  *     Make sizes UI prettier
  *   update() takes about twice as long when a modal dialog is open
+ *     Maybe because of the many long textWidth() calculations?
  *   Transparency
  *     Selecting a semi-transparent area and pasting it over a completely
  *       transparent area messes up the pixel colors: the semi-transparent area
@@ -82,6 +77,7 @@ import ui.components.ImageCanvas;
  *   (When parent app closes, children should also close)
  *   Packaging:
  *     Use jpackage tool
+ *     Create logo
  * 
  * UI:
  *   UISizes:
@@ -103,8 +99,16 @@ import ui.components.ImageCanvas;
  *         Would require a variable number of UITexts as children (which is
  *           currently not possible. Why?)
  *     Text wrapping
- *     Fix bug in UILabel: when the textUpdater returns text containig newline
- *       characters, the text is not properly split across multiple lines
+ *   Selection
+ *     When nothing is currently selected, the dropdowns for rotating and
+ *       flipping the selection should be made inactive.
+ *     Add option to crop selection?
+ *     Add precise pixel input for scaling / cropping selection like ResizeUI?
+ *   Icons
+ *     The current icons look kind of bad in light mode
+ *       -> separate icons for light and dark mode?
+ *     Create icons for:
+ *       Basically everything in the menu bar (cut, copy, paste, zoom)
  *   On the first frame that the UI is rendered, the root has a black background
  *     and parts of the UI are not yet visible. This is visible when opening a
  *     child app.
@@ -120,7 +124,6 @@ import ui.components.ImageCanvas;
  *     Add options for custom button labels like in JOptionPane
  *       For what?
  *   Using Tab + Enter, multiple dropdowns can be opened simultaneously
- *   Selection are area right-click? (Same menu as "Selection" in menu bar)
  *   Layering inconsistency: the SizeKnobs' outline appears above the dropdowns
  *     of the top row (Rotate, Flip, font selection)
  *   Make side panel collapsable?
@@ -189,7 +192,7 @@ public final class MainApp extends App {
      * <li>Disables prompting to save changes when closing the window
      * </ul>
      */
-    public static final boolean DEV_BUILD = true;
+    public static final boolean DEV_BUILD = false;
 
     /**
      * https://images.minitool.com/de.minitool.com/images/uploads/news/2022/02/microsoft-paint-herunterladen-installieren/microsoft-paint-herunterladen-installieren-1.png
@@ -301,11 +304,13 @@ public final class MainApp extends App {
     public void update(double deltaT) {
         super.update(deltaT);
 
-        if (colorSelection == PRIMARY_COLOR) {
+        if (frameCount == 1)
+            resetImageTransform();
+
+        if (colorSelection == PRIMARY_COLOR)
             primaryColor = selectedColorPicker.getRGB();
-        } else {
+        else
             secondaryColor = selectedColorPicker.getRGB();
-        }
 
         String filename = getFilename();
         boolean hasUnsavedChanges = imageManager.hasUnsavedChanges();
@@ -446,6 +451,11 @@ public final class MainApp extends App {
     public void setImage(BufferedImage image) {
         getImage().setBufferedImage(image);
         renderer.setTempFBOSize(image.getWidth(), image.getHeight());
+        addImageSnapshot();
+    }
+
+    public void magic(int x, int y, int mouseButton) {
+        getImage().magic(x, y, mouseButton == GLFW_MOUSE_BUTTON_LEFT ? primaryColor : secondaryColor);
         addImageSnapshot();
     }
 

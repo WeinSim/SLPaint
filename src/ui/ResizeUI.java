@@ -43,6 +43,7 @@ public class ResizeUI extends AppUI<ResizeApp> {
         UIRadioButtonList resizeMode = new UIRadioButtonList(
                 VERTICAL,
                 new String[] { "Resize (scale) image", "Crop image" },
+                new String[] { "resize", "crop" },
                 app::getResizeMode,
                 app::setResizeMode);
         resizeMode.setMarginScale(1.0);

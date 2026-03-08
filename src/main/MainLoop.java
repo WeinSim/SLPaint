@@ -30,7 +30,6 @@ public class MainLoop {
         testImports();
 
         // String font1 = "FreeMono";
-        // String font2 = "FreeMonoBold";
         // TextFont.createFontAtlas(font1, 36);
         // TextFont.createFontAtlas(font1, 18);
         // TextFont.createFontAtlas(font2, 36);
@@ -45,7 +44,7 @@ public class MainLoop {
         NFD_Init();
 
         apps = new ArrayList<>();
-        MainApp mainApp = new MainApp(args.length == 0 ? null: args[0]);
+        MainApp mainApp = new MainApp(args.length == 0 ? null : args[0]);
 
         double deltaT = 1.0 / 60.0;
         boolean stop = false;
@@ -115,7 +114,7 @@ public class MainLoop {
             }
         }.set();
 
-        // Initialize  Most GLFW functions will not work before doing this.
+        // Initialize Most GLFW functions will not work before doing this.
         if (!glfwInit())
             throw new IllegalStateException("Unable to initialize GLFW");
 

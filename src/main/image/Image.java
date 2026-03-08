@@ -2,6 +2,7 @@ package main.image;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL30.*;
 
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
@@ -104,6 +105,8 @@ public class Image implements Cleanable {
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA,
                     GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
         }
+
+        glGenerateMipmap(GL_TEXTURE_2D);
     }
 
     private static BufferedImage copyBufferedImage(BufferedImage oldImage) {
@@ -357,6 +360,24 @@ public class Image implements Cleanable {
                             drawPixel(x, y, color);
                     }
                 }
+            }
+        }
+    }
+
+    public void magic(int x0, int y0, int color) {
+        final int radius = 11;
+        final int margin = 5;
+        final int strokeWeight = 2;
+        final int xc = x0 + radius, yc = y0 + radius;
+        for (int dy = -radius - margin; dy <= margin; dy++) {
+            int y = yc + dy;
+            for (int dx = -radius - margin; dx <= radius + margin; dx++) {
+                int x = xc + dx;
+                if (!isInside(x, y))
+                    continue;
+                double mag = Math.sqrt(dx * dx + dy * dy);
+                if (Math.abs(mag - radius) <= strokeWeight / 2)
+                    setPixel(x, y, color);
             }
         }
     }

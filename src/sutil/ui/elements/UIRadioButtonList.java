@@ -12,6 +12,12 @@ import sutil.ui.UISizes;
 public class UIRadioButtonList extends UIContainer {
 
     public UIRadioButtonList(int orientation, String[] options, IntSupplier stateSupplier, IntConsumer stateConsumer) {
+        this(orientation, options, null, stateSupplier, stateConsumer);
+    }
+
+    public UIRadioButtonList(int orientation, String[] options, String[] icons, IntSupplier stateSupplier,
+            IntConsumer stateConsumer) {
+
         super(orientation, orientation == UI.VERTICAL ? UI.LEFT : UI.CENTER);
 
         noOutline();
@@ -28,7 +34,21 @@ public class UIRadioButtonList extends UIContainer {
             row.setSelectable(true);
 
             row.add(new UIRadioButton(i, stateSupplier));
-            row.add(new UIText(options[i]));
+            String iconName = icons != null ? icons[i] : null;
+            String text = options != null ? options[i] : null;
+            UILabel label;
+            if (iconName == null) {
+                if (text == null)
+                    label = new UILabel();
+                else
+                    label = UILabel.text(text);
+            } else {
+                if (text == null)
+                    label = UILabel.icon(iconName);
+                else
+                    label = UILabel.iconText(iconName, text);
+            }
+            row.add(label);
 
             add(row);
         }

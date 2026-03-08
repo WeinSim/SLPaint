@@ -260,9 +260,8 @@ public class ShaderProgram implements Cleanable {
         glShaderSource(shaderID, shaderSource);
         glCompileShader(shaderID);
         if (glGetShaderi(shaderID, GL_COMPILE_STATUS) == GL_FALSE) {
-            System.out.format("Could not compile shader \"%s\"!\n", filename);
-            // System.out.println(glGetShaderInfoLog(shaderID));
-            System.exit(-1);
+            System.out.println(glGetShaderInfoLog(shaderID));
+            throw new RuntimeException(String.format("Could not compile shader \"%s\"!\n", filename));
         }
         return shaderID;
     }

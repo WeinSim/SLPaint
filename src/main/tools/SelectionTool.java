@@ -24,6 +24,7 @@ public final class SelectionTool extends DragTool {
         addShortcut("select_all", GLFW_KEY_A, GLFW_MOD_CONTROL, NONE | IDLE, this::selectEverything);
         addShortcut("finish_selection", GLFW_KEY_ESCAPE, 0, IDLE, this::finish);
         addShortcut("delete_selection", GLFW_KEY_DELETE, 0, IDLE, this::deleteSelection);
+        addShortcut("delete_selection", GLFW_KEY_X, 0, IDLE, this::deleteSelection);
         addShortcut("paste", GLFW_KEY_V, GLFW_MOD_CONTROL, NONE | IDLE, this::pasteFromClipboard);
         addShortcut("copy", GLFW_KEY_C, GLFW_MOD_CONTROL, IDLE, this::copyToClipboard);
         addShortcut("cut", GLFW_KEY_X, GLFW_MOD_CONTROL, IDLE, this::cutToClipboard);

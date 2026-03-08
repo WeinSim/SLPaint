@@ -11,18 +11,12 @@ public class KeyboardShortcut extends UIKeyPressAction {
         this.identifier = identifier;
     }
 
-    public String getIdentifier() {
-        return identifier;
-    }
-
-    public boolean isPossible() {
-        return possible.getAsBoolean();
-    }
-
-    // This code is duplicated from the constructor. But until some future update
-    // (valhallah?) java won't let us use this::run in the constructor.
     public void run() {
         if (isPossible())
             action.run();
+    }
+
+    public String getIdentifier() {
+        return identifier;
     }
 }

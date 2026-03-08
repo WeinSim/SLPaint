@@ -5,7 +5,7 @@ import java.util.function.BooleanSupplier;
 import main.apps.MainApp;
 import sutil.ui.UI;
 
-public abstract sealed class ImageTool permits PencilTool, LineTool, DragTool, FillBucketTool, PipetteTool {
+public abstract sealed class ImageTool permits PencilTool, LineTool, DragTool, FillBucketTool, PipetteTool, MagicTool {
 
     public static final PencilTool PENCIL = PencilTool.INSTANCE;
     public static final LineTool LINE = LineTool.INSTANCE;
@@ -13,15 +13,11 @@ public abstract sealed class ImageTool permits PencilTool, LineTool, DragTool, F
     public static final PipetteTool PIPETTE = PipetteTool.INSTANCE;
     public static final SelectionTool SELECTION = SelectionTool.INSTANCE;
     public static final TextTool TEXT = TextTool.INSTANCE;
+    public static final MagicTool MAGIC = MagicTool.INSTANCE;
 
-    public static final ImageTool[] INSTANCES = {
-            PENCIL,
-            LINE,
-            FILL_BUCKET,
-            PIPETTE,
-            SELECTION,
-            TEXT
-    };
+    public static final ImageTool[] INSTANCES = MainApp.DEV_BUILD
+            ? new ImageTool[] { PENCIL, LINE, FILL_BUCKET, PIPETTE, SELECTION, TEXT, MAGIC }
+            : new ImageTool[] { PENCIL, LINE, FILL_BUCKET, PIPETTE, SELECTION, TEXT };
 
     public static final int NONE = 0x01;
 

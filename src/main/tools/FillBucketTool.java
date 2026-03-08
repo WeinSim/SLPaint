@@ -69,6 +69,6 @@ public final class FillBucketTool extends ImageTool {
 
     @Override
     public String getName() {
-        return "Fill Bucket";
+        return "FillBucket";
     }
 }

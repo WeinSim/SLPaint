@@ -10,7 +10,7 @@ I started this project in August of 2024.
 SLPaint is still under development and has quite some room for improvement:
 - Text input is very basic
 - There are a lot of small transparency bugs
-- There are no icons (yet)
+- Icons are in an early state
 
 *SLPaint is still in early development. There might be unexpected bugs or crashes.*
 

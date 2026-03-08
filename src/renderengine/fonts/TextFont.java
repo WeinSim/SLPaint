@@ -27,8 +27,8 @@ public class TextFont {
     public static final String DEFAULT_FONT_NAME = "FreeMonoBold";
 
     private static final char[] CHAR_RANGES = {
-        0x0020, 0x007E,
-        0x00A0, 0x00FF
+            0x0020, 0x007E,
+            0x00A0, 0x00FF
     };
     private static final char UNKNOWN_CHAR = 0x25A1; // □ (WHITE SQUARE)
     // private static final char BULLET_CHAR = 0x2022; // • (BULLET)
@@ -73,6 +73,7 @@ public class TextFont {
         // this is just a hack for now
         int fontSize = UI.getUIScale() > 1.5 ? 36 : 18;
         fontSize = 36;
+        // fontSize = 96;
 
         String directoryName = getDirectoryName(name);
 
@@ -197,7 +198,7 @@ public class TextFont {
         String directoryName = getDirectoryName(name);
         MainApp.runCommand(directoryName,
                 getFontGenerationCommand(name, 2, 256, 256, textSize,
-                    CHAR_RANGES,
+                        CHAR_RANGES,
                         EXTRA_CHARS, 0));
     }
 

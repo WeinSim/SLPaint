@@ -30,8 +30,11 @@ public class UIModalDialog extends UIFloatContainer {
 
         UIContainer topRow = new UIContainer(HORIZONTAL, RIGHT, CENTER);
         topRow.setHFillSize().zeroMargin();
-        topRow.add(new UILabel(title).setHFillSize().setHAlignment(CENTER));
-        topRow.add(new UIButton("X", () -> finish(UI.CLOSED_OPTION)));
+        UIContainer titleContainer = new UIContainer(VERTICAL, CENTER);
+        titleContainer.setHFillSize().zeroMargin().noOutline();
+        titleContainer.add(new UIText(title));
+        topRow.add(titleContainer);
+        topRow.add(new UIButton(UILabel.icon("close"), () -> finish(UI.CLOSED_OPTION)));
         content.add(topRow);
 
         UIContainer mainArea = new UIContainer(VERTICAL, CENTER);

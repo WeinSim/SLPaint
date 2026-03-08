@@ -4,35 +4,39 @@ import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-public class UIDropdown extends UIContainer {
+import sutil.ui.UIColors;
+import sutil.ui.UIIcon;
+
+public class UIDropdown extends UIButton {
 
     private boolean expanded;
 
-    private final UIFloatMenu dropdown;
+    protected final UIFloatMenu floatMenu;
 
-    public UIDropdown(String text) {
-        this(() -> text, false);
+    public UIDropdown(UILabel label) {
+        this(label, false);
     }
 
-    public UIDropdown(Supplier<String> textUpdater, boolean scroll) {
-        super(CENTER, CENTER);
+    public UIDropdown(UIIcon icon, Supplier<String> textSupplier, boolean scroll) {
+        this(icon == null ? new UILabel() : new UILabel(icon));
 
-        noBackground();
-        withOutline();
-        zeroPadding();
-        backgroundHighlight = true;
+        label.add(new UIText(textSupplier));
+    }
 
-        selectable = true;
+    public UIDropdown(UILabel label, boolean scroll) {
+        super(label, null);
 
-        add(new UIText(textUpdater));
+        style.setBackgroundColor(() -> mouseAbove || expanded ? UIColors.BACKGROUND_HIGHLIGHT.get() : null);
+
+        add(new UIImage(new UIIcon("expand_up")).setVisibilitySupplier(() -> expanded));
+        add(new UIImage(new UIIcon("expand_down")).setVisibilitySupplier(() -> !expanded));
+
+        floatMenu = new UIFloatMenu(() -> expanded, () -> expanded = false, scroll, UIText.NORMAL);
+        floatMenu.addAnchor(UIFloatContainer.Anchor.TOP_LEFT, UIFloatContainer.Anchor.BOTTOM_LEFT);
+        floatMenu.addAnchor(UIFloatContainer.Anchor.BOTTOM_LEFT, UIFloatContainer.Anchor.TOP_LEFT);
+        add(floatMenu);
 
         addLeftClickAction(() -> expanded = !expanded);
-
-        dropdown = new UIFloatMenu(() -> expanded, () -> expanded = false, scroll, UIText.NORMAL);
-        dropdown.addAnchor(UIFloatContainer.Anchor.TOP_LEFT, UIFloatContainer.Anchor.BOTTOM_LEFT);
-        dropdown.addAnchor(UIFloatContainer.Anchor.BOTTOM_LEFT, UIFloatContainer.Anchor.TOP_LEFT);
-
-        add(dropdown);
 
         expanded = false;
     }
@@ -44,7 +48,9 @@ public class UIDropdown extends UIContainer {
     public UIDropdown(String[] options, IntSupplier valueSupplier, IntConsumer valueSetter,
             boolean scroll) {
 
-        this(() -> options[valueSupplier.getAsInt()], scroll);
+        this(null, () -> options[valueSupplier.getAsInt()], scroll);
+
+        outlineNormal = true;
 
         for (int i = 0; i < options.length; i++) {
             final int j = i;
@@ -53,6 +59,10 @@ public class UIDropdown extends UIContainer {
     }
 
     public void addLabel(String text, Runnable clickAction) {
-        dropdown.addLabel(text, clickAction);
+        floatMenu.addLabel(text, clickAction);
+    }
+
+    public UIFloatMenu getFloatMenu() {
+        return floatMenu;
     }
 }

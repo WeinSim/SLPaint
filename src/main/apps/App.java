@@ -16,7 +16,7 @@ import ui.AppUI;
 
 public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp {
 
-    private static final double FRAME_TIME_GAMMA = 0.01;
+    private static final double FRAME_TIME_GAMMA = 0.015;
 
     /**
      * 0 = normal 1 = mouse above, 2 = always

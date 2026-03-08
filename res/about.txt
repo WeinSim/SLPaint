@@ -10,7 +10,7 @@ SLPaint is still under development and has quite
 some room for improvement:
 - Text input is very basic
 - There are a lot of small transparency bugs
-- There are no icons (yet)
+- Icons are in an early state
 
 The source code is available at
 <c>https://github.com/WeinSim/SLPaint

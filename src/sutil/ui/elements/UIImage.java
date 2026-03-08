@@ -17,6 +17,10 @@ public class UIImage extends UIElement {
         this(icon.textureID(), UISizes.ICON::getWidthHeight);
     }
 
+    public UIImage(UIIcon icon, Supplier<SVector> sizeSupplier) {
+        this(icon.textureID(), sizeSupplier);
+    }
+
     public UIImage(int textureID, SVector size) {
         setTextureID(textureID);
         setSize(size);

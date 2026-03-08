@@ -8,6 +8,10 @@ import java.util.function.Consumer;
  */
 public record UICharInputAction(boolean selected, Consumer<Character> action) {
 
+    public UICharInputAction(Consumer<Character> action) {
+        this(true, action);
+    }
+
     public void charInput(char c, boolean isSelected) {
         if (!selected || isSelected)
             action.accept(c);

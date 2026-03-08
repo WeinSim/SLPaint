@@ -242,7 +242,7 @@ public abstract class UIElement {
     }
 
     public void addMousePressAction(int button, Runnable action) {
-        addMousePressAction(button, true, action);
+        mousePressActions.add(new UIMouseButtonAction(button, action));
     }
 
     public void addMousePressAction(int button, boolean mouseAbove, Runnable action) {
@@ -250,7 +250,7 @@ public abstract class UIElement {
     }
 
     public void addMouseReleaseAction(int button, Runnable action) {
-        addMouseReleaseAction(button, true, action);
+        mouseReleaseActions.add(new UIMouseButtonAction(button, action));
     }
 
     public void addMouseReleaseAction(int button, boolean mouseAbove, Runnable action) {
@@ -258,11 +258,15 @@ public abstract class UIElement {
     }
 
     public void addMouseWheelAction(int mods, Predicate<SVector> action) {
-        addMouseWheelAction(mods, true, action);
+        mouseWheelActions.add(new UIMouseWheelAction(mods, action));
     }
 
     public void addMouseWheelAction(int mods, boolean mouseAbove, Predicate<SVector> action) {
         mouseWheelActions.add(new UIMouseWheelAction(mods, mouseAbove, action));
+    }
+
+    public void addMouseWheelAction(int mods, boolean mouseAbove, BooleanSupplier possible, Predicate<SVector> action) {
+        mouseWheelActions.add(new UIMouseWheelAction(mods, mouseAbove, possible, action));
     }
 
     public void addKeyPressAction(int key, int mods, Runnable action) {
@@ -274,7 +278,7 @@ public abstract class UIElement {
     }
 
     public void addCharInputAction(Consumer<Character> action) {
-        addCharInputAction(true, action);
+        charInputActions.add(new UICharInputAction(action));
     }
 
     public void addCharInputAction(boolean selected, Consumer<Character> action) {

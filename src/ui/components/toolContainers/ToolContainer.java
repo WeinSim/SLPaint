@@ -4,9 +4,8 @@ import main.apps.MainApp;
 import main.tools.ImageTool;
 import sutil.ui.elements.UIFloatContainer;
 
-public abstract sealed class ToolContainer<T extends ImageTool> extends UIFloatContainer
-        permits DragToolContainer, PencilToolContainer, LineToolContainer, PipetteToolContainer,
-        FillBucketToolContainer {
+public sealed class ToolContainer<T extends ImageTool> extends UIFloatContainer
+        permits DragToolContainer, PencilToolContainer, LineToolContainer {
 
     protected final T tool;
 
@@ -24,5 +23,7 @@ public abstract sealed class ToolContainer<T extends ImageTool> extends UIFloatC
         setVisibilitySupplier(() -> app.getActiveTool() == tool && (tool.getState() & getVisibleStates()) != 0);
     }
 
-    protected abstract int getVisibleStates();
+    protected int getVisibleStates() {
+        return 0;
+    }
 }

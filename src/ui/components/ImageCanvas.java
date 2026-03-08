@@ -4,11 +4,9 @@ import static org.lwjgl.glfw.GLFW.*;
 
 import main.apps.MainApp;
 import main.image.Image;
-import main.tools.FillBucketTool;
 import main.tools.ImageTool;
 import main.tools.LineTool;
 import main.tools.PencilTool;
-import main.tools.PipetteTool;
 import main.tools.Resizable;
 import main.tools.SelectionTool;
 import main.tools.TextTool;
@@ -17,18 +15,18 @@ import sutil.ui.UI;
 import sutil.ui.UIColors;
 import sutil.ui.UISizes;
 import sutil.ui.elements.UIContainer;
+import sutil.ui.elements.UIElement;
 import sutil.ui.elements.UIFloatContainer;
 import sutil.ui.elements.UIImage;
-import ui.components.toolContainers.FillBucketToolContainer;
 import ui.components.toolContainers.LineToolContainer;
 import ui.components.toolContainers.PencilToolContainer;
-import ui.components.toolContainers.PipetteToolContainer;
 import ui.components.toolContainers.SelectionToolContainer;
 import ui.components.toolContainers.TextToolContainer;
+import ui.components.toolContainers.ToolContainer;
 
 public class ImageCanvas extends UIContainer {
 
-    private static final int MIN_ZOOM_LEVEL = -4;
+    private static final int MIN_ZOOM_LEVEL = -6;
     private static final int MAX_ZOOM_LEVEL = 8;
     private static final double ZOOM_BASE = 1.6;
 
@@ -51,9 +49,6 @@ public class ImageCanvas extends UIContainer {
         setFillSize();
         zeroMargin();
 
-        addLeftClickAction(this::leftClick);
-        addRightClickAction(this::rightClick);
-
         setCursorShape(() -> draggingImage ? GLFW_POINTING_HAND_CURSOR : null);
 
         style.setBackgroundColor(UIColors.CANVAS);
@@ -67,34 +62,39 @@ public class ImageCanvas extends UIContainer {
             add(switch (tool) {
                 case PencilTool _ -> new PencilToolContainer(app);
                 case LineTool _ -> new LineToolContainer(app);
-                case PipetteTool _ -> new PipetteToolContainer(app);
-                case FillBucketTool _ -> new FillBucketToolContainer(app);
                 case TextTool _ -> new TextToolContainer(app);
                 case SelectionTool _ -> new SelectionToolContainer(app);
-                default -> throw new RuntimeException(
-                        String.format("No ToolContainer found for tool \"%s\"", tool.getName()));
+                default -> new ToolContainer<ImageTool>(tool, app);
             });
         }
 
         resetImageTransform();
+        // imageTranslation = new SVector();
+        // imageZoomLevel = 0;
 
         draggingImage = false;
         resizing = false;
 
+        addMousePressAction(GLFW_MOUSE_BUTTON_LEFT, false, this::leftClick);
+        addMousePressAction(GLFW_MOUSE_BUTTON_RIGHT, false, this::rightClick);
+
         // zoom
-        addMouseWheelAction(GLFW_MOD_CONTROL, scroll -> {
-            zoom((int) Math.signum(scroll.y), new SVector(mousePosition).sub(position));
-            return true;
-        });
+        addMouseWheelAction(GLFW_MOD_CONTROL, false, this::canDoScrollZoom,
+                scroll -> {
+                    zoom((int) Math.signum(scroll.y), new SVector(mousePosition).sub(position));
+                    return true;
+                });
         // scroll
-        addMouseWheelAction(0, scroll -> {
-            imageTranslation.add(scroll);
-            return true;
-        });
-        addMouseWheelAction(GLFW_MOD_SHIFT, scroll -> {
-            imageTranslation.add(new SVector(scroll.y, scroll.x));
-            return true;
-        });
+        addMouseWheelAction(0, false, this::canDoScrollZoom,
+                scroll -> {
+                    imageTranslation.add(scroll);
+                    return true;
+                });
+        addMouseWheelAction(GLFW_MOD_SHIFT, false, this::canDoScrollZoom,
+                scroll -> {
+                    imageTranslation.add(new SVector(scroll.y, scroll.x));
+                    return true;
+                });
     }
 
     @Override
@@ -118,14 +118,17 @@ public class ImageCanvas extends UIContainer {
     }
 
     private void leftClick() {
-        int mods = UI.getModifiers();
-        toolClick(GLFW_MOUSE_BUTTON_LEFT, mods);
+        if (mouseAbove) {
+            int mods = UI.getModifiers();
+            toolClick(GLFW_MOUSE_BUTTON_LEFT, mods);
+        }
     }
 
     private void rightClick() {
         int mods = UI.getModifiers();
-        toolClick(GLFW_MOUSE_BUTTON_RIGHT, mods);
 
+        if (mouseAbove)
+            toolClick(GLFW_MOUSE_BUTTON_RIGHT, mods);
         if (canDoScrollZoom()) {
             // dragging image
             if ((mods & GLFW_MOD_CONTROL) != 0) {
@@ -135,7 +138,6 @@ public class ImageCanvas extends UIContainer {
     }
 
     private void toolClick(int mouseButton, int mods) {
-        // if ((mods & (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT)) == 0) {
         if ((mods & GLFW_MOD_CONTROL) == 0) {
             int[] mousePosition = app.getMouseImagePosition();
             int mouseX = mousePosition[0],
@@ -154,12 +156,40 @@ public class ImageCanvas extends UIContainer {
     }
 
     public boolean canDoScrollZoom() {
-        return mouseAbove;
+        return mouseAboveChild(this);
+    }
+
+    private boolean mouseAboveChild(UIElement element) {
+        if (element.mouseAbove())
+            return true;
+        if (element instanceof UIContainer container) {
+            for (UIElement child : container.getChildren()) {
+                if (mouseAboveChild(child))
+                    return true;
+            }
+        }
+        return false;
     }
 
     public void resetImageTransform() {
-        imageTranslation = new SVector(10, 10).scale(UI.getUIScale());
-        imageZoomLevel = 0;
+        // imageTranslation = new SVector(1, 1).scale(UISizes.MARGIN.get() *
+        // UI.getUIScale());
+        // imageZoomLevel = 0;
+
+        // Math.pow(ZOOM_BASE, imageZoomLevel) * UI.getUIScale() * imageWidth = 1500 *
+        // UI.getScale()
+        // ZOOM_BASE^imageZoomLevel = 1500 / imageWidth
+
+        SVector size = new SVector(this.size);
+        if (size.magSq() < 1)
+            size = new SVector(1576, 888); // canvas size when on 1920x1080 window with ui scale of 1
+
+        imageZoomLevel = getDefaultZoomLevel();
+        Image image = app.getImage();
+        int imageWidth = image.getWidth(),
+                imageHeight = image.getHeight();
+        double zoom = getImageZoom();
+        imageTranslation = new SVector(size).sub(new SVector(imageWidth, imageHeight).scale(zoom)).div(2);
     }
 
     public void zoomIn() {
@@ -179,7 +209,20 @@ public class ImageCanvas extends UIContainer {
     }
 
     public void resetZoom() {
-        zoom(-imageZoomLevel, new SVector(size).div(2));
+        int deltaZoom = getDefaultZoomLevel() - imageZoomLevel;
+        zoom(deltaZoom, new SVector(size).div(2));
+    }
+
+    private int getDefaultZoomLevel() {
+        double uiScale = UI.getUIScale();
+        Image image = app.getImage();
+        int imageWidth = image.getWidth(),
+                imageHeight = image.getHeight();
+        double widthRatio = size.x / (imageWidth * uiScale),
+                heightRatio = size.y / (imageHeight * uiScale);
+        int level = (int) Math.floor(Math.log(Math.min(widthRatio, heightRatio)) / Math.log(ZOOM_BASE));
+        level = Math.min(Math.max(MIN_ZOOM_LEVEL, level), MAX_ZOOM_LEVEL);
+        return level;
     }
 
     public double getImageZoom() {

@@ -24,8 +24,9 @@ void main(void) {
         discard;
     }
 
+
     vec4 sampleColor = texture(textureSamplers[samplerID], uvCoords);
-    // sampleColor = texture(textureSamplers[0], uvCoords);
+    // sampleColor.xyz = vec3(1, 1, 1) - sampleColor.xyz;
 
     outColor = sampleColor;
     // outColor.a = 1;

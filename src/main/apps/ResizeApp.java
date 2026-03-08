@@ -20,7 +20,7 @@ public final class ResizeApp extends App {
     private double widthPercentage = 0, heightPercentage = 0;
     private int resizeMode;
 
-    private boolean lockRatio = false;
+    private boolean lockRatio;
 
     private final int initialWidth, initialHeight;
     private final double initialRatio;
@@ -35,9 +35,13 @@ public final class ResizeApp extends App {
 
         initialWidth = mainApp.getImage().getWidth();
         initialHeight = mainApp.getImage().getHeight();
+        // when setting width and height for the first time, the aspect ratio must be
+        // unlocked, otherwise the initial ratio is set to zero
+        lockRatio = false;
         setWidthPixels(initialWidth);
         setHeightPixels(initialHeight);
         initialRatio = (double) initialWidth / initialHeight;
+        lockRatio = true;
 
         minWidthPercentage = 100.0 * MainApp.MIN_IMAGE_SIZE / initialWidth;
         minHeightPercentage = 100.0 * MainApp.MIN_IMAGE_SIZE / initialHeight;
@@ -59,9 +63,8 @@ public final class ResizeApp extends App {
     public void update(double deltaT) {
         super.update(deltaT);
 
-        if (frameCount == 1) {
+        if (frameCount == 1)
             UI.select(widthInput);
-        }
 
         window.setTitle(getTitle());
     }

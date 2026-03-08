@@ -2,6 +2,7 @@ package ui;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL30.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -110,7 +111,10 @@ public abstract class AppUI<T extends App> extends UI implements Cleanable {
             // e.printStackTrace();
             throw new RuntimeException(String.format("Unable to load icon \"%s\"", name));
         }
-        return texture.getTextureID();
+        int textureID =  texture.getTextureID();
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        return textureID;
     }
 
     @Override

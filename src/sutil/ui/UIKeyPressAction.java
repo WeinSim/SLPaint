@@ -53,6 +53,10 @@ public class UIKeyPressAction {
         return mods;
     }
 
+    public BooleanSupplier getPossible() {
+        return possible;
+    }
+
     public boolean isPossible() {
         return possible.getAsBoolean();
     }

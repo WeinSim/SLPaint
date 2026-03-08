@@ -12,6 +12,7 @@ public enum UISizes implements DoubleSupplier {
     TEXT(18),
     TEXT_SMALL(14),
     ICON(18),
+    ICON_SMALL(14),
     SCROLLBAR(15),
     SCALE_NARROW(2),
     SCALE_WIDE(18),
