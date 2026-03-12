@@ -285,17 +285,15 @@ public class AppRenderer implements Cleanable {
     }
 
     public void renderImageToImage(Image srcImage, int x, int y, int width, int height, Image dstImage) {
-        uiMaster.start();
-        uiMaster.tempFrameBuffer();
-
         glDisable(GL_BLEND);
 
+        uiMaster.start();
+        uiMaster.tempFrameBuffer();
         uiMaster.setBGColor(new Vector4f(0, 0, 0, 0));
         uiMaster.image(srcImage.getTextureID(), new SVector(x, y), new SVector(width, height));
-
         uiMaster.render();
 
-        glEnable(GL_BLEND);
+        // glEnable(GL_BLEND);
 
         FrameBufferObject fbo = uiMaster.getTempFBO();
         int fboWidth = fbo.width, fboHeight = fbo.height;
@@ -303,6 +301,8 @@ public class AppRenderer implements Cleanable {
         int[] array = new int[fboWidth * fboHeight];
         glBindTexture(GL_TEXTURE_2D, fbo.textureID);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, array);
+
+        glEnable(GL_BLEND);
 
         dstImage.drawSubImage(0, 0, fboWidth, fboHeight, array);
     }

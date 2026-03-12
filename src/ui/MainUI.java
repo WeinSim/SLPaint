@@ -17,7 +17,7 @@ import main.tools.ImageTool;
 import main.tools.LineTool;
 import main.tools.PencilTool;
 import main.tools.SelectionTool;
-import main.tools.TextTool;
+import renderengine.fonts.TextFont;
 import sutil.SUtil;
 import sutil.ui.UI;
 import sutil.ui.UISizes;
@@ -285,11 +285,12 @@ public class MainUI extends AppUI<MainApp> {
         textFontContainer.zeroMargin().setPaddingScale(2).setVFillSize().noOutline();
         UIContainer textFontRow1 = new UIContainer(HORIZONTAL, CENTER);
         textFontRow1.zeroMargin().noOutline();
-        textFontRow1.add(new UIDropdown(
-                TextTool.FONT_NAMES,
-                () -> 0,
-                _ -> {
-                }, true));
+        // textFontRow1.add(new UIDropdown(
+        // TextTool.FONT_NAMES,
+        // () -> 0,
+        // _ -> {
+        // }, true));
+        textFontRow1.add(new UIText(TextFont::getCurrentFontName));
         textFontContainer.add(textFontRow1);
         textFontContainer.add(new UIText("Font", UISizes.TEXT_SMALL));
         textTools.add(textFontContainer);
@@ -453,7 +454,7 @@ public class MainUI extends AppUI<MainApp> {
         debugPanel.add(new UIText(() -> String.format("Active tool: %s", app.getActiveTool().getName())));
         debugPanel.add(new UIText(() -> String.format(" State: %d", app.getActiveTool().getState())));
         debugPanel.add(new UIText(() -> String.format("TextTool.text: \"%s\"", ImageTool.TEXT.getText())));
-        debugPanel.add(new UIText(() -> String.format("TextTool.font: \"%s\"", ImageTool.TEXT.getFont())));
+        // debugPanel.add(new UIText(() -> String.format("TextTool.font: \"%s\"", ImageTool.TEXT.getFont())));
 
         // debugPanel.add(new UIText(" "));
         // String[] lipsum = lipsum(Integer.MAX_VALUE, 3);

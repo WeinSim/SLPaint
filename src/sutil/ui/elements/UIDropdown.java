@@ -1,5 +1,6 @@
 package sutil.ui.elements;
 
+import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -55,6 +56,23 @@ public class UIDropdown extends UIButton {
         for (int i = 0; i < options.length; i++) {
             final int j = i;
             addLabel(options[i], () -> valueSetter.accept(j));
+        }
+    }
+
+    public UIDropdown(String[] options, Supplier<String> nameSupplier, Consumer<String> nameConsumer) {
+        this(options, nameSupplier, nameConsumer, false);
+    }
+
+    public UIDropdown(String[] options, Supplier<String> nameSupplier, Consumer<String> nameConsumer,
+            boolean scroll) {
+
+        this(null, nameSupplier, scroll);
+
+        outlineNormal = true;
+
+        for (int i = 0; i < options.length; i++) {
+            final int j = i;
+            addLabel(options[i], () -> nameConsumer.accept(options[j]));
         }
     }
 

@@ -5,7 +5,8 @@
             "name": "SLPaint",
             "request": "launch",
             "mainClass": "main.MainLoop",
-            "args": "res/images/test.png",
+            // "args": "res/icons/logo.png",
+            // "args": "res/images/test.png",
             "vmArgs": "--enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow",
         }
     ]

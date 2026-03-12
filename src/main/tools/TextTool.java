@@ -10,8 +10,8 @@ public final class TextTool extends DragTool {
 
     public static final TextTool INSTANCE;
 
-    public static final String[] FONT_NAMES;
-    private static final String DEFAULT_FONT_NAME;
+    // public static final String[] FONT_NAMES;
+    // private static final String DEFAULT_FONT_NAME;
 
     private static final int MIN_TEXT_SIZE = 0,
             MAX_TEXT_SIZE = 128,
@@ -33,23 +33,20 @@ public final class TextTool extends DragTool {
         // System.out.format("getFontFamilyNames: %.3fms\n", (System.nanoTime() -
         // startTime) * 1e-6);
 
-        DEFAULT_FONT_NAME = TextFont.DEFAULT_FONT_NAME;
-
-        FONT_NAMES = new String[] { DEFAULT_FONT_NAME };
-        // DEFAULT_FONT_NAME = (new Font("Courier", Font.PLAIN, 1)).getFamily();
+        // DEFAULT_FONT_NAME = TextFont.DEFAULT_FONT_NAME;
+        // FONT_NAMES = new String[] { DEFAULT_FONT_NAME };
 
         INSTANCE = new TextTool();
     }
 
     private String text;
     private int size;
-    private String font = DEFAULT_FONT_NAME;
+    // private String font = DEFAULT_FONT_NAME;
 
     private TextTool() {
         super();
 
         size = DEFAULT_TEXT_SIZE;
-
         text = "";
     }
 
@@ -70,7 +67,7 @@ public final class TextTool extends DragTool {
     public void finish() {
         if (!text.isEmpty()) {
             SVector position = app.getImagePosition(app.getTextToolInput().getAbsolutePosition());
-            app.renderTextToImage(text, position.x, position.y, size, TextFont.getFont(font));
+            app.renderTextToImage(text, position.x, position.y, size, TextFont.getCurrentFont());
             text = "";
         }
 
@@ -116,9 +113,9 @@ public final class TextTool extends DragTool {
         this.size = Math.min(Math.max(MIN_TEXT_SIZE, size), MAX_TEXT_SIZE);
     }
 
-    public String getFont() {
-        return font;
-    }
+    // public String getFont() {
+    // return font;
+    // }
 
     public String getText() {
         return text;

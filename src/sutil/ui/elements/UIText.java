@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 
 import org.lwjglx.util.vector.Vector4f;
 
+import renderengine.fonts.TextFont;
 import sutil.math.SVector;
 import sutil.ui.UI;
 import sutil.ui.UIColors;
@@ -22,7 +23,7 @@ public class UIText extends UIElement {
     private DoubleSupplier textSizeUpdater;
 
     private String fontName;
-    private Supplier<String> fontUpdater = UI::getDefaultFontName;
+    private Supplier<String> fontUpdater = TextFont::getCurrentFontName;
 
     private Vector4f color = new Vector4f();
     private Supplier<Vector4f> colorUpdater = UIColors.TEXT;

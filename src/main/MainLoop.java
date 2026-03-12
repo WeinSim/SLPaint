@@ -25,13 +25,17 @@ public class MainLoop {
         long programStartTime = System.nanoTime();
         boolean firstLoop = true;
 
-        SUtil.printNumLines();
+        // System.out.println("Hello, World!");
+        // System.exit(0);
 
-        testImports();
+        if (MainApp.DEV_BUILD) {
+            SUtil.printNumLines();
+            testImports();
+        }
 
-        // String font1 = "FreeMono";
+        // String font1 = TextFont.DEFAULT_FONT_NAME;
+        // TextFont.createFontAtlas(font1, 50);
         // TextFont.createFontAtlas(font1, 36);
-        // TextFont.createFontAtlas(font1, 18);
         // TextFont.createFontAtlas(font2, 36);
         // TextFont.createFontAtlas(font2, 18);
 
@@ -44,7 +48,9 @@ public class MainLoop {
         NFD_Init();
 
         apps = new ArrayList<>();
-        MainApp mainApp = new MainApp(args.length == 0 ? null : args[0]);
+        MainApp mainApp = new MainApp(args.length == 0
+                ? (MainApp.DEV_BUILD ? "res/images/test.png" : null)
+                : args[0]);
 
         double deltaT = 1.0 / 60.0;
         boolean stop = false;
@@ -79,7 +85,7 @@ public class MainLoop {
                 }
             }
 
-            if (firstLoop) {
+            if (MainApp.DEV_BUILD && firstLoop) {
                 long duration = System.nanoTime() - programStartTime;
                 System.out.format("Startup time: %.1fms\n", duration * 1e-6);
                 firstLoop = false;

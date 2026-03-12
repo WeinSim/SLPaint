@@ -34,6 +34,11 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
+ *   Packaging:
+ *     https://docs.oracle.com/en/java/javase/25/jpackage/packaging-overview.html
+ *     Make it actually installable (deb package)
+ *     File associations
+ *     Why does startup take so long?
  *   Selection: Shift + initial drag forces square aspect ratio (combine with
  *     analogous feature for line tool)
  *   UI
@@ -55,6 +60,8 @@ import ui.components.ImageCanvas;
  *     Make sizes UI prettier
  *   update() takes about twice as long when a modal dialog is open
  *     Maybe because of the many long textWidth() calculations?
+ *   Undoing / redoing an operation that changes the image size doesn't change
+ *     the temp FBO size
  *   Transparency
  *     Selecting a semi-transparent area and pasting it over a completely
  *       transparent area messes up the pixel colors: the semi-transparent area
@@ -75,17 +82,12 @@ import ui.components.ImageCanvas;
  *       => Add correct gamma blending? (as a setting?)
  *         Have OpenGL also do correct gamma blending?
  *   (When parent app closes, children should also close)
- *   Packaging:
- *     Use jpackage tool
- *     Create logo
  * 
  * UI:
  *   UISizes:
  *     There are multiple places where I want to set a larger margin but have
  *       to akwardly divide by the default margin because only a margin scale
  *       can be set. Solution: add UIContainer.setMargin()?
- *   Zooming doesn't work when the mouse is above the selection / text tool
- *     input
  *   Change UIContainer defaults? .zeroMargin().noOutline() is used in a ton of
  *     places and should maybe be the default.
  *   Tool cursors
@@ -139,6 +141,9 @@ import ui.components.ImageCanvas;
  *     set incorrectly.
  *   Text rendering
  *     Orange text on image has yellow edges (on the left)
+ *     Generate distance map (SDF) from highres, non-anti-aliassed font texture
+ *       => should allow for fonts of different sizes
+ *       => glyphs aren't locked to integer positions
  *     How to handle fonts?
  *       How to handle big font sizes?
  *         Generate texture atlas using fontbm on demand?
@@ -172,6 +177,7 @@ import ui.components.ImageCanvas;
  * 
  * Backend:
  *   Make SUtil a git submodule
+ *   Use Math.clamp wherever it is possible
  *   Sizes
  *     Move things that should not be part of sutil.ui into ui package
  *   GLFW key input: automatically recognize keyboard layout and remappings to
@@ -186,10 +192,14 @@ public final class MainApp extends App {
     /**
      * Setting {@code DEV_BUILD} to {@code true} does the following things:
      * <ul>
+     * <li>Prints the total number of lines to the console on startup
+     * <li>Prints "illegal" imports to the console on startup
+     * <li>Prints the startup time to the console
      * <li>Adds options (keyboard shortcuts + menu bar items) for showing element
      * outlines ({@code ,}), reloading the UI ({@code Shift + R}) and and reloading
      * the shaders ({@code Shift + S})
      * <li>Disables prompting to save changes when closing the window
+     * <li>Adds a test context menu to the settings window
      * </ul>
      */
     public static final boolean DEV_BUILD = false;

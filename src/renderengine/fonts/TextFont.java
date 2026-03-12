@@ -1,10 +1,15 @@
 package renderengine.fonts;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL30.*;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -12,6 +17,7 @@ import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
 import main.apps.MainApp;
+import main.settings.StringSetting;
 import renderengine.UIRenderMaster;
 import renderengine.bufferobjects.FloatVBO;
 import renderengine.bufferobjects.IntVBO;
@@ -23,8 +29,12 @@ import sutil.ui.UI;
 public class TextFont {
 
     private static final String FONT_DIRECTORY = "res/fonts/";
-
     public static final String DEFAULT_FONT_NAME = "FreeMonoBold";
+
+    /**
+     * This font gets used if the current font is cannot be loaded
+     */
+    public static final String[] AVAILABLE_FONTS;
 
     private static final char[] CHAR_RANGES = {
             0x0020, 0x007E,
@@ -38,6 +48,21 @@ public class TextFont {
     };
 
     private static HashMap<String, TextFont> fontCache = new HashMap<>();
+    private static TextFont defaultFont;
+    private static StringSetting currentFont = new StringSetting("font");
+
+    static {
+        ArrayList<String> availableFonts = new ArrayList<>();
+        File fontsFolder = new File(FONT_DIRECTORY);
+        for (File child : fontsFolder.listFiles()) {
+            if (child.isDirectory())
+                availableFonts.add(child.getName());
+        }
+        Collections.sort(availableFonts);
+        AVAILABLE_FONTS = new String[availableFonts.size()];
+        for (int i = 0; i < AVAILABLE_FONTS.length; i++)
+            AVAILABLE_FONTS[i] = availableFonts.get(i);
+    }
 
     public final String name;
     public final int size;
@@ -69,15 +94,16 @@ public class TextFont {
         this.uboData = uboData;
     }
 
-    public static TextFont load(String name) throws IOException {
+    private static TextFont load(String name) throws IOException {
         // this is just a hack for now
-        int fontSize = UI.getUIScale() > 1.5 ? 36 : 18;
-        fontSize = 36;
-        // fontSize = 96;
+        int fontSize;
+        fontSize = UI.getUIScale() > 1.5 ? 36 : 18;
+        // fontSize = 36;
+        // fontSize = 50;
 
         String directoryName = getDirectoryName(name);
 
-        String fontInfoFile = String.format("%s/output_%d.fnt", directoryName, fontSize);
+        String fontInfoFile = String.format("%soutput_%d.fnt", directoryName, fontSize);
         List<String> allLines = null;
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fontInfoFile))) {
             allLines = bufferedReader.readAllLines();
@@ -171,7 +197,9 @@ public class TextFont {
         uboData[uboIndex++] = textureHeight;
 
         if (unknownCharIndex == -1)
-            loadFail("\"Unknown character\" (\"\u9633\", id %d) missing", name, UNKNOWN_CHAR);
+            // loadFail("\"Unknown character\" (\"%c\", id %d) missing", name, UNKNOWN_CHAR,
+            // (int) UNKNOWN_CHAR);
+            unknownCharIndex = 0;
 
         return new TextFont(name, size, lineHeight, base, textureFilenames, textureWidth, textureHeight, fontChars,
                 charIDs, unknownCharIndex, uboData);
@@ -187,90 +215,6 @@ public class TextFont {
         throw new IOException(message);
     }
 
-    public static void createFontAtlas(String name, int textSize) {
-        // doesn't work, don't know why
-        // delete old files
-        // ArrayList<String> deleteArgs = new ArrayList<>();
-        // deleteArgs.add("rm");
-        // deleteArgs.add("output*");
-        // MainApp.runCommand(String.format("%s%s", FONT_DIRECTORY, name), deleteArgs);
-
-        String directoryName = getDirectoryName(name);
-        MainApp.runCommand(directoryName,
-                getFontGenerationCommand(name, 2, 256, 256, textSize,
-                        CHAR_RANGES,
-                        EXTRA_CHARS, 0));
-    }
-
-    private static void addArgument(ArrayList<String> commands, String argument, int value) {
-        addArgument(commands, argument, Integer.toString(value));
-    }
-
-    private static void addArgument(ArrayList<String> commands, String argument, String value) {
-        commands.add("--" + argument);
-        commands.add(value);
-    }
-
-    private static ArrayList<String> getFontGenerationCommand(String fontName, int padding, int textureWidth,
-            int textureHeight, int fontSize, char[] charRanges, char[] extraChars, int bgColor) {
-
-        ArrayList<String> commands = new ArrayList<>();
-        // commands.add("/home/simon/code/executables/fontbm/fontbm");
-        commands.add("fontbm");
-        addArgument(commands, "font-file", "%s.ttf".formatted(fontName));
-        addArgument(commands, "output", "output_%s".formatted(fontSize));
-        addArgument(commands, "padding-up", padding);
-        addArgument(commands, "padding-down", padding);
-        addArgument(commands, "padding-left", padding);
-        addArgument(commands, "padding-right", padding);
-        addArgument(commands, "texture-size", "%dx%d".formatted(textureWidth, textureHeight));
-        addArgument(commands, "font-size", fontSize);
-        StringBuilder charsBuilder = new StringBuilder();
-        for (int i = 0; i < charRanges.length / 2; i++) {
-            charsBuilder.append("%d-%d,".formatted((int) charRanges[2 * i], (int) charRanges[2 * i + 1]));
-        }
-        for (int extraChar : extraChars) {
-            charsBuilder.append("%d,".formatted((int) extraChar));
-        }
-        int len = charsBuilder.length();
-        if (len > 0) {
-            charsBuilder.deleteCharAt(len - 1);
-        }
-        addArgument(commands, "chars", charsBuilder.toString());
-        addArgument(commands, "background-color", "%d,%d,%d".formatted(
-                SUtil.red(bgColor), SUtil.green(bgColor), SUtil.blue(bgColor)));
-
-        // System.out.print("Generated command: ");
-        // for (String str : commands) {
-        // System.out.print(str + " ");
-        // }
-        // System.out.println();
-
-        return commands;
-    }
-
-    public static TextFont getFont(String name) {
-        // try returning already loaded font
-        TextFont font = fontCache.get(name);
-        if (font != null)
-            return font;
-
-        // load new font
-        try {
-            font = TextFont.load(name);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        fontCache.put(name, font);
-        return font;
-    }
-
-    public static TextFont getDefaultFont() {
-        return getFont(DEFAULT_FONT_NAME);
-    }
-
     public int[] loadTextures() throws IOException {
         String directoryName = getDirectoryName(name);
         int[] textureIDs = new int[textureFilenames.length];
@@ -283,7 +227,11 @@ public class TextFont {
                 e.printStackTrace();
                 loadFail("Unable to load texture \"%s\"", name, textureFile);
             }
-            textureIDs[i] = texture.getTextureID();
+            int textureID = texture.getTextureID();
+            textureIDs[i] = textureID;
+            glBindTexture(GL_TEXTURE_2D, textureID);
+            glGenerateMipmap(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, 0);
         }
         return textureIDs;
     }
@@ -359,5 +307,117 @@ public class TextFont {
 
     public float[] getUBOData() {
         return uboData;
+    }
+
+    public static void createFontAtlas(String name, int textSize) {
+        // doesn't work, don't know why
+        // delete old files
+        // ArrayList<String> deleteArgs = new ArrayList<>();
+        // deleteArgs.add("rm");
+        // deleteArgs.add("output*");
+        // MainApp.runCommand(String.format("%s%s", FONT_DIRECTORY, name), deleteArgs);
+
+        String directoryName = getDirectoryName(name);
+        MainApp.runCommand(directoryName,
+                getFontGenerationCommand(name, 2, 256, 256, textSize,
+                        CHAR_RANGES, EXTRA_CHARS, 0));
+    }
+
+    private static void addArgument(ArrayList<String> commands, String argument, int value) {
+        addArgument(commands, argument, Integer.toString(value));
+    }
+
+    private static void addArgument(ArrayList<String> commands, String argument, String value) {
+        commands.add("--" + argument);
+        commands.add(value);
+    }
+
+    private static ArrayList<String> getFontGenerationCommand(String fontName, int padding, int textureWidth,
+            int textureHeight, int fontSize, char[] charRanges, char[] extraChars, int bgColor) {
+
+        ArrayList<String> commands = new ArrayList<>();
+        // commands.add("/home/simon/code/executables/fontbm/fontbm");
+        commands.add("fontbm");
+        addArgument(commands, "font-file", "%s.ttf".formatted(fontName));
+        addArgument(commands, "output", "output_%s".formatted(fontSize));
+        addArgument(commands, "padding-up", padding);
+        addArgument(commands, "padding-down", padding);
+        addArgument(commands, "padding-left", padding);
+        addArgument(commands, "padding-right", padding);
+        addArgument(commands, "texture-size", "%dx%d".formatted(textureWidth, textureHeight));
+        addArgument(commands, "font-size", fontSize);
+        StringBuilder charsBuilder = new StringBuilder();
+        for (int i = 0; i < charRanges.length / 2; i++) {
+            charsBuilder.append("%d-%d,".formatted((int) charRanges[2 * i], (int) charRanges[2 * i + 1]));
+        }
+        for (int extraChar : extraChars) {
+            charsBuilder.append("%d,".formatted((int) extraChar));
+        }
+        int len = charsBuilder.length();
+        if (len > 0) {
+            charsBuilder.deleteCharAt(len - 1);
+        }
+        addArgument(commands, "chars", charsBuilder.toString());
+        addArgument(commands, "background-color", "%d,%d,%d".formatted(
+                SUtil.red(bgColor), SUtil.green(bgColor), SUtil.blue(bgColor)));
+
+        // System.out.print("Generated command: ");
+        // for (String str : commands) {
+        // System.out.print(str + " ");
+        // }
+        // System.out.println();
+
+        return commands;
+    }
+
+    public static TextFont getFont(String name) {
+        if (defaultFont == null) {
+            // put the default font into the cache
+            try {
+                defaultFont = load(DEFAULT_FONT_NAME);
+                fontCache.put(DEFAULT_FONT_NAME, defaultFont);
+            } catch (IOException e) {
+                String message = String.format("Unable to load default font (%s)", DEFAULT_FONT_NAME);
+                throw new RuntimeException(message, e);
+            }
+        }
+
+        // try returning already loaded font
+        TextFont font = null;
+        if (fontCache.containsKey(name)) {
+            font = fontCache.get(name);
+        } else {
+            // load new font
+            try {
+                font = TextFont.load(name);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            // even if we fail to load the font, we still put null into the font cache to
+            // indicate that we already tried to load this font
+            fontCache.put(name, font);
+        }
+
+        return font != null ? font : defaultFont;
+    }
+
+    // public static TextFont getDefaultFont() {
+    // return getFont(DEFAULT_FONT_NAME);
+    // }
+
+    public static TextFont getCurrentFont() {
+        return getFont(getCurrentFontName());
+    }
+
+    public static String getCurrentFontName() {
+        return currentFont.get();
+    }
+
+    public static void setCurrentFontName(String name) {
+        // test if this font is actually available
+        TextFont font = getFont(name);
+        if (font.name.equals(name))
+            currentFont.set(name);
     }
 }

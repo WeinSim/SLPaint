@@ -2,11 +2,17 @@ package ui;
 
 import static org.lwjgl.glfw.GLFW.*;
 
+import java.util.function.Consumer;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
+
 import main.ColorPicker;
 import main.apps.App;
 import main.apps.MainApp;
 import main.apps.SettingsApp;
 import main.settings.Settings;
+import renderengine.fonts.TextFont;
 import sutil.ui.UI;
 import sutil.ui.UISizes;
 import sutil.ui.elements.UIButton;
@@ -49,17 +55,36 @@ public class SettingsUI extends AppUI<SettingsApp> {
         mainContainer.setFillSize();
 
         mainContainer.add(createBaseColor());
-        mainContainer.add(createDarkModeDropdown());
-        mainContainer.add(createHueSatDropdown());
-        mainContainer.add(createHSLHSVDropdown());
+        mainContainer.add(createDropdown(
+                "Theme:",
+                new String[] { "Dark", "Light" },
+                () -> AppUI.isDarkMode() ? 0 : 1,
+                i3 -> app.setDarkMode(i3 == 0)));
+        mainContainer.add(createDropdown(
+                "Shape of Hue-Saturation Field:",
+                new String[] { "Circle", "Square" },
+                () -> App.isCircularHueSatField() ? 0 : 1,
+                i2 -> App.setCircularHueSatField(i2 == 0)));
+        mainContainer.add(createDropdown(
+                "Color space:",
+                new String[] { "HSV", "HSL" },
+                () -> App.isHSLColorSpace() ? 1 : 0,
+                i1 -> App.setHSLColorSpace(i1 == 1)));
+        final String[] fonts = TextFont.AVAILABLE_FONTS;
+        mainContainer.add(createDropdown("Font:",
+                fonts,
+                TextFont::getCurrentFontName,
+                s -> app.queueEvent(() -> TextFont.setCurrentFontName(s))));
 
-        UIContextMenu contextMenu = new UIContextMenu(mainContainer, false);
-        contextMenu.addLabel("Label 1", () -> System.out.println("Label 1"));
-        contextMenu.addSeparator();
-        UIFloatMenu nestedMenu = contextMenu.addNestedMenu("Nested Menu", true);
-        for (int i = 0; i < 20; i++) {
-            nestedMenu.addLabel(String.format("Nested %d", i), () -> {
-            });
+        if (MainApp.DEV_BUILD) {
+            UIContextMenu contextMenu = new UIContextMenu(mainContainer, false);
+            contextMenu.addLabel("Label 1", () -> System.out.println("Label 1"));
+            contextMenu.addSeparator();
+            UIFloatMenu nestedMenu = contextMenu.addNestedMenu("Nested Menu", true);
+            for (int i = 0; i < 20; i++) {
+                nestedMenu.addLabel(String.format("Nested %d", i), () -> {
+                });
+            }
         }
 
         root.add(mainContainer.addScrollbars());
@@ -139,40 +164,23 @@ public class SettingsUI extends AppUI<SettingsApp> {
         return baseColor;
     }
 
-    private UIContainer createDarkModeDropdown() {
-        UIContainer container = new UIContainer(HORIZONTAL,
-                CENTER);
-        container.zeroMargin().noOutline();
+    private UIContainer createDropdown(String name, String[] options, IntSupplier stateSupplier,
+            IntConsumer stateConsumer) {
 
-        container.add(new UIText("Theme:"));
-        container.add(new UIDropdown(
-                new String[] { "Dark", "Light" },
-                () -> AppUI.isDarkMode() ? 0 : 1,
-                i -> app.setDarkMode(i == 0)));
-        return container;
+        return createDropdown(name, new UIDropdown(options, stateSupplier, stateConsumer));
     }
 
-    private UIContainer createHueSatDropdown() {
-        UIContainer container = new UIContainer(HORIZONTAL, CENTER);
-        container.zeroMargin().noOutline();
+    private UIContainer createDropdown(String name, String[] options, Supplier<String> nameSupplier,
+            Consumer<String> nameConsumer) {
 
-        container.add(new UIText("Shape of Hue-Saturation Field:"));
-        container.add(new UIDropdown(
-                new String[] { "Circle", "Square" },
-                () -> App.isCircularHueSatField() ? 0 : 1,
-                i -> App.setCircularHueSatField(i == 0)));
-        return container;
+        return createDropdown(name, new UIDropdown(options, nameSupplier, nameConsumer));
     }
 
-    private UIContainer createHSLHSVDropdown() {
+    private UIContainer createDropdown(String name, UIDropdown dropdown) {
         UIContainer container = new UIContainer(HORIZONTAL, CENTER);
         container.zeroMargin().noOutline();
-
-        container.add(new UIText("Color space:"));
-        container.add(new UIDropdown(
-                new String[] { "HSV", "HSL" },
-                () -> App.isHSLColorSpace() ? 1 : 0,
-                i -> App.setHSLColorSpace(i == 1)));
+        container.add(new UIText(name));
+        container.add(dropdown);
         return container;
     }
 }

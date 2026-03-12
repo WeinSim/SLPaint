@@ -2,7 +2,7 @@ package main.settings;
 
 import sutil.json.values.JSONValue;
 
-public abstract sealed class Setting<T> permits BooleanSetting, ColorSetting, ColorArraySetting {
+public abstract sealed class Setting<T> permits BooleanSetting, StringSetting, ColorSetting, ColorArraySetting {
 
     protected String identifier;
     protected T value;

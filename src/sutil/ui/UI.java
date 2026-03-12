@@ -59,7 +59,8 @@ public abstract class UI {
 
     private static UI context = null;
 
-    protected String defaultFontName = "FreeMonoBold";
+    // This is currently unused in SLPaint
+    protected String defaultFontName = "UbuntuSansMono";
 
     private double uiScale = 1.0;
 
@@ -369,10 +370,6 @@ public abstract class UI {
         return context.uiScale;
     }
 
-    public static String getDefaultFontName() {
-        return context.defaultFontName;
-    }
-
     public static UIElement getSelectedElement() {
         return context.selectedElement;
     }
@@ -406,6 +403,14 @@ public abstract class UI {
 
     public static SVector getRootSize() {
         return context.rootSize;
+    }
+
+    public static String getDefaultFontName() {
+        return context.defaultFontName;
+    }
+
+    public static void setDefaultFontName(String defaultFontName) {
+        context.defaultFontName = defaultFontName;
     }
 
     public void setUIScale(double uiScale) {

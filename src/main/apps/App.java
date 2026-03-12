@@ -9,6 +9,7 @@ import main.MainLoop;
 import main.settings.BooleanSetting;
 import renderengine.AppRenderer;
 import renderengine.Window;
+import renderengine.fonts.TextFont;
 import sutil.math.SVector;
 import sutil.ui.UI;
 import sutil.ui.elements.UIRoot;
@@ -17,6 +18,8 @@ import ui.AppUI;
 public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp {
 
     private static final double FRAME_TIME_GAMMA = 0.015;
+
+    private String lastFont = "";
 
     /**
      * 0 = normal 1 = mouse above, 2 = always
@@ -271,10 +274,12 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     }
 
     public final void render() {
-        if (renderer == null) {
+        // if (renderer == null)
+        String currentFont = TextFont.getCurrentFontName();
+        if (!lastFont.equals(currentFont))
             renderer = new AppRenderer(this);
-        }
         renderer.render();
+        lastFont = currentFont;
     }
 
     public void queueEvent(Runnable action) {

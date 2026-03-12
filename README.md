@@ -9,10 +9,12 @@ I started this project in August of 2024.
 
 SLPaint is still under development and has quite some room for improvement:
 - Text input is very basic
+- Text rendering is quite primitive
 - There are a lot of small transparency bugs
 - Icons are in an early state
 
 *SLPaint is still in early development. There might be unexpected bugs or crashes.*
+
 
 ## Feature list
 
@@ -35,11 +37,6 @@ SLPaint supports the following features:
 - Undo / redo options
 - RGB, HSL and HSV color formats
 - Light and dark theme
-
-
-## Java requirements
-
-This project requires java version 25.
 
 
 ## License

@@ -95,7 +95,7 @@ public class UIRenderMaster {
         renderers.add(rectOutlineRenderer = new RectOutlineRenderer());
         renderers.add(hslRenderer = new HSLRenderer());
         renderers.add(ellipseRenderer = new EllipseRenderer());
-        renderers.add(textRenderer = new TextRenderer(TextFont.getDefaultFont()));
+        renderers.add(textRenderer = new TextRenderer(TextFont.getCurrentFont()));
         renderers.add(imageRenderer = new ImageRenderer());
 
         createTempFBO();

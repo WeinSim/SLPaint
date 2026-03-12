@@ -265,12 +265,12 @@ public class Image implements Cleanable {
     public void drawPixel(int x, int y, int color) {
         checkBounds(x, y);
 
-        drawPixelUnsafe(x, y, color);
+        drawPixelUnsafe(x, y, color, false);
 
         setDirty(x, y);
     }
 
-    private void drawPixelUnsafe(int x, int y, int color) {
+    private void drawPixelUnsafe(int x, int y, int color, boolean premultipliedAlpha) {
         int srcAlpha = SUtil.alpha(color);
 
         if (srcAlpha == 0)
@@ -287,14 +287,26 @@ public class Image implements Cleanable {
             int dst = getPixel(x, y);
             int dstRed = SUtil.red(dst),
                     dstGreen = SUtil.green(dst),
-                    dstBlue = SUtil.green(dst),
+                    dstBlue = SUtil.blue(dst),
                     dstAlpha = SUtil.alpha(dst);
 
+            double sFactor = srcAlpha / 255.0,
+                    dFactor = (1 - srcAlpha / 255.0) * dstAlpha / 255.0;
+            double sum = sFactor + dFactor;
+            if (premultipliedAlpha)
+                sFactor = 1;
+
             c = SUtil.toARGB(
-                    ((255 - srcAlpha) * dstRed + srcAlpha * srcRed) / 255,
-                    ((255 - srcAlpha) * dstGreen + srcAlpha * srcGreen) / 255,
-                    ((255 - srcAlpha) * dstBlue + srcAlpha * srcBlue) / 255,
+                    (sFactor * srcRed + dFactor * dstRed) / sum,
+                    (sFactor * srcGreen + dFactor * dstGreen) / sum,
+                    (sFactor * srcBlue + dFactor * dstBlue) / sum,
                     255 - (255 - srcAlpha) * (255 - dstAlpha) / 255);
+
+            // c = SUtil.toARGB(
+            // ((255 - srcAlpha) * dstRed + srcAlpha * srcRed) / 255,
+            // ((255 - srcAlpha) * dstGreen + srcAlpha * srcGreen) / 255,
+            // ((255 - srcAlpha) * dstBlue + srcAlpha * srcBlue) / 255,
+            // 255 - (255 - srcAlpha) * (255 - dstAlpha) / 255);
         }
         pixelArray[y * width + x] = c;
     }
@@ -427,6 +439,10 @@ public class Image implements Cleanable {
         drawSubImage(x, y, w, h, pixels, true);
     }
 
+    /**
+     * 
+     * @param pixels Are expected to have premultiplied alpha
+     */
     private void drawSubImage(int x, int y, int w, int h, int[] pixels, boolean doAlphaBlending) {
         if (x >= width || x + w <= 0 || y >= height || y + h <= 0)
             return;
@@ -445,7 +461,7 @@ public class Image implements Cleanable {
             for (int row = 0; row < numRows; row++) {
                 for (int col = 0; col < len; col++) {
                     int c = pixels[row * stride + offset + col];
-                    drawPixelUnsafe(col + x0, row + y0, c);
+                    drawPixelUnsafe(col + x0, row + y0, c, true);
                 }
             }
         } else {

@@ -23,6 +23,11 @@ public abstract class InstanceShapeRenderer<C extends DrawCall> extends ShapeRen
         shaderProgram.start();
         shaderProgram.loadUniform("viewMatrix", viewMatrix);
 
+        glEnable(GL_BLEND);
+        glBlendFuncSeparate(
+                GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,
+                GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+
         model.bind();
         model.enableVBOs();
         while (prepareNextDrawcall())

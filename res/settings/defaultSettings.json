@@ -12,5 +12,6 @@
     "hueSatCircle": true,
     "hslColorSpace": true,
     "transparentSelection": false,
-    "lockSelectionRatio": true
+    "lockSelectionRatio": true,
+    "font": "UbuntuSansMono"
 }

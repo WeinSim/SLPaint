@@ -40,7 +40,7 @@ public final class TextToolContainer extends DragToolContainer<TextTool> {
             setVisibilitySupplier(TextToolContainer.this::showChildren);
 
             uiText.setTextSize(() -> tool.getSize() * app.getImageZoom());
-            uiText.setFontName(tool::getFont);
+            // uiText.setFontName(tool::getFont);
             uiText.setColor(() -> MainApp.toVector4f(app.getPrimaryColor()));
 
             app.setTextToolInput(this);

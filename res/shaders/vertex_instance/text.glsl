@@ -40,8 +40,8 @@ out vec2 textureCoords;
 out vec4 color;
 
 vec4 getGLPos(vec3 screenPos, float depth) {
-    // screenPos.x = floor(screenPos.x);
-    // screenPos.y = floor(screenPos.y);
+    screenPos.x = floor(screenPos.x);
+    screenPos.y = floor(screenPos.y);
     return vec4(
         (viewMatrix * screenPos).xy,
         depth,

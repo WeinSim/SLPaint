@@ -15,11 +15,11 @@ public final class BooleanSetting extends Setting<Boolean> {
     }
 
     @Override
-    public void setJSONValue(JSONValue value) {
-        if (value instanceof JSONBoolean b) {
-            this.value = b.getValue();
+    public void setJSONValue(JSONValue json) {
+        if (json instanceof JSONBoolean b) {
+            value = b.getValue();
         } else {
-            handleIncorrectJSONType("JSONBoolean", value.getClass().getName());
+            handleIncorrectJSONType("JSONBoolean", json.getClass().getName());
         }
     }
 }
