@@ -1,6 +1,6 @@
 .vscode/settings.json
 bin/
-build/
+build/package-input
 dist/
 res/fonts/Courier New/
 res/fonts/Courier New Bold/

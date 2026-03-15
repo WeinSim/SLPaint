@@ -4,10 +4,6 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.*;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.function.BooleanSupplier;
@@ -19,6 +15,7 @@ import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
 import main.ColorPicker;
+import main.Loader;
 import main.apps.App;
 import main.apps.MainApp;
 import main.settings.BooleanSetting;
@@ -34,7 +31,7 @@ import sutil.ui.elements.UIElement;
 
 public abstract class AppUI<T extends App> extends UI implements Cleanable {
 
-    private static final String ICON_BASE_PATH = "res/icons/%s.png",
+    private static final String ICON_BASE_PATH = "icons/%s.png",
             MISSING_ICON_NAME = "questionmark";
 
     private static final Vector4f[] DEFAULT_UI_COLORS_DARK = {
@@ -101,17 +98,17 @@ public abstract class AppUI<T extends App> extends UI implements Cleanable {
 
     @Override
     protected int loadIconTextureID(String name) {
-        File file = new File(String.format(ICON_BASE_PATH, name));
-        if (!file.exists())
-            file = new File(String.format(ICON_BASE_PATH, MISSING_ICON_NAME));
+        String filename = String.format(ICON_BASE_PATH, name);
+        if (!Loader.exists(filename)) 
+            filename = String.format(ICON_BASE_PATH, MISSING_ICON_NAME);
         Texture texture = null;
         try {
-            texture = TextureLoader.getTexture("PNG", new FileInputStream(file));
+            texture = TextureLoader.getTexture("PNG", Loader.getInputStream(filename));
         } catch (Exception e) {
             // e.printStackTrace();
             throw new RuntimeException(String.format("Unable to load icon \"%s\"", name));
         }
-        int textureID =  texture.getTextureID();
+        int textureID = texture.getTextureID();
         glBindTexture(GL_TEXTURE_2D, textureID);
         glGenerateMipmap(GL_TEXTURE_2D);
         return textureID;
@@ -131,13 +128,9 @@ public abstract class AppUI<T extends App> extends UI implements Cleanable {
      * @return
      */
     public static String[] lipsum(int numWords, int lineLength) {
-        String lipsum = "";
-        try (BufferedReader reader = new BufferedReader(new FileReader("res/misc/lipsum.txt"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                lipsum += line;
-                lipsum += "\n ";
-            }
+        String lipsum;
+        try {
+            lipsum = Loader.getString("misc/lipsum.txt");
         } catch (IOException e) {
             e.printStackTrace();
             return new String[] { "[unable to load lipsum]" };

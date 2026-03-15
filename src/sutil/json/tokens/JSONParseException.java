@@ -1,6 +1,8 @@
 package sutil.json.tokens;
 
-public class JSONParseException extends Exception {
+import java.io.IOException;
+
+public class JSONParseException extends IOException {
 
     public JSONParseException(String message) {
         super(message);

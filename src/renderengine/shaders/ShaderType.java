@@ -3,9 +3,9 @@ package renderengine.shaders;
 public enum ShaderType {
 
     INSTANCE(
-            "res/shaders/vertex_instance/%s.glsl",
+            "shaders/vertex_instance/%s.glsl",
             null,
-            "res/shaders/fragment/%s.glsl");
+            "shaders/fragment/%s.glsl");
 
     public final String vertexPath,
             geometryPath,

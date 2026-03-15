@@ -5,7 +5,6 @@ import static org.lwjgl.glfw.GLFW.*;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -14,6 +13,7 @@ import org.lwjglx.util.vector.Vector4f;
 
 import main.ColorArray;
 import main.ColorPicker;
+import main.Loader;
 import main.image.Image;
 import main.image.ImageFormat;
 import main.image.ImageManager;
@@ -34,16 +34,6 @@ import ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- *   Packaging:
- *     https://docs.oracle.com/en/java/javase/25/jpackage/packaging-overview.html
- *     Make it actually installable (deb package)
- *     File associations
- *     Why does startup take so long?
- *   Selection: Shift + initial drag forces square aspect ratio (combine with
- *     analogous feature for line tool)
- *   UI
- *     Combine user actions (keyboard, mouse). Combine with BooleanSupplier
- *       (active / possible)
  * 
  * App:
  *   Keyboard shortcuts
@@ -58,6 +48,11 @@ import ui.components.ImageCanvas;
  *       => Make the pencil tool also use the temp framebuffer?
  *     Sizes 1 & 2 and 3 & 4 look the same
  *     Make sizes UI prettier
+ *   Selection (/ drag tools)
+ *     Shift + initial drag should force square aspect ratio (combine with
+ *       analogous feature for line tool)
+ *     Shift + resize should lock the aspect ratio
+ *       => remove "lock aspect ratio" setting?
  *   update() takes about twice as long when a modal dialog is open
  *     Maybe because of the many long textWidth() calculations?
  *   Undoing / redoing an operation that changes the image size doesn't change
@@ -81,9 +76,13 @@ import ui.components.ImageCanvas;
  *       video)
  *       => Add correct gamma blending? (as a setting?)
  *         Have OpenGL also do correct gamma blending?
+ *   Packaging:
+ *     Why does startup take so long?
  *   (When parent app closes, children should also close)
  * 
  * UI:
+ *   Combine user actions (keyboard, mouse). Combine with BooleanSupplier
+ *     (active / possible)
  *   UISizes:
  *     There are multiple places where I want to set a larger margin but have
  *       to akwardly divide by the default margin because only a margin scale
@@ -106,11 +105,16 @@ import ui.components.ImageCanvas;
  *       flipping the selection should be made inactive.
  *     Add option to crop selection?
  *     Add precise pixel input for scaling / cropping selection like ResizeUI?
+ *   Tool + undo inconsistencies:
+ *     Starting a tool action (e.g. putting a tool in the IDLE state) and then
+ *       pressing Ctrl+Z should cancel (not finish) the current tool.
+ *       Currently it does nothing (except sometimes with selection).
  *   Icons
  *     The current icons look kind of bad in light mode
  *       -> separate icons for light and dark mode?
  *     Create icons for:
  *       Basically everything in the menu bar (cut, copy, paste, zoom)
+ *   The window icon does not work (Window.setIcon())
  *   On the first frame that the UI is rendered, the root has a black background
  *     and parts of the UI are not yet visible. This is visible when opening a
  *     child app.
@@ -238,14 +242,24 @@ public final class MainApp extends App {
 
     public static final int MIN_IMAGE_SIZE = 1, MAX_IMAGE_SIZE = 65535;
 
+    private static final String ABOUT_TEXT_FILE = "about.txt";
+    private static final String ABOUT_TEXT;
+
+    static {
+        String about;
+        try {
+            about = Loader.getString(ABOUT_TEXT_FILE);
+        } catch (IOException e) {
+            e.printStackTrace();
+            about = "[unable to load about]";
+        }
+        ABOUT_TEXT = about;
+    }
+
     private static BooleanSetting transparentSelection = new BooleanSetting("transparentSelection");
     private static BooleanSetting lockSelectionRatio = new BooleanSetting("lockSelectionRatio");
 
     private static ColorArraySetting customUIBaseColors = new ColorArraySetting("customUIColors");
-
-    private static final String ABOUT_TEXT_FILE = "res/about.txt";
-
-    private static String aboutText;
 
     private final ImageManager imageManager;
 
@@ -295,16 +309,6 @@ public final class MainApp extends App {
         prevTool = ImageTool.PENCIL;
         for (ImageTool tool : ImageTool.INSTANCES)
             tool.setApp(this);
-
-        // load about text
-        aboutText = null;
-        try (BufferedReader reader = new BufferedReader(new FileReader(ABOUT_TEXT_FILE))) {
-            aboutText = reader.readAllAsString();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (aboutText == null)
-            aboutText = "[unable to load about]";
 
         // load UI
         loadUI();
@@ -364,7 +368,7 @@ public final class MainApp extends App {
 
         switch (dialogType) {
             case ABOUT_DIALOG -> {
-                (new Thread(() -> UI.showModalDialog("About", aboutText, UI.INFO_DIALOG))).start();
+                (new Thread(() -> UI.showModalDialog("About", ABOUT_TEXT, UI.INFO_DIALOG))).start();
             }
         }
     }
@@ -825,10 +829,8 @@ public final class MainApp extends App {
             // }
         } catch (IOException e) {
             e.printStackTrace();
-            System.exit(1);
         } catch (InterruptedException e) {
             e.printStackTrace();
-            System.exit(1);
         }
         return exitVal;
     }

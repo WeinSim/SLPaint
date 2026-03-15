@@ -6,13 +6,15 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
+import main.Loader;
 import sutil.json.JSONParser;
 import sutil.json.JSONSerializer;
-import sutil.json.tokens.JSONParseException;
 import sutil.json.values.JSONObject;
 import sutil.json.values.JSONValue;
 
@@ -26,8 +28,8 @@ import sutil.json.values.JSONValue;
  */
 public class Settings {
 
-    private static final String SETTINGS_FILE = "res/settings/settings.json";
-    private static final String DEFAULT_SETTINGS_FILE = "res/settings/defaultSettings.json";
+    private static final String DEFAULT_SETTINGS_FILE = "settings/defaultSettings.json";
+    private static final String SETTINGS_FILE;
 
     private static JSONObject defaultSettings;
     private static JSONObject currentSettings;
@@ -37,19 +39,22 @@ public class Settings {
     private static SettingsSaveThread saveThread;
 
     static {
-        defaultSettings = loadSettingsFromFile(DEFAULT_SETTINGS_FILE);
-        if (defaultSettings == null) {
-            System.err.format("Unable to load default settings file (%s)!\n", DEFAULT_SETTINGS_FILE);
-            System.exit(1);
+        Path configPath = Path.of(System.getProperty("user.home"), ".slpaint");
+        try {
+            Files.createDirectories(configPath);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to create config directory", e);
         }
-
-        currentSettings = loadSettingsFromFile(SETTINGS_FILE);
-        if (currentSettings == null) {
-            System.err.println("Unable to load settings. Using default settings instead.");
-            currentSettings = new JSONObject(defaultSettings);
-        }
+        SETTINGS_FILE = configPath.resolve("settings.json").toString();
 
         allSettings = new HashMap<>();
+        try {
+            defaultSettings = JSONParser.parseObject(Loader.getString(DEFAULT_SETTINGS_FILE));
+        } catch (IOException e) {
+            final String message = String.format("Unable to load default settings file (%s)", DEFAULT_SETTINGS_FILE);
+            throw new RuntimeException(message, e);
+        }
+        loadUserSettings();
 
         if (saveThread == null) {
             saveThread = new SettingsSaveThread();
@@ -62,7 +67,7 @@ public class Settings {
 
     public static void addSetting(String identifier, Setting<?> setting) {
         if (allSettings.get(identifier) != null) {
-            throw new RuntimeException(String.format("Duplicate setting %s!", identifier));
+            throw new RuntimeException(String.format("Duplicate setting %s", identifier));
         }
         allSettings.put(identifier, setting);
 
@@ -74,14 +79,13 @@ public class Settings {
         if (jsonValue == null) {
             jsonValue = defaultSettings.get(identifier);
             if (jsonValue == null) {
-                throw new RuntimeException(String.format("The setting named %s does not exist!", identifier));
+                throw new RuntimeException(String.format("The setting named %s does not exist", identifier));
             }
         }
         setting.setJSONValue(jsonValue);
     }
 
-    public static void loadDefaultSettings() {
-        defaultSettings = loadSettingsFromFile(DEFAULT_SETTINGS_FILE);
+    public static void setDefaultSettings() {
         currentSettings = new JSONObject(defaultSettings);
 
         for (Entry<String, Setting<?>> entry : allSettings.entrySet()) {
@@ -89,29 +93,21 @@ public class Settings {
         }
     }
 
-    private static JSONObject loadSettingsFromFile(String path) {
-        File file = new File(path);
-        if (!file.exists())
-            return null;
-
+    private static void loadUserSettings() {
         String buffer = "";
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                buffer += line + "\n";
+        try {
+            try (BufferedReader br = new BufferedReader(new FileReader(SETTINGS_FILE))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    buffer += line + "\n";
+                }
             }
+            currentSettings = JSONParser.parseObject(buffer);
         } catch (IOException e) {
             e.printStackTrace();
+            System.err.println("Unable to load settings. Using default settings instead.");
+            currentSettings = new JSONObject(defaultSettings);
         }
-
-        JSONObject json = null;
-        try {
-            json = JSONParser.parseObject(buffer);
-        } catch (JSONParseException e) {
-            e.printStackTrace();
-        }
-
-        return json;
     }
 
     public static void finish() {
@@ -135,7 +131,7 @@ public class Settings {
 
     private static class SettingsSaveThread extends Thread {
 
-        private static final long SLEEP_TIME = 5000;
+        private static final long SLEEP_TIME = 10_000;
 
         private String lastJSONString = null;
 

@@ -27,8 +27,7 @@ public class TextRenderer extends InstanceShapeRenderer<TextDrawCall> {
         try {
             textureIDs = font.loadTextures();
         } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
+            throw new RuntimeException(e);
         }
 
         shaderProgram.start();

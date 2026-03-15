@@ -2,6 +2,7 @@ package main.apps;
 
 import static org.lwjgl.glfw.GLFW.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -18,8 +19,6 @@ import ui.AppUI;
 public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, ResizeApp {
 
     private static final double FRAME_TIME_GAMMA = 0.015;
-
-    private String lastFont = "";
 
     /**
      * 0 = normal 1 = mouse above, 2 = always
@@ -39,6 +38,11 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     protected boolean adjustSizeOnInit = false;
 
     protected AppRenderer renderer;
+    /**
+     * The font that was loaded the last time render() was called. This field is
+     * used to load the renderer both on startup and whenever the font changes.
+     */
+    private String lastFont = "";
 
     /**
      * Only used if this app is the child app of another app.
@@ -73,11 +77,16 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         mouseButtons = new boolean[2];
         mousePos = new SVector();
         prevMousePos = new SVector();
+
+        ArrayList<String> iconNames = new ArrayList<>();
+        final int[] resolutions = { 16, 32, 256 };
+        for (int res : resolutions) {
+            iconNames.add(String.format("logo/logo_%d.png", res));
+        }
+        window.setIcon(iconNames);
     }
 
     public final void loadUI() {
-        if (ui != null)
-            ui.cleanUp();
         ui = createUI();
 
         if (adjustSizeOnInit) {
@@ -187,10 +196,6 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         }
     }
 
-    public void updateDisplay() {
-        window.updateDisplay();
-    }
-
     public void reloadShaders() {
         renderer.reloadShaders();
     }
@@ -249,16 +254,18 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
     }
 
     public void showDialog(int dialogType) {
-        App child = childApps.get(dialogType);
-        if (child != null) {
-            child.requestFocus();
-        } else {
-            child = createChildApp(dialogType);
+        MainLoop.queueEvent(() -> {
+            App child = childApps.get(dialogType);
             if (child != null) {
-                child.setDialogType(dialogType);
-                childApps.put(dialogType, child);
+                child.requestFocus();
+            } else {
+                child = createChildApp(dialogType);
+                if (child != null) {
+                    child.setDialogType(dialogType);
+                    childApps.put(dialogType, child);
+                }
             }
-        }
+        });
     }
 
     protected abstract App createChildApp(int dialogType);
@@ -278,7 +285,9 @@ public sealed abstract class App permits MainApp, ColorEditorApp, SettingsApp, R
         String currentFont = TextFont.getCurrentFontName();
         if (!lastFont.equals(currentFont))
             renderer = new AppRenderer(this);
+
         renderer.render();
+        window.updateDisplay();
         lastFont = currentFont;
     }
 

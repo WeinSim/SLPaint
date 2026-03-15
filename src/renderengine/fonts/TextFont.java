@@ -3,19 +3,14 @@ package renderengine.fonts;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.*;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 
+import main.Loader;
 import main.apps.MainApp;
 import main.settings.StringSetting;
 import renderengine.UIRenderMaster;
@@ -23,17 +18,17 @@ import renderengine.bufferobjects.FloatVBO;
 import renderengine.bufferobjects.IntVBO;
 import renderengine.drawcalls.TextDrawCall;
 import sutil.SUtil;
+import sutil.json.JSONParser;
+import sutil.json.values.JSONArray;
+import sutil.json.values.JSONObject;
 import sutil.math.SVector;
 import sutil.ui.UI;
 
 public class TextFont {
 
-    private static final String FONT_DIRECTORY = "res/fonts/";
-    public static final String DEFAULT_FONT_NAME = "FreeMonoBold";
-
-    /**
-     * This font gets used if the current font is cannot be loaded
-     */
+    private static final String FONT_DIRECTORY = "fonts/";
+    private static final String FONT_FILE = "fonts.json";
+    public static final String DEFAULT_FONT_NAME;
     public static final String[] AVAILABLE_FONTS;
 
     private static final char[] CHAR_RANGES = {
@@ -47,22 +42,24 @@ public class TextFont {
             // BULLET_CHAR,
     };
 
+    static {
+        try {
+            JSONObject fonts = JSONParser.parseObject(Loader.getString(FONT_DIRECTORY + FONT_FILE));
+            JSONArray fontsArray = fonts.getArray("fonts");
+            AVAILABLE_FONTS = new String[fontsArray.size()];
+            for (int i = 0; i < AVAILABLE_FONTS.length; i++) {
+                AVAILABLE_FONTS[i] = fontsArray.getString(i);
+            }
+            DEFAULT_FONT_NAME = fonts.getString("defaultFont");
+        } catch (IOException e) {
+            final String message = String.format("Unable to load font info file (%s)", FONT_FILE);
+            throw new RuntimeException(message, e);
+        }
+    }
+
     private static HashMap<String, TextFont> fontCache = new HashMap<>();
     private static TextFont defaultFont;
     private static StringSetting currentFont = new StringSetting("font");
-
-    static {
-        ArrayList<String> availableFonts = new ArrayList<>();
-        File fontsFolder = new File(FONT_DIRECTORY);
-        for (File child : fontsFolder.listFiles()) {
-            if (child.isDirectory())
-                availableFonts.add(child.getName());
-        }
-        Collections.sort(availableFonts);
-        AVAILABLE_FONTS = new String[availableFonts.size()];
-        for (int i = 0; i < AVAILABLE_FONTS.length; i++)
-            AVAILABLE_FONTS[i] = availableFonts.get(i);
-    }
 
     public final String name;
     public final int size;
@@ -101,12 +98,10 @@ public class TextFont {
         // fontSize = 36;
         // fontSize = 50;
 
-        String directoryName = getDirectoryName(name);
-
-        String fontInfoFile = String.format("%soutput_%d.fnt", directoryName, fontSize);
-        List<String> allLines = null;
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fontInfoFile))) {
-            allLines = bufferedReader.readAllLines();
+        String fontInfoFile = String.format("%s%s/output_%d.fnt", FONT_DIRECTORY, name, fontSize);
+        String[] allLines = null;
+        try {
+            allLines = Loader.getString(fontInfoFile).split("\n");
         } catch (IOException e) {
             loadFail("Unable to read file %s", name, fontInfoFile);
         }
@@ -205,10 +200,6 @@ public class TextFont {
                 charIDs, unknownCharIndex, uboData);
     }
 
-    private static String getDirectoryName(String name) {
-        return String.format("%s%s/", FONT_DIRECTORY, name);
-    }
-
     private static void loadFail(String message, String name, Object... params) throws IOException {
         message = String.format(message, params);
         message = String.format("Could not load font \"%s\": %s", name, message);
@@ -216,15 +207,13 @@ public class TextFont {
     }
 
     public int[] loadTextures() throws IOException {
-        String directoryName = getDirectoryName(name);
         int[] textureIDs = new int[textureFilenames.length];
         for (int i = 0; i < textureFilenames.length; i++) {
-            String textureFile = String.format("%s/%s", directoryName, textureFilenames[i]);
+            String textureFile = String.format("%s%s/%s", FONT_DIRECTORY, name, textureFilenames[i]);
             Texture texture = null;
             try {
-                texture = TextureLoader.getTexture("PNG", new FileInputStream(textureFile));
+                texture = TextureLoader.getTexture("PNG", Loader.getInputStream(textureFile));
             } catch (Exception e) {
-                e.printStackTrace();
                 loadFail("Unable to load texture \"%s\"", name, textureFile);
             }
             int textureID = texture.getTextureID();
@@ -317,7 +306,7 @@ public class TextFont {
         // deleteArgs.add("output*");
         // MainApp.runCommand(String.format("%s%s", FONT_DIRECTORY, name), deleteArgs);
 
-        String directoryName = getDirectoryName(name);
+        String directoryName = String.format("res/%s%s/", FONT_DIRECTORY, name);
         MainApp.runCommand(directoryName,
                 getFontGenerationCommand(name, 2, 256, 256, textSize,
                         CHAR_RANGES, EXTRA_CHARS, 0));

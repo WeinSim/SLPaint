@@ -7,13 +7,20 @@ import static org.lwjgl.glfw.GLFWNativeX11.*;
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.util.nfd.NativeFileDialog.*;
 
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.imageio.ImageIO;
+
+import org.lwjgl.BufferUtils;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFWCharCallbackI;
+import org.lwjgl.glfw.GLFWImage;
 import org.lwjgl.glfw.GLFWKeyCallbackI;
 import org.lwjgl.glfw.GLFWMouseButtonCallbackI;
 import org.lwjgl.glfw.GLFWScrollCallbackI;
@@ -23,6 +30,8 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.Platform;
 
+import main.Loader;
+import sutil.SUtil;
 import sutil.math.SVector;
 
 public class Window {
@@ -328,6 +337,44 @@ public class Window {
         glfwSetWindowPos(windowHandle,
                 offset + (pmVideoMode.width() - width) / 2,
                 (pmVideoMode.height() - height) / 2);
+    }
+
+    public void setIcon(ArrayList<String> images) {
+        GLFWImage.Buffer icons = GLFWImage.malloc(images.size());
+        for (String path : images) {
+            GLFWImage icon = loadGLFWImage(path);
+            icons.put(icon);
+        }
+        glfwSetWindowIcon(windowHandle, icons);
+        // there are probably more things that should be freed here (like the individual
+        // icons and buffers)
+        icons.free();
+    }
+
+    private static GLFWImage loadGLFWImage(String path) {
+        BufferedImage bufferedImage;
+        try {
+            bufferedImage = ImageIO.read(Loader.getInputStream(path));
+        } catch (IOException e) {
+            final String message = String.format("Unable to load image %s", path);
+            throw new RuntimeException(message, e);
+        }
+        int width = bufferedImage.getWidth(),
+                height = bufferedImage.getHeight();
+        ByteBuffer buffer = BufferUtils.createByteBuffer(width * height * 4);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int color = bufferedImage.getRGB(x, y);
+                buffer.put((byte) SUtil.red(color));
+                buffer.put((byte) SUtil.green(color));
+                buffer.put((byte) SUtil.blue(color));
+                buffer.put((byte) SUtil.alpha(color));
+            }
+        }
+        buffer.flip();
+        GLFWImage image = GLFWImage.malloc();
+        image.set(width, height, buffer);
+        return image;
     }
 
     public void requestFocus() {

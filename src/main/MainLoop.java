@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.newdawn.slick.util.Log;
@@ -21,12 +22,11 @@ public class MainLoop {
 
     private static ArrayList<App> apps;
 
+    private static LinkedList<Runnable> eventQueue;
+
     public static void main(String[] args) {
         long programStartTime = System.nanoTime();
         boolean firstLoop = true;
-
-        // System.out.println("Hello, World!");
-        // System.exit(0);
 
         if (MainApp.DEV_BUILD) {
             SUtil.printNumLines();
@@ -51,26 +51,24 @@ public class MainLoop {
         MainApp mainApp = new MainApp(args.length == 0
                 ? (MainApp.DEV_BUILD ? "res/images/test.png" : null)
                 : args[0]);
+        eventQueue = new LinkedList<>();
 
         double deltaT = 1.0 / 60.0;
         boolean stop = false;
         while (!stop) {
             long startTime = System.nanoTime();
 
+            while (!eventQueue.isEmpty())
+                eventQueue.removeFirst().run();
+
             for (int i = apps.size() - 1; i >= 0; i--) {
                 App app = apps.get(i);
 
-                // For some reason, with the new rendering system I have to call
-                // makeContextCurrent() twice. I have absolutely no idea why.
-                app.makeContextCurrent();
-
                 glfwPollEvents();
 
-                app.update(deltaT);
                 app.makeContextCurrent();
+                app.update(deltaT);
                 app.render();
-
-                app.updateDisplay();
 
                 if (app.isCloseRequested()) {
                     if (app.finish()) {
@@ -105,6 +103,10 @@ public class MainLoop {
 
     public static void addApp(App app) {
         apps.add(app);
+    }
+
+    public static void queueEvent(Runnable event) {
+        eventQueue.add(event);
     }
 
     private static void initGLFW() {

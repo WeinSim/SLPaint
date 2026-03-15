@@ -1,0 +1,9 @@
+{
+    "fonts": [
+        "FreeMono",
+        "FreeMonoBold",
+        "UbuntuSans",
+        "UbuntuSansMono"
+    ],
+    "defaultFont": "UbuntuSansMono"
+}

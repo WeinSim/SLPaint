@@ -95,7 +95,7 @@ public class SettingsUI extends AppUI<SettingsApp> {
         UIContainer fill = new UIContainer(0, 0);
         fill.setHFillSize().noOutline();
         bottomRow.add(fill);
-        bottomRow.add(new UIButton("Reset Settings", () -> Settings.loadDefaultSettings()));
+        bottomRow.add(new UIButton("Reset Settings", () -> Settings.setDefaultSettings()));
 
         root.add(bottomRow);
     }
