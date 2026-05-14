@@ -5,6 +5,8 @@
             "name": "SLPaint",
             "request": "launch",
             "mainClass": "com.weinsim.slpaint.main.MainLoop",
+            // without projectName, VSCode complains that the main class name apparently isn't unique
+            "projectName": "slpaint",
             // "args": "res/icons/logo.png",
             // "args": "res/images/test.png",
             "vmArgs": "--enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow",

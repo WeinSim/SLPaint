@@ -49,7 +49,7 @@ public class MainLoop {
 
         apps = new ArrayList<>();
         MainApp mainApp = new MainApp(args.length == 0
-                ? (MainApp.DEV_BUILD ? "res/images/test.png" : null)
+                ? (MainApp.DEV_BUILD ? "src/main/resources/com/weinsim/slpaint/images/test.png" : null)
                 : args[0]);
         eventQueue = new LinkedList<>();
 

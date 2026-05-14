@@ -34,8 +34,6 @@ import com.weinsim.slpaint.ui.components.ImageCanvas;
 /**
  * <pre>
  * TODO continue:
- * Set up maven
- * Make SUtil separate maven project and include it as a dependency?
  * 
  * App:
  *   Keyboard shortcuts
@@ -208,7 +206,7 @@ public final class MainApp extends App {
      * <li>Adds a test context menu to the settings window
      * </ul>
      */
-    public static final boolean DEV_BUILD = false;
+    public static final boolean DEV_BUILD = true;
 
     /**
      * https://images.minitool.com/de.minitool.com/images/uploads/news/2022/02/microsoft-paint-herunterladen-installieren/microsoft-paint-herunterladen-installieren-1.png

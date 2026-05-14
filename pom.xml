@@ -79,16 +79,72 @@
             <artifactId>lwjgl-stb</artifactId>
             <classifier>${lwjgl.natives}</classifier>
         </dependency>
-        <!-- <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20251224</version>
-        </dependency> -->
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
+                <groupId>org.panteleyev</groupId>
+                <artifactId>jpackage-maven-plugin</artifactId>
+                <version>1.7.4</version>
+                <executions>
+                    <execution>
+                    <goals>
+                        <goal>jpackage</goal>
+                    </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <name>SLPaint</name>
+                    <appVersion>0.1-SNAPSHOT</appVersion>
+                    <description>"A free and simple image editing program"</description>
+                    <destination>target</destination>
+                    <input>${project.build.directory}</input>
+                    <mainJar>slpaint-0.1-SNAPSHOT.jar</mainJar>
+                    <mainClass>com.weinsim.slpaint.main.MainLoop</mainClass>
+                    <type>DEB</type>
+                    <copyright>"Copyright 2026, Simon Weinzierl"</copyright>
+                    <addModules>"java.base,java.desktop,jdk.unsupported"</addModules>
+                    <javaOptions>"--enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow"</javaOptions>
+                    <aboutUrl>"https://github.com/WeinSim/slpaint"</aboutUrl>
+                    <linuxPackageName>slpaint</linuxPackageName>
+                    <icon>res/logo/logo_256.png</icon>
+                    <fileAssociations>build/png.properties</fileAssociations>
+                    <fileAssociations>build/jpg.properties</fileAssociations>
+                    <fileAssociations>build/jpeg.properties</fileAssociations>
+                    <fileAssociations>build/bmp.properties</fileAssociations>
+                    <linuxDebMaintainer>"simon-weinzierl@web.de"</linuxDebMaintainer>
+                    <linuxMenuGroup>"Graphics"</linuxMenuGroup>
+                </configuration>
+                </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.5.2</version>
+                <executions>
+                    <execution>
+                        <!--
+                            this is just to make the following error go away:
+                            Plugin execution not covered by lifecycle configuration:
+                            org.apache.maven.plugins:maven-install-plugin:2.5.2:install-file
+                            (execution: default, phase: initialize)
+                         -->
+                        <?m2e execute onConfiguration,onIncremental?>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <file>lib/slick-util3/slick-util3.jar</file>
+                            <groupId>org.newdawn</groupId>
+                            <artifactId>slick</artifactId>
+                            <version>3.0.0</version>
+                            <packaging>jar</packaging>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.6.2</version>
@@ -110,7 +166,7 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin> -->
             <!-- <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -125,33 +181,6 @@
             Posted by sphinks, modified by community. See post 'Timeline' for change history
             Retrieved 2026-05-14, License - CC BY-SA 4.0
             -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>2.5.2</version>
-                <executions>
-                    <execution>
-                        <!--
-                            this is just to make the following error go away:
-                            Plugin execution not covered by lifecycle configuration:
-                            org.apache.maven.plugins:maven-install-plugin:2.5.2:install-file
-                            (execution: default, phase: initialize)
-                         -->
-                        <!-- <?m2e execute onConfiguration,onIncremental?> -->
-                        <phase>build</phase>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <configuration>
-                            <file>lib/slick-util3/slick-util3.jar</file>
-                            <groupId>org.newdawn</groupId>
-                            <artifactId>slick</artifactId>
-                            <version>3.0.0</version>
-                            <packaging>jar</packaging>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
