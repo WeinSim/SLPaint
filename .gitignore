@@ -1,8 +1,13 @@
 .vscode/settings.json
+
+target/
 bin/
-build/package-input
 dist/
-res/fonts/Courier New/
-res/fonts/Courier New Bold/
-res/fonts/FreeSans/
-src/sutil/SimplexNoise_octave.java
+
+build/package-input
+
+# src/main/resources/com/weinsim/slpaint/fonts/Courier New/
+# src/main/resources/com/weinsim/slpaint/fonts/Courier New Bold/
+# src/main/resources/com/weinsim/slpaint/fonts/FreeSans/
+
+src/main/java/com/weinsim/slpaint/sutil/SimplexNoise_octave.java

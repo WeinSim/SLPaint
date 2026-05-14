@@ -4,7 +4,7 @@
             "type": "java",
             "name": "SLPaint",
             "request": "launch",
-            "mainClass": "main.MainLoop",
+            "mainClass": "com.weinsim.slpaint.main.MainLoop",
             // "args": "res/icons/logo.png",
             // "args": "res/images/test.png",
             "vmArgs": "--enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow",

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.weinsim</groupId>
+    <artifactId>slpaint</artifactId>
+    <version>0.1-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>26</maven.compiler.source>
+        <maven.compiler.target>26</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <lwjgl.version>3.3.6</lwjgl.version>
+        <lwjgl.natives>natives-linux</lwjgl.natives>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.lwjgl</groupId>
+                <artifactId>lwjgl-bom</artifactId>
+                <version>${lwjgl.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.newdawn</groupId>
+            <artifactId>slick</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl</artifactId>
+            <classifier>${lwjgl.natives}</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-glfw</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-glfw</artifactId>
+            <classifier>${lwjgl.natives}</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-nfd</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-nfd</artifactId>
+            <classifier>${lwjgl.natives}</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-opengl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-opengl</artifactId>
+            <classifier>${lwjgl.natives}</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-stb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-stb</artifactId>
+            <classifier>${lwjgl.natives}</classifier>
+        </dependency>
+        <!-- <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20251224</version>
+        </dependency> -->
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.2</version>
+                <executions>
+                    <execution>
+                        <id>server</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.weinsim.slpaint.main.MainLoop</mainClass>
+                                </transformer>
+                            </transformers>
+                            <finalName>slpaint</finalName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.12.0</version>
+                <configuration>
+                    <show>private</show>
+                    <outputDirectory>${project.basedir}/doc</outputDirectory>
+                </configuration>
+            </plugin> -->
+            <!--
+            Source - https://stackoverflow.com/a/38339518
+            Posted by sphinks, modified by community. See post 'Timeline' for change history
+            Retrieved 2026-05-14, License - CC BY-SA 4.0
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.5.2</version>
+                <executions>
+                    <execution>
+                        <!--
+                            this is just to make the following error go away:
+                            Plugin execution not covered by lifecycle configuration:
+                            org.apache.maven.plugins:maven-install-plugin:2.5.2:install-file
+                            (execution: default, phase: initialize)
+                         -->
+                        <!-- <?m2e execute onConfiguration,onIncremental?> -->
+                        <phase>build</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <file>lib/slick-util3/slick-util3.jar</file>
+                            <groupId>org.newdawn</groupId>
+                            <artifactId>slick</artifactId>
+                            <version>3.0.0</version>
+                            <packaging>jar</packaging>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
