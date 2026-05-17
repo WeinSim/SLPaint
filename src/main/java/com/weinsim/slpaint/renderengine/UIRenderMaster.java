@@ -25,7 +25,7 @@ import com.weinsim.slpaint.renderengine.drawcalls.ImageDrawCall;
 import com.weinsim.slpaint.renderengine.drawcalls.RectFillDrawCall;
 import com.weinsim.slpaint.renderengine.drawcalls.RectOutlineDrawCall;
 import com.weinsim.slpaint.renderengine.drawcalls.TextDrawCall;
-import com.weinsim.slpaint.renderengine.fonts.TextFont;
+import com.weinsim.slpaint.renderengine.font.TextFont;
 import com.weinsim.slpaint.renderengine.renderers.EllipseRenderer;
 import com.weinsim.slpaint.renderengine.renderers.HSLRenderer;
 import com.weinsim.slpaint.renderengine.renderers.ImageRenderer;

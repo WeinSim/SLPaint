@@ -1,4 +1,4 @@
-package com.weinsim.slpaint.renderengine.shaders;
+package com.weinsim.slpaint.renderengine.shader;
 
 public enum Datatype {
 

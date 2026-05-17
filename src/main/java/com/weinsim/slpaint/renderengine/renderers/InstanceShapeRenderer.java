@@ -8,7 +8,7 @@ import org.lwjglx.util.vector.Vector2f;
 
 import com.weinsim.slpaint.renderengine.bufferobjects.FloatVBO;
 import com.weinsim.slpaint.renderengine.drawcalls.DrawCall;
-import com.weinsim.slpaint.renderengine.shaders.ShaderType;
+import com.weinsim.slpaint.renderengine.shader.ShaderType;
 
 public abstract class InstanceShapeRenderer<C extends DrawCall> extends ShapeRenderer<C> {
 

@@ -14,8 +14,8 @@ import com.weinsim.slpaint.renderengine.RawModel;
 import com.weinsim.slpaint.renderengine.bufferobjects.UBOEntry;
 import com.weinsim.slpaint.renderengine.bufferobjects.UniformBufferObject;
 import com.weinsim.slpaint.renderengine.drawcalls.DrawCall;
-import com.weinsim.slpaint.renderengine.shaders.ShaderProgram;
-import com.weinsim.slpaint.renderengine.shaders.ShaderType;
+import com.weinsim.slpaint.renderengine.shader.ShaderProgram;
+import com.weinsim.slpaint.renderengine.shader.ShaderType;
 
 public abstract class ShapeRenderer<C extends DrawCall> implements Cleanable {
 

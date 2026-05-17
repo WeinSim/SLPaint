@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 
 import org.lwjglx.util.vector.Vector4f;
 
-import com.weinsim.slpaint.renderengine.fonts.TextFont;
+import com.weinsim.slpaint.renderengine.font.TextFont;
 import com.weinsim.slpaint.sutil.math.SVector;
 import com.weinsim.slpaint.sutil.ui.UI;
 import com.weinsim.slpaint.sutil.ui.UIColors;

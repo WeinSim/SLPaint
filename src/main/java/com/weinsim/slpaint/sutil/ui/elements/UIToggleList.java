@@ -28,6 +28,7 @@ public class UIToggleList extends UIContainer {
         container.setHFillSize().zeroMargin().noOutline();
 
         container.addLeftClickAction(() -> consumer.accept(!supplier.getAsBoolean()));
+        // container.addKeyPressAction(GLFW.GLFW_KEY_SPACE, 0, true, clickAction);
         container.setHandCursor();
         container.setSelectable(true);
 

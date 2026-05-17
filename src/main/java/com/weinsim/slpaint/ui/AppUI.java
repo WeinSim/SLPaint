@@ -21,7 +21,7 @@ import com.weinsim.slpaint.main.apps.MainApp;
 import com.weinsim.slpaint.settings.BooleanSetting;
 import com.weinsim.slpaint.settings.ColorSetting;
 import com.weinsim.slpaint.renderengine.Cleanable;
-import com.weinsim.slpaint.renderengine.fonts.TextFont;
+import com.weinsim.slpaint.renderengine.font.TextFont;
 import com.weinsim.slpaint.sutil.SUtil;
 import com.weinsim.slpaint.sutil.ui.UI;
 import com.weinsim.slpaint.sutil.ui.UIColors;

@@ -4,7 +4,7 @@ import org.lwjglx.util.vector.Matrix3f;
 import org.lwjglx.util.vector.Vector4f;
 
 import com.weinsim.slpaint.renderengine.bufferobjects.UBOEntry;
-import com.weinsim.slpaint.renderengine.fonts.TextFont;
+import com.weinsim.slpaint.renderengine.font.TextFont;
 import com.weinsim.slpaint.sutil.math.SVector;
 
 public final class TextDrawCall extends DrawCall {

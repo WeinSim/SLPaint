@@ -30,6 +30,7 @@ public class UIRadioButtonList extends UIContainer {
 
             final int j = i;
             row.addLeftClickAction(() -> stateConsumer.accept(j));
+            // row.addKeyPressAction(GLFW.GLFW_KEY_SPACE, 0, true, clickAction);
             row.setHandCursor();
             row.setSelectable(true);
 

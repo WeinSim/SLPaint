@@ -1,4 +1,4 @@
-package com.weinsim.slpaint.renderengine.shaders;
+package com.weinsim.slpaint.renderengine.shader;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;

@@ -1,6 +1,6 @@
 # SLPaint
 
-![SLPaint Screenshot](./res/images/screenshot.png)
+![SLPaint Screenshot](./src/main/resources/com/weinsim/slpaint/images/screenshot.png)
 
 SLPaint (short for Simon - Linux - Paint) is a simple image editing program for Linux,
 inspired by Microsoft Paint.

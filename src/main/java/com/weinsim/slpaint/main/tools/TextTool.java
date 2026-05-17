@@ -2,7 +2,7 @@ package com.weinsim.slpaint.main.tools;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-import com.weinsim.slpaint.renderengine.fonts.TextFont;
+import com.weinsim.slpaint.renderengine.font.TextFont;
 import com.weinsim.slpaint.sutil.math.SVector;
 import com.weinsim.slpaint.sutil.ui.UI;
 

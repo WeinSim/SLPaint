@@ -13,7 +13,7 @@ import org.lwjglx.util.vector.Matrix3f;
 import com.weinsim.slpaint.renderengine.bufferobjects.FloatVBO;
 import com.weinsim.slpaint.renderengine.bufferobjects.IntVBO;
 import com.weinsim.slpaint.renderengine.drawcalls.TextDrawCall;
-import com.weinsim.slpaint.renderengine.fonts.TextFont;
+import com.weinsim.slpaint.renderengine.font.TextFont;
 
 public class TextRenderer extends InstanceShapeRenderer<TextDrawCall> {
 

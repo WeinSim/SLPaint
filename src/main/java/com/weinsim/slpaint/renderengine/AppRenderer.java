@@ -11,7 +11,7 @@ import com.weinsim.slpaint.main.apps.App;
 import com.weinsim.slpaint.main.apps.MainApp;
 import com.weinsim.slpaint.main.image.Image;
 import com.weinsim.slpaint.renderengine.bufferobjects.FrameBufferObject;
-import com.weinsim.slpaint.renderengine.fonts.TextFont;
+import com.weinsim.slpaint.renderengine.font.TextFont;
 import com.weinsim.slpaint.sutil.math.SVector;
 import com.weinsim.slpaint.sutil.ui.UI;
 import com.weinsim.slpaint.sutil.ui.UIColors;

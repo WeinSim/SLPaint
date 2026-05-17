@@ -1,4 +1,4 @@
-package com.weinsim.slpaint.renderengine.fonts;
+package com.weinsim.slpaint.renderengine.font;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.*;

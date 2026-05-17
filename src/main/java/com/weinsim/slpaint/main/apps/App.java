@@ -10,7 +10,7 @@ import com.weinsim.slpaint.main.MainLoop;
 import com.weinsim.slpaint.settings.BooleanSetting;
 import com.weinsim.slpaint.renderengine.AppRenderer;
 import com.weinsim.slpaint.renderengine.Window;
-import com.weinsim.slpaint.renderengine.fonts.TextFont;
+import com.weinsim.slpaint.renderengine.font.TextFont;
 import com.weinsim.slpaint.sutil.math.SVector;
 import com.weinsim.slpaint.sutil.ui.UI;
 import com.weinsim.slpaint.sutil.ui.elements.UIRoot;

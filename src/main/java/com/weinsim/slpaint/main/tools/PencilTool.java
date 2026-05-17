@@ -3,6 +3,7 @@ package com.weinsim.slpaint.main.tools;
 import static org.lwjgl.glfw.GLFW.*;
 
 import com.weinsim.slpaint.main.image.Image;
+import com.weinsim.slpaint.settings.BooleanSetting;
 
 public final class PencilTool extends ImageTool {
 
@@ -13,6 +14,8 @@ public final class PencilTool extends ImageTool {
     public static final int MIN_SIZE = 1, MAX_SIZE = 16;
 
     private int size = 1;
+
+    private BooleanSetting applyTransparency = new BooleanSetting("applyTransparency");
 
     private PencilTool() {
         super();
@@ -61,5 +64,13 @@ public final class PencilTool extends ImageTool {
 
     public void setSize(int size) {
         this.size = Math.min(Math.max(size, MIN_SIZE), MAX_SIZE);
+    }
+
+    public boolean isApplyTransparency() {
+        return applyTransparency.get();
+    }
+
+    public void setApplyTransparency(boolean applyTransparency) {
+        this.applyTransparency.set(applyTransparency);
     }
 }

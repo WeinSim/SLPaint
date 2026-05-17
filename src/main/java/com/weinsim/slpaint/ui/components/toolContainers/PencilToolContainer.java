@@ -40,7 +40,8 @@ public final class PencilToolContainer extends ToolContainer<PencilTool> {
                     pmouseY = prevMousePosition[1];
 
             int color = state == PencilTool.DRAWING_PRIMARY ? app.getPrimaryColor() : app.getSecondaryColor();
-            app.drawLine(mouseX, mouseY, pmouseX, pmouseY, tool.getSize(), color, true);
+            boolean ignoreAlpha = !ImageTool.PENCIL.isApplyTransparency();
+            app.drawLine(mouseX, mouseY, pmouseX, pmouseY, tool.getSize(), color, ignoreAlpha);
         }
     }
 

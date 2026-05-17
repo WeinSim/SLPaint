@@ -79,7 +79,7 @@ public class Settings {
         if (jsonValue == null) {
             jsonValue = defaultSettings.get(identifier);
             if (jsonValue == null) {
-                throw new RuntimeException(String.format("The setting named %s does not exist", identifier));
+                throw new RuntimeException(String.format("Setting \"%s\" does not exist", identifier));
             }
         }
         setting.setJSONValue(jsonValue);

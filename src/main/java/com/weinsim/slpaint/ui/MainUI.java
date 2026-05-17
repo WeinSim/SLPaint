@@ -17,7 +17,7 @@ import com.weinsim.slpaint.main.tools.ImageTool;
 import com.weinsim.slpaint.main.tools.LineTool;
 import com.weinsim.slpaint.main.tools.PencilTool;
 import com.weinsim.slpaint.main.tools.SelectionTool;
-import com.weinsim.slpaint.renderengine.fonts.TextFont;
+import com.weinsim.slpaint.renderengine.font.TextFont;
 import com.weinsim.slpaint.sutil.SUtil;
 import com.weinsim.slpaint.sutil.ui.UI;
 import com.weinsim.slpaint.sutil.ui.UISizes;
@@ -230,8 +230,7 @@ public class MainUI extends AppUI<MainApp> {
                 x -> sizeConsumer.accept((int) Math.round(SUtil.map(x, 0, 1, min, max))));
         sizeTools.add(sizeScale);
 
-        UIContainer sizeBottomRow = new UIContainer(HORIZONTAL,
-                CENTER);
+        UIContainer sizeBottomRow = new UIContainer(HORIZONTAL, CENTER);
         sizeBottomRow.zeroMargin().noOutline();
         sizeBottomRow.add(new UIText("Size:", UIText.SMALL));
         sizeBottomRow.add(new UIContainer(0, 0).setHFillSize().noOutline());
@@ -239,6 +238,11 @@ public class MainUI extends AppUI<MainApp> {
 
         sizeTools.add(sizeBottomRow);
         toolRow.add(sizeTools);
+
+        UIToggleList pencilTools = new UIToggleList("Apply transparency",
+                ImageTool.PENCIL::isApplyTransparency,
+                ImageTool.PENCIL::setApplyTransparency);
+        toolRow.add(pencilTools);
 
         UIContainer selectionTools = new UIContainer(VERTICAL, CENTER);
         selectionTools.zeroMargin().setPaddingScale(2.0).noOutline();

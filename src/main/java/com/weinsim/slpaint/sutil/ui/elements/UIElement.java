@@ -73,19 +73,24 @@ public abstract class UIElement {
 
         setDefaultStyle();
 
-        addKeyPressAction(GLFW_KEY_ENTER, 0, () -> {
-            // We skip the click action that selects this element.
-            // Doing it this way is kind of fragile because it assumes that this click
-            // action is always at index zero.
-            for (int i = 1; i < mousePressActions.size(); i++) {
-                mousePressActions.get(i).action().run();
-            }
-        });
-
         addLeftClickAction(() -> {
             if (selectOnClick)
                 UI.select(this);
         });
+
+        // why do we not need to specify that this element needs to be selected??
+        Runnable runLeftMouseActions = () -> {
+            // We skip the click action that selects this element.
+            // Doing it this way is kind of fragile because it assumes that this click
+            // action is always at index zero.
+            for (int i = 1; i < mousePressActions.size(); i++) {
+                UIMouseButtonAction action = mousePressActions.get(i);
+                if (action.button() == GLFW_MOUSE_BUTTON_LEFT)
+                    action.action().run();
+            }
+        };
+        addKeyPressAction(GLFW_KEY_ENTER, 0, runLeftMouseActions);
+        addKeyPressAction(GLFW_KEY_SPACE, 0, runLeftMouseActions);
     }
 
     public void updateVisibility() {

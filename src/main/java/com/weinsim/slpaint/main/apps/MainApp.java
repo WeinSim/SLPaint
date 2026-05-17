@@ -22,7 +22,7 @@ import com.weinsim.slpaint.settings.ColorArraySetting;
 import com.weinsim.slpaint.settings.Settings;
 import com.weinsim.slpaint.main.tools.ImageTool;
 import com.weinsim.slpaint.renderengine.Window;
-import com.weinsim.slpaint.renderengine.fonts.TextFont;
+import com.weinsim.slpaint.renderengine.font.TextFont;
 import com.weinsim.slpaint.sutil.SUtil;
 import com.weinsim.slpaint.sutil.math.SVector;
 import com.weinsim.slpaint.sutil.ui.UI;
@@ -40,7 +40,6 @@ import com.weinsim.slpaint.ui.components.ImageCanvas;
  *     Selecting one of the radio buttons in the resize ui and pressing enter
  *       closes the resize window. => add option for keyboard shortcut to not
  *       run if something is currently selected (similar to text input).
- *     Radio buttons, toggles, etc. should also be toggled when pressing space
  *   Pencil tool
  *     Drawing with a semi-transparent color has weird artifacts because some
  *       pixels are drawn multiple times on consecutive frames, resulting in
@@ -180,14 +179,17 @@ import com.weinsim.slpaint.ui.components.ImageCanvas;
  *     Debug view
  * 
  * Backend:
- *   Make SUtil a git submodule
+ *   Proper package names / structure
+ *     Put package names in signular: sutil.ui.elements, renderengine.fonts,
+ *       renderengine.shaders
+ *   Make SUtil a git submodule / maven subproject?
+ *   Make MainApp static?
  *   Use Math.clamp wherever it is possible
  *   Sizes
  *     Move things that should not be part of sutil.ui into ui package
  *   GLFW key input: automatically recognize keyboard layout and remappings to
  *     avoid manual conversion between Y/Z and Esc/CapsLock (see Window.KEY_MAP)
  *   Performance: only ~50fps on Microsoft Surface
- *   Proper package com.weinsim.slpaint.names / structure
  *   Error handling
  * </pre>
  */
